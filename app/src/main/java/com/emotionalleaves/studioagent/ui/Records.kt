@@ -447,7 +447,16 @@ fun SettingsScreen(nav: NavController, section: String) {
                 }) { Text("Try it") }
                 Expand("Faster and steadier: a free key of your own") {
                     Small("The free helper can be slow when it is busy. A Google key is free too and takes a minute: sign in, tap Create API key, copy it, come back. The app works out the rest from the key itself.")
-                    OutlinedButton(onClick = { com.emotionalleaves.studioagent.sys.Share.open(ctx, "https://aistudio.google.com/apikey") }) { Text("Get a free Google key") }
+                    val clip = androidx.compose.ui.platform.LocalClipboardManager.current
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { com.emotionalleaves.studioagent.sys.Share.open(ctx, "https://aistudio.google.com/apikey") }) { Text("Get a free key") }
+                        // Back from the website with the key copied: one tap, no typing.
+                        Button(onClick = {
+                            val k = clip.getText()?.text?.trim().orEmpty()
+                            if (k.length < 20 || k.contains(' ')) status = "Nothing that looks like a key is copied yet. On the key page, tap the copy button next to the key, then come back."
+                            else { G.ai.useKey(k); status = "Key added: ${Ai.detect(k).name}. Tap Try it to check." }
+                        }) { Text("Paste the key I copied") }
+                    }
                     SText("Paste any AI key here (Google, Claude, OpenAI, Groq, OpenRouter)", st.aiKey, secret = true) { G.ai.useKey(it) }
                     if (st.aiKey.isNotBlank()) {
                         Small("Recognised as ${Ai.detect(st.aiKey).name}.")

@@ -196,6 +196,9 @@ fun ContactScreen(nav: NavController, id: Long) {
 
     Screen(c.venue.ifBlank { c.name.ifBlank { "Contact" } }, nav) {
         Row { Tag(statusWords(c), strong = c.status in setOf("research", "drafted")) }
+        if (c.email.isNotBlank() || c.website.isNotBlank()) Small(listOf(c.name, c.email, c.website).filter { it.isNotBlank() }.joinToString("\n"))
+        // The email is the point of this page; the details fold away once the basics are in.
+        Expand("Details: who, where, how they take work", startOpen = c.venue.isBlank() || c.email.isBlank()) {
         Field("Venue", c.venue, { save(c.copy(venue = it)) })
         Field("Person", c.name, { save(c.copy(name = it)) })
         Field("Email", c.email, { save(c.copy(email = it.trim())) })
@@ -206,6 +209,7 @@ fun ContactScreen(nav: NavController, id: Long) {
         Field("Their submission instructions", c.submissionNotes, { save(c.copy(submissionNotes = it)) }, lines = 2)
         Field("Notes (what they show, who you met, openings you went to)", c.notes, { save(c.copy(notes = it)) }, lines = 3)
         if (c.website.isNotBlank()) TextButton(onClick = { Share.open(ctx, c.website) }) { Text("Open their site") }
+        }
         SavedLine()
         Status(status)
 

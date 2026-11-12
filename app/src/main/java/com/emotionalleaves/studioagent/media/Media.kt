@@ -160,6 +160,8 @@ class Pdf(ctx: Context? = null, private val owner: String = "", private val docT
         var previewDir: File? = null
     }
     private val preview = previewDir
+    /** A cover page carries no running footer. */
+    var coverPage = false
     private val shots = mutableListOf<Bitmap>()
     private var shot: Canvas? = null
 
@@ -212,7 +214,7 @@ class Pdf(ctx: Context? = null, private val owner: String = "", private val docT
     private fun finishPage() {
         if (!open) return
         val c = cv()
-        if (owner.isNotBlank() || docTitle.isNotBlank()) {
+        if ((owner.isNotBlank() || docTitle.isNotBlank()) && !(n == 1 && coverPage)) {
             val tp = paint(8f, Face.BODY, true)
             val base = h - margin / 2f
             c.drawText(listOf(owner, docTitle).filter { it.isNotBlank() }.joinToString(", "), margin.toFloat(), base, tp)

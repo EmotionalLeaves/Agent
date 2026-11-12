@@ -101,7 +101,7 @@ object Papers {
     // ------------------------------------------------------------ portfolio
 
     fun portfolio(ctx: Context, s: Settings, works: List<Artwork>, statement: String, count: Int): File {
-        val pdf = Pdf(ctx, name(s), "Portfolio")
+        val pdf = Pdf(ctx, name(s), "Portfolio").apply { coverPage = true }
         val shown = works.take(count)
         // Cover: name, years, contact. Nothing else.
         pdf.space(220f)

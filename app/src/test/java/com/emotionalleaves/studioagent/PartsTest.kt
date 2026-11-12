@@ -115,6 +115,61 @@ class PartsTest {
         assertTrue("9 labels need a second page", File(docs, "Leaves_Wall_labels_p2.png").exists())
     }
 
+    /**
+     * The whole point of the app, end to end, with no keys of any kind: a listing page is read, a call is found,
+     * an application is made, and the pack a gallery receives is built with the right names and credit.
+     */
+    @Test fun aCallGoesFromAListingPageToAFinishedPackWithNoKeys() = runBlocking {
+        ctx
+        val s = G.settings
+        s.firstName = "Jade"; s.lastName = "Leaves"; s.email = "jade@example.com"; s.city = "Austin"
+        s.freeAi = false; s.aiKey = ""; s.useCalendar = false; s.sourcesSeeded = true
+        val server = MockWebServer()
+        server.dispatcher = object : okhttp3.mockwebserver.Dispatcher() {
+            override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest): MockResponse = when (request.path) {
+                "/robots.txt" -> MockResponse().setBody("User-agent: *\nDisallow: /private")
+                "/calls" -> MockResponse().setBody("<html><head><title>Calls</title></head><body><nav><a href='/about'>About us and our team</a></nav><ul>" +
+                    "<li><a href='/call/1'>Winter Open 2027 juried exhibition</a> Deadline January 15, 2027</li>" +
+                    "<li><a href='/private/2'>Members only open call for artists</a> Deadline February 1, 2027</li>" +
+                    "<li><a href='/call/3'>Last year's open call for artists</a> Deadline January 5, 2026</li></ul></body></html>")
+                "/call/1" -> MockResponse().setBody("<html><body><h1>Winter Open 2027</h1><p>Riverside Arts invites entries from artists in Austin. Juried by Ana Reyes.</p>" +
+                    "<p>Deadline: January 15, 2027. Entry fee: $25 for up to 3 works. Email entries@riverside.example.org</p></body></html>")
+                "/call/3" -> MockResponse().setBody("<html><body><h1>Last Year's Open</h1><p>Deadline: January 5, 2026.</p></body></html>")
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        server.start()
+        try {
+            G.dao.put(com.emotionalleaves.studioagent.data.Source(name = "Test listing", kind = "url", url = server.url("/calls").toString()))
+            assertEquals("one open call; the closed one and the one robots.txt keeps private are left out", 1, Engine.scanSources(System.currentTimeMillis()))
+            val opp = G.dao.oppsNow().single { it.title == "Winter Open 2027" }
+            assertEquals(25.0, opp.fee, 0.0); assertEquals("local", opp.scope); assertEquals(3, opp.maxWorks)
+            assertTrue(opp.url.endsWith("/call/1")); assertEquals("entries@riverside.example.org", opp.email)
+            assertTrue(G.dao.sourcesNow().single().lastStatus.startsWith("Added 1"))
+
+            val img = picture("pack.jpg", 1200, 900)
+            (1..3).forEach { G.dao.put(Artwork(title = "Piece $it", year = 2026, widthIn = 16.0, heightIn = 12.0, status = "documented", imagePath = img.absolutePath, pixelW = 1200, pixelH = 900, price = 400.0)) }
+            G.dao.put(Doc(type = "statement", variant = "150", text = "I draw the kitchen at five in the morning.", approved = true))
+            G.dao.put(Fact(category = "education", year = 2020, text = "BFA, State University"))
+            val id = Engine.createApplication(ctx, opp)
+            val a = G.dao.applsNow().single { it.id == id }
+            assertEquals("Winter Open 2027: submission from Jade Leaves", a.emailSubject)
+            assertTrue(a.emailBody, a.emailBody.startsWith("Dear selection committee,") && a.emailBody.contains("1. Piece 1, 2026") && a.emailBody.trim().endsWith("Austin"))
+            assertEquals("email", a.method)
+
+            com.emotionalleaves.studioagent.media.Pdf.previewDir = File(ctx.cacheDir, "pack_preview")
+            val dir = try { Engine.buildPack(ctx, a, opp) } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
+            val names = dir.listFiles()!!.map { it.name }.sorted()
+            assertEquals(listOf("Leaves_01_Piece1_2026_Archivalpigmentprint_12x16in.jpg", "Leaves_02_Piece2_2026_Archivalpigmentprint_12x16in.jpg",
+                "Leaves_03_Piece3_2026_Archivalpigmentprint_12x16in.jpg", "Leaves_CV.pdf", "Leaves_Price_list.pdf", "Leaves_Statement.pdf"), names)
+            val exif = android.media.ExifInterface(File(dir, names[0]).absolutePath)
+            assertEquals("Jade Leaves", exif.getAttribute(android.media.ExifInterface.TAG_ARTIST))
+            assertTrue(exif.getAttribute(android.media.ExifInterface.TAG_COPYRIGHT).orEmpty().contains("All rights reserved"))
+            val checks = Engine.checklist(G.dao.applsNow().single { it.id == id }, opp, G.dao.artworksNow(), Engine.feeLeft(emptyList()), System.currentTimeMillis())
+            assertTrue(checks.filter { !it.second }.joinToString { it.first }, checks.all { it.second })
+        } finally { server.shutdown() }
+    }
+
     @Test fun existingFilesComeInAsFinishedPieces() = runBlocking {
         ctx
         val f = picture("blue_hour-final.jpg", 3000, 2400)
