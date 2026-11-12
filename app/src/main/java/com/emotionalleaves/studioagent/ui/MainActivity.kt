@@ -22,6 +22,9 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -90,15 +93,47 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** One palette everywhere: warm paper, deep green, a little terracotta. No stock purple. */
+private val LightColors = lightColorScheme(
+    primary = Color(0xFF2F5D50), onPrimary = Color.White, primaryContainer = Color(0xFFD9EAE3), onPrimaryContainer = Color(0xFF10261F),
+    secondary = Color(0xFFA9571F), onSecondary = Color.White, secondaryContainer = Color(0xFFDCEBE5), onSecondaryContainer = Color(0xFF16332B),
+    tertiary = Color(0xFF7A5C2E), onTertiary = Color.White, tertiaryContainer = Color(0xFFF3E4C8), onTertiaryContainer = Color(0xFF2B1F08),
+    background = Color(0xFFFAF9F6), onBackground = Color(0xFF1D1C1A), surface = Color(0xFFFAF9F6), onSurface = Color(0xFF1D1C1A),
+    surfaceVariant = Color(0xFFECE9E2), onSurfaceVariant = Color(0xFF55524B), outline = Color(0xFF8A867D), outlineVariant = Color(0xFFDAD6CD),
+    surfaceTint = Color(0xFF2F5D50), inverseSurface = Color(0xFF32302C), inverseOnSurface = Color(0xFFF5F0E8), inversePrimary = Color(0xFF9BD1BF),
+    surfaceContainerLowest = Color(0xFFFFFFFF), surfaceContainerLow = Color(0xFFF6F4EF), surfaceContainer = Color(0xFFF1EFE9),
+    surfaceContainerHigh = Color(0xFFECE9E2), surfaceContainerHighest = Color(0xFFE7E4DC), surfaceBright = Color(0xFFFAF9F6), surfaceDim = Color(0xFFDDDAD2)
+)
+
+private val DarkColors = darkColorScheme(
+    primary = Color(0xFF9BD1BF), onPrimary = Color(0xFF0B3128), primaryContainer = Color(0xFF214A3F), onPrimaryContainer = Color(0xFFD9EAE3),
+    secondary = Color(0xFFE8B48A), onSecondary = Color(0xFF4A2A10), secondaryContainer = Color(0xFF2A3B35), onSecondaryContainer = Color(0xFFD9EAE3),
+    tertiary = Color(0xFFDDC28F), onTertiary = Color(0xFF3D2E0C), tertiaryContainer = Color(0xFF554420), onTertiaryContainer = Color(0xFFF3E4C8),
+    background = Color(0xFF151513), onBackground = Color(0xFFE8E4DC), surface = Color(0xFF151513), onSurface = Color(0xFFE8E4DC),
+    surfaceVariant = Color(0xFF3A3833), onSurfaceVariant = Color(0xFFC9C5BB), outline = Color(0xFF938F86), outlineVariant = Color(0xFF45433D),
+    surfaceTint = Color(0xFF9BD1BF), inverseSurface = Color(0xFFE8E4DC), inverseOnSurface = Color(0xFF32302C), inversePrimary = Color(0xFF2F5D50),
+    surfaceContainerLowest = Color(0xFF0F0F0E), surfaceContainerLow = Color(0xFF1C1C1A), surfaceContainer = Color(0xFF21211E),
+    surfaceContainerHigh = Color(0xFF2B2B27), surfaceContainerHighest = Color(0xFF363631), surfaceBright = Color(0xFF3B3A36), surfaceDim = Color(0xFF151513)
+)
+
+/** Slightly smaller, tighter text than the stock scale, with clear steps between heading, body and note. */
+private val AppType = Typography().let { t ->
+    t.copy(
+        displayMedium = t.displayMedium.copy(fontSize = 52.sp, lineHeight = 56.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.sp),
+        headlineSmall = t.headlineSmall.copy(fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = 0.sp),
+        titleLarge = t.titleLarge.copy(fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold),
+        titleMedium = t.titleMedium.copy(fontSize = 16.sp, lineHeight = 22.sp, letterSpacing = 0.sp),
+        bodyLarge = t.bodyLarge.copy(fontSize = 15.sp, lineHeight = 22.sp, letterSpacing = 0.1.sp),
+        bodyMedium = t.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp, letterSpacing = 0.1.sp),
+        bodySmall = t.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp, letterSpacing = 0.1.sp),
+        labelLarge = t.labelLarge.copy(fontSize = 14.sp, letterSpacing = 0.1.sp),
+        labelMedium = t.labelMedium.copy(letterSpacing = 0.8.sp)
+    )
+}
+
 @Composable
 fun StudioTheme(content: @Composable () -> Unit) {
-    val green = Color(0xFF2F5D50)
-    val scheme = if (isSystemInDarkTheme()) darkColorScheme(primary = Color(0xFF9BD1BF), secondary = Color(0xFFE2B48C))
-    else lightColorScheme(
-        primary = green, secondary = Color(0xFFB5622B), primaryContainer = Color(0xFFD6E9E2), onPrimaryContainer = Color(0xFF10261F),
-        background = Color(0xFFFAF9F6), surface = Color(0xFFFAF9F6), surfaceVariant = Color(0xFFECE9E2)
-    )
-    MaterialTheme(colorScheme = scheme, content = content)
+    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) DarkColors else LightColors, typography = AppType, content = content)
 }
 
 private fun NavBackStackEntry.id(): Long = arguments?.getString("id")?.toLongOrNull() ?: 0L

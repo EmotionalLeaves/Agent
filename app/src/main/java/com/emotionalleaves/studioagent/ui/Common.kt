@@ -4,7 +4,11 @@ import android.content.Intent
 import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -137,7 +141,7 @@ fun Screen(
 }
 
 @Composable
-fun H(text: String) = Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp))
+fun H(text: String) = Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp).semantics { heading() })
 
 /** Small grey explanation. Hidden when "fewer words" is on, so screens can be as quiet as you like. */
 @Composable
@@ -161,11 +165,21 @@ fun SavedLine() {
 
 fun fitLabel(score: Int): String = if (st.fitWords) Texts.fitWord(score) else "Fit $score of 100"
 
+/**
+ * The app's card. Plain panels are white with a hairline edge; [strong] ones are tinted for the one thing that matters on a screen.
+ * A panel you can tap shows a small arrow, so it is obvious without trying.
+ */
 @Composable
 fun Panel(onClick: (() -> Unit)? = null, strong: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
-    val colors = if (strong) CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer) else CardDefaults.cardColors()
+    val colors = CardDefaults.cardColors(containerColor = if (strong) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest,
+        contentColor = if (strong) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface)
     val m = Modifier.fillMaxWidth().let { if (onClick != null) it.clickable { onClick() } else it }
-    Card(modifier = m, colors = colors) { Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content) }
+    Card(modifier = m, colors = colors, border = if (strong) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp), content = content)
+            if (onClick != null) Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(start = 8.dp))
+        }
+    }
 }
 
 @Composable
@@ -262,9 +276,11 @@ fun Expand(title: String, startOpen: Boolean = false, content: @Composable Colum
 @Composable
 fun Intro(key: String, text: String) {
     val tick by st.changed.collectAsState()
-    if (tick >= 0 && key !in st.seenIntros.split(",")) Panel(strong = true) {
-        Text(text)
-        TextButton(onClick = { st.seenIntros = st.seenIntros + "," + key }) { Text("Got it") }
+    if (tick >= 0 && key !in st.seenIntros.split(",")) {
+        Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(12.dp)).padding(start = 12.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(text, Modifier.weight(1f).padding(vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            TextButton(onClick = { st.seenIntros = st.seenIntros + "," + key }) { Text("Got it") }
+        }
     }
 }
 
