@@ -30,6 +30,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavBackStackEntry
@@ -93,6 +94,14 @@ fun Root(incoming: MutableState<Incoming?>) {
     LaunchedEffect(inc) {
         if (inc != null) {
             if (inc.route == "share") { Shared.text = inc.text; Shared.image = inc.image }
+            // The screens are set up a moment after this runs on a cold start, so wait for them before moving.
+            var tries = 0
+            while (tries < 200) {
+                val ready = try { nav.graph; true } catch (e: IllegalStateException) { false }
+                if (ready) break
+                withFrameNanos { }
+                tries++
+            }
             try { nav.navigate(inc.route) { launchSingleTop = true } } catch (e: Exception) { }
             incoming.value = null
         }
