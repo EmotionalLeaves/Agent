@@ -521,6 +521,10 @@ fun ApplScreen(nav: NavController, id: Long) {
     }
 }
 
+/**
+ * Fills empty boxes on an entry form by what their labels say. Work boxes numbered 2, 3... ("Title of work 2") get that work's details.
+ * It never presses submit and never changes a box you already filled.
+ */
 private const val FILL_JS = """
 (function(d){
  function key(el){var s=(el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.getAttribute('aria-label')||'');
@@ -528,12 +532,18 @@ private const val FILL_JS = """
  function setv(el,v){var p=el.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;
   var set=Object.getOwnPropertyDescriptor(p,'value').set; set.call(el,v);
   el.dispatchEvent(new Event('input',{bubbles:true})); el.dispatchEvent(new Event('change',{bubbles:true}));}
- var rules=[['first',d.first],['last',d.last],['surname',d.last],['email',d.email],['phone',d.phone],['website',d.website],['url',d.website],
-  ['portfolio',d.website],['city',d.city],['statement',d.statement],['bio',d.bio],['title',d.title],['medium',d.medium],
-  ['dimension',d.dims],['size',d.dims],['year',d.year],['price',d.price],['name',d.name]];
- var n=0; var els=document.querySelectorAll('input[type=text],input[type=email],input[type=tel],input[type=url],input:not([type]),textarea');
- els.forEach(function(el){ if(el.value){return;} var k=key(el);
-  for(var i=0;i<rules.length;i++){ if(rules[i][1] && k.indexOf(rules[i][0])>=0){ setv(el,rules[i][1]); n++; break; } } });
+ function work(k){var m=k.replace(/(19|20)\d\d/g,'').match(/(\d{1,2})/); var i=m?parseInt(m[1],10)-1:0;
+  return d.works[(i>=0&&i<d.works.length)?i:0]||{};}
+ var person=[['first',d.first],['last',d.last],['surname',d.last],['family name',d.last],['email',d.email],['phone',d.phone],['mobile',d.phone],
+  ['website',d.website],['portfolio',d.website],['url',d.website],['city',d.city],['statement',d.statement],['bio',d.bio]];
+ var piece=['title','medium','materials','dimension','size','year','price','value'];
+ var n=0; var els=document.querySelectorAll('input[type=text],input[type=email],input[type=tel],input[type=url],input[type=number],input:not([type]),textarea');
+ els.forEach(function(el){ if(el.value){return;} var k=key(el); var v='';
+  for(var i=0;i<person.length&&!v;i++){ if(k.indexOf(person[i][0])>=0){ v=person[i][1]; } }
+  if(!v){ for(var j=0;j<piece.length&&!v;j++){ if(k.indexOf(piece[j])>=0){ var w=work(k);
+   v={title:w.title,medium:w.medium,materials:w.medium,dimension:w.dims,size:w.dims,year:w.year,price:w.price,value:w.price}[piece[j]]; } } }
+  if(!v && k.indexOf('name')>=0 && k.indexOf('title')<0){ v=d.name; }
+  if(v){ setv(el,v); n++; } });
  return n;
 })
 """
@@ -564,14 +574,16 @@ fun WebFill(nav: NavController, id: Long) {
                 actions = {
                     TextButton(onClick = {
                         if (a != null) {
-                            val first = works.firstOrNull { it.id in Engine.workIds(a) }
                             val bio = docs.filter { it.type == "bio" && it.text.isNotBlank() }.maxByOrNull { if (it.approved) 1 else 0 }?.text.orEmpty()
+                            val ids = Engine.workIds(a)
+                            val list = org.json.JSONArray()
+                            works.filter { it.id in ids }.sortedBy { ids.indexOf(it.id) }.forEach { w ->
+                                list.put(JSONObject().put("title", w.title).put("medium", Papers.medium(w)).put("dims", Texts.dims(w.widthIn, w.heightIn, w.depthIn))
+                                    .put("year", w.year.takeIf { it > 0 }?.toString().orEmpty()).put("price", if (w.nfs) "NFS" else w.price.takeIf { it > 0 }?.let { "%.0f".format(it) }.orEmpty()))
+                            }
                             val d = JSONObject().put("first", st.firstName).put("last", st.lastName).put("name", st.fullName).put("email", st.email)
                                 .put("phone", st.phone).put("website", st.website).put("city", st.city).put("statement", a.statement).put("bio", bio)
-                                .put("title", first?.title.orEmpty()).put("medium", first?.let { Papers.medium(it) }.orEmpty())
-                                .put("dims", first?.let { Texts.dims(it.widthIn, it.heightIn) }.orEmpty())
-                                .put("year", first?.year?.takeIf { it > 0 }?.toString().orEmpty())
-                                .put("price", first?.price?.takeIf { it > 0 }?.let { "%.0f".format(it) }.orEmpty())
+                                .put("works", list)
                             web?.evaluateJavascript(FILL_JS + "(" + d.toString() + ")") { r -> status = "Filled ${r ?: "0"} fields. Read each one, then press the site's own submit button." }
                         }
                     }) { Text("Fill") }
@@ -622,7 +634,7 @@ fun WebFill(nav: NavController, id: Long) {
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { cb.onReceiveValue(picked.map { Uri.fromFile(File(it)) }.toTypedArray()); picked.clear(); chooser = null }) { Text("Attach") }
+                        Button(onClick = { cb.onReceiveValue(picked.map { Share.uri(ctx, File(it)) }.toTypedArray()); picked.clear(); chooser = null }) { Text("Attach") }
                         TextButton(onClick = { cb.onReceiveValue(null); picked.clear(); chooser = null }) { Text("Cancel") }
                     }
                 }
