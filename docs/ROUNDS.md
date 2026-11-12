@@ -32,3 +32,13 @@ build-1 database. The camera, calendar, email, AI services, GitHub and the web f
 | Guide | Fifteen steps with exact instructions (including getting an AI key, a Gmail app password and a GitHub token), worked out from what is really set up; test buttons for the AI key, email and backup |
 | Less at once | Four tabs instead of five, one-time explanations on main screens, Settings split into nine short sections, long forms folded |
 | Fixed | Opening from the tile, widget, a notification or a share on a cold start landed on Home instead of the right screen |
+
+## Third build: easier with ADHD and OCD
+
+| Area | Added |
+| --- | --- |
+| Starting | "Start now" picks the piece and starts the clock in one tap; "Just 5 minutes"; the tile and widget start instantly; a bar that fills to your usual session length; reminders offer Start, In 30 minutes, Not today |
+| Small steps | Each piece can be broken into tiny steps; the session screen shows only the next one; your own written finish line and a "call it finished" button |
+| Certainty | "Saved" with the time on every editing screen; a done page after each session; Receipts lists everything sent and everything the app did in the background; approved texts lock |
+| Calmer | No red warnings; fit shown in words; optional fewer-words mode; a "Done this week" list with no streaks; park an idea straight from Home |
+| Settings | A "Focus and calm" section where each of these can be switched |
