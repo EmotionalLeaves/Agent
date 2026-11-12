@@ -65,12 +65,20 @@ class LiveProbeTest {
         }
 
         log("\n== The app's own free writing help (Ai class, no key)")
+        com.emotionalleaves.studioagent.ai.Ai.liveInTests = true
         try {
             val t0 = System.currentTimeMillis()
             val a = kotlinx.coroutines.runBlocking { G.ai.complete("Reply in one short sentence.", "Name one famous painter.", fast = true, maxTokens = 200) }
             log("answered in ${System.currentTimeMillis() - t0} ms: ${a.take(200)}")
             val calls = kotlinx.coroutines.runBlocking { G.ai.extractCalls("Riverside Arts Center Winter Open. Juried exhibition for artists in Illinois. Deadline: January 15, 2027. Entry fee \$25 for up to 3 works. Submit at https://example.org/winter", "probe") }
             log("extractCalls: " + calls.joinToString { "${it.title} / ${it.deadline} / ${it.fee} / ${it.scope}" })
+            val raw = "Albuquerque Open 2027. The Harwood Art Center invites artists living in New Mexico, Arizona, Colorado and Texas to submit up to three recent works in any medium " +
+                "for a juried group exhibition, March 10 to April 20, 2027. Juror: Maria Lopez, curator. Entry fee \$25 for up to three works. Accepted work must be delivered ready to hang " +
+                "by March 1; the center takes a 30% commission on sales. By entering, artists grant the center the right to reproduce images for promotion of the exhibition."
+            val plain = kotlinx.coroutines.runBlocking { com.emotionalleaves.studioagent.work.Engine.plainWords(com.emotionalleaves.studioagent.data.Opp(id = 999, title = "Albuquerque Open 2027", rawText = raw)) }
+            log("plainWords:\n  " + plain.joinToString("\n  "))
+            val steps = kotlinx.coroutines.runBlocking { com.emotionalleaves.studioagent.work.Engine.suggestSteps(com.emotionalleaves.studioagent.data.Artwork(title = "Walk-in Cooler", medium = "Graphite on paper", widthIn = 11.0, heightIn = 14.0)) }
+            log("suggestSteps:\n  " + steps.joinToString("\n  "))
         } catch (e: Exception) { log("failed: $e") }
 
         log("\n== Starter listing sites, exactly as the daily check reads them")
@@ -100,6 +108,7 @@ class LiveProbeTest {
                 log("kept $kept of ${minOf(6, links.size)}")
             } catch (e: Exception) { log("failed: $e") }
         }
+        com.emotionalleaves.studioagent.ai.Ai.liveInTests = false
         File("build/screens").apply { mkdirs() }.resolve("live.txt").writeText(out.toString())
     }
 }

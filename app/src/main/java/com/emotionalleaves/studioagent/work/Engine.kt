@@ -333,6 +333,45 @@ object Engine {
     }
 
     /** What to do first on a piece: its next open small step, or the line left at the end of the last session. */
+    private val plainCache = mutableMapOf<Long, List<String>>()
+
+    fun plainWordsCached(o: Opp): List<String> = plainCache[o.id].orEmpty()
+
+    /** Three short plain lines about a call: what it is, what they want from you, anything to watch. Empty when there is nothing to read. */
+    suspend fun plainWords(o: Opp): List<String> = withContext(Dispatchers.IO) {
+        val src = o.rawText.ifBlank { listOf(o.theme, o.eligibility, o.prizes, o.delivery).filter { it.isNotBlank() }.joinToString("\n") }
+        if (!ai.ready || src.length < 120) return@withContext emptyList()
+        val out = ai.complete(
+            "You explain open calls for artists to someone new to the art world who has ADHD. ${ai.dataRule} Reply with exactly three short lines, plain words, no jargon, no headings, no bullet symbols: " +
+                "1) what this is and who runs it, 2) what they want you to send, 3) one thing to watch (cost, rights, travel, dates), or what makes it a good first step.",
+            "<data>\nTitle: ${o.title}\n${src.take(5000)}\n</data>", fast = true, maxTokens = 260)
+        val lines = out.lines().map { it.trim().trimStart('-', '*', '•').replace(Regex("^\\d+[.)]\\s*"), "").trim() }.filter { it.length in 8..220 }.take(3)
+        plainCache[o.id] = lines
+        lines
+    }
+
+    /**
+     * Five small, concrete steps for a piece, each small enough to start tired after work.
+     * The writing help suggests them from the piece's own details; without it, a sound general sequence.
+     */
+    suspend fun suggestSteps(w: Artwork): List<String> {
+        val plain = when (w.format) {
+            "print" -> listOf("Pick the final file and check its size", "Make a small test print", "Adjust colour from the test", "Order or make the final print", "Sign and number it")
+            "screen" -> listOf("Choose the exact cut or loop", "Check it plays on a borrowed screen", "Export the final file", "Write the one-line installation note", "Record a short clip for calls")
+            else -> listOf("Set out materials and one reference", "Block in the big shapes", "Work the main area for one session", "Refine the details that matter most", "Compare it with the finish line")
+        }
+        if (!ai.ready) return plain
+        return try {
+            val out = ai.complete(
+                "You help an artist with ADHD start work after a full-time job. Reply with exactly five lines, no numbering, no extra words. " +
+                    "Each line is one concrete physical step of 4 to 9 words, small enough to start in five minutes. Use only what the details say; do not invent subject matter.",
+                "Piece: ${w.title.ifBlank { "untitled" }}. Medium: ${Papers.medium(w).ifBlank { "not stated" }}. Size: ${Texts.dims(w.widthIn, w.heightIn).ifBlank { "not stated" }}. " +
+                    "Finish line: ${w.doneWhen.ifBlank { "not set" }}. Notes: ${w.notes.take(400)}", fast = true, maxTokens = 300)
+            val lines = out.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "").trim() }.filter { it.length in 4..80 }.take(5)
+            if (lines.size >= 3) lines else plain
+        } catch (e: Exception) { plain }
+    }
+
     fun firstStep(a: Artwork): String = Texts.firstOpenStep(a.steps).ifBlank { a.nextStep }
 
     /** Starts a session straight away with sensible choices, so starting is one tap. */

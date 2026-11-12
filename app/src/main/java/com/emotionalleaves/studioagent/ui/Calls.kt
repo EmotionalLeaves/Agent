@@ -271,6 +271,14 @@ fun CallDetail(nav: NavController, id: Long) {
             o.fitReasons.lines().filter { it.isNotBlank() }.forEach { Text(it) }
             if (why.isNotEmpty()) Text("Held back by your rules: " + why.joinToString("; "), color = MaterialTheme.colorScheme.secondary)
             Flags(o)
+            // Call pages are long and full of jargon: the writing help says what it is and what they want, in three plain lines.
+            var plain by remember(o.id) { mutableStateOf(Engine.plainWordsCached(o)) }
+            LaunchedEffect(o.id) { if (plain.isEmpty()) plain = try { Engine.plainWords(o) } catch (e: Exception) { emptyList() } }
+            if (plain.isNotEmpty()) {
+                Hair()
+                Small("In plain words")
+                plain.forEach { Text(it) }
+            }
         }
         Status(status)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -305,6 +305,16 @@ fun WorkDetail(nav: NavController, id: Long) {
                     RemoveButton("step: $text") { save(w.copy(steps = Texts.stepsText(steps.filterIndexed { j, _ -> j != i }))) }
                 }
             }
+            if (steps.isEmpty()) {
+                var thinking by remember { mutableStateOf(false) }
+                OutlinedButton(enabled = !thinking, onClick = {
+                    thinking = true
+                    scope.io({ thinking = false }) {
+                        val list = Engine.suggestSteps(w)
+                        withContext(Dispatchers.Main) { save(w.copy(steps = Texts.stepsText(list.map { false to it }))); thinking = false }
+                    }
+                }) { Text(if (thinking) "Thinking of steps..." else "Suggest small steps") }
+            }
             Field("Add a small step (for example: block in the big shapes)", newStep)
             if (newStep.value.isNotBlank()) OutlinedButton(onClick = { save(w.copy(steps = Texts.stepsText(steps + (false to newStep.value.trim())))); newStep.value = "" }) { Text("Add step") }
 
@@ -320,7 +330,6 @@ fun WorkDetail(nav: NavController, id: Long) {
         if (w.status in manual || w.status == "available") Choice("Status", manual, if (w.status == "available") "documented" else w.status, names = ::statusWords) { save(w.copy(status = it)) }
         else Row { Tag(statusWords(w.status), strong = true) }
         Explain("What do these mean?", "Idea: not started. In progress: still making it. Finished: done, not photographed yet. Ready to send: has its picture and details and can go to calls. Out on a call, Shown and Sold are set by the app when they happen.")
-        Field("Next step (shown when you start a session)", w.nextStep, { save(w.copy(nextStep = it)) })
         // The rest only matters once a piece is heading out, so it stays folded until then.
         Expand("Size, year, medium, series", startOpen = w.widthIn <= 0 && w.status in setOf("finished", "documented")) {
             Whole("Year", w.year) { save(w.copy(year = it)) }
