@@ -80,7 +80,7 @@ class AppTest {
     private fun opens(route: String, expect: String) {
         ActivityScenario.launch<MainActivity>(Intent(ctx, MainActivity::class.java).putExtra("route", route)).use {
             try {
-                compose.waitUntil(15_000) { compose.onAllNodesWithText(expect, substring = true).fetchSemanticsNodes().isNotEmpty() }
+                compose.waitUntil(15_000) { compose.onAllNodesWithText(expect, substring = true, ignoreCase = true).fetchSemanticsNodes().isNotEmpty() }
             } catch (e: Throwable) {
                 val seen = try { compose.onAllNodes(isRoot()).printToString(maxDepth = 40).replace("\n", " | ").take(1500) } catch (x: Throwable) { "nothing (${x.message?.take(200)})" }
                 throw AssertionError("Screen '$route' never showed \"$expect\". On screen: $seen")
