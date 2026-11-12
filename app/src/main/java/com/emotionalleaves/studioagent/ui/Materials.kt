@@ -109,9 +109,19 @@ fun Materials(nav: NavController) {
         }
 
         H("Statements and bios")
-        docSlots.forEach { (type, variant, label) ->
+        // The two most calls ask for come first; the other lengths wait in a fold until a call needs one.
+        val main = setOf("statement/150", "bio/50")
+        docSlots.filter { "${it[0]}/${it[1]}" in main }.forEach { (type, variant, label) ->
             val d = docs.firstOrNull { it.type == type && it.variant == variant && it.seriesId == 0L }
             DocRow(label, d?.text.orEmpty(), d?.approved == true) { open(type, variant) }
+        }
+        Expand("Other lengths") {
+            Column {
+                docSlots.filter { "${it[0]}/${it[1]}" !in main }.forEach { (type, variant, label) ->
+                    val d = docs.firstOrNull { it.type == type && it.variant == variant && it.seriesId == 0L }
+                    DocRow(label, d?.text.orEmpty(), d?.approved == true) { open(type, variant) }
+                }
+            }
         }
         if (series.isNotEmpty()) H("Series statements")
         series.forEach { s ->
