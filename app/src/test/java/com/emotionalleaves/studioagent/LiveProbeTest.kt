@@ -79,6 +79,8 @@ class LiveProbeTest {
             log("plainWords:\n  " + plain.joinToString("\n  "))
             val steps = kotlinx.coroutines.runBlocking { com.emotionalleaves.studioagent.work.Engine.suggestSteps(com.emotionalleaves.studioagent.data.Artwork(title = "Walk-in Cooler", medium = "Graphite on paper", widthIn = 11.0, heightIn = 14.0)) }
             log("suggestSteps:\n  " + steps.joinToString("\n  "))
+            val reply = kotlinx.coroutines.runBlocking { com.emotionalleaves.studioagent.work.Engine.ask("Is it normal to pay to enter a juried show?", emptyList()) }
+            log("ask: $reply")
         } catch (e: Exception) { log("failed: $e") }
 
         log("\n== Starter listing sites, exactly as the daily check reads them")

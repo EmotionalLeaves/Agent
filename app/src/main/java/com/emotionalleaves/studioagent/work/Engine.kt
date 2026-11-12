@@ -362,7 +362,8 @@ object Engine {
         if (!ai.ready || src.length < 120) return@withContext emptyList()
         val out = ai.complete(
             "You explain open calls for artists to someone new to the art world who has ADHD. ${ai.dataRule} Reply with exactly three short lines, plain words, no jargon, no headings, no bullet symbols: " +
-                "1) what this is and who runs it, 2) what they want you to send, 3) one thing to watch (cost, rights, travel, dates), or what makes it a good first step.",
+                "1) what this is and who runs it, 2) what they want you to send, 3) one thing to watch (cost, commission, image rights, delivery, travel). " +
+                "Give a date only if the text gives it, and say what that date is for (entry deadline, delivery, show dates). Do not praise or recommend.",
             "<data>\nTitle: ${o.title}\n${src.take(5000)}\n</data>", fast = true, maxTokens = 260)
         val lines = out.lines().map { it.trim().trimStart('-', '*', '•').replace(Regex("^\\d+[.)]\\s*"), "").trim() }.filter { it.length in 8..220 }.take(3)
         plainCache[o.id] = lines
@@ -383,7 +384,8 @@ object Engine {
         return try {
             val out = ai.complete(
                 "You help an artist with ADHD start work after a full-time job. Reply with exactly five lines, no numbering, no extra words. " +
-                    "Each line is one concrete physical step of 4 to 9 words, small enough to start in five minutes. Use only what the details say; do not invent subject matter.",
+                    "The lines are the steps in the order they happen, from the first marks to the finished piece. Each is one concrete action of 4 to 9 words that moves the piece forward " +
+                    "and can be started in five minutes. Only the first may be preparation. Use only what the details say; do not invent subject matter.",
                 "Piece: ${w.title.ifBlank { "untitled" }}. Medium: ${Papers.medium(w).ifBlank { "not stated" }}. Size: ${Texts.dims(w.widthIn, w.heightIn).ifBlank { "not stated" }}. " +
                     "Finish line: ${w.doneWhen.ifBlank { "not set" }}. Notes: ${w.notes.take(400)}", fast = true, maxTokens = 300)
             val lines = out.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "").trim() }.filter { it.length in 4..80 }.take(5)

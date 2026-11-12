@@ -255,11 +255,12 @@ fun WorkDetail(nav: NavController, id: Long) {
                 Text("No picture yet", style = MaterialTheme.typography.titleLarge)
                 Small("Photograph the work, or bring in the file. Everything else can come later.")
             }
+            if (w.imagePath.isBlank()) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }, modifier = Modifier.weight(1f)) { Text("Take a photo", maxLines = 1) }
+                OutlinedButton(onClick = { pick.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Choose a file", maxLines = 1) }
+            }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (w.imagePath.isBlank()) {
-                    Button(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Take a photo") }
-                    OutlinedButton(onClick = { pick.launch("image/*") }) { Text("Bring in a file") }
-                } else {
+                if (w.imagePath.isBlank()) { } else {
                     // Fixing the picture is the common need; replacing it is rarer, so it sits behind one button.
                     TextButton(onClick = { nav.navigate("crop/$id") }) { Text("Straighten and crop") }
                     var replace by remember { mutableStateOf(false) }

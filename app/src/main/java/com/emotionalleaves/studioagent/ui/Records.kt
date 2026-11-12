@@ -440,7 +440,7 @@ fun SettingsScreen(nav: NavController, section: String) {
             }
             "writing" -> {
                 Intro("writing", "These apply to everything the app writes for you: statements, bios, emails, answers.")
-                SText("Standing notes (for example: never call it a journey; mention that I cook for a living)", st.writingNotes, lines = 3) { st.writingNotes = it }
+                SText("For example: never call it a journey; mention that I cook for a living", st.writingNotes, lines = 3) { st.writingNotes = it }
                 SText("Words or phrases never to use (comma separated)", st.extraJargon, lines = 2) { st.extraJargon = it }
                 Count("Rewrites before a text is called ready", st.revisionLimit, 1, 5) { st.revisionLimit = it }
             }
