@@ -167,3 +167,34 @@ Twenty passes that replace the look rather than adjust it.
 8. Dark screenshots, including the tour and the saved screen.
 9. App size checked (about 9 MB).
 10. README rewritten for the new first run.
+
+## Loop 3: 50 cycles and 10 checks (builds 46 to 58)
+
+- Counts are steppers (− and +), times use the phone's clock face, work days are seven circles to tap, dates use the phone's calendar.
+- Permissions as three rows with ticks; AI and email marked optional with their details folded; the crop screen and the form filler explain a missing picture or link instead of waiting forever.
+- Settings explanations moved behind the info button; a quiet loading bar instead of "One moment".
+- Writing listed with a tick (approved), dot (draft waiting) or ring (not written); only the 150-word statement and 50-word bio shown, other lengths folded.
+- The piece screen leads with status and next step; size, year, medium and series folded until the piece is heading out.
+- Screen titles match the rows that open them; send buttons say plainly what they do; Back to Today after a session.
+- Typed text and chosen tabs survive turning the phone or the app being closed in the background (37 places).
+- Session setup asks how long (5, 15 or your usual); session history puts logging below the list.
+- Every instruction in the app names the new places.
+- Checks: tests green; no warnings; every screen has a way in; no screen has two menu entries; instructions accurate; rotation-safe text; missing files handled; dark and large text checked; README map rewritten; size about 9 MB.
+
+## Navigation: 5 rounds of one clear way to each thing (builds 48 to 51)
+
+1. Five fixed tabs: Today, Studio, Calls, People, You. No more simple or full layout with different tabs.
+2. More and the Settings menu merged into one You page, one row per thing.
+3. Ideas moved into Studio (a third view), call sources into Calls (bottom of All), ready-made emails into People.
+4. Duplicate ways in removed: Today no longer repeats the Guide, level or plain answers; help sheets only explain; settings no longer repeat Your week; the separate setup pages are gone (the tour and You, Work hours cover them).
+5. Fewer buttons: call cards have Yes, apply and No (Not this year is an answer to No); Today has Start now and one way to choose instead.
+
+## Loop 4: 50 cycles and 10 checks (builds 59 to 64)
+
+- One word for undo everywhere; every Add button says what it adds; bring in a file, take a photo, use another file.
+- Stopping a session asks for one line; note and photo folded; discard in red.
+- Tape yellow kept to moments that ask for action; strong tags in the cobalt tint.
+- Piece status uses the same words as the wall labels (Ready to send, Out on a call).
+- One date style and the phone's own clock style everywhere.
+- Guide steps and the tour name today's buttons and places.
+- Checks: tests green; no warnings; no generic labels (OK, Submit, Save, Add) left; no stale references to Home, More or Materials; notification titles match screen names; tape audit (five uses, all calls to action).
