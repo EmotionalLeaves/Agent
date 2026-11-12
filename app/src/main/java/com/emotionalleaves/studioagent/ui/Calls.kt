@@ -113,7 +113,7 @@ fun Calls(nav: NavController) {
     fun kindOk(o: Opp) = kindFilter == "every kind" || o.kind == kindFilter
 
     Screen("Calls", nav, back = false) {
-        Intro("calls", "Open calls you could apply to. The app checks each one against your level, budget and work, and shows the few worth a look. You only answer Yes, No or Not this year.")
+        Intro("calls", "Open calls you could apply to. The app checks each one against your level, budget and work, and shows the few worth a look. You only answer Yes or No.")
         Choice("", listOf("this week", "all", "applied"), tab) { tab = it }
         if (kindsPresent.size > 1 && tab != "applied") Choice("", listOf("every kind") + kindsPresent, kindFilter) { kindFilter = it }
         Status(status)

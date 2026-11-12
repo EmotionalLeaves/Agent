@@ -393,7 +393,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Text("Each of these is a default you can switch. None of them is a rule about you.")
                 H("Starting")
                 Count("Usual session length", st.defaultSessionMin, 5, 180, 5, "min") { st.defaultSessionMin = it }
-                Small("Start now uses this. Just 5 minutes is always there for days when starting is the hard part.")
+                Small("Start now uses this. A shorter time is one tap away under Start now, for days when starting is the hard part.")
                 Toggle("Keep the screen on during a session", keepAwake) { keepAwake = it; st.keepAwake = it }
                 H("Less on screen")
                 Toggle("Hide the small grey explanations", shortText) { shortText = it; st.shortText = it }

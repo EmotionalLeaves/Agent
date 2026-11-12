@@ -103,7 +103,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
 
         GuideStep("call", d, "Add your first call",
             "You never need to go looking inside the app. When you see a call anywhere, hand it over.",
-            listOf("In any app or browser, tap Share and choose Studio Agent.", "Tap Add as an open call.", "Or open Calls and paste the link there.", "The app reads it, checks it and ranks it. You answer Yes, No or Not this year."),
+            listOf("In any app or browser, tap Share and choose Studio Agent.", "Tap Add as an open call.", "Or open Calls and paste the link there.", "The app reads it, checks it and ranks it. You answer Yes or No."),
             "calls", "Open Calls", opps.isNotEmpty()),
         GuideStep("sources", d, "Have calls sent to you",
             "Listing sites will email you new calls. The app reads those emails so you do not have to.",

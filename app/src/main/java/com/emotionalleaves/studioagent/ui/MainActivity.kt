@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
@@ -145,7 +145,7 @@ fun Root(incoming: MutableState<Incoming?>) {
     // Five places, always the same, each named for what is in it.
     val tabs = listOf(
         Triple("home", "Today", Icons.Default.Home), Triple("works", "Studio", Icons.Default.Create), Triple("calls", "Calls", Icons.Default.Search),
-        Triple("outreach", "People", Icons.Default.Person), Triple("more", "You", Icons.Default.Face)
+        Triple("outreach", "People", Icons.Default.Person), Triple("more", "You", Icons.Default.AccountCircle)
     )
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
