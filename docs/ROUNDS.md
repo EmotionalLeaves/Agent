@@ -198,3 +198,24 @@ Twenty passes that replace the look rather than adjust it.
 - One date style and the phone's own clock style everywhere.
 - Guide steps and the tour name today's buttons and places.
 - Checks: tests green; no warnings; no generic labels (OK, Submit, Save, Add) left; no stale references to Home, More or Materials; notification titles match screen names; tape audit (five uses, all calls to action).
+
+## Loop 5: 50 cycles and 10 checks (builds 65 to 75)
+
+- Failures read in plain words (offline, slow, key not accepted, busy) and never as raw errors; a failed email send notifies you and opens the application.
+- Restoring a backup asks first: the one action that cannot be undone.
+- Accessibility sweep over 35 screens: every tap target has a spoken label (now a failing check); writing rows, pictures and check marks announce their state.
+- The rules screen folds level gates, fee caps and ranking (55 tap targets down to 23); the daily notification limit lives in one place.
+- The interview is one question at a time (30 tap targets down to 13).
+- Piece status offers the four you set; the app sets out on a call, shown and sold.
+- The back gesture steps within the tour and keeps you in the stopping flow; long titles end with an ellipsis.
+- Tab names never break mid-word at the largest text sizes; the session ring shrinks sideways; a silent session note in the shade while a session runs.
+- Checks: tests green, no warnings, no unlabelled tap targets, plain-error and starter-draft tests, double-submit guards, largest text and sideways screenshots.
+
+## Loop 6: 50 cycles and 10 checks (builds 76 to 84)
+
+- Pictures fade in when read from storage; Studio and All calls draw in batches with Show more; the app opens without waiting on the phone's key store.
+- Fourteen buttons that only waited for typing now appear when there is something to act on, instead of sitting greyed out.
+- Unused code removed (old tiles, thumbnails, simple-layout and guide-hiding settings).
+- The Guide counts only the steps you need; its first step is Take the tour.
+- Add a piece makes one piece however fast you tap.
+- Checks: tests green; no warnings; a test that every screen belongs to exactly one tab; no unlabelled tap targets; 515 tap targets across 35 screens (the busiest is the piece page at 31); dark screenshots of every new screen; spelling and doubled-word scan of all 1,500 app strings; app about 9 MB.
