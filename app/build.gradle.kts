@@ -57,7 +57,8 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             all {
-                it.maxHeapSize = "2g"
+                it.maxHeapSize = "3g"
+                it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
                 it.testLogging {
                     events("failed")
                     exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
