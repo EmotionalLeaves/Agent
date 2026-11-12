@@ -167,7 +167,7 @@ fun Calls(nav: NavController) {
                 Field("Paste a link or the call text", paste, lines = 2)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(enabled = paste.value.isNotBlank(), onClick = {
-                        val t = paste.value.trim(); status = "Reading it..."
+                        val t = paste.value.trim(); paste.value = ""; status = "Reading it..."
                         scope.io({ status = it }) {
                             val isUrl = t.startsWith("http") && !t.contains(" ")
                             if (!G.ai.ready) {
