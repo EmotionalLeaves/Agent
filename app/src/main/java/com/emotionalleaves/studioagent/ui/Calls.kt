@@ -299,8 +299,7 @@ fun CallDetail(nav: NavController, id: Long) {
         Field("Jurors", o.jurors, { save(o.copy(jurors = it)) })
         Field("Mediums accepted", o.mediums, { save(o.copy(mediums = it)) })
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(Modifier.weight(1f)) { Whole("Fewest works", o.minWorks) { save(o.copy(minWorks = it)) } }
-            Column(Modifier.weight(1f)) { Whole("Most works", o.maxWorks) { save(o.copy(maxWorks = it)) } }
+                        Column(Modifier.weight(1f)) { Count("Fewest works", o.minWorks, 0, 20) { save(o.copy(minWorks = it)) }; Count("Most works", o.maxWorks, 0, 20) { save(o.copy(maxWorks = it)) } }
         }
         Field("Image rules (for example: JPEG, 1920 px, under 5 MB)", o.imageSpecs, { save(o.copy(imageSpecs = it)) })
         Whole("Statement word limit", o.statementLimit) { save(o.copy(statementLimit = it)) }
@@ -623,7 +622,7 @@ fun WebFill(nav: NavController, id: Long) {
                         }
                     }
                 )
-            } else Text("This call has no link yet. Add one on the call's details page.", Modifier.padding(16.dp))
+            } else Box(Modifier.padding(20.dp)) { Empty("This call has no link yet, so there is no form to fill. Add the link on the call's page.", "Go to the call") { nav.popBackStack() } }
         }
     }
 }

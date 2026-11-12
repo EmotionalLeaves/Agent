@@ -406,7 +406,8 @@ fun CropScreen(nav: NavController, id: Long) {
     val w = works.firstOrNull { it.id == id }
     if (w == null) { Screen("Straighten", nav) { Note("One moment") }; return }
     val src = w.originalPath.ifBlank { w.imagePath }
-    val preview by produceState<Bitmap?>(null, src) { value = withContext(Dispatchers.IO) { ImageTools.decode(src, 1200) } }
+    var tried by remember { mutableStateOf(false) }
+    val preview by produceState<Bitmap?>(null, src) { value = withContext(Dispatchers.IO) { try { ImageTools.decode(src, 1200) } catch (e: Exception) { null } }; tried = true }
     val pts = remember { mutableStateListOf(Offset(0.06f, 0.06f), Offset(0.94f, 0.06f), Offset(0.94f, 0.94f), Offset(0.06f, 0.94f)) }
     var active by remember { mutableStateOf(-1) }
     var fix by remember { mutableStateOf(w.format == "physical") }
@@ -463,7 +464,8 @@ fun CropScreen(nav: NavController, id: Long) {
                 }
             }) { Text("Apply") }
             Note("Your original file is kept untouched, so you can redo this any time.")
-        } else Note("Loading the image")
+        } else if (tried) Empty("This picture could not be opened. It may have been moved or deleted. Add it again from the piece's page.", "Back to the piece") { nav.popBackStack() }
+        else Note("Loading the image")
     }
 }
 

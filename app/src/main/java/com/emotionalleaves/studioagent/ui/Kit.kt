@@ -1,6 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -307,3 +308,70 @@ fun IconRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String
 fun DangerButton(onClick: () -> Unit, content: @Composable RowScope.() -> Unit) =
     androidx.compose.material3.TextButton(onClick, Modifier.heightIn(min = 48.dp), shape = ButtonShape,
         colors = androidx.compose.material3.ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.secondary), content = content)
+
+/** A small count with − and + beside it: nothing to type, nothing to get wrong. */
+@Composable
+fun Count(label: String, value: Int, min: Int = 0, max: Int = 99, step: Int = 1, unit: String = "", onValue: (Int) -> Unit) {
+    var v by remember { mutableStateOf(value.coerceIn(min, max)) }
+    val cs = MaterialTheme.colorScheme
+    fun set(n: Int) { v = n.coerceIn(min, max); onValue(v) }
+    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        StepButton("−", "Less", v > min) { set(v - step) }
+        Column(Modifier.size(width = 64.dp, height = 48.dp).semantics(mergeDescendants = true) { }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text("$v", style = MaterialTheme.typography.titleLarge)
+            if (unit.isNotBlank()) Text(unit, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+        }
+        StepButton("+", "More", v < max) { set(v + step) }
+    }
+}
+
+@Composable
+private fun StepButton(sign: String, spoken: String, enabled: Boolean, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Box(Modifier.size(44.dp).clip(RoundedCornerShape(22.dp)).background(if (enabled) cs.surfaceContainerLowest else cs.surfaceContainer)
+        .clickable(enabled = enabled, role = Role.Button, onClickLabel = spoken) { onClick() }
+        .semantics { androidx.compose.ui.semantics.contentDescription = spoken }, contentAlignment = Alignment.Center) {
+        Text(sign, style = MaterialTheme.typography.titleLarge, color = if (enabled) cs.primary else cs.outline)
+    }
+}
+
+/** A time of day, chosen on the phone's own clock face. Stored as HH:MM. */
+@Composable
+fun TimeField(label: String, value: String, onValue: (String) -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var v by remember { mutableStateOf(value) }
+    val (h, m) = v.split(":").let { (it.getOrNull(0)?.toIntOrNull() ?: 7) to (it.getOrNull(1)?.toIntOrNull() ?: 0) }
+    Column {
+        Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(role = Role.Button) {
+            android.app.TimePickerDialog(ctx, { _, hh, mm -> v = "%02d:%02d".format(hh, mm); onValue(v) }, h, m, android.text.format.DateFormat.is24HourFormat(ctx)).show()
+        }, verticalAlignment = Alignment.CenterVertically) {
+            Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+            val shown = java.time.LocalTime.of(h.coerceIn(0, 23), m.coerceIn(0, 59)).format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT))
+            Text(shown, Modifier.clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(horizontal = 14.dp, vertical = 10.dp),
+                style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+        }
+        Hair()
+    }
+}
+
+/** Seven days as seven circles to tap. Stored as "1,2,3" with 1 = Monday. */
+@Composable
+fun DaysField(label: String, value: String, onValue: (String) -> Unit) {
+    var on by remember { mutableStateOf(value.split(",").mapNotNull { it.trim().toIntOrNull() }.filter { it in 1..7 }.toSet()) }
+    val cs = MaterialTheme.colorScheme
+    val names = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(label, style = MaterialTheme.typography.bodyLarge)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            (1..7).forEach { d ->
+                val picked = d in on
+                Box(Modifier.size(42.dp).clip(RoundedCornerShape(21.dp)).background(if (picked) cs.primary else cs.surfaceContainerLowest)
+                    .toggleable(value = picked, role = Role.Checkbox) { c -> on = if (c) on + d else on - d; onValue(on.sorted().joinToString(",")) }
+                    .semantics { androidx.compose.ui.semantics.contentDescription = names[d - 1] }, contentAlignment = Alignment.Center) {
+                    Text("MTWTFSS"[d - 1].toString(), style = MaterialTheme.typography.labelLarge, color = if (picked) cs.onPrimary else cs.onSurface)
+                }
+            }
+        }
+    }
+}

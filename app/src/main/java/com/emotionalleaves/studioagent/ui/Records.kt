@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.selection.toggleable
@@ -348,12 +349,12 @@ fun SettingsScreen(nav: NavController, section: String) {
             }
             "hours" -> {
                 Note("The app sends nothing during work hours on work days, and nothing from one hour before bedtime until 7:00.")
-                SText("Work days (1 = Monday ... 7 = Sunday)", st.workDays) { st.workDays = it }
-                SText("Work starts (HH:MM)", st.workStart) { st.workStart = it }
-                SText("Work ends (HH:MM)", st.workEnd) { st.workEnd = it }
-                Whole("Rest after work before any studio time, minutes", st.bufferMin) { st.bufferMin = it }
-                SText("Bedtime (HH:MM)", st.bedtime) { st.bedtime = it }
-                Whole("Notifications a day, at most", st.notifCap) { st.notifCap = it }
+                DaysField("Days you work", st.workDays) { st.workDays = it }
+                TimeField("Work starts", st.workStart) { st.workStart = it }
+                TimeField("Work ends", st.workEnd) { st.workEnd = it }
+                Count("Rest after work before studio time", st.bufferMin, 0, 240, 15, "min") { st.bufferMin = it }
+                TimeField("Bedtime", st.bedtime) { st.bedtime = it }
+                Count("Notifications a day, at most", st.notifCap, 0, 10) { st.notifCap = it }
                 Toggle("Book studio time in my calendar", useCal) { useCal = it; st.useCalendar = it }
                 Toggle("Silence my phone during sessions", dnd) { dnd = it; st.dndInSession = it }
                 OutlinedButton(onClick = { nav.navigate("week") }) { Text("Change my studio times") }
@@ -363,9 +364,9 @@ fun SettingsScreen(nav: NavController, section: String) {
                 H("Level")
                 Choice("My level", listOf("automatic", "0", "1", "2", "3", "4"), levelPick) { levelPick = it; st.levelOverride = it.toIntOrNull() ?: -1 }
                 Note("Automatic works it out from your catalog and CV. Pick a number if you already have a history the app does not know about.")
-                Whole("Level 1 opens at this many documented works in one series", st.gateWorks) { if (it > 0) st.gateWorks = it }
-                Whole("Level 2 opens at this many exhibitions", st.gateShows1) { if (it > 0) st.gateShows1 = it }
-                Whole("Level 3 opens at this many (plus an award or invitation)", st.gateShows2) { if (it > 0) st.gateShows2 = it }
+                Count("Level 1: finished works in one series", st.gateWorks, 1, 30) { st.gateWorks = it }
+                Count("Level 2: shows you have been in", st.gateShows1, 1, 30) { st.gateShows1 = it }
+                Count("Level 3: shows, plus an award or invitation", st.gateShows2, 1, 50) { st.gateShows2 = it }
                 H("Calls")
                 Toggle("Show calls from every level, whatever mine is", showAll) { showAll = it; st.showAllLevels = it }
                 Num("Fee cap per entry at Level 0", st.feeCap0) { st.feeCap0 = it }
@@ -374,7 +375,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Num("Fee budget a month", st.feeBudget) { st.feeBudget = it }
                 Note("A call with a fee is only shown when it is under your level's cap and this month's budget still covers it. Budget 0 means free calls only.")
                 Multi("Kinds of call to show", Ai.callKinds, st.kinds) { st.callKinds = it.joinToString(",") }
-                Whole("Calls on the weekly short list", st.shortlistSize) { if (it > 0) st.shortlistSize = it }
+                Count("Calls on the weekly short list", st.shortlistSize, 1, 10) { st.shortlistSize = it }
                 SText("Blocked organisers (comma separated)", st.blocked) { st.blocked = it }
                 H("What matters most when ranking")
                 listOf("Theme fits my work", "Good for my CV", "Costs little", "Good odds", "Little effort", "Matches my goals").forEachIndexed { i, label ->
@@ -386,21 +387,21 @@ fun SettingsScreen(nav: NavController, section: String) {
                 }
                 H("Outreach")
                 Toggle("Hold back emails to venues above my level", gateOut) { gateOut = it; st.gateOutreach = it }
-                Whole("Outreach emails a week, at most", st.outreachWeeklyCap) { st.outreachWeeklyCap = it }
+                Count("Outreach emails a week, at most", st.outreachWeeklyCap, 0, 20) { st.outreachWeeklyCap = it }
             }
             "calm" -> {
                 Text("Each of these is a default you can switch. None of them is a rule about you.")
                 H("Starting")
-                Whole("Usual session length, minutes (the bar fills to this)", st.defaultSessionMin) { if (it > 0) st.defaultSessionMin = it }
+                Count("Usual session length", st.defaultSessionMin, 5, 180, 5, "min") { st.defaultSessionMin = it }
                 Small("Start now uses this. Just 5 minutes is always there for days when starting is the hard part.")
                 Toggle("Keep the screen on during a session", keepAwake) { keepAwake = it; st.keepAwake = it }
                 H("Less on screen")
                 Toggle("Hide the small grey explanations", shortText) { shortText = it; st.shortText = it }
                 Toggle("Show fit as words (Strong, Good, Fair), not a score", fitWords) { fitWords = it; st.fitWords = it }
-                Whole("Notifications a day, at most", st.notifCap) { st.notifCap = it }
+                Count("Notifications a day, at most", st.notifCap, 0, 10) { st.notifCap = it }
                 H("Finished means finished")
                 Toggle("Lock texts once I approve them", lockApproved) { lockApproved = it; st.lockApproved = it }
-                Whole("Rewrites before the app says a text is ready", st.revisionLimit) { st.revisionLimit = it.coerceAtLeast(1) }
+                Count("Rewrites before a text is called ready", st.revisionLimit, 1, 5) { st.revisionLimit = it }
                 Small("Sent applications lock on their own. Every editing screen shows the time it last saved, and Receipts lists everything that went out.")
                 OutlinedButton(onClick = { nav.navigate("receipts") }) { Text("Open Receipts") }
             }
@@ -408,10 +409,10 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Note("These apply to everything the app writes for you: statements, bios, emails, answers.")
                 SText("Standing notes (for example: never call it a journey; mention that I cook for a living)", st.writingNotes, lines = 3) { st.writingNotes = it }
                 SText("Words or phrases never to use (comma separated)", st.extraJargon, lines = 2) { st.extraJargon = it }
-                Whole("Revision passes before the app says a text is ready", st.revisionLimit) { st.revisionLimit = it.coerceAtLeast(1) }
+                Count("Rewrites before a text is called ready", st.revisionLimit, 1, 5) { st.revisionLimit = it }
             }
             "ai" -> {
-                Note("Without a key the app still works; you type what it would have written. With one, it writes drafts and reads calls out of links, emails and flyers.")
+                Small("Optional. Without a key the app still works and starts every draft for you. With one, drafts read more smoothly and listing pages with many calls can be read.")
                 Choice("Provider", listOf("anthropic", "gemini", "custom"), provider) { provider = it; st.aiProvider = it }
                 Note(when (provider) {
                     "anthropic" -> "Get a key at platform.claude.com, under Settings, API keys. It is billed separately from any chat subscription."
@@ -420,10 +421,12 @@ fun SettingsScreen(nav: NavController, section: String) {
                 })
                 SText("API key", st.aiKey, secret = true) { st.aiKey = it }
                 if (provider == "custom") SText("Service address", st.aiBaseUrl) { st.aiBaseUrl = it }
-                SText("Model for writing", st.aiModelWrite) { st.aiModelWrite = it }
-                SText("Model for reading and sorting", st.aiModelFast) { st.aiModelFast = it }
                 Num("Stop at this much a month (estimate)", st.aiCapUsd) { st.aiCapUsd = it }
-                Note("Spent this month, roughly: ${money(G.ai.spentThisMonth())}.")
+                Small("Spent this month, roughly: ${money(G.ai.spentThisMonth())}.")
+                Expand("Advanced: model names", startOpen = provider != "anthropic") {
+                    SText("Model for writing", st.aiModelWrite) { st.aiModelWrite = it }
+                    SText("Model for reading and sorting", st.aiModelFast) { st.aiModelFast = it }
+                }
                 Button(enabled = !busy, onClick = {
                     busy = true; status = "Testing..."
                     scope.io({ status = "That did not work: $it"; busy = false }) {
@@ -434,8 +437,8 @@ fun SettingsScreen(nav: NavController, section: String) {
                 }) { Text("Test the key") }
             }
             "email" -> {
-                Note("With this, the app sends approved emails itself and reads replies and results. Without it, the app opens your mail app with everything filled in and you press Send.")
-                Note("Gmail: turn on 2-Step Verification, then create an app password at myaccount.google.com/apppasswords and paste it below. It is not your normal password.")
+                Small("Optional. Without it, the app opens your mail app with everything filled in and you press Send. With it, approved emails go by themselves and replies are read for you.")
+                Explain("Where do I get an app password?", "For Gmail: turn on 2-Step Verification, then create an app password at myaccount.google.com/apppasswords and paste it below. It is not your normal password, and it can be removed any time.")
                 SText("Email address", st.mailUser) { st.mailUser = it }
                 SText("App password", st.mailPass, secret = true) { st.mailPass = it.replace(" ", "") }
                 Expand("Not Gmail?") {
@@ -481,17 +484,27 @@ fun SettingsScreen(nav: NavController, section: String) {
                 OutlinedButton(onClick = { restore.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Text("Restore from a backup") }
             }
             "permissions" -> {
-                Text("Notifications: " + (if (Notifier.allowed(ctx)) "on" else "off"))
-                Text("Calendar: " + (if (Cal.granted(ctx)) "on" else "off"))
-                Text("Do Not Disturb during sessions: " + (if (Notifier.dndGranted(ctx)) "on" else "off"))
-                Note("All three are optional. Calendar lets the app book studio time around your day. Do Not Disturb silences the phone while a session runs.")
-                OutlinedButton(onClick = {
+                Small("All three are optional. Each one only makes something easier.")
+                listOf(
+                    Triple("Notifications", "At most a couple of quiet reminders a day, never during work.", Notifier.allowed(ctx)),
+                    Triple("Calendar", "Lets the app book studio time around your day.", Cal.granted(ctx)),
+                    Triple("Do Not Disturb", "Silences the phone while a session runs.", Notifier.dndGranted(ctx))
+                ).forEach { (name, what, on) ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Box(Modifier.padding(top = 2.dp)) { Mark(on) }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(name + (if (on) ": on" else ": off"), style = MaterialTheme.typography.titleSmall)
+                            Small(what)
+                        }
+                    }
+                }
+                if (!Notifier.allowed(ctx) || !Cal.granted(ctx)) OutlinedButton(onClick = {
                     val wanted = mutableListOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
                     if (Build.VERSION.SDK_INT >= 33) wanted += Manifest.permission.POST_NOTIFICATIONS
                     perms.launch(wanted.toTypedArray())
                 }) { Text("Allow calendar and notifications") }
                 OutlinedButton(onClick = { try { ctx.startActivity(Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)) } catch (e: Exception) { } }) { Text("Allow Do Not Disturb") }
-                Note("Social media: there is none in this app. No feeds, no follower counts, no sign-in.")
+                Small("Social media: there is none in this app. No feeds, no follower counts, no sign-in.")
                 H("Something not working?")
                 Small("Version ${G.versionName()}. The report has no keys, passwords or artwork in it.")
                 OutlinedButton(onClick = { Share.text(ctx, G.problemReport()) }) { Text("Share a problem report") }
