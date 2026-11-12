@@ -219,3 +219,36 @@ Twenty passes that replace the look rather than adjust it.
 - The Guide counts only the steps you need; its first step is Take the tour.
 - Add a piece makes one piece however fast you tap.
 - Checks: tests green; no warnings; a test that every screen belongs to exactly one tab; no unlabelled tap targets; 515 tap targets across 35 screens (the busiest is the piece page at 31); dark screenshots of every new screen; spelling and doubled-word scan of all 1,500 app strings; app about 9 MB.
+
+## Loop 7: professionalism, practical, simplicity and AI rounds (builds 85 to 93)
+
+Professionalism (20 rounds)
+- The PDF writer uses the app's typefaces, true italics for titles, a running footer (name, document, page), aligned columns, and keeps headings with what follows.
+- CV with a hanging year column and "Lives and works in"; portfolio with a cover; numbered image and price lists; wall labels eight to a page with cut marks; certificate with a double rule, catalog number and copyright line; bill of sale; proposal.
+- Sizes as 20 × 16 in (50.8 × 40.6 cm); prices with thousands separators; catalog numbers like JL-2026-007; one file name pattern, Lastname_What.pdf; pack images numbered Lastname_01_Title… to match the image list.
+- Covering emails, letters and starters open with "Dear …" and close with a full signature.
+- Exported pictures carry the artist, a copyright line and the caption inside the file.
+- The portfolio page has a contents line, italic titles, a CV laid out by year, share previews and a copyright footer.
+- Help includes an About section: privacy in plain words and the font licences.
+
+Practical (20 rounds), checked against the live web on the build server
+- Calls are found without AI: listing pages are read for links that look like single calls, each call page is opened and read, robots.txt is respected, and calls already closed are skipped. 22 real calls were read from four sites on 12 November 2026.
+- Prize amounts ($12,000, $1K) are no longer read as fees; titles are cleaned ("Home | …"); the kind of call is read from the title first, not from site menus.
+- Calls that name your city or state count as local.
+- An unset monthly fee budget means only your level's fee cap applies (before, it blocked every paid call).
+- Look for calls now, on an empty Calls list.
+- The pack is made by itself once every check passes.
+- An end-to-end test: a listing page, then the call, then the application, then the pack with the right names and credit, all with no keys.
+
+Simplicity (10 rounds)
+- Four tabs instead of five; the You page went from 23 rows to 6.
+- Help absorbs About and the tour; Records absorbs Receipts; the Guide absorbs the levels.
+- The piece page: replacing a picture sits behind one button; sections merged into three.
+- Lists of more than six choices are one dropdown; CV lines are tapped to change.
+- The contact page folds its details away so the email comes first.
+
+AI (5 rounds)
+- Writing help works with no key, using a free public service with no account (checked live: about 1.5 seconds).
+- Any key is recognised by how it starts; there are no provider or model settings to choose.
+- "Get a free key" and "Paste the key I copied".
+- When the helper doesn't answer, every writing button falls back to the plain starter, so nothing stops.

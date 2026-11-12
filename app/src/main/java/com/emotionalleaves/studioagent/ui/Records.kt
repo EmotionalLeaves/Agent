@@ -435,7 +435,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Count("Rewrites before a text is called ready", st.revisionLimit, 1, 5) { st.revisionLimit = it }
             }
             "ai" -> {
-                Small("Writing help is on and free. It drafts statements and emails and reads calls for you, using a public service that needs no account. Only the text being written is sent; nothing is kept on this phone's behalf.")
+                Small("Writing help is on and free. It drafts statements and emails and reads calls for you, using a public service that needs no account. Only the text being written is sent, and no account is made in your name.")
                 Toggle("Use the free writing help", st.freeAi) { st.freeAi = it }
                 Small("Now writing: ${G.ai.who()}.")
                 Button(enabled = !busy, onClick = {

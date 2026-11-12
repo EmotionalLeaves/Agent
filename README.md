@@ -25,11 +25,16 @@ Every build photographs the main screens in light, dark and large text and attac
 
 ## Where things are
 
-Five tabs, the same every time. Each thing has one place.
+Four tabs, the same every time. Each thing has one place.
 
 - **Today**: the one next step, Start now, your week (tap it for studio times, pausing and session history), deadlines, and anything waiting for your yes.
 - **Studio**: your pieces, series and parked ideas.
 - **Calls**: open calls this week, all of them, what you applied to, and where calls come from.
-- **People**: openings, venues and people, ready-made emails, your email list.
-- **You**: your statement, bio and CV; the Guide and levels; to-dos, money and receipts; every setting; the tour and plain answers.
+- **You**, six rows: Statement, bio and CV; People and venues; Guide (with the five levels); Records (to-dos, money, sales, proof of what was sent); Settings; Help (the tour, plain answers, about).
+
+## Works with nothing set up
+
+- Calls: four public listing sites (ArtCall, Artwork Archive, ArtJobs, Artshow) are read once a day without AI, and only where the site's robots.txt allows it. Each new call's own page is opened and read for title, deadline, fee, kind and scope.
+- Writing help: a free public service that needs no account (Pollinations, with LLM7 as the fallback). If it doesn't answer, every button falls back to a starter built from your own words. A key of your own, from any provider, can be pasted in; the app recognises the provider from the key.
+- Documents: CV, portfolio, price list, wall labels, certificate, bill of sale and proposal, set in the app's typefaces, with titles of works in italics, sizes as h × w in with cm, catalog numbers, and Lastname_What.pdf names. Exported pictures carry your name and a copyright line inside the file.
 
