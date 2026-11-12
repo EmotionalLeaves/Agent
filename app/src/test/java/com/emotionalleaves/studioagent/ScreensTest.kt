@@ -3,11 +3,8 @@ package com.emotionalleaves.studioagent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onRoot
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import com.emotionalleaves.studioagent.data.Appl
@@ -41,11 +38,24 @@ class ScreensTest {
     private val dir = File("build/screens").apply { mkdirs() }
 
     private fun shot(name: String, route: String, expect: String) {
-        ActivityScenario.launch<MainActivity>(Intent(ctx, MainActivity::class.java).putExtra("route", route)).use {
+        ActivityScenario.launch<MainActivity>(Intent(ctx, MainActivity::class.java).putExtra("route", route)).use { scenario ->
             try { compose.waitUntil(15_000) { compose.onAllNodesWithText(expect, substring = true).fetchSemanticsNodes().isNotEmpty() } } catch (e: Throwable) { }
             try {
-                val bmp = compose.onRoot().captureToImage().asAndroidBitmap()
-                File(dir, "$name.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                var bmp: Bitmap? = null
+                var note = ""
+                scenario.onActivity { a ->
+                    val v = a.window.decorView
+                    val b = Bitmap.createBitmap(v.width.coerceAtLeast(1), v.height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+                    try {
+                        android.view.PixelCopy.request(a.window, b, { r -> note = "pixelcopy=$r" }, android.os.Handler(android.os.Looper.getMainLooper()))
+                    } catch (e: Throwable) {
+                        note = "drawn: $e"; v.draw(android.graphics.Canvas(b))
+                    }
+                    bmp = b
+                }
+                org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+                File(dir, "$name.png").outputStream().use { bmp!!.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                if (note.isNotBlank() && note != "pixelcopy=0") File(dir, "$name.note.txt").writeText(note)
             } catch (e: Throwable) {
                 File(dir, "$name.failed.txt").writeText(e.toString())
             }
