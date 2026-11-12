@@ -345,7 +345,7 @@ fun WorkDetail(nav: NavController, id: Long) {
                 scope.io {
                     if (pc > 0) dao.put(Ledger(kind = "print", amount = -pc, date = now(), note = "Print: $title", artworkId = id))
                     if (fc > 0) dao.put(Ledger(kind = "framing", amount = -fc, date = now(), note = "Frame: $title", artworkId = id))
-                    status = "Added to your records ✓ (More, Records). No need to add it again."
+                    status = "Added to your records (You, To-dos and money). No need to add it again."
                 }
             }) { Text("Add these costs to my records") }
         }

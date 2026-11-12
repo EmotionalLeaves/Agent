@@ -122,7 +122,7 @@ fun Calls(nav: NavController) {
             "this week" -> {
                 val list = Engine.shortlist(opps.filter { kindOk(it) }, p, now(), Engine.stretchOk(now()), st.shortlistSize)
                 val cap = Levels.feeCap(p.level, p.rules)
-                LevelLine(nav, if (p.rules.showAllLevels) "Showing calls from every level (you turned level limits off in Settings)."
+                LevelLine(nav, if (p.rules.showAllLevels) "Showing calls from every level (you turned level limits off in You, Your rules)."
                 else "Level ${p.level}: " + (if (cap <= 0.0) "free calls only. " else if (cap == Double.MAX_VALUE) "no fee cap. " else "fees up to ${money(cap)}. ") + when (p.level) {
                     0 -> "Online or on your doorstep. The priority right now is making the series."
                     1 -> "Local, campus and community calls."
@@ -491,7 +491,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             else {
                 Button(enabled = allGreen && files.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = { Share.email(ctx, a.emailTo, a.emailSubject, a.emailBody, files) }) { Text("Open in my mail app, filled in") }
                 OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Sent from your mail app to ${a.emailTo} on ${fmtDate(now())}.") } }) { Text("I sent it") }
-                Note("Add your email and an app password in Settings and the app sends it for you instead.")
+                Note("Add your email and an app password in You, Email and the app sends it for you instead.")
             }
         } else {
             Button(enabled = o.url.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = { nav.navigate("web/${a.id}") }) { Text("Fill in the entry form") }
@@ -646,7 +646,7 @@ fun Sources(nav: NavController) {
     Screen("Where calls come from", nav) {
         Intro("sources", "The safest sources need no page-reading: sharing a link or flyer into the app, and email alerts from listing sites you have signed up to.")
         if (sources.isEmpty()) Empty("No sources yet. Calls you share or paste still arrive without one.")
-        Explain("What can I add here?", "Email source: the sender's address or domain (for example callforentry.org). Needs email set up in Settings. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
+        Explain("What can I add here?", "Email source: the sender's address or domain (for example callforentry.org). Needs email set up in You, Email. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
         sources.forEach { s ->
             Panel {
                 Toggle("${s.name}  (${s.kind})", s.enabled) { on -> scope.io { dao.put(s.copy(enabled = on)) } }

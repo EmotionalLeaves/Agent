@@ -59,7 +59,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
             "works", "Open Studio", works.any { it.imagePath.isNotBlank() }),
         GuideStep("session", a, "Run one session",
             "This is the part that matters most. The app only needs to be told when you start and when you stop.",
-            listOf("Tap Start session on Home.", "Pick the piece, tap Start, and put the phone down.", "When you stop, write one line for next time and tap End and save."),
+            listOf("Tap Start now on Today.", "Pick the piece, tap Start, and put the phone down.", "When you stop, write one line for next time and tap End and save."),
             "session", "Start a session", sessions.isNotEmpty()),
         GuideStep("week", a, "Make the week yours",
             "The app suggests studio times around your job. If they are not realistic, change them. You can also pause planning any time.",
@@ -68,7 +68,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
 
         GuideStep("print", a, "Get one piece printed and framed",
             "This is the moment digital work becomes something that can hang. The app walks each step and tells you what to ask for.",
-            listOf("Open a finished piece in Studio.", "Open Getting it printed.", "Do only the highlighted step, then tap Done.", "Ready-made emails (under More) has the message to send a print lab."),
+            listOf("Open a finished piece in Studio.", "Open Getting it printed.", "Do only the highlighted step, then tap Done.", "Ready-made emails (in People) has the message to send a print lab."),
             "works", "Open Studio", works.any { it.printStage >= 5 } || m("print"), optional = true, manual = true),
         GuideStep("ai", b, "Optional: an AI key for smoother drafts",
             "This lets the app write statements and emails and read calls out of links and flyers. It is pay-as-you-go and separate from any chat subscription. The app stops at your monthly cap (5 to start).",
@@ -81,8 +81,8 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
             "facts", "Open CV facts", facts.isNotEmpty()),
         GuideStep("statement", b, "Get your statement and approve it",
             "Nearly every call asks for one. Once approved, the app reuses it everywhere.",
-            listOf("Open Materials and tap Statement, 150 words.", "Tap Write it for me (or type your own).", "Read it once. Fix anything that is not true or not you.", "When the checklist is all ticks, tap Approve."),
-            "materials", "Open Materials", docs.any { it.type == "statement" && it.approved && it.text.isNotBlank() }),
+            listOf("In You, open Statement, bio and CV, then tap Statement, 150 words.", "Tap Write it for me (or type your own).", "Read it once. Fix anything that is not true or not you.", "When the checklist is all ticks, tap Approve."),
+            "materials", "Open it", docs.any { it.type == "statement" && it.approved && it.text.isNotBlank() }),
 
         GuideStep("email", c, "Connect your email",
             "Then the app sends approved emails itself and reads replies and results for you. Skip this and it still works: it opens your mail app with everything filled in.",
@@ -97,7 +97,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
             "The portfolio page is the one link you give to venues. The same setup also keeps a second backup off your phone.",
             listOf("On github.com create two repositories: a private one for backup and a public one for your page.", "Open github.com/settings/personal-access-tokens/new.", "Choose Only select repositories and pick those two.",
                 "Under Repository permissions, set Contents to Read and write.", "Generate the token and copy it.", "Come back here, tap the button below, and paste the token and both repository names (yourname/repository).",
-                "Tap Back up to GitHub now to test it.", "For the page: tap Publish in Materials. Then, once, in the public repository open Settings, Pages, and choose the main branch."),
+                "Tap Back up to GitHub now to test it.", "For the page: tap Publish in You, Statement bio and CV. Then, once, in the public repository open Settings, Pages, and choose the main branch."),
             "settings/github", "Open GitHub settings", (st.ghReady && (st.ghBackupRepo.isNotBlank() || st.ghPagesRepo.isNotBlank())) || m("github"), optional = true,
             link = "https://github.com/settings/personal-access-tokens/new"),
 
@@ -180,7 +180,7 @@ val basics = listOf(
     "What is an artist CV?" to "A plain list of your education, exhibitions, awards and similar. A short one is completely normal when you start. The app adds a line each time you get into something.",
     "What happens if I get in?" to "You deliver or ship the framed work by a date, it hangs for a few weeks, and you collect whatever does not sell. Venues usually keep a share of any sale, called commission. The app turns the acceptance into a checklist.",
     "What if I am not chosen?" to "That is the usual result for everyone, including artists who show a lot. It is not a verdict on the work. The app frees the pieces for the next call and does not make you go over it.",
-    "What are the levels in this app?" to "A way to keep the next step small. Level 0 is making your first series. Each level opens slightly bigger opportunities. You can ignore them, or set your level yourself in Settings, Your rules."
+    "What are the levels in this app?" to "A way to keep the next step small. Level 0 is making your first series. Each level opens slightly bigger opportunities. You can ignore them, or set your level yourself in You, Your rules, Your rules."
 )
 
 @Composable
@@ -225,6 +225,6 @@ fun PathScreen(nav: NavController) {
                 }
             }
         }
-        Small("Rough timing for someone with a full-time job: months for the first two levels, years for the rest. The gates decide, not the calendar. You can change the gates or set your level yourself in Settings, Your rules.")
+        Small("Rough timing for someone with a full-time job: months for the first two levels, years for the rest. The gates decide, not the calendar. You can change the gates or set your level yourself in You, Your rules, Your rules.")
     }
 }

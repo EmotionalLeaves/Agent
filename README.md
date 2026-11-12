@@ -25,12 +25,11 @@ Every build photographs the main screens in light, dark and large text and attac
 
 ## Where things are
 
-- `app/src/main/java/.../domain` rules with no Android in them: career levels, call scoring, week planner, text rules (unit tested)
-- `.../work` the engine: daily run, applications, results, outreach, backup, paper documents
-- `.../ai` provider layer and prompts
-- `.../media` image straightening, colour fix, exports, PDF writer
-- `.../net` page fetch, GitHub, email
-- `.../ui` screens
-- `docs/ROUNDS.md` what each build round delivered and what is still simplified
+Five tabs, the same every time. Each thing has one place.
 
-The signing key in `keystore/` is deliberately not secret, so builds upgrade each other. Replace it with GitHub Secrets before sharing the app.
+- **Today**: the one next step, Start now, your week (tap it for studio times, pausing and session history), deadlines, and anything waiting for your yes.
+- **Studio**: your pieces, series and parked ideas.
+- **Calls**: open calls this week, all of them, what you applied to, and where calls come from.
+- **People**: openings, venues and people, ready-made emails, your email list.
+- **You**: your statement, bio and CV; the Guide and levels; to-dos, money and receipts; every setting; the tour and plain answers.
+

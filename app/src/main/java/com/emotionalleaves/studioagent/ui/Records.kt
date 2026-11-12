@@ -467,7 +467,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                         status = if (n == 0) "Nothing was uploaded. Check the token and the backup repository name." else "Backed up $n files. It now repeats on its own every day."; busy = false
                     }
                 }) { Text("Back up to GitHub now") }
-                Note("The portfolio page is published from Materials. The first time, also open the public repository's Settings, Pages, and choose the main branch.")
+                Note("The portfolio page is published from You, Statement bio and CV. The first time, also open the public repository's Settings, Pages, and choose the main branch.")
             }
             "backup" -> {
                 H("Automatic")
