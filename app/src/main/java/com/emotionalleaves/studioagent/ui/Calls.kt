@@ -401,7 +401,7 @@ fun ApplScreen(nav: NavController, id: Long) {
         }
         StageHead(2, "Statement and fit", a.statement.isNotBlank() && a.themeText.isNotBlank())
         Field((if (o.statementLimit > 0) "Limit ${o.statementLimit} words. " else "") + "Edit only if this call needs it", a.statement, { save(a.copy(statement = it, packDir = "")) }, lines = 5)
-        Note("${Texts.words(a.statement)} words")
+        Small("${Texts.words(a.statement)} words" + (if (o.statementLimit > 0) " of ${o.statementLimit} allowed" else ""))
         Field("How these works fit this call (2 to 3 sentences)", a.themeText, { save(a.copy(themeText = it, packDir = "")) }, lines = 3)
         if (!G.ai.ready && a.themeText.isBlank()) TextButton(onClick = {
             save(a.copy(themeText = Starter.fit(works.filter { it.id in chosenIds }.map { it.title.ifBlank { "Untitled" } }, o, a.statement), packDir = ""))

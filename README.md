@@ -13,9 +13,9 @@ Open the newest release on your phone, download the `.apk`, and install it. Late
 
 ## First run
 
-1. Answer the four setup questions.
-2. Allow calendar and notifications if you want studio time booked and quiet reminders.
-3. Optional, in More > Settings: an AI key, email with an app password, a GitHub token for backup and the portfolio page.
+1. A seven-page tour shows how the app works. Nothing has to be filled in; a name is optional.
+2. Tap Start using it. That is all the setup there is. Allow notifications if you want quiet reminders.
+3. Everything works without an AI key: drafts start from your own answers, with [brackets] for the line only you can write, and nothing can be sent with a bracket left in. An AI key, email and GitHub in More > Settings are optional extras.
 
 ## Look and feel
 

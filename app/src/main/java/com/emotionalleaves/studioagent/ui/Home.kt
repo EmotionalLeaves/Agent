@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
@@ -188,7 +189,7 @@ fun Home(nav: NavController) {
             else {
                 // One tap: the app picks the piece and starts the clock. Nothing to decide first.
                 Button(onClick = { buzz(); scope.io { Engine.quickStart(st.defaultSessionMin); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)) { Text("Start now") }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     TextButton(onClick = { buzz(); scope.io { Engine.quickStart(5); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }) { Text("Just 5 minutes") }
                     TextButton(onClick = { nav.navigate("session") }) { Text("Let me choose first") }
                 }
@@ -229,9 +230,8 @@ fun Home(nav: NavController) {
             if (deadlines.isNotEmpty()) {
                 Section("Deadlines")
                 deadlines.forEach { e ->
-                    Panel(onClick = { e.applId.takeIf { it > 0 }?.let { nav.navigate("appl/$it") } ?: nav.navigate("calls") }) {
-                        Text(e.title.removePrefix("Deadline: "), style = MaterialTheme.typography.titleSmall)
-                        Small(Planner.weekendsLeft(today, Engine.date(e.date)).replaceFirstChar { it.uppercase() })
+                    IconRow(Icons.Default.DateRange, e.title.removePrefix("Deadline: "), Planner.weekendsLeft(today, Engine.date(e.date)).replaceFirstChar { it.uppercase() }) {
+                        e.applId.takeIf { it > 0 }?.let { nav.navigate("appl/$it") } ?: nav.navigate("calls")
                     }
                 }
             }

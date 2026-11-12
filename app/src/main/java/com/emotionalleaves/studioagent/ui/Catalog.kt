@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.layout.ContentScale
@@ -275,9 +277,14 @@ fun WorkDetail(nav: NavController, id: Long) {
             Small("Small enough to start without thinking. A session shows only the next one.")
             val steps = Texts.steps(w.steps)
             steps.forEachIndexed { i, (done, text) ->
+                val firstOpen = steps.indexOfFirst { !it.first }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = done, onCheckedChange = { c -> save(w.copy(steps = Texts.stepsText(steps.mapIndexed { j, p -> if (j == i) c to p.second else p }))) })
-                    Text(text, Modifier.weight(1f))
+                    // The same round marks as everywhere else; the next step gets the dot.
+                    Row(Modifier.weight(1f).heightIn(min = 48.dp).toggleable(value = done, role = androidx.compose.ui.semantics.Role.Checkbox) { c -> save(w.copy(steps = Texts.stepsText(steps.mapIndexed { j, p -> if (j == i) c to p.second else p }))) },
+                        horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Mark(done, current = i == firstOpen)
+                        Text(text, color = if (done) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
+                    }
                     RemoveButton("step: $text") { save(w.copy(steps = Texts.stepsText(steps.filterIndexed { j, _ -> j != i }))) }
                 }
             }

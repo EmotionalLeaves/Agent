@@ -140,3 +140,30 @@ Twenty passes that replace the look rather than adjust it.
 8. All screens still open in tests, fresh and with data.
 9. Large-text screenshots checked; nothing clips.
 10. README describes the look.
+
+## Less setup, less AI, a tour (builds 36 to 38)
+
+- A seven-page startup tour with drawings of the real screens opens on a fresh install; it ends by starting the app straight away. A name is optional. It can be opened again from More, the info sheet on any screen, or Home.
+- No setup is required any more: the app counts as set up once the tour ends or is skipped. Week, hours and details are optional.
+- Without an AI key: starter fit paragraphs, starter answers, starter outreach emails and their follow-ups, a plain read of a call's page, plain reading of email call alerts, and venue lookup from a website. Starters leave [brackets] for what only you can say, and an application or email cannot be approved with one left in.
+
+## Design cycles, second set of 50 (builds 39 to 45)
+
+1. Skip the tour from Home. 2-8. Long field labels above the box; interview progress; facts and sources explanations behind the info button; two- or three-way choices as one joined bar.
+9-14. New app icon (a framed piece taped to a cobalt wall); rounded widget; window colours match the app; the weekly review as numbered stages; the week card shows it opens; contact status as a tag.
+15-27. Clear loading text for the next step; no empty headings; level line with a Change link; a smooth timer ring; one entrance moment on Saved; red deletes; ellipsis on long titles; keyboard Next between fields; a wall label under each piece's picture.
+28-35. One-colour notification and tile icon; Android 12 opening screen in the app's colours; to-dos as tappable lines sorted by date; help sheet links to the tour; pictures never cropped in Studio; You settings grouped.
+36-50. Piece steps use the shared round marks; an honest length rule on documents; start links wrap at large text; deadline rows with icons; word count shown against the call's limit; the AI step in the Guide marked optional; dark and large-text passes.
+
+## Overall checks, round 2
+
+1. Build warnings: none.
+2. Every screen opens in tests, fresh and with data, including the tour.
+3. Contrast re-measured after the new colours; all text passes 4.5:1.
+4. No screen tells you a feature is blocked without AI; each has a no-AI path.
+5. Setup needed before first use: none.
+6. The tour is reachable from Home, More and every info sheet.
+7. Large-text screenshots: nothing clips.
+8. Dark screenshots, including the tour and the saved screen.
+9. App size checked (about 9 MB).
+10. README rewritten for the new first run.

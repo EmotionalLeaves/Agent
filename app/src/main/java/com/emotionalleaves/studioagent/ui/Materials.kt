@@ -270,7 +270,7 @@ fun DocScreen(nav: NavController, id: Long) {
         }
         Panel {
             Text("Ready when these are all true", fontWeight = FontWeight.SemiBold)
-            Check(lengthOk, "Length: $words words (target $target or fewer)")
+            Check(lengthOk, "Length: $words words (aim for ${(target * 0.5).toInt()} to $target)")
                 if (target > 0) LinearProgressIndicator(progress = { (words.toFloat() / target).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().padding(start = 30.dp).height(4.dp),
                     color = if (lengthOk) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary, trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
             Check(d.text.isNotBlank() && jargon.isEmpty(), if (jargon.isEmpty()) "No stock art jargon" else "Jargon to cut: " + jargon.joinToString(", "))
