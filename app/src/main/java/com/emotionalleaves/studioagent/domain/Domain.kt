@@ -542,9 +542,16 @@ object CallReader {
             title = title, url = url, email = email, deadline = deadlineMs, fee = fee(text), kind = kind, scope = scope,
             online = scope == "online", statementLimit = if (l.contains("statement")) limit else 0, maxWorks = works,
             jurors = Regex("(?i:jurors?|juried by|judges?):?\\s+([A-Z][^\\n.,;]{2,60})").find(text)?.groupValues?.get(1)?.trim().orEmpty(),
-            rawText = text.take(6000), sourceName = sourceName, createdAt = now, dedupeKey = Texts.dedupeKey("", deadlineMs, title)
+            rawText = text.take(6000), sourceName = sourceName, createdAt = now, dedupeKey = Texts.dedupeKey("", deadlineMs, title),
+            guaranteed = payToShow(l), rightsGrab = takesRights(l)
         )
     }
+
+    /** Vanity-gallery signs: a place is bought, not juried. */
+    fun payToShow(l: String) = Regex("guaranteed (exhibition|acceptance|placement|to be (shown|exhibited))|all (works|artists|entries) (are |will be )?(accepted|exhibited|shown)|wall (rental|fee)|hanging fee|rent (a )?wall|exhibition fee of|every (artist|entry) (is|will be) (accepted|shown)").containsMatchIn(l)
+
+    /** Terms that take more than the right to promote the show. */
+    fun takesRights(l: String) = Regex("perpetual|irrevocable|in perpetuity|transfer (of )?(all )?(copyright|rights)|assign (all )?(copyright|rights)|exclusive rights|sell (the )?images|commercial use of (the )?(images|works)").containsMatchIn(l)
 }
 
 
