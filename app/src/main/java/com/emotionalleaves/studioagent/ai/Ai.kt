@@ -33,29 +33,6 @@ class Ai(private val settings: Settings) {
     /** True when the help is the free public service rather than your own key. */
     val free: Boolean get() = settings.aiKey.isBlank()
 
-    companion object {
-        data class Kind(val provider: String, val name: String, val base: String, val write: String, val fast: String)
-
-        /** Which service a key belongs to, read from how the key starts. */
-        fun detect(key: String): Kind {
-            val k = key.trim()
-            return when {
-                k.startsWith("sk-ant-") -> Kind("anthropic", "Claude", "", "claude-sonnet-5-5", "claude-haiku-5-5")
-                k.startsWith("AIza") -> Kind("gemini", "Google Gemini", "", "gemini-flash-latest", "gemini-flash-lite-latest")
-                k.startsWith("sk-or-") -> Kind("custom", "OpenRouter", "https://openrouter.ai/api/v1", "openrouter/auto", "openrouter/auto")
-                k.startsWith("gsk_") -> Kind("custom", "Groq", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", "llama-3.1-8b-instant")
-                k.startsWith("sk_") || k.startsWith("pk_") -> Kind("custom", "Pollinations", "https://gen.pollinations.ai/v1", "openai", "openai")
-                else -> Kind("custom", "OpenAI", "https://api.openai.com/v1", "gpt-5-mini", "gpt-5-nano")
-            }
-        }
-
-        /** Free services that answer with no key and no account, tried in order. */
-        val FREE = listOf(
-            Triple("https://text.pollinations.ai/openai", "openai", "Pollinations"),
-            Triple("https://api.llm7.io/v1/chat/completions", "default", "LLM7"),
-        )
-    }
-
     /** Sets a key and everything that follows from it in one go. */
     fun useKey(key: String) {
         val k = key.trim()
@@ -296,6 +273,27 @@ class Ai(private val settings: Settings) {
     }
 
     companion object {
+        data class Kind(val provider: String, val name: String, val base: String, val write: String, val fast: String)
+
+        /** Which service a key belongs to, read from how the key starts. */
+        fun detect(key: String): Kind {
+            val k = key.trim()
+            return when {
+                k.startsWith("sk-ant-") -> Kind("anthropic", "Claude", "", "claude-sonnet-5-5", "claude-haiku-5-5")
+                k.startsWith("AIza") -> Kind("gemini", "Google Gemini", "", "gemini-flash-latest", "gemini-flash-lite-latest")
+                k.startsWith("sk-or-") -> Kind("custom", "OpenRouter", "https://openrouter.ai/api/v1", "openrouter/auto", "openrouter/auto")
+                k.startsWith("gsk_") -> Kind("custom", "Groq", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", "llama-3.1-8b-instant")
+                k.startsWith("sk_") || k.startsWith("pk_") -> Kind("custom", "Pollinations", "https://gen.pollinations.ai/v1", "openai", "openai")
+                else -> Kind("custom", "OpenAI", "https://api.openai.com/v1", "gpt-5-mini", "gpt-5-nano")
+            }
+        }
+
+        /** Free services that answer with no key and no account, tried in order. */
+        val FREE = listOf(
+            Triple("https://text.pollinations.ai/openai", "openai", "Pollinations"),
+            Triple("https://api.llm7.io/v1/chat/completions", "default", "LLM7"),
+        )
+    
         val callKinds = listOf("exhibition", "residency", "grant", "publication", "fair", "commission", "other")
 
         fun jsonSlice(s: String, open: Char, close: Char): String {

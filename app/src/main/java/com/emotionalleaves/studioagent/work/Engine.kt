@@ -61,6 +61,9 @@ object Engine {
     fun millis(t: LocalDateTime): Long = t.atZone(zone).toInstant().toEpochMilli()
     fun date(ms: Long): LocalDate = Instant.ofEpochMilli(ms).atZone(zone).toLocalDate()
 
+    /** What is left of this month's fee budget. No budget set means only your level's fee cap applies. */
+    fun feeLeft(ledger: List<Ledger>): Double = if (st.feeBudget <= 0) Double.MAX_VALUE else (st.feeBudget - feesThisMonth(ledger)).coerceAtLeast(0.0)
+
     fun schedule(ctx: Context) {
         val req = PeriodicWorkRequestBuilder<DailyWorker>(1, TimeUnit.DAYS)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build()
@@ -91,7 +94,7 @@ object Engine {
     fun profileOf(works: List<Artwork>, docs: List<Doc>, facts: List<Fact>, ledger: List<Ledger>): Profile = Profile(
         level = levelOf(works, docs, facts), routes = st.routes, rules = rules(), kinds = st.kinds,
         availableWorks = works.count { available(it) },
-        feeBudgetLeft = (st.feeBudget - feesThisMonth(ledger)).coerceAtLeast(0.0),
+        feeBudgetLeft = feeLeft(ledger),
         goals = st.goals, blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts()
     )
 
@@ -434,7 +437,7 @@ object Engine {
         // Starter drafts made without AI leave [square brackets] for you to fill; nothing goes out with one left in.
         out += "No [blanks] left to fill" to !(a.statement + a.themeText + qa.joinToString(" ") { it.second }).contains('[')
         if (qa.isNotEmpty()) out += "Every question answered (${qa.count { it.second.isNotBlank() }} of ${qa.size})" to qa.all { it.second.isNotBlank() }
-        if (o.fee > 0) out += "Fee of $${"%.0f".format(o.fee)} fits this month's budget" to (o.fee <= feeLeft)
+        if (o.fee > 0 && feeLeft < Double.MAX_VALUE) out += "Fee of ${st.currency}${"%.0f".format(o.fee)} fits this month's budget" to (o.fee <= feeLeft)
         if (a.method == "email") out += "Submission email address known" to a.emailTo.contains("@")
         return out
     }

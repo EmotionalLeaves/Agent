@@ -339,7 +339,7 @@ fun ApplScreen(nav: NavController, id: Long) {
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     val resultText = rememberSaveable { mutableStateOf("") }
-    val feeLeft = (st.feeBudget - Engine.feesThisMonth(ledger)).coerceAtLeast(0.0)
+    val feeLeft = Engine.feeLeft(ledger)
 
     if (loaded.status in setOf("submitted", "accepted", "declined")) {
         val chosen = works.filter { it.id in Engine.workIds(loaded) }
