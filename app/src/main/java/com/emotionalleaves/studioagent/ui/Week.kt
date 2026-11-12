@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.MaterialTheme
@@ -137,9 +138,9 @@ fun SessionsScreen(nav: NavController) {
     val sessions by dao.sessions().collectAsState(emptyList())
     val works by dao.artworks().collectAsState(emptyList())
     val date = remember { mutableStateOf(LocalDate.now().toString()) }
-    val minutes = remember { mutableStateOf("") }
-    val note = remember { mutableStateOf("") }
-    var kind by remember { mutableStateOf("make") }
+    val minutes = rememberSaveable { mutableStateOf("") }
+    val note = rememberSaveable { mutableStateOf("") }
+    var kind by rememberSaveable { mutableStateOf("make") }
     var workId by remember { mutableStateOf(0L) }
     val active = works.filter { it.status != "sold" }.take(12)
     fun name(id: Long) = works.firstOrNull { it.id == id }?.let { it.title.ifBlank { "Untitled #${it.id}" } }.orEmpty()

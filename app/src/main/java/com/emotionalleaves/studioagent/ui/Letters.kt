@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
@@ -46,9 +47,9 @@ fun fillLetter(text: String, them: String, place: String): String =
 fun Letters(nav: NavController) {
     val ctx = LocalContext.current
     var picked by remember { mutableStateOf(-1) }
-    val them = remember { mutableStateOf("") }
-    val place = remember { mutableStateOf("") }
-    val to = remember { mutableStateOf("") }
+    val them = rememberSaveable { mutableStateOf("") }
+    val place = rememberSaveable { mutableStateOf("") }
+    val to = rememberSaveable { mutableStateOf("") }
     Screen("Ready-made emails", nav) {
         Intro("letters", "Short, polite emails for moments when you do not know what to say. Pick one, fill in a name, and it opens in your mail app ready to send. Nothing here goes out by itself.")
         if (picked < 0) letters.forEachIndexed { i, l -> Panel(onClick = { picked = i }) { Text(l.title, fontWeight = FontWeight.SemiBold); Small(l.whenToUse) } }

@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.heightIn
@@ -75,15 +76,15 @@ fun Records(nav: NavController) {
     val appls by dao.appls().collectAsState(emptyList())
     val opps by dao.opps().collectAsState(emptyList())
     val works by dao.artworks().collectAsState(emptyList())
-    var kind by remember { mutableStateOf("fee") }
+    var kind by rememberSaveable { mutableStateOf("fee") }
     var amount by remember { mutableStateOf(0.0) }
-    val note = remember { mutableStateOf("") }
+    val note = rememberSaveable { mutableStateOf("") }
     var saleWork by remember { mutableStateOf(0L) }
     var salePrice by remember { mutableStateOf(0.0) }
     var saleCommission by remember { mutableStateOf(0.0) }
     var status by remember { mutableStateOf("") }
-    val todo = remember { mutableStateOf("") }
-    val todoDate = remember { mutableStateOf("") }
+    val todo = rememberSaveable { mutableStateOf("") }
+    val todoDate = rememberSaveable { mutableStateOf("") }
 
     Screen("To-dos and money", nav) {
         Intro("records", "The paperwork drawer: what is left to do for shows you got into, your own to-dos, money in and out, and a report once a quarter. Nothing here needs checking daily.")

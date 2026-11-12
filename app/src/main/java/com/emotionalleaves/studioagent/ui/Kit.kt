@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.clickable
@@ -179,7 +180,7 @@ fun Screen(
     actions: @Composable RowScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val help = remember { mutableStateOf("") }
+    val help = rememberSaveable { mutableStateOf("") }
     var showHelp by remember { mutableStateOf(false) }
     val helpButton: @Composable () -> Unit = {
         if (help.value.isNotBlank()) IconButton(onClick = { showHelp = true }) { Icon(Icons.Outlined.Info, "What is this screen for?", tint = MaterialTheme.colorScheme.onSurfaceVariant) }

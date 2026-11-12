@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
@@ -85,8 +86,8 @@ fun Materials(nav: NavController) {
     val series by dao.series().collectAsState(emptyList())
     var status by remember { mutableStateOf("") }
     val answered = docs.count { it.type == "interview" && it.text.isNotBlank() }
-    val newTitle = remember { mutableStateOf("") }
-    val newBrief = remember { mutableStateOf("") }
+    val newTitle = rememberSaveable { mutableStateOf("") }
+    val newBrief = rememberSaveable { mutableStateOf("") }
     var newTarget by remember { mutableStateOf(150) }
 
     fun open(type: String, variant: String, seriesId: Long = 0) {
@@ -180,7 +181,7 @@ fun Interview(nav: NavController) {
         docs.filter { it.type == "interview" }.forEach { if (answers[it.variant] == null) answers[it.variant] = it.text }
     }
     var status by remember { mutableStateOf("") }
-    val ownQuestion = remember { mutableStateOf("") }
+    val ownQuestion = rememberSaveable { mutableStateOf("") }
     Screen("Interview", nav) {
         Intro("interview", "About 10 minutes, once. Talk or type. Rough is good: your own words are what make the writing sound like you. You can stop and come back.")
         Small("${answers.values.count { it.isNotBlank() }} of ${interviewQuestions.size} answered. Rough is good; three is enough to start.")
@@ -332,7 +333,7 @@ fun Facts(nav: NavController) {
     val facts by dao.facts().collectAsState(emptyList())
     var category by remember { mutableStateOf("education") }
     var year by remember { mutableStateOf(LocalDate.now().year) }
-    val text = remember { mutableStateOf("") }
+    val text = rememberSaveable { mutableStateOf("") }
     var editing by remember { mutableStateOf<Fact?>(null) }
     Screen("CV facts", nav) {
         Intro("facts", "Only true, finished things. A show you applied to is not a line; a show you were in is. Accepted applications are added here automatically.")

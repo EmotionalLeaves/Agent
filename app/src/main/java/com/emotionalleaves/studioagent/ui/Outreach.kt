@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.foundation.layout.padding
@@ -60,12 +61,12 @@ fun Outreach(nav: NavController) {
     val docs by dao.docs().collectAsState(emptyList())
     val facts by dao.facts().collectAsState(emptyList())
     val level = Engine.levelOf(works, docs, facts)
-    val url = remember { mutableStateOf("") }
+    val url = rememberSaveable { mutableStateOf("") }
     val events by dao.events().collectAsState(emptyList())
-    val openingPlace = remember { mutableStateOf("") }
-    val openingNote = remember { mutableStateOf("") }
-    val subName = remember { mutableStateOf("") }
-    val subEmail = remember { mutableStateOf("") }
+    val openingPlace = rememberSaveable { mutableStateOf("") }
+    val openingNote = rememberSaveable { mutableStateOf("") }
+    val subName = rememberSaveable { mutableStateOf("") }
+    val subEmail = rememberSaveable { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     Screen("People", nav, back = false) {
@@ -186,7 +187,7 @@ fun ContactScreen(nav: NavController, id: Long) {
     }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
-    val reply = remember { mutableStateOf("") }
+    val reply = rememberSaveable { mutableStateOf("") }
     fun save(x: Contact) { c = x; scope.io { dao.put(x); markSaved() } }
     val level = Engine.levelOf(works, docs, facts)
     val allowed = Levels.outreachAllowed(level, c.kind, Engine.rules())

@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -118,10 +119,10 @@ fun Home(nav: NavController) {
     var pendingCount by remember { mutableStateOf(0) }
     var guide by remember { mutableStateOf<List<GuideStep>>(emptyList()) }
     var pinning by remember { mutableStateOf(false) }
-    val pinText = remember { mutableStateOf("") }
+    val pinText = rememberSaveable { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val appls by dao.appls().collectAsState(emptyList())
-    val idea = remember { mutableStateOf("") }
+    val idea = rememberSaveable { mutableStateOf("") }
     var parked by remember { mutableStateOf(false) }
     LaunchedEffect(works, docs, sessions, events, tick) {
         withContext(Dispatchers.IO) {
@@ -359,8 +360,8 @@ fun SessionScreen(nav: NavController) {
     } else {
         var nowMs by remember { mutableStateOf(now()) }
         LaunchedEffect(start) { while (true) { delay(1000); nowMs = now() } }
-        val note = remember { mutableStateOf("") }
-        val nextStep = remember { mutableStateOf("") }
+        val note = rememberSaveable { mutableStateOf("") }
+        val nextStep = rememberSaveable { mutableStateOf("") }
         var photo by remember { mutableStateOf("") }
         val photoFile = remember(start) { File(ImageTools.mediaDir(ctx), "progress_$start.jpg") }
         val take = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok -> if (ok) photo = photoFile.absolutePath }

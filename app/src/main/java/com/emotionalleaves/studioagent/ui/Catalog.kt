@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Box
@@ -93,12 +94,12 @@ fun Works(nav: NavController) {
     val scope = rememberCoroutineScope()
     val works by dao.artworks().collectAsState(emptyList())
     val series by dao.series().collectAsState(emptyList())
-    var tab by remember { mutableStateOf("works") }
-    val newSeries = remember { mutableStateOf("") }
+    var tab by rememberSaveable { mutableStateOf("works") }
+    val newSeries = rememberSaveable { mutableStateOf("") }
     val sessions by dao.sessions().collectAsState(emptyList())
     val docs by dao.docs().collectAsState(emptyList())
     val tick by st.changed.collectAsState()
-    val search = remember { mutableStateOf("") }
+    val search = rememberSaveable { mutableStateOf("") }
     var show by remember { mutableStateOf("all") }
     val ctx = LocalContext.current
     var importStatus by remember { mutableStateOf("") }
@@ -192,7 +193,7 @@ fun WorkDetail(nav: NavController, id: Long) {
     var w by remember(id) { mutableStateOf(loaded) }
     var status by remember { mutableStateOf("") }
     fun save(x: Artwork) { w = x; scope.io { dao.put(x); markSaved() } }
-    val newStep = remember { mutableStateOf("") }
+    val newStep = rememberSaveable { mutableStateOf("") }
 
     val dir = ImageTools.mediaDir(ctx)
     val orig = File(dir, "work_${id}_orig.jpg")
@@ -271,7 +272,7 @@ fun WorkDetail(nav: NavController, id: Long) {
         if (w.status == "in_progress") {
             var focus by remember { mutableStateOf(st.focusWork == id) }
             if (focus) Small("This is your one piece this week. Start now opens straight onto it.")
-            OutlinedButton(onClick = { focus = !focus; st.focusWork = if (focus) id else 0L }) { Text(if (focus) "Stop focusing on this piece" else "Make this my one piece this week") }
+            OutlinedButton(onClick = { focus = !focus; st.focusWork = if (focus) id else 0L }) { Text(if (focus) "Stop making this the week's piece" else "Make this the week's piece") }
         }
         if (w.status == "in_progress" || w.status == "idea") {
             H("Small steps")
@@ -483,7 +484,7 @@ fun Ideas(nav: NavController) {
 fun IdeasBody(nav: NavController) {
     val scope = rememberCoroutineScope()
     val ideas by dao.ideas().collectAsState(emptyList())
-    val text = remember { mutableStateOf("") }
+    val text = rememberSaveable { mutableStateOf("") }
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Field("New idea", text, lines = 2, mic = true)
         if (text.value.isNotBlank()) Button(onClick = { val t = text.value.trim(); text.value = ""; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }

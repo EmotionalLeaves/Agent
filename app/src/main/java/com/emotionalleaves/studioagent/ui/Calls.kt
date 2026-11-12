@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.heading
@@ -102,10 +103,10 @@ fun Calls(nav: NavController) {
     val ledger by dao.ledger().collectAsState(emptyList())
     val appls by dao.appls().collectAsState(emptyList())
     val tick by st.changed.collectAsState()
-    var tab by remember { mutableStateOf("this week") }
+    var tab by rememberSaveable { mutableStateOf("this week") }
     var status by remember { mutableStateOf("") }
     var saidNo by remember { mutableStateOf(0L) }
-    val paste = remember { mutableStateOf("") }
+    val paste = rememberSaveable { mutableStateOf("") }
     val p = remember(works, docs, facts, ledger, tick) { profileOf(works, docs, facts, ledger) }
     val today = LocalDate.now()
     var kindFilter by remember { mutableStateOf("every kind") }
@@ -336,7 +337,7 @@ fun ApplScreen(nav: NavController, id: Long) {
     if (loaded == null || o == null) { Screen("Application", nav) { Loading() }; return }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
-    val resultText = remember { mutableStateOf("") }
+    val resultText = rememberSaveable { mutableStateOf("") }
     val feeLeft = (st.feeBudget - Engine.feesThisMonth(ledger)).coerceAtLeast(0.0)
 
     if (loaded.status in setOf("submitted", "accepted", "declined")) {
@@ -390,7 +391,7 @@ fun ApplScreen(nav: NavController, id: Long) {
     val allGreen = checks.all { it.second }
     val chosenIds = Engine.workIds(a)
     val files = remember(a.packDir, status) { Engine.packFiles(a) }
-    val newQuestion = remember { mutableStateOf("") }
+    val newQuestion = rememberSaveable { mutableStateOf("") }
 
     Screen(o.title, nav) {
         Note((if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.")
@@ -637,9 +638,9 @@ fun Sources(nav: NavController) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val sources by dao.sources().collectAsState(emptyList())
-    val name = remember { mutableStateOf("") }
-    val value = remember { mutableStateOf("") }
-    var kind by remember { mutableStateOf("email") }
+    val name = rememberSaveable { mutableStateOf("") }
+    val value = rememberSaveable { mutableStateOf("") }
+    var kind by rememberSaveable { mutableStateOf("email") }
     var status by remember { mutableStateOf(if (st.lastDaily > 0) "Last daily check ${fmtDate(st.lastDaily)}: ${st.lastDailyStatus}" else "") }
     var busy by remember { mutableStateOf(false) }
     Screen("Where calls come from", nav) {
