@@ -506,7 +506,8 @@ fun WorkTile(w: Artwork, seriesName: String, focus: Boolean, onClick: () -> Unit
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Box(Modifier.fillMaxWidth().aspectRatio(0.8f).clip(RoundedCornerShape(3.dp)).background(cs.surfaceContainerLowest), contentAlignment = Alignment.Center) {
-            if (w.imagePath.isNotBlank() && File(w.imagePath).exists()) PathImage(w.imagePath, Modifier.fillMaxSize(), 500, ContentScale.Crop)
+            // The whole picture, never cropped, on a white mat: artists need to see their edges.
+            if (w.imagePath.isNotBlank() && File(w.imagePath).exists()) PathImage(w.imagePath, Modifier.fillMaxSize().padding(10.dp), 500, ContentScale.Fit)
             else Text(w.title.trim().take(1).uppercase().ifBlank { "?" }, style = MaterialTheme.typography.displayLarge, color = cs.outlineVariant)
             if (focus) TapeStrip(Modifier.align(Alignment.TopCenter).offset(y = (-6).dp), 2f)
         }

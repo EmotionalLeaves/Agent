@@ -328,13 +328,17 @@ fun SettingsScreen(nav: NavController, section: String) {
                 IconRow(Icons.Default.CheckCircle, "Guide and layout", "Setup steps, simple layout on or off") { nav.navigate("guide") }
             }
             "you" -> {
+                Small("All optional. Each is used only where it is needed: your CV, file names, entry forms.")
+                Section("Name")
                 SText("First name", st.firstName) { st.firstName = it }
                 SText("Last name", st.lastName) { st.lastName = it }
+                Section("Contact")
                 SText("Email", st.email) { st.email = it }
                 SText("Phone (only used to fill entry forms)", st.phone) { st.phone = it }
                 SText("Website or portfolio page", st.website) { st.website = it }
                 SText("City", st.city) { st.city = it }
                 SText("State or region", st.region) { st.region = it }
+                Section("Your work")
                 SText("Mediums", st.mediums) { st.mediums = it }
                 Multi("How your work is shown (pick every one that applies)", listOf("print", "physical", "screen"), st.routes) { st.route = it.joinToString(",") }
                 SText("Goals for the next 12 months", st.goals, lines = 2) { st.goals = it }

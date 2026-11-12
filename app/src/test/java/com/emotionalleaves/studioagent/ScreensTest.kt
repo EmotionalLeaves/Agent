@@ -131,6 +131,8 @@ class ScreensTest {
         shot("35_dark_session", "startnow", "Now: Block in the big shapes")
         shot("36_dark_piece", "work/${ids["wip"]}", "Small steps")
         shot("37_dark_settings", "settings", "Your rules")
+        shot("38_dark_tour", "tour", "From the studio to a wall")
+        shot("39_dark_done", "done", "It is all stored")
     }
 
     /** Phone text size turned up, to catch anything that clips or collides. */
