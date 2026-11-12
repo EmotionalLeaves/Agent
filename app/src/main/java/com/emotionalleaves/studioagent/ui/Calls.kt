@@ -146,15 +146,18 @@ fun Calls(nav: NavController) {
                             o.fitReasons.lines().filter { it.isNotBlank() && !it.startsWith("Free to enter") && !it.startsWith("Fee ") }.take(2).forEach { Small(it) }
                             Flags(o)
                             if (saidNo == o.id) {
-                                Choice("Why not? (optional, it teaches the ranking)", listOf("too far", "fee", "wrong vibe", "no reason"), "") { r ->
+                                // "Not this year" is one of the answers to No, so the card needs only two buttons.
+                                Choice("Why not? (optional, it teaches the ranking)", listOf("not this year", "too far", "fee", "wrong vibe", "no reason"), "") { r ->
                                     saidNo = 0L
-                                    if (r != "no reason") st.addNoReason(r)
-                                    scope.io { dao.put(o.copy(status = "no", noReason = r)); Engine.rescore() }
+                                    if (r == "not this year") scope.io { dao.put(o.copy(status = "later")) }
+                                    else {
+                                        if (r != "no reason") st.addNoReason(r)
+                                        scope.io { dao.put(o.copy(status = "no", noReason = r)); Engine.rescore() }
+                                    }
                                 }
                             } else FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Button(onClick = { scope.io({ status = it }) { val id = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$id") } } }) { Text("Yes") }
                                 OutlinedButton(onClick = { saidNo = o.id }) { Text("No") }
-                                TextButton(onClick = { scope.io { dao.put(o.copy(status = "later")) } }) { Text("Not this year") }
                             }
                         }
                     }

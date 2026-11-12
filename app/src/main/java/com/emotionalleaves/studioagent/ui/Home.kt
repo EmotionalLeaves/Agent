@@ -189,9 +189,8 @@ fun Home(nav: NavController) {
             else {
                 // One tap: the app picks the piece and starts the clock. Nothing to decide first.
                 Button(onClick = { buzz(); scope.io { Engine.quickStart(st.defaultSessionMin); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)) { Text("Start now") }
-                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = { buzz(); scope.io { Engine.quickStart(5); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }) { Text("Just 5 minutes") }
-                    TextButton(onClick = { nav.navigate("session") }) { Text("Let me choose first") }
+                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    TextButton(onClick = { nav.navigate("session") }) { Text("Choose the piece or a shorter time") }
                 }
             }
         }
