@@ -337,16 +337,17 @@ fun WorkDetail(nav: NavController, id: Long) {
             Field("Medium (blank uses the default for its format)", w.medium, { save(w.copy(medium = it)) })
             Choice("Format", listOf("print", "physical", "screen", "digital"), w.format) { save(w.copy(format = it)) }
             Explain("Not sure which format?", "Print: a digital file that will be printed and framed. Physical: made by hand. Screen: shown on a monitor. Digital: a file with no plan yet. If unsure, leave it on print.")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            var sizeVersion by remember { mutableStateOf(0) }
+            key(sizeVersion) { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(Modifier.weight(1f)) { Dim("Width", w.widthIn) { save(w.copy(widthIn = it)) } }
                 Column(Modifier.weight(1f)) { Dim("Height", w.heightIn) { save(w.copy(heightIn = it)) } }
                 Column(Modifier.weight(1f)) { Dim("Depth", w.depthIn) { save(w.copy(depthIn = it)) } }
-            }
+            } }
             if (w.format == "print" || w.format == "digital") {
                 Panel { Text("Print check", fontWeight = FontWeight.SemiBold); Text(Texts.printVerdict(w.pixelW, w.pixelH, w.widthIn, w.heightIn)) }
                 val size = Texts.suggestedPrintSize(w.pixelW, w.pixelH)
-                if (size != null && (w.widthIn <= 0 || w.heightIn <= 0)) OutlinedButton(onClick = { save(w.copy(widthIn = size.first, heightIn = size.second)); status = "Size filled in. Reopen this piece to see it in the boxes." }) {
-                    Text("I do not know the size: use ${Texts.dim(size.second)} x ${Texts.dim(size.first)} in, the largest sharp print")
+                if (size != null && (w.widthIn <= 0 || w.heightIn <= 0)) OutlinedButton(onClick = { save(w.copy(widthIn = size.first, heightIn = size.second)); sizeVersion++; status = "Size filled in." }) {
+                    Text("I do not know the size: use ${Texts.dim(size.second)} \u00D7 ${Texts.dim(size.first)} in, the largest sharp print")
                 }
             }
             Toggle("Framed", w.framed) { save(w.copy(framed = it)) }
@@ -379,8 +380,10 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
 
         Expand("Price, edition and where it is") {
-        Num("Price, " + st.currency, w.price) { save(w.copy(price = it)) }
-        if (w.widthIn > 0 && w.heightIn > 0) TextButton(onClick = { save(w.copy(price = Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))); status = "Price set from your rule. Reopen this piece to see it in the box." }) {
+        var priceVersion by remember { mutableStateOf(0) }
+        // The box is redrawn only when the rule fills it, so typing in it is never interrupted.
+        key(priceVersion) { Num("Price, " + st.currency, w.price) { save(w.copy(price = it)) } }
+        if (w.widthIn > 0 && w.heightIn > 0) TextButton(onClick = { save(w.copy(price = Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))); priceVersion++; status = "Price set from your rule." }) {
             Text("Use my price rule: ${money(Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))}")
         }
         Toggle("Not for sale", w.nfs) { save(w.copy(nfs = it)) }
