@@ -177,22 +177,19 @@ fun Home(nav: NavController) {
             }
         }
 
-        val workEnd = Planner.time(st.workEnd, LocalTime.of(15, 30))
-        val isWorkDay = today.dayOfWeek.value in Planner.days(st.workDays)
-        if (st.onboarded && isWorkDay && LocalTime.now().isAfter(workEnd) && st.energyDay != today.toString()) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Energy after work?", style = MaterialTheme.typography.titleSmall)
-                Choice("", listOf("wiped", "okay", "good"), "") { e -> st.energy = e; st.energyDay = today.toString() }
-            }
-        }
-
         if (st.onboarded) {
             if (st.sessionStart > 0) Button(onClick = { nav.navigate("session") }, modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)) { Text("Back to your session") }
             else {
-                // One tap: the app picks the piece and starts the clock. Nothing to decide first.
-                Button(onClick = { buzz(); scope.io { Engine.quickStart(st.defaultSessionMin); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)) { Text("Start now") }
+                // One tap: the app picks the piece and starts the clock. A tired day is the second button, not a question first.
+                fun go(min: Int, tired: Boolean) {
+                    buzz()
+                    if (tired) { st.energy = "wiped"; st.energyDay = today.toString() }
+                    scope.io { Engine.quickStart(min); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } }
+                }
+                Button(onClick = { go(st.defaultSessionMin, false) }, modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)) { Text("Start now, ${st.defaultSessionMin} minutes") }
                 FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    TextButton(onClick = { nav.navigate("session") }) { Text("Choose the piece or a shorter time") }
+                    TextButton(onClick = { go(5, true) }) { Text("Tired? Just 5 minutes") }
+                    TextButton(onClick = { nav.navigate("session") }) { Text("Choose the piece") }
                 }
             }
         }

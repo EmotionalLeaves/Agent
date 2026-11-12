@@ -1,5 +1,13 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material3.Button
+
+import com.emotionalleaves.studioagent.work.Engine
+
+import androidx.compose.runtime.saveable.rememberSaveable
+
+import androidx.compose.runtime.rememberCoroutineScope
+
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
@@ -189,6 +197,18 @@ val basics = listOf(
 fun Basics(nav: NavController) {
     Screen("Help", nav) {
         OutlinedButton(onClick = { nav.navigate("tour") }, modifier = Modifier.fillMaxWidth()) { Text("Take the two-minute tour again") }
+        Section("Ask anything")
+        val scope = rememberCoroutineScope()
+        val question = rememberSaveable { mutableStateOf("") }
+        var reply by remember { mutableStateOf("") }
+        var asking by remember { mutableStateOf(false) }
+        Field("A question about shows, calls or this app", question, lines = 2)
+        if (question.value.isNotBlank()) Button(enabled = !asking, onClick = {
+            asking = true; reply = ""
+            val q = question.value.trim()
+            scope.io({ reply = it; asking = false }) { reply = Engine.ask(q, basics); asking = false }
+        }) { Text(if (asking) "Thinking..." else "Ask") }
+        if (reply.isNotBlank()) Panel { Text(reply) }
         Section("Plain answers")
         Small("Tap any question. None of this is a test, and you can use the whole app without reading it.")
         basics.forEach { (q, a) -> Expand(q) { Text(a) } }

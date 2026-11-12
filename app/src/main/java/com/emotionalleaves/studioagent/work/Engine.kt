@@ -333,6 +333,25 @@ object Engine {
     }
 
     /** What to do first on a piece: its next open small step, or the line left at the end of the last session. */
+    /**
+     * A plain answer to a question about the art world or the app. The writing help answers briefly and honestly;
+     * without it, the closest of the app's own plain answers.
+     */
+    suspend fun ask(q: String, known: List<Pair<String, String>>): String = withContext(Dispatchers.IO) {
+        val words = q.lowercase().split(Regex("[^a-z]+")).filter { it.length > 3 }.toSet()
+        val best = known.maxByOrNull { (k, a) -> (k + " " + a).lowercase().split(Regex("[^a-z]+")).count { it in words } }
+        val bestScore = best?.let { (k, a) -> (k + " " + a).lowercase().split(Regex("[^a-z]+")).count { it in words } } ?: 0
+        if (ai.ready) try {
+            return@withContext ai.complete(
+                "You answer questions from an artist who is new to the art world, works a full-time day job, and has ADHD. Answer in at most five short sentences of plain words. " +
+                    "Be practical and honest; say when something depends on the call or the venue. Never invent specific organisations, prices or deadlines. " +
+                    "The artist uses an app that finds open calls, writes statements from their own answers, builds application packs and sends them; mention it only when it helps.",
+                q.take(800), fast = true, maxTokens = 400).trim()
+        } catch (e: Exception) { }
+        if (best != null && bestScore > 0) best.first + "\n\n" + best.second
+        else "The writing help did not answer just now. Try the plain answers below, or ask again in a minute."
+    }
+
     private val plainCache = mutableMapOf<Long, List<String>>()
 
     fun plainWordsCached(o: Opp): List<String> = plainCache[o.id].orEmpty()
