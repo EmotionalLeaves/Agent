@@ -438,6 +438,7 @@ fun More(nav: NavController) {
             Triple("Your week", "Studio times, pause, session history", "week"),
             Triple("Materials", "Interview, statement, bio, CV, portfolio", "materials"),
             Triple("Admin pass", "Everything waiting for your yes", "admin"),
+            Triple("Ready-made emails", "What to say to a print lab, a gallery, a library", "letters"),
             Triple("Receipts", "Everything sent, and what the app did on its own", "receipts"),
             Triple("Records and logistics", "Checklists, fees, sales, reports", "records"),
             Triple("Ideas", "Parked for later", "ideas"),

@@ -174,6 +174,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("guide") { Guide(nav) }
             composable("done") { DoneScreen(nav) }
             composable("basics") { Basics(nav) }
+            composable("letters") { Letters(nav) }
             composable("receipts") { Receipts(nav) }
             composable("week") { WeekScreen(nav) }
             composable("sessions") { SessionsScreen(nav) }

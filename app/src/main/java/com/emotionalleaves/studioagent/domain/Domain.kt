@@ -498,7 +498,7 @@ object CallReader {
         return Opp(
             title = title, url = url, email = email, deadline = deadlineMs, fee = fee(text), kind = kind, scope = scope,
             online = scope == "online", statementLimit = if (l.contains("statement")) limit else 0, maxWorks = works,
-            jurors = Regex("(?:juror|juried by|judge)s?:?\\s+([A-Z][^\\n.,;]{2,60})").find(text)?.groupValues?.get(1)?.trim().orEmpty(),
+            jurors = Regex("(?i:jurors?|juried by|judges?):?\\s+([A-Z][^\\n.,;]{2,60})").find(text)?.groupValues?.get(1)?.trim().orEmpty(),
             rawText = text.take(6000), sourceName = sourceName, createdAt = now, dedupeKey = Texts.dedupeKey("", deadlineMs, title)
         )
     }
@@ -536,5 +536,35 @@ object Drafts {
         if (shows.isNotEmpty()) parts += "$whose work has been shown in " + shows.joinToString("; ") { it.text + (if (it.year > 0) " (${it.year})" else "") } + "."
         facts.filter { it.category in setOf("award", "grant", "residency") }.maxByOrNull { it.year }?.let { parts += sentence(it.text + (if (it.year > 0) " (${it.year})" else "")) }
         return Texts.trimToWords(parts.joinToString(" "), target)
+    }
+}
+
+
+// ---------------------------------------------------------------- is a series ready to show
+
+object Readiness {
+    val printSteps = listOf(
+        "File ready" to "Tap Export images (under Files and papers) and keep the file ending in _original. That is the one a lab prints from.",
+        "Proof ordered" to "Order one small test print, called a proof, from a fine-art print lab. Ask for matte cotton rag paper. Print order (under Files and papers) writes the request for you.",
+        "Proof checked" to "Look at the proof in daylight. If the colours and darks are close to your screen, it passes. If it is too dark, brighten the file a little and proof once more. Close is good enough; a print never matches a lit screen exactly.",
+        "Final print made" to "Order the final at full size. When it arrives, sign and number it in pencil in the bottom margin, like 1/10.",
+        "Framed and ready to hang" to "A plain frame, white mat and hanging wire is what shows expect. Many accept only wired work."
+    )
+
+    /** Objective checks. [ready] are the series' finished pieces that have an image. */
+    fun series(ready: List<com.emotionalleaves.studioagent.data.Artwork>, target: Int, hasStatement: Boolean): List<Pair<String, Boolean>> {
+        val out = mutableListOf<Pair<String, Boolean>>()
+        out += "At least $target finished pieces with images (${ready.size} so far)" to (ready.size >= target)
+        out += "Every finished piece has a title, year and size" to (ready.isNotEmpty() && ready.all { it.title.isNotBlank() && it.year > 0 && it.widthIn > 0 && it.heightIn > 0 })
+        out += "Every finished piece has a price or is marked not for sale" to (ready.isNotEmpty() && ready.all { it.price > 0 || it.nfs })
+        val longSides = ready.map { maxOf(it.widthIn, it.heightIn) }.filter { it > 0 }
+        out += "Sizes belong together (the largest is no more than twice the smallest)" to (longSides.isNotEmpty() && longSides.max() <= longSides.min() * 2)
+        val prints = ready.filter { it.format == "print" }
+        if (prints.isNotEmpty()) {
+            out += "Every print file is sharp enough at its size (200 ppi or more)" to prints.all { Texts.ppi(it.pixelW, it.pixelH, it.widthIn, it.heightIn) >= 200 }
+            out += "Every print is printed and framed" to prints.all { it.printStage >= 5 }
+        }
+        out += "A statement for this series is written and approved" to hasStatement
+        return out
     }
 }

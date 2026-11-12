@@ -46,6 +46,8 @@ import androidx.navigation.NavController
 import com.emotionalleaves.studioagent.data.Artwork
 import com.emotionalleaves.studioagent.data.Idea
 import com.emotionalleaves.studioagent.data.Series
+import com.emotionalleaves.studioagent.data.Ledger
+import com.emotionalleaves.studioagent.domain.Readiness
 import com.emotionalleaves.studioagent.domain.Texts
 import com.emotionalleaves.studioagent.media.ImageTools
 import com.emotionalleaves.studioagent.sys.Share
@@ -85,6 +87,7 @@ fun Works(nav: NavController) {
     var tab by remember { mutableStateOf("works") }
     val newSeries = remember { mutableStateOf("") }
     val sessions by dao.sessions().collectAsState(emptyList())
+    val docs by dao.docs().collectAsState(emptyList())
     val tick by st.changed.collectAsState()
     val search = remember { mutableStateOf("") }
     var show by remember { mutableStateOf("all") }
@@ -144,6 +147,13 @@ fun Works(nav: NavController) {
                     LinearProgressIndicator(progress = { (done.toFloat() / s.targetCount.coerceAtLeast(1)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                     Note("$done of ${s.targetCount} documented, ${works.count { it.seriesId == s.id }} started")
                     Small(Engine.forecast(s.id, s.targetCount, works, sessions))
+                    Expand("Is this series ready to show?") {
+                        val ready = works.filter { it.seriesId == s.id && Engine.documented(it) }
+                        val hasStatement = docs.any { it.type == "statement" && it.seriesId == s.id && it.approved && it.text.isNotBlank() }
+                        val checks = Readiness.series(ready, s.targetCount, hasStatement)
+                        checks.forEach { (label, ok) -> Text((if (ok) "✓ " else "○ ") + label) }
+                        Small(if (checks.all { it.second }) "Every check passes. It is ready; there is nothing left to perfect." else "When every line is ticked, it is ready. Nothing else is needed.")
+                    }
                     Field("What ties these works together? (used for the series statement)", notes, { notes = it; scope.io { dao.put(s.copy(notes = it, name = name.trim().ifBlank { s.name })) } }, lines = 2, mic = true)
                     Whole("How many works you are aiming for", s.targetCount) { n -> if (n > 0) scope.io { dao.put(s.copy(targetCount = n, notes = notes, name = name.trim().ifBlank { s.name })) } }
                     TextButton(onClick = { scope.io { works.filter { it.seriesId == s.id }.forEach { dao.put(it.copy(seriesId = 0)) }; dao.del(s) } }) { Text("Delete this series (its works are kept)") }
@@ -270,6 +280,30 @@ fun WorkDetail(nav: NavController, id: Long) {
         Explain("What do these mean?", "In progress: still making it. Finished: done, not photographed yet. Documented or available: has its image and can be sent to calls. Pending: sent to a call, waiting. Shown and sold: the app sets these for you.")
         Field("Next step (shown when you start a session)", w.nextStep, { save(w.copy(nextStep = it)) })
         Field("Tags (your own labels, comma separated)", w.tags, { save(w.copy(tags = it)) })
+
+        if (w.format == "print") Expand("Getting it printed (step ${w.printStage.coerceIn(0, 5)} of 5 done)") {
+            Small("You do not need to know how any of this works. Do the highlighted step; ignore the rest.")
+            Readiness.printSteps.forEachIndexed { i, (name, how) ->
+                val state = when { i < w.printStage -> "✓ "; i == w.printStage -> "→ "; else -> "○ " }
+                Text(state + name, fontWeight = if (i == w.printStage) FontWeight.SemiBold else FontWeight.Normal)
+                if (i == w.printStage) Text(how)
+            }
+            if (w.printStage < 5) Button(onClick = { save(w.copy(printStage = w.printStage + 1)) }) { Text("Done: " + Readiness.printSteps[w.printStage.coerceIn(0, 4)].first.lowercase()) }
+            else Small("Printed and framed ✓. This piece can hang.")
+            if (w.printStage > 0) TextButton(onClick = { save(w.copy(printStage = w.printStage - 1)) }) { Text("Go back a step") }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.weight(1f)) { Num("Print cost, " + st.currency, w.printCost) { save(w.copy(printCost = it)) } }
+                Column(Modifier.weight(1f)) { Num("Frame cost, " + st.currency, w.frameCost) { save(w.copy(frameCost = it)) } }
+            }
+            if (w.printCost > 0 || w.frameCost > 0) OutlinedButton(onClick = {
+                val title = w.title; val pc = w.printCost; val fc = w.frameCost
+                scope.io {
+                    if (pc > 0) dao.put(Ledger(kind = "print", amount = -pc, date = now(), note = "Print: $title", artworkId = id))
+                    if (fc > 0) dao.put(Ledger(kind = "framing", amount = -fc, date = now(), note = "Frame: $title", artworkId = id))
+                    status = "Added to your records ✓ (More, Records). No need to add it again."
+                }
+            }) { Text("Add these costs to my records") }
+        }
 
         Expand("More pictures of this piece") {
             Note("A detail, the back, the piece on a wall. Kept with the piece and backed up.")

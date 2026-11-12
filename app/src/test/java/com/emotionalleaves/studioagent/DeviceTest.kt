@@ -49,11 +49,11 @@ class UpgradeTest {
             V1Schema.rows.forEach { raw.execSQL(it) }
             raw.version = 1
         }
-        val db = Room.databaseBuilder(ctx, Db::class.java, name).addMigrations(Db.MIGRATION_1_2, Db.MIGRATION_2_3).allowMainThreadQueries().build()
+        val db = Room.databaseBuilder(ctx, Db::class.java, name).addMigrations(*Db.MIGRATIONS).allowMainThreadQueries().build()
         runBlocking {
             val dao = db.dao()
             val work = dao.artworksNow().single()
-            assertEquals("x", work.title); assertEquals("", work.extraImages); assertEquals("", work.tags); assertEquals("", work.steps); assertEquals("", work.doneWhen)
+            assertEquals("x", work.title); assertEquals("", work.extraImages); assertEquals("", work.tags); assertEquals("", work.steps); assertEquals("", work.doneWhen); assertEquals(0, work.printStage); assertEquals(0.0, work.printCost, 0.0)
             val doc = dao.docsNow().single()
             assertEquals("x", doc.text); assertEquals(0, doc.target); assertEquals("", doc.title)
             assertEquals("exhibition", dao.oppsNow().single().kind)
@@ -91,7 +91,7 @@ class AppTest {
     @Test fun everyScreenOpensOnAFreshInstall() {
         ctx
         listOf(
-            "home" to "Set up in 2 minutes", "onboarding" to "Only your first name is needed", "basics" to "What is an open call?", "session" to "Two-minute start", "admin" to "Nothing to approve",
+            "home" to "Set up in 2 minutes", "onboarding" to "Only your first name is needed", "basics" to "What is an open call?", "letters" to "Ask a print lab for a quote", "session" to "Two-minute start", "admin" to "Nothing to approve",
             "works" to "Add a piece", "ideas" to "Park it", "materials" to "Your own documents", "interview" to "Save answers", "facts" to "Add line",
             "calls" to "Add a call", "sources" to "Run the daily check now", "outreach" to "Your email list", "records" to "Quarterly report",
             "settings" to "Your rules", "settings/you" to "Sizes in", "settings/hours" to "Change my studio times", "settings/rules" to "What matters most when ranking",

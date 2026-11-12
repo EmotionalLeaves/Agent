@@ -7,6 +7,7 @@ import com.emotionalleaves.studioagent.domain.Drafts
 import com.emotionalleaves.studioagent.domain.Levels
 import com.emotionalleaves.studioagent.domain.Planner
 import com.emotionalleaves.studioagent.domain.Profile
+import com.emotionalleaves.studioagent.domain.Readiness
 import com.emotionalleaves.studioagent.domain.Rules
 import com.emotionalleaves.studioagent.domain.Scoring
 import com.emotionalleaves.studioagent.domain.Texts
@@ -197,6 +198,18 @@ class DomainTest {
         assertEquals("Jade Leaves is an artist based in Austin, working in digital prints. Education: BFA, State University. Jade's work has been shown in Winter Open, Riverside (2026).",
             Drafts.bio("Jade", "Leaves", "Austin", "digital prints", facts, false, 150))
         assertEquals("I am an artist.", Drafts.bio("Jade", "", "", "", emptyList(), true, 40))
+    }
+
+    @Test fun aSeriesIsReadyWhenEveryCheckPasses() {
+        fun piece(w: Double, stage: Int = 5, price: Double = 100.0) = com.emotionalleaves.studioagent.data.Artwork(title = "A", year = 2026, widthIn = w, heightIn = w * 1.25, price = price, format = "print", pixelW = 4800, pixelH = 6000, printStage = stage)
+        val good = List(3) { piece(16.0) }
+        assertTrue(Readiness.series(good, 3, true).all { it.second })
+        assertFalse(Readiness.series(good, 10, true).first().second)
+        assertFalse(Readiness.series(good, 3, false).last().second)
+        assertTrue(Readiness.series(good + piece(40.0), 3, true).any { it.first.startsWith("Sizes belong together") && !it.second })
+        assertTrue(Readiness.series(good + piece(16.0, stage = 2), 3, true).any { it.first.contains("printed and framed") && !it.second })
+        assertTrue(Readiness.series(good + piece(16.0, price = 0.0), 3, true).any { it.first.contains("price") && !it.second })
+        assertEquals(5, Readiness.printSteps.size)
     }
 
     @Test fun smallStepsRoundTrip() {

@@ -50,7 +50,11 @@ data class Artwork(
     /** Tiny steps, one per line, "[x] done step" or "[ ] open step". */
     val steps: String = "",
     /** Your own finish line: this piece is finished when... */
-    val doneWhen: String = ""
+    val doneWhen: String = "",
+    /** 0 not started, then file ready, proof ordered, proof checked, final print made, 5 framed and ready to hang. */
+    val printStage: Int = 0,
+    val printCost: Double = 0.0,
+    val frameCost: Double = 0.0
 )
 
 @Entity
@@ -304,7 +308,7 @@ interface Dao {
 @Database(
     entities = [Artwork::class, Series::class, Sess::class, Idea::class, Doc::class, Fact::class, Opp::class,
         Appl::class, Contact::class, Evt::class, Ledger::class, Source::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class Db : RoomDatabase() {
@@ -313,7 +317,17 @@ abstract class Db : RoomDatabase() {
     companion object {
         const val NAME = "studio.db"
         fun open(c: Context): Db =
-            Room.databaseBuilder(c, Db::class.java, NAME).setJournalMode(JournalMode.TRUNCATE).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+            Room.databaseBuilder(c, Db::class.java, NAME).setJournalMode(JournalMode.TRUNCATE).addMigrations(*MIGRATIONS).build()
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Artwork ADD COLUMN printStage INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Artwork ADD COLUMN printCost REAL NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Artwork ADD COLUMN frameCost REAL NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATIONS: Array<Migration> get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
