@@ -391,7 +391,7 @@ fun DateField(label: String, value: String, onValue: (String) -> Unit) {
             android.app.DatePickerDialog(ctx, { _, y, m, day -> onValue(java.time.LocalDate.of(y, m + 1, day).toString()) }, d.year, d.monthValue - 1, d.dayOfMonth).show()
         }, verticalAlignment = Alignment.CenterVertically) {
             Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-            Text(d.format(java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM)),
+            Text(fmtDate(d.atTime(12, 0).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()),
                 Modifier.clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(horizontal = 14.dp, vertical = 10.dp),
                 style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
         }

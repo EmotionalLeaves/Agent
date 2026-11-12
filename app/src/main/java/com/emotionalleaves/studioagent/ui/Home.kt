@@ -223,7 +223,7 @@ fun Home(nav: NavController) {
                     }
                 }
                 if (st.pausedUntil > now()) Small("Planning is paused until ${fmtDate(st.pausedUntil)}.")
-                else events.firstOrNull { it.type == "studio" && it.date > now() }?.let { Small("Next studio time: ${fmtDate(it.date)}") }
+                else events.firstOrNull { it.type == "studio" && it.date > now() }?.let { Small("Next studio time: ${fmtDate(it.date)}, ${clock(it.date)}") }
             }
 
             val deadlines = events.filter { it.type == "deadline" && !it.done && it.date > now() }.take(3)
@@ -585,7 +585,7 @@ fun Review(nav: NavController) {
         val coming = events.filter { it.type == "studio" && it.date > now() }.take(5)
         if (st.pausedUntil > now()) Small("Planning is paused until ${fmtDate(st.pausedUntil)}.")
         else if (coming.isEmpty()) Small("None planned yet. They are added with the next daily check.")
-        else coming.forEach { Check(false, fmtDate(it.date) + ", ${(it.endDate - it.date) / 60000} min", small = true) }
+        else coming.forEach { Check(false, fmtDate(it.date) + ", " + clock(it.date) + ", ${(it.endDate - it.date) / 60000} min", small = true) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { nav.navigate("week") }) { Text("Change studio times") }
             if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("Approve $pending") }

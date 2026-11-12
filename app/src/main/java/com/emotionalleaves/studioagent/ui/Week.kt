@@ -123,8 +123,8 @@ fun WeekScreen(nav: NavController) {
             H("Coming up")
             coming.forEach { e ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(fmtDate(e.date) + "  " + java.time.Instant.ofEpochMilli(e.date).atZone(java.time.ZoneId.systemDefault()).toLocalTime().toString().take(5) + ", ${(e.endDate - e.date) / 60000} min", Modifier.weight(1f))
-                    TextButton(onClick = { scope.io { Cal.remove(ctx, e.calendarId); dao.del(e) } }) { Text("Skip") }
+                    Text(fmtDate(e.date) + ", " + clock(e.date) + ", ${(e.endDate - e.date) / 60000} min", Modifier.weight(1f))
+                    TextButton(onClick = { scope.remove("the studio time", { Cal.remove(ctx, e.calendarId); dao.del(e) }, { dao.put(e) }) }) { Text("Skip") }
                 }
             }
         }

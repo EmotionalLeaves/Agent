@@ -227,7 +227,7 @@ fun Receipts(nav: NavController) {
     }
 }
 
-private fun clock(ms: Long): String = java.time.Instant.ofEpochMilli(ms).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
+
 
 @Composable
 private fun SText(label: String, initial: String, secret: Boolean = false, lines: Int = 1, onSet: (String) -> Unit) {
