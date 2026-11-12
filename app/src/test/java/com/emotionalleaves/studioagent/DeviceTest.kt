@@ -49,11 +49,11 @@ class UpgradeTest {
             V1Schema.rows.forEach { raw.execSQL(it) }
             raw.version = 1
         }
-        val db = Room.databaseBuilder(ctx, Db::class.java, name).addMigrations(Db.MIGRATION_1_2).allowMainThreadQueries().build()
+        val db = Room.databaseBuilder(ctx, Db::class.java, name).addMigrations(Db.MIGRATION_1_2, Db.MIGRATION_2_3).allowMainThreadQueries().build()
         runBlocking {
             val dao = db.dao()
             val work = dao.artworksNow().single()
-            assertEquals("x", work.title); assertEquals("", work.extraImages); assertEquals("", work.tags)
+            assertEquals("x", work.title); assertEquals("", work.extraImages); assertEquals("", work.tags); assertEquals("", work.steps); assertEquals("", work.doneWhen)
             val doc = dao.docsNow().single()
             assertEquals("x", doc.text); assertEquals(0, doc.target); assertEquals("", doc.title)
             assertEquals("exhibition", dao.oppsNow().single().kind)
@@ -97,7 +97,7 @@ class AppTest {
             "settings" to "Your rules", "settings/you" to "Sizes in", "settings/hours" to "Change my studio times", "settings/rules" to "What matters most when ranking",
             "settings/writing" to "These apply to everything", "settings/ai" to "Test the key", "settings/email" to "Send me a test email",
             "settings/github" to "Back up to GitHub now", "settings/backup" to "Save a backup", "settings/permissions" to "Allow Do Not Disturb",
-            "guide" to "Tell the app who you are", "week" to "Change these", "sessions" to "No sessions yet", "more" to "Call sources", "share" to "Park as an idea"
+            "guide" to "Tell the app who you are", "receipts" to "What the app did on its own", "settings/calm" to "Finished means finished", "done" to "Session saved", "week" to "Change these", "sessions" to "No sessions yet", "more" to "Call sources", "share" to "Park as an idea"
         ).forEach { (route, expect) -> opens(route, expect) }
     }
 
@@ -109,7 +109,7 @@ class AppTest {
             val dao = G.dao
             val series = dao.put(Series(name = "Night Kitchen", createdAt = 1))
             val work = dao.put(Artwork(title = "Blue Hour", year = 2026, widthIn = 16.0, heightIn = 20.0, seriesId = series, status = "available", imagePath = "/none.jpg", tags = "blue", createdAt = 1))
-            dao.put(Artwork(title = "Night Shift", status = "in_progress", seriesId = series, createdAt = 2))
+            dao.put(Artwork(title = "Night Shift", status = "in_progress", seriesId = series, createdAt = 2, steps = "[x] Open the file\n[ ] Block in the big shapes", doneWhen = "the light reads as 5am"))
             val doc = dao.put(Doc(type = "statement", variant = "150", text = "I draw the kitchen at five in the morning.", approved = false))
             dao.put(Doc(type = "custom", variant = "c1", title = "Cover letter", brief = "For a staff show", target = 120))
             dao.put(Doc(type = "interview", variant = "what", text = "Drawings of the kitchen."))
@@ -128,7 +128,7 @@ class AppTest {
             mapOf("work" to work, "doc" to doc, "opp" to opp, "draft" to draft, "sent" to sent, "contact" to contact)
         }
         listOf(
-            "home" to "Start session", "session" to "Night Shift", "admin" to "Approve statement", "works" to "Blue Hour", "work/${ids["work"]}" to "More pictures of this piece",
+            "home" to "Start now", "startnow" to "Now: Block in the big shapes", "receipts" to "Application: Staff Show", "admin" to "Approve statement", "works" to "Blue Hour", "work/${ids["work"]}" to "More pictures of this piece",
             "crop/${ids["work"]}" to "Drag each dot", "ideas" to "Fridge light series", "materials" to "Cover letter", "doc/${ids["doc"]}" to "Ready when these are all true",
             "facts" to "BFA, State University", "calls" to "Winter Open", "call/${ids["opp"]}" to "The basics", "appl/${ids["draft"]}" to "Questions this call asks (1)",
             "appl/${ids["sent"]}" to "Submitted. Done.", "sources" to "CaFE alerts", "outreach" to "Campus Gallery", "contact/${ids["contact"]}" to "How realistic right now",
@@ -198,6 +198,22 @@ class AppTest {
         val own = dao.eventsNow().filter { it.type == "studio" }
         assertTrue(own.size in 6..7)
         assertTrue(own.all { it.endDate - it.date == 30 * 60_000L })
+    }
+
+    @Test fun startingIsOneTapAndStepsLeadTheWay() = runBlocking {
+        ctx
+        val dao = G.dao; val s = G.settings
+        s.firstName = "Jade"
+        dao.put(Doc(type = "interview", variant = "what", text = "Kitchen drawings."))
+        dao.put(Series(name = "Night Kitchen"))
+        val id = dao.put(Artwork(title = "Night Shift", status = "in_progress", nextStep = "old note", steps = "[x] Open the file\n[ ] Block in the big shapes\n[ ] Add the light"))
+        assertEquals("Block in the big shapes", Engine.nextStep().title)
+        Engine.quickStart(5)
+        assertEquals(id, s.sessionArtwork); assertEquals("make", s.sessionKind); assertEquals(5, s.sessionGoalMin)
+        assertTrue(s.sessionStart > 0)
+        assertEquals("session", Engine.nextStep().route)
+        s.log("first"); s.log("second")
+        assertEquals("second", s.activityLines().first().second)
     }
 
     @Test fun theHomeCardFollowsPinsAndSnoozes() = runBlocking {

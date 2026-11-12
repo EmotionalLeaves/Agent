@@ -103,6 +103,12 @@ class Settings(ctx: Context) {
     var writingNotes by S("writingNotes")
     var extraJargon by S("extraJargon")
     var aiBaseUrl by S("aiBaseUrl", "https://api.openai.com/v1")
+    var shortText by B("shortText", false)
+    var fitWords by B("fitWords", true)
+    var lockApproved by B("lockApproved", true)
+    var defaultSessionMin by I("defaultSessionMin", 40)
+    var sessionGoalMin by I("sessionGoalMin", 0)
+    var activity by S("activity")
     var simpleMode by B("simpleMode", true)
     var guideHidden by B("guideHidden", false)
     var seenIntros by S("seenIntros")
@@ -165,6 +171,15 @@ class Settings(ctx: Context) {
         val m = noReasonCounts().toMutableMap(); m[r] = (m[r] ?: 0) + 1
         noReasons = m.entries.joinToString(",") { "${it.key}=${it.value}" }
     }
+
+    /** A plain record of what the app did, newest first, so nothing has to be checked by hand. */
+    fun log(text: String) {
+        val line = System.currentTimeMillis().toString() + "|" + text.replace("\n", " ").take(200)
+        activity = (listOf(line) + activity.split("\n").filter { it.isNotBlank() }).take(60).joinToString("\n")
+    }
+
+    fun activityLines(): List<Pair<Long, String>> =
+        activity.split("\n").filter { it.contains("|") }.map { (it.substringBefore("|").toLongOrNull() ?: 0L) to it.substringAfter("|") }
 
     /** Non-secret settings, for the backup file. */
     fun exportPlain(): Map<String, String> = plain.all.mapValues { "${it.value?.javaClass?.simpleName}:${it.value}" }

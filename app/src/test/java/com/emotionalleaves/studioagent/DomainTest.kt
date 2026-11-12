@@ -159,6 +159,15 @@ class DomainTest {
         assertEquals(240, suggested.sumOf { it.minutes })
     }
 
+    @Test fun smallStepsRoundTrip() {
+        val steps = Texts.steps("[x] Open the file\n[ ] Block in shapes\nAdd the light\n\n")
+        assertEquals(3, steps.size)
+        assertTrue(steps[0].first); assertFalse(steps[1].first); assertFalse(steps[2].first)
+        assertEquals("Block in shapes", Texts.firstOpenStep(Texts.stepsText(steps)))
+        assertEquals("", Texts.firstOpenStep("[x] Only step"))
+        assertEquals("Strong fit", Texts.fitWord(80)); assertEquals("Weak fit", Texts.fitWord(10))
+    }
+
     @Test fun yourOwnBannedWordsAreCaught() {
         assertTrue(Texts.jargonIn("It was a journey.", listOf("Journey")).contains("journey"))
     }

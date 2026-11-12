@@ -162,6 +162,31 @@ fun Records(nav: NavController) {
     }
 }
 
+/** One page that answers "did it send?" and "what has the app been doing?" so neither needs checking twice. */
+@Composable
+fun Receipts(nav: NavController) {
+    val appls by dao.appls().collectAsState(emptyList())
+    val opps by dao.opps().collectAsState(emptyList())
+    val contacts by dao.contacts().collectAsState(emptyList())
+    val tick by st.changed.collectAsState()
+    Screen("Receipts", nav) {
+        Intro("receipts", "If you ever wonder whether something really went out, the answer is here, with the time. One look is enough; this list does not change behind your back.")
+        H("Sent")
+        val sent = appls.filter { it.submittedAt > 0 }.map { Triple(it.submittedAt, "Application: " + (opps.firstOrNull { o -> o.id == it.oppId }?.title ?: "call"), it.proofText) } +
+            contacts.filter { it.sentAt > 0 }.map { Triple(it.sentAt, "Email to " + it.venue.ifBlank { it.email }, if (it.status == "followed_up") "Follow-up sent too. Nothing more will go to them." else "") }
+        if (sent.isEmpty()) Small("Nothing sent yet.")
+        sent.sortedByDescending { it.first }.forEach { (at, what, proof) ->
+            Panel { Text("✓ $what", fontWeight = FontWeight.SemiBold); Small(fmtDate(at) + ", " + clock(at)); if (proof.isNotBlank()) Small(proof) }
+        }
+        H("What the app did on its own")
+        val lines = if (tick >= 0) st.activityLines() else emptyList()
+        if (lines.isEmpty()) Small("Nothing yet. The daily check runs once a day when the phone is online.")
+        lines.take(40).forEach { (at, text) -> Small(fmtDate(at) + ", " + clock(at) + ": " + text) }
+    }
+}
+
+private fun clock(ms: Long): String = java.time.Instant.ofEpochMilli(ms).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("h:mm a"))
+
 @Composable
 private fun SText(label: String, initial: String, secret: Boolean = false, lines: Int = 1, onSet: (String) -> Unit) {
     var t by remember { mutableStateOf(initial) }
@@ -186,6 +211,7 @@ private val sectionNames = listOf(
     Triple("you", "You", "Name, contact details, what you make, goals"),
     Triple("hours", "Work hours and quiet time", "When the app must stay silent"),
     Triple("rules", "Your rules", "Level, gates, fee caps, what calls you see, what matters most"),
+    Triple("calm", "Focus and calm", "Fewer words, session length, locks against re-checking"),
     Triple("writing", "Writing", "Standing notes for anything the app writes"),
     Triple("ai", "AI", "The key that lets the app write and read for you"),
     Triple("email", "Email", "Let the app send and read email itself"),
@@ -208,6 +234,9 @@ fun SettingsScreen(nav: NavController, section: String) {
     var gateOut by remember { mutableStateOf(st.gateOutreach) }
     var levelPick by remember { mutableStateOf(if (st.levelOverride in 0..4) st.levelOverride.toString() else "automatic") }
     var units by remember { mutableStateOf(st.units) }
+    var shortText by remember { mutableStateOf(st.shortText) }
+    var fitWords by remember { mutableStateOf(st.fitWords) }
+    var lockApproved by remember { mutableStateOf(st.lockApproved) }
     var weights by remember { mutableStateOf(st.weights.split(",").map { it.trim().toIntOrNull() ?: 2 }.let { l -> List(6) { l.getOrElse(it) { 2 } } }) }
     val perms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { status = "Permissions updated." }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
@@ -296,6 +325,21 @@ fun SettingsScreen(nav: NavController, section: String) {
                 H("Outreach")
                 Toggle("Hold back emails to venues above my level", gateOut) { gateOut = it; st.gateOutreach = it }
                 Whole("Outreach emails a week, at most", st.outreachWeeklyCap) { st.outreachWeeklyCap = it }
+            }
+            "calm" -> {
+                Text("Each of these is a default you can switch. None of them is a rule about you.")
+                H("Starting")
+                Whole("Usual session length, minutes (the bar fills to this)", st.defaultSessionMin) { if (it > 0) st.defaultSessionMin = it }
+                Small("Start now uses this. Just 5 minutes is always there for days when starting is the hard part.")
+                H("Less on screen")
+                Toggle("Hide the small grey explanations", shortText) { shortText = it; st.shortText = it }
+                Toggle("Show fit as words (Strong, Good, Fair), not a score", fitWords) { fitWords = it; st.fitWords = it }
+                Whole("Notifications a day, at most", st.notifCap) { st.notifCap = it }
+                H("Finished means finished")
+                Toggle("Lock texts once I approve them", lockApproved) { lockApproved = it; st.lockApproved = it }
+                Whole("Rewrites before the app says a text is ready", st.revisionLimit) { st.revisionLimit = it.coerceAtLeast(1) }
+                Small("Sent applications lock on their own. Every editing screen shows the time it last saved, and Receipts lists everything that went out.")
+                OutlinedButton(onClick = { nav.navigate("receipts") }) { Text("Open Receipts") }
             }
             "writing" -> {
                 Note("These apply to everything the app writes for you: statements, bios, emails, answers.")

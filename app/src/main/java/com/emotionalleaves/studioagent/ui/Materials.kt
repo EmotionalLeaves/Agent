@@ -203,7 +203,9 @@ fun DocScreen(nav: NavController, id: Long) {
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var editedHere by remember { mutableStateOf(false) }
-    fun save(x: Doc) { d = x; scope.io { dao.put(x) } }
+    fun save(x: Doc) { d = x; scope.io { dao.put(x); markSaved() } }
+    var unlocked by remember { mutableStateOf(false) }
+    val locked = d.approved && st.lockApproved && !unlocked
 
     val target = docTarget(d)
     val words = Texts.words(d.text)
@@ -236,11 +238,18 @@ fun DocScreen(nav: NavController, id: Long) {
             Field("What it is for", d.brief, { save(d.copy(brief = it)) }, lines = 2)
             Whole("About how many words", d.target) { n -> if (n > 0) save(d.copy(target = n)) }
         }
-        Field("Text", d.text, {
-            val first = !editedHere && d.text.isNotBlank()
-            editedHere = true
-            save(d.copy(text = it, approved = false, revisions = d.revisions + (if (first) 1 else 0), updatedAt = now()))
-        }, lines = 8)
+        if (locked) {
+            Panel { Text(d.text) }
+            Small("Approved and locked: ${Texts.words(d.text)} words. This is finished. The app uses exactly this.")
+            TextButton(onClick = { unlocked = true }) { Text("I have a real reason to change it") }
+        } else {
+            Field("Text", d.text, {
+                val first = !editedHere && d.text.isNotBlank()
+                editedHere = true
+                save(d.copy(text = it, approved = false, revisions = d.revisions + (if (first) 1 else 0), updatedAt = now()))
+            }, lines = 8)
+            SavedLine()
+        }
         Panel {
             Text("Ready when these are all true", fontWeight = FontWeight.SemiBold)
             Text((if (lengthOk) "✓ " else "○ ") + "Length: $words words (target $target or fewer)")
@@ -248,7 +257,7 @@ fun DocScreen(nav: NavController, id: Long) {
             Text("✓ Written only from your interview and CV facts")
         }
         Status(status)
-        if (d.approved) Panel(strong = true) { Text("Approved. This is the version the app uses. Editing it un-approves it.") }
+        if (d.approved) { if (!locked) Panel(strong = true) { Text("Approved. Editing it un-approves it.") } }
         else if (d.text.isNotBlank()) {
             if (d.revisions >= limit) Panel(strong = true) {
                 Text("That is ${d.revisions} revision passes. " + (if (lengthOk && jargon.isEmpty()) "It meets every check, so it is ready as it is." else "Fix the open check above, then it is ready."))

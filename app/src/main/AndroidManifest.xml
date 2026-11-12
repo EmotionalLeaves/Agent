@@ -54,6 +54,8 @@
             </intent-filter>
         </service>
 
+        <receiver android:name=".sys.ReminderReceiver" android:exported="false" />
+
         <receiver android:name=".sys.SessionWidget" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

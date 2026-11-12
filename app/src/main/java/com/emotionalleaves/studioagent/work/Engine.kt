@@ -219,6 +219,13 @@ object Engine {
         }
     }
 
+    /** "Later" on a reminder: ask again in half an hour, once. */
+    fun remindLater(ctx: Context) {
+        val req = OneTimeWorkRequestBuilder<ReminderWorker>().setInitialDelay(30, TimeUnit.MINUTES)
+            .setInputData(workDataOf("title" to "Studio time, when you are ready", "route" to "session")).build()
+        try { WorkManager.getInstance(ctx).enqueueUniqueWork("studio-later", ExistingWorkPolicy.REPLACE, req) } catch (e: Exception) { }
+    }
+
     private fun remind(ctx: Context, s: Long, now: Long) {
         val delay = s - now - 15 * 60_000
         if (delay <= 0) return
@@ -236,6 +243,22 @@ object Engine {
             dao.del(e)
         }
         planWeek(ctx)
+    }
+
+    /** What to do first on a piece: its next open small step, or the line left at the end of the last session. */
+    fun firstStep(a: Artwork): String = Texts.firstOpenStep(a.steps).ifBlank { a.nextStep }
+
+    /** Starts a session straight away with sensible choices, so starting is one tap. */
+    suspend fun quickStart(goalMin: Int): Long {
+        val works = dao.artworksNow()
+        val wiped = st.energyDay == LocalDate.now().toString() && st.energy == "wiped"
+        val piece = works.firstOrNull { it.status == "in_progress" } ?: works.firstOrNull { it.status == "idea" }
+        st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
+        st.sessionArtwork = piece?.id ?: 0L
+        st.sessionKind = if (wiped || piece == null) "light" else "make"
+        st.sessionGoalMin = goalMin
+        st.sessionStart = System.currentTimeMillis()
+        return st.sessionStart
     }
 
     /** Milliseconds actually worked in the running session, with pauses taken out. */
@@ -352,6 +375,7 @@ object Engine {
         dao.oppsNow().firstOrNull { it.id == a.oppId }?.let { dao.put(it.copy(status = "applied")) }
         dao.artworksNow().filter { it.id in workIds(a) && available(it) }.forEach { dao.put(it.copy(status = "pending")) }
         dao.eventsNow().filter { it.applId == a.id && it.type in setOf("pack", "submit", "deadline") }.forEach { dao.put(it.copy(done = true)) }
+        st.log("Application locked as sent: " + (dao.oppsNow().firstOrNull { it.id == a.oppId }?.title ?: "application") + ". " + proof)
     }
 
     /** Unlocks a submitted application, for the rare case it really has to change. */
@@ -387,6 +411,7 @@ object Engine {
         val opp = dao.oppsNow().firstOrNull { it.id == a.oppId }
         val works = dao.artworksNow().filter { it.id in workIds(a) }
         dao.put(a.copy(status = if (accepted) "accepted" else "declined", resultText = text.take(4000)))
+        st.log("Result recorded for ${opp?.title ?: "an application"}: " + (if (accepted) "accepted." else "not this time. The works are free again."))
         opp?.let { dao.put(it.copy(status = if (accepted) "accepted" else "declined")) }
         if (!accepted) {
             works.filter { it.status == "pending" }.forEach { dao.put(it.copy(status = "available")) }
@@ -431,6 +456,7 @@ object Engine {
             try {
                 Mail.send(st.smtpHost, st.mailUser, st.mailPass, c.email, c.draftSubject, c.draftBody)
                 dao.put(c.copy(status = "sent", sentAt = now, followUpAt = now + 24 * DAY))
+                st.log("Email sent to ${c.venue.ifBlank { c.email }}.")
                 contacts = dao.contactsNow()
             } catch (e: Exception) { }
         }
@@ -438,6 +464,7 @@ object Engine {
             try {
                 Mail.send(st.smtpHost, st.mailUser, st.mailPass, c.email, "Re: " + c.draftSubject, c.followUpBody)
                 dao.put(c.copy(status = "followed_up", revisitAt = now + 180 * DAY))
+                st.log("Follow-up sent to ${c.venue.ifBlank { c.email }}. Nothing more will be sent to them.")
             } catch (e: Exception) { }
         }
     }
@@ -472,6 +499,7 @@ object Engine {
             if (src != null && ai.ready) try { ingest(m.subject + "\n" + m.text, src.name) } catch (e: Exception) { }
         }
         st.lastMailCheck = msgs.maxOf { it.date }
+        st.log("Checked your inbox: ${msgs.size} new messages looked at.")
     }
 
     // ------------------------------------------------------------ backup and portfolio page
@@ -564,7 +592,7 @@ object Engine {
         val finished = works.firstOrNull { it.status == "finished" }
         if (finished != null) return NextStep("Document \"${finished.title.ifBlank { "Untitled" }}\"", "One photo or file import, then it counts toward your series.", "work/${finished.id}")
         if (current != null) return NextStep(
-            current.nextStep.ifBlank { "Continue \"${current.title.ifBlank { "Untitled" }}\"" },
+            firstStep(current).ifBlank { "Continue \"${current.title.ifBlank { "Untitled" }}\"" },
             "Two-minute start: " + (if (current.format == "physical") "set out your materials." else "open the file."), "session"
         )
         val best = works.filter { documented(it) }.groupBy { it.seriesId }.values.maxOfOrNull { it.size } ?: 0
@@ -608,6 +636,7 @@ object Engine {
         }
         st.lastDaily = now
         st.lastDailyStatus = if (log.isEmpty()) "All steps ran" else log.joinToString("; ")
+        st.log("Daily check finished. " + (if (log.isEmpty()) "Everything ran." else "Some steps could not run: " + log.joinToString("; ")))
         return st.lastDailyStatus
     }
 }
@@ -620,9 +649,9 @@ class DailyWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx,
 
 class ReminderWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
-        val next = try { G.dao.artworksNow().firstOrNull { it.status == "in_progress" }?.nextStep.orEmpty() } catch (e: Exception) { "" }
+        val next = try { G.dao.artworksNow().firstOrNull { it.status == "in_progress" }?.let { Engine.firstStep(it) }.orEmpty() } catch (e: Exception) { "" }
         Notifier.post(applicationContext, G.settings, 50, inputData.getString("title") ?: "Studio time",
-            if (next.isNotBlank()) "Where you left off: $next" else "One small first step is enough.", inputData.getString("route") ?: "session")
+            if (next.isNotBlank()) "First small step: $next" else "One small first step is enough.", inputData.getString("route") ?: "session", choices = true)
         return Result.success()
     }
 }

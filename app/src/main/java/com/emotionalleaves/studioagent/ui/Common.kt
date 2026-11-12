@@ -109,8 +109,27 @@ fun Screen(
 @Composable
 fun H(text: String) = Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp))
 
+/** Small grey explanation. Hidden when "fewer words" is on, so screens can be as quiet as you like. */
 @Composable
-fun Note(text: String) = Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+fun Note(text: String) { if (!st.shortText) Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+
+/** Small grey text that always shows: labels and facts, not explanations. */
+@Composable
+fun Small(text: String) = Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+/** When the last change on an editing screen reached storage. Seeing it once replaces going back to check. */
+val lastSaved = mutableStateOf(0L)
+fun markSaved() { lastSaved.value = System.currentTimeMillis() }
+private val clockFmt = DateTimeFormatter.ofPattern("h:mm:ss a")
+
+@Composable
+fun SavedLine() {
+    val opened = remember { System.currentTimeMillis() }
+    val at = lastSaved.value
+    Small(if (at >= opened) "Saved ✓ at " + Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault()).format(clockFmt) + ". Nothing else to do." else "Everything here saves by itself as you type.")
+}
+
+fun fitLabel(score: Int): String = if (st.fitWords) Texts.fitWord(score) else "Fit $score of 100"
 
 @Composable
 fun Panel(onClick: (() -> Unit)? = null, strong: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
@@ -143,7 +162,7 @@ fun Field(label: String, state: MutableState<String>, lines: Int = 1, number: Bo
 @Composable
 fun Choice(label: String, options: List<String>, selected: String, onSelect: (String) -> Unit) {
     Column {
-        if (label.isNotBlank()) Note(label)
+        if (label.isNotBlank()) Small(label)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             options.forEach { o -> FilterChip(selected = o == selected, onClick = { onSelect(o) }, label = { Text(o.replace('_', ' ')) }) }
         }

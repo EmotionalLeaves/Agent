@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -140,7 +141,8 @@ fun WorkDetail(nav: NavController, id: Long) {
     if (loaded == null) { Screen("Piece", nav) { Note("One moment") }; return }
     var w by remember(id) { mutableStateOf(loaded) }
     var status by remember { mutableStateOf("") }
-    fun save(x: Artwork) { w = x; scope.io { dao.put(x) } }
+    fun save(x: Artwork) { w = x; scope.io { dao.put(x); markSaved() } }
+    val newStep = remember { mutableStateOf("") }
 
     val dir = ImageTools.mediaDir(ctx)
     val orig = File(dir, "work_${id}_orig.jpg")
@@ -188,6 +190,27 @@ fun WorkDetail(nav: NavController, id: Long) {
         Status(status)
         if (w.imagePath.isNotBlank() && (w.status == "in_progress" || w.status == "finished"))
             Button(onClick = { save(w.copy(status = "documented")) }, modifier = Modifier.fillMaxWidth()) { Text("Finished and documented") }
+        SavedLine()
+
+        if (w.status == "in_progress" || w.status == "idea") {
+            H("Small steps")
+            Note("Break the piece into steps small enough to start without thinking. The session screen shows only the next one.")
+            val steps = Texts.steps(w.steps)
+            steps.forEachIndexed { i, (done, text) ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = done, onCheckedChange = { c -> save(w.copy(steps = Texts.stepsText(steps.mapIndexed { j, p -> if (j == i) c to p.second else p }))) })
+                    Text(text, Modifier.weight(1f))
+                    TextButton(onClick = { save(w.copy(steps = Texts.stepsText(steps.filterIndexed { j, _ -> j != i }))) }) { Text("×") }
+                }
+            }
+            Field("Add a small step (for example: block in the big shapes)", newStep)
+            OutlinedButton(enabled = newStep.value.isNotBlank(), onClick = { save(w.copy(steps = Texts.stepsText(steps + (false to newStep.value.trim())))); newStep.value = "" }) { Text("Add step") }
+
+            H("Finish line")
+            Field("This piece is finished when...", w.doneWhen, { save(w.copy(doneWhen = it)) })
+            Note("Decide it now, while you are calm. When the piece meets this, it is finished, even if part of you wants one more pass.")
+            OutlinedButton(onClick = { save(w.copy(status = "finished")) }) { Text(if (w.doneWhen.isNotBlank()) "It meets my finish line: call it finished" else "Call it finished") }
+        }
 
         H("Details")
         Field("Title", w.title, { save(w.copy(title = it)) })
@@ -206,7 +229,6 @@ fun WorkDetail(nav: NavController, id: Long) {
         Choice("Status", workStatuses, w.status) { save(w.copy(status = it)) }
         Field("Next step (shown when you start a session)", w.nextStep, { save(w.copy(nextStep = it)) })
         Field("Tags (your own labels, comma separated)", w.tags, { save(w.copy(tags = it)) })
-        Note("Saved automatically as you type.")
 
         Expand("More pictures of this piece") {
             Note("A detail, the back, the piece on a wall. Kept with the piece and backed up.")

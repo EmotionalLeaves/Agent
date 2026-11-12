@@ -46,7 +46,11 @@ data class Artwork(
     /** More pictures of the same piece (detail, installed view), paths joined by "|". */
     val extraImages: String = "",
     /** Your own labels, comma separated. */
-    val tags: String = ""
+    val tags: String = "",
+    /** Tiny steps, one per line, "[x] done step" or "[ ] open step". */
+    val steps: String = "",
+    /** Your own finish line: this piece is finished when... */
+    val doneWhen: String = ""
 )
 
 @Entity
@@ -300,7 +304,7 @@ interface Dao {
 @Database(
     entities = [Artwork::class, Series::class, Sess::class, Idea::class, Doc::class, Fact::class, Opp::class,
         Appl::class, Contact::class, Evt::class, Ledger::class, Source::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class Db : RoomDatabase() {
@@ -309,7 +313,14 @@ abstract class Db : RoomDatabase() {
     companion object {
         const val NAME = "studio.db"
         fun open(c: Context): Db =
-            Room.databaseBuilder(c, Db::class.java, NAME).setJournalMode(JournalMode.TRUNCATE).addMigrations(MIGRATION_1_2).build()
+            Room.databaseBuilder(c, Db::class.java, NAME).setJournalMode(JournalMode.TRUNCATE).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Artwork ADD COLUMN steps TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Artwork ADD COLUMN doneWhen TEXT NOT NULL DEFAULT ''")
+            }
+        }
 
         /** Build 2 added columns only; nothing from build 1 is dropped or rewritten. */
         val MIGRATION_1_2 = object : Migration(1, 2) {

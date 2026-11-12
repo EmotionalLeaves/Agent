@@ -34,6 +34,7 @@ import com.emotionalleaves.studioagent.data.Opp
 import com.emotionalleaves.studioagent.data.Sess
 import com.emotionalleaves.studioagent.domain.Levels
 import com.emotionalleaves.studioagent.domain.Planner
+import com.emotionalleaves.studioagent.domain.Texts
 import com.emotionalleaves.studioagent.media.ImageTools
 import com.emotionalleaves.studioagent.net.Fetch
 import com.emotionalleaves.studioagent.sys.Notifier
@@ -64,6 +65,10 @@ fun Home(nav: NavController) {
     var guide by remember { mutableStateOf<List<GuideStep>>(emptyList()) }
     var pinning by remember { mutableStateOf(false) }
     val pinText = remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    val appls by dao.appls().collectAsState(emptyList())
+    val idea = remember { mutableStateOf("") }
+    var parked by remember { mutableStateOf(false) }
     LaunchedEffect(works, docs, sessions, events, tick) {
         withContext(Dispatchers.IO) {
             try { next = Engine.nextStep(); pendingCount = Engine.pending().size; guide = guideSteps(ctx) } catch (e: Exception) { }
@@ -108,8 +113,16 @@ fun Home(nav: NavController) {
             }
         }
 
-        if (st.onboarded) Button(onClick = { nav.navigate("session") }, modifier = Modifier.fillMaxWidth().height(56.dp)) {
-            Text(if (st.sessionStart > 0) "Back to session" else "Start session")
+        if (st.onboarded) {
+            if (st.sessionStart > 0) Button(onClick = { nav.navigate("session") }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Back to session") }
+            else {
+                // One tap: the app picks the piece and starts the clock. Nothing to decide first.
+                Button(onClick = { scope.io { Engine.quickStart(st.defaultSessionMin); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Start now") }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { scope.io { Engine.quickStart(5); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }) { Text("Just 5 minutes") }
+                    TextButton(onClick = { nav.navigate("session") }) { Text("Let me choose first") }
+                }
+            }
         }
 
         val todo = guide.filter { !it.done }
@@ -146,10 +159,47 @@ fun Home(nav: NavController) {
             )
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { nav.navigate("ideas") }) { Text("Park an idea") }
-            if (pendingCount > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("Admin pass ($pendingCount)") }
+        // Proof of what got done, in plain counts. No streaks, nothing to break.
+        val weekStart = Engine.millis(today.with(java.time.DayOfWeek.MONDAY).atStartOfDay())
+        val weekSessions = sessions.filter { it.start >= weekStart && it.end > it.start }
+        val wins = mutableListOf<String>()
+        if (weekSessions.isNotEmpty()) wins += "${weekSessions.size} session" + (if (weekSessions.size > 1) "s" else "") + ", ${weekSessions.sumOf { (it.end - it.start) / 60000 }} minutes of making"
+        works.count { it.createdAt >= weekStart && it.imagePath.isNotBlank() }.let { if (it > 0) wins += "$it piece" + (if (it > 1) "s" else "") + " with an image added" }
+        appls.count { it.submittedAt >= weekStart }.let { if (it > 0) wins += "$it application" + (if (it > 1) "s" else "") + " sent" }
+        if (wins.isNotEmpty()) Panel {
+            Text("Done this week", fontWeight = FontWeight.SemiBold)
+            wins.forEach { Text("✓ $it") }
         }
+
+        if (st.onboarded) {
+            Field("Park an idea so it stops circling", idea)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(enabled = idea.value.isNotBlank(), onClick = { val t = idea.value.trim(); idea.value = ""; parked = true; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
+                if (pendingCount > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("Admin pass ($pendingCount)") }
+            }
+            if (parked) Small("Parked ✓. It is safe in Ideas; you can let it go for now.")
+        }
+    }
+}
+
+/** Shown once after a session ends: what was saved, in full, so there is no doubt and nothing to go back and check. */
+@Composable
+fun DoneScreen(nav: NavController) {
+    val sessions by dao.sessions().collectAsState(emptyList())
+    val works by dao.artworks().collectAsState(emptyList())
+    val s = sessions.firstOrNull()
+    Screen("Session saved", nav, back = false) {
+        Panel(strong = true) {
+            Text("Saved ✓", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+            if (s != null) {
+                val mins = ((s.end - s.start) / 60000).coerceAtLeast(0)
+                Text("$mins minutes" + (works.firstOrNull { it.id == s.artworkId }?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".")
+                if (s.nextStep.isNotBlank()) Text("Next time starts with: ${s.nextStep}")
+                Text(if (mins < 10) "Short sessions count. You showed up." else "That counts toward your week.")
+            }
+        }
+        Small("It is all stored. You can close the app.")
+        Button(onClick = { nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("OK") }
     }
 }
 
@@ -214,7 +264,7 @@ fun SessionScreen(nav: NavController) {
                 }
                 TextButton(onClick = { scope.io { workId = dao.put(newWork()) } }) { Text("Start a new piece") }
             }
-            val left = work?.nextStep.orEmpty().ifBlank { sessions.firstOrNull { it.artworkId == workId && it.nextStep.isNotBlank() }?.nextStep.orEmpty() }
+            val left = work?.let { Engine.firstStep(it) }.orEmpty().ifBlank { sessions.firstOrNull { it.artworkId == workId && it.nextStep.isNotBlank() }?.nextStep.orEmpty() }
             Panel(strong = true) {
                 Text("Two-minute start", fontWeight = FontWeight.SemiBold)
                 Text(when {
@@ -226,6 +276,7 @@ fun SessionScreen(nav: NavController) {
             }
             Button(onClick = {
                 st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
+                st.sessionGoalMin = if (kind == "light") 15 else st.defaultSessionMin
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
                 if (st.dndInSession) Notifier.dnd(ctx, true)
             }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Start") }
@@ -249,14 +300,31 @@ fun SessionScreen(nav: NavController) {
             scope.io {
                 if (save) {
                     dao.put(Sess(artworkId = artId, kind = kind, start = start, end = end, note = note.value.trim(), nextStep = nextStep.value.trim(), photoPath = photo))
-                    if (work != null && nextStep.value.isNotBlank()) dao.put(work.copy(nextStep = nextStep.value.trim()))
+                    val latest = dao.artworksNow().firstOrNull { it.id == artId }
+                    if (latest != null && nextStep.value.isNotBlank()) dao.put(latest.copy(nextStep = nextStep.value.trim()))
                 }
+                withContext(Dispatchers.Main) { nav.navigate(if (save) "done" else "home") { popUpTo("home") { inclusive = !save } } }
             }
-            nav.navigate("home") { popUpTo("home") { inclusive = true } }
         }
         Screen("In session", nav) {
             Text("%d:%02d:%02d".format(secs / 3600, (secs / 60) % 60, secs % 60), style = MaterialTheme.typography.displayMedium)
+            val goal = st.sessionGoalMin
+            if (goal > 0) {
+                LinearProgressIndicator(progress = { (secs / (goal * 60f)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().height(10.dp))
+                if (secs >= goal * 60L) Panel(strong = true) { Text("That is your $goal minutes. Stopping now is a complete session. Keep going only if you want to.") }
+                else Small("${((goal * 60L - secs) / 60) + 1} minutes to go of $goal")
+            }
             Note((work?.title?.ifBlank { "Untitled" } ?: st.sessionKind) + ". Your phone is quiet. Close this screen and work; the timer keeps going.")
+            if (work != null) {
+                val steps = Texts.steps(work.steps)
+                if (work.doneWhen.isNotBlank()) Small("Finished when: ${work.doneWhen}")
+                val open = steps.indexOfFirst { !it.first }
+                if (open >= 0) Panel {
+                    Text("Now: ${steps[open].second}", fontWeight = FontWeight.SemiBold)
+                    Small("${steps.count { it.first }} of ${steps.size} small steps done")
+                    OutlinedButton(onClick = { scope.io { dao.put(work.copy(steps = Texts.stepsText(steps.mapIndexed { i, p -> if (i == open) true to p.second else p }))) } }) { Text("Done, show the next one") }
+                } else if (work.nextStep.isNotBlank()) Small("Where you left off: ${work.nextStep}")
+            }
             if (Planner.isWindDown(LocalDateTime.now(), Planner.time(st.bedtime, LocalTime.of(22, 30)))) Panel(strong = true) {
                 Text("Wind-down time. A good place to stop: write your next step below so nothing is lost.")
             }
@@ -344,6 +412,7 @@ fun More(nav: NavController) {
             Triple("Your week", "Studio times, pause, session history", "week"),
             Triple("Materials", "Interview, statement, bio, CV, portfolio", "materials"),
             Triple("Admin pass", "Everything waiting for your yes", "admin"),
+            Triple("Receipts", "Everything sent, and what the app did on its own", "receipts"),
             Triple("Records and logistics", "Checklists, fees, sales, reports", "records"),
             Triple("Ideas", "Parked for later", "ideas"),
             Triple("Call sources", "Pages and senders the app reads", "sources"),

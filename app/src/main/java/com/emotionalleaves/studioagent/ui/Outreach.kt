@@ -138,7 +138,7 @@ fun ContactScreen(nav: NavController, id: Long) {
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     val reply = remember { mutableStateOf("") }
-    fun save(x: Contact) { c = x; scope.io { dao.put(x) } }
+    fun save(x: Contact) { c = x; scope.io { dao.put(x); markSaved() } }
     val level = Engine.levelOf(works, docs, facts)
     val allowed = Levels.outreachAllowed(level, c.kind, Engine.rules())
     val limit = st.revisionLimit
@@ -155,6 +155,7 @@ fun ContactScreen(nav: NavController, id: Long) {
         Field("Their submission instructions", c.submissionNotes, { save(c.copy(submissionNotes = it)) }, lines = 2)
         Field("Notes (what they show, who you met, openings you went to)", c.notes, { save(c.copy(notes = it)) }, lines = 3)
         if (c.website.isNotBlank()) TextButton(onClick = { Share.open(ctx, c.website) }) { Text("Open their site") }
+        SavedLine()
         Status(status)
 
         H("Email")

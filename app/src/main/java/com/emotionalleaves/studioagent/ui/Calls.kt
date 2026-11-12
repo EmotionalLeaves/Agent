@@ -72,7 +72,7 @@ fun profileOf(works: List<Artwork>, docs: List<Doc>, facts: List<Fact>, ledger: 
 
 @Composable
 fun Flags(o: Opp) {
-    Scoring.trustFlags(o).forEach { Text("! $it", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+    Scoring.trustFlags(o).forEach { Text("Worth knowing: $it", color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall) }
 }
 
 fun whereLine(o: Opp): String = listOf(o.organiser, if (o.online) "online" else o.city).filter { it.isNotBlank() }.joinToString("  ·  ")
@@ -120,7 +120,7 @@ fun Calls(nav: NavController) {
                         Panel {
                             Text(o.title, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth())
                             Note(whereLine(o))
-                            Text("Fit ${o.fitScore}" + (if (o.deadline > 0) "  ·  " + Planner.weekendsLeft(today, Engine.date(o.deadline)) else ""))
+                            Text(fitLabel(o.fitScore) + (if (o.deadline > 0) "  ·  " + Planner.weekendsLeft(today, Engine.date(o.deadline)) else ""))
                             o.fitReasons.lines().filter { it.isNotBlank() }.take(4).forEach { Note("· $it") }
                             Flags(o)
                             if (saidNo == o.id) {
@@ -166,7 +166,7 @@ fun Calls(nav: NavController) {
                     Panel(onClick = { nav.navigate("call/${o.id}") }) {
                         Text(o.title, fontWeight = FontWeight.SemiBold)
                         Note(o.kind + "  ·  " + whereLine(o) + "  ·  " + fmtDate(o.deadline) + "  ·  " + (if (o.fee > 0) money(o.fee) else "free"))
-                        Note(when { o.status != "new" -> "You said: ${o.status}"; why.isEmpty() -> "Eligible, fit ${o.fitScore}"; else -> "Held back: " + why.joinToString("; ") })
+                        Note(when { o.status != "new" -> "You said: ${o.status}"; why.isEmpty() -> "Eligible. " + fitLabel(o.fitScore); else -> "Held back: " + why.joinToString("; ") })
                         Flags(o)
                     }
                 }
@@ -206,14 +206,14 @@ fun CallDetail(nav: NavController, id: Long) {
     var status by remember { mutableStateOf("") }
     var deadlineText by remember { mutableStateOf(if (loaded.deadline > 0) Engine.date(loaded.deadline).toString() else "") }
     val p = profileOf(works, docs, facts, ledger)
-    fun save(x: Opp) { val s = Engine.scored(x.copy(dedupeKey = Texts.dedupeKey(x.organiser, x.deadline, x.title)), p); o = s; scope.io { dao.put(s) } }
+    fun save(x: Opp) { val s = Engine.scored(x.copy(dedupeKey = Texts.dedupeKey(x.organiser, x.deadline, x.title)), p); o = s; scope.io { dao.put(s); markSaved() } }
     val why = Scoring.ineligible(o, p, now())
 
     Screen(o.title.ifBlank { "Call" }, nav) {
         Panel(strong = true) {
-            Text("Fit ${o.fitScore} of 100", fontWeight = FontWeight.SemiBold)
+            Text(fitLabel(o.fitScore), fontWeight = FontWeight.SemiBold)
             o.fitReasons.lines().filter { it.isNotBlank() }.forEach { Text("· $it") }
-            if (why.isNotEmpty()) Text("Held back: " + why.joinToString("; "), color = MaterialTheme.colorScheme.error)
+            if (why.isNotEmpty()) Text("Held back by your rules: " + why.joinToString("; "))
             Flags(o)
         }
         Status(status)
@@ -236,7 +236,7 @@ fun CallDetail(nav: NavController, id: Long) {
         Num("Entry fee, " + st.currency, o.fee) { save(o.copy(fee = it)) }
         Choice("Reach", listOf("campus", "local", "online", "regional", "national", "international"), o.scope) { save(o.copy(scope = it)) }
         Field("Link", o.url, { save(o.copy(url = it.trim())) })
-        Note("Saved automatically.")
+        SavedLine()
         Expand("All the details", startOpen = o.organiser.isBlank() && o.rawText.isBlank()) {
         Field("Organiser", o.organiser, { save(o.copy(organiser = it)) })
         Field("Venue", o.venue, { save(o.copy(venue = it)) })
@@ -289,7 +289,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                 Text(when (loaded.status) { "accepted" -> "Accepted"; "declined" -> "Not this time"; else -> "Submitted. Done." }, fontWeight = FontWeight.SemiBold)
                 Text("Sent ${fmtDate(loaded.submittedAt)}.")
                 if (loaded.proofText.isNotBlank()) Note(loaded.proofText)
-                if (loaded.status == "submitted") Note("This application is locked. There is nothing left to check: the result comes to you" + (if (st.mailReady) " automatically." else " by email, and you record it below."))
+                if (loaded.status == "submitted") Small("This application is locked. There is nothing left to check: the result comes to you" + (if (st.mailReady) " automatically." else " by email, and you record it below."))
                 if (loaded.status == "declined") Note("The works are free again and will be offered to the next call that fits.")
             }
             if (loaded.proofPath.isNotBlank()) PathImage(loaded.proofPath, Modifier.fillMaxWidth())
@@ -328,7 +328,7 @@ fun ApplScreen(nav: NavController, id: Long) {
     }
 
     var a by remember(id) { mutableStateOf(loaded) }
-    fun save(x: com.emotionalleaves.studioagent.data.Appl) { a = x; scope.io { dao.put(x) } }
+    fun save(x: com.emotionalleaves.studioagent.data.Appl) { a = x; scope.io { dao.put(x); markSaved() } }
     val checks = Engine.checklist(a, o, works, feeLeft, now())
     val allGreen = checks.all { it.second }
     val chosenIds = Engine.workIds(a)
@@ -385,6 +385,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             checks.forEach { (label, ok) -> Text((if (ok) "✓ " else "○ ") + label) }
         }
         Status(status)
+        SavedLine()
 
         H("Pack")
         if (files.isEmpty()) Button(enabled = !busy && chosenIds.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = {

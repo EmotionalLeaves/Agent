@@ -38,6 +38,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** What another app (or a notification, tile or widget) handed us. */
 data class Incoming(val route: String, val text: String = "", val image: Uri? = null)
@@ -90,6 +92,7 @@ private fun NavBackStackEntry.id(): Long = arguments?.getString("id")?.toLongOrN
 @Composable
 fun Root(incoming: MutableState<Incoming?>) {
     val nav = rememberNavController()
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     val inc = incoming.value
     LaunchedEffect(inc) {
         if (inc != null) {
@@ -102,7 +105,16 @@ fun Root(incoming: MutableState<Incoming?>) {
                 withFrameNanos { }
                 tries++
             }
-            try { nav.navigate(inc.route) { launchSingleTop = true } } catch (e: Exception) { }
+            // The tile and the widget start the clock straight away: no screen of choices first.
+            var route = inc.route
+            if (route == "startnow") {
+                route = if (st.onboarded) "session" else "onboarding"
+                if (st.onboarded && st.sessionStart == 0L) {
+                    try { withContext(Dispatchers.IO) { com.emotionalleaves.studioagent.work.Engine.quickStart(st.defaultSessionMin) } } catch (e: Exception) { }
+                    if (st.dndInSession) com.emotionalleaves.studioagent.sys.Notifier.dnd(ctx, true)
+                }
+            }
+            try { nav.navigate(route) { launchSingleTop = true } } catch (e: Exception) { }
             incoming.value = null
         }
     }
@@ -156,6 +168,8 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("settings") { SettingsScreen(nav, "") }
             composable("settings/{section}") { SettingsScreen(nav, it.arguments?.getString("section").orEmpty()) }
             composable("guide") { Guide(nav) }
+            composable("done") { DoneScreen(nav) }
+            composable("receipts") { Receipts(nav) }
             composable("week") { WeekScreen(nav) }
             composable("sessions") { SessionsScreen(nav) }
             composable("more") { More(nav) }

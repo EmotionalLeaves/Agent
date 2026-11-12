@@ -54,15 +54,21 @@ object Notifier {
     )
 
     /** Returns true if it was shown. Dropped items are never lost: they wait on the home card and in the admin pass. */
-    fun post(ctx: Context, s: Settings, id: Int, title: String, text: String, route: String = "home"): Boolean {
+    fun post(ctx: Context, s: Settings, id: Int, title: String, text: String, route: String = "home", choices: Boolean = false): Boolean {
         if (!allowed(ctx) || quietNow(s)) return false
         val today = LocalDate.now().toString()
         if (s.notifDay != today) { s.notifDay = today; s.notifCount = 0 }
         if (s.notifCount >= s.notifCap) return false
         val intent = Intent(ctx, MainActivity::class.java).putExtra("route", route).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(ctx, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val n = NotificationCompat.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_launcher).setContentTitle(title).setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text)).setContentIntent(pi).setAutoCancel(true).build()
+        val b = NotificationCompat.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_launcher).setContentTitle(title).setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text)).setContentIntent(pi).setAutoCancel(true)
+        if (choices) {
+            // Three honest answers to a reminder, none of them a failure.
+            fun act(what: String, code: Int) = PendingIntent.getBroadcast(ctx, code, Intent(ctx, ReminderReceiver::class.java).setAction(what).putExtra("id", id), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            b.addAction(0, "Start", pi).addAction(0, "In 30 minutes", act("later", 61)).addAction(0, "Not today", act("skip", 62))
+        }
+        val n = b.build()
         return try {
             (ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(id, n)
             s.notifCount = s.notifCount + 1
@@ -225,10 +231,20 @@ object Backup {
     }
 }
 
+/** Handles "In 30 minutes" and "Not today" on a studio reminder. */
+class ReminderReceiver : android.content.BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        try {
+            (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(intent.getIntExtra("id", 50))
+            if (intent.action == "later") com.emotionalleaves.studioagent.work.Engine.remindLater(context)
+        } catch (e: Exception) { }
+    }
+}
+
 /** Quick-settings tile: one tap from anywhere to start a session. */
 class SessionTile : TileService() {
     override fun onClick() {
-        val i = Intent(this, MainActivity::class.java).putExtra("route", "session").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val i = Intent(this, MainActivity::class.java).putExtra("route", "startnow").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         try {
             if (Build.VERSION.SDK_INT >= 34) {
                 startActivityAndCollapse(PendingIntent.getActivity(this, 7, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
@@ -243,7 +259,7 @@ class SessionTile : TileService() {
 /** Home-screen widget: a single Start session button. */
 class SessionWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
-        val i = Intent(context, MainActivity::class.java).putExtra("route", "session").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val i = Intent(context, MainActivity::class.java).putExtra("route", "startnow").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(context, 8, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         for (id in ids) {
             val views = RemoteViews(context.packageName, R.layout.widget_start)

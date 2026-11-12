@@ -304,6 +304,21 @@ object Texts {
         "ever-evolving", "seeks to", "invites the viewer", "at the intersection of", "unique perspective", "passion for"
     )
 
+    /** A piece's tiny steps. Each line is "[x] text" (done) or "[ ] text" (open); a bare line counts as open. */
+    fun steps(s: String): List<Pair<Boolean, String>> = s.lines().map { it.trim() }.filter { it.isNotBlank() }.map {
+        when {
+            it.startsWith("[x]") -> true to it.removePrefix("[x]").trim()
+            it.startsWith("[ ]") -> false to it.removePrefix("[ ]").trim()
+            else -> false to it
+        }
+    }.filter { it.second.isNotBlank() }
+
+    fun stepsText(l: List<Pair<Boolean, String>>): String = l.joinToString("\n") { (if (it.first) "[x] " else "[ ] ") + it.second }
+
+    fun firstOpenStep(s: String): String = steps(s).firstOrNull { !it.first }?.second.orEmpty()
+
+    fun fitWord(score: Int): String = when { score >= 75 -> "Strong fit"; score >= 60 -> "Good fit"; score >= 45 -> "Fair fit"; else -> "Weak fit" }
+
     fun words(s: String): Int = s.trim().split(Regex("\\s+")).count { it.isNotBlank() }
 
     fun jargonIn(s: String, extra: List<String> = emptyList()): List<String> {
