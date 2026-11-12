@@ -219,12 +219,16 @@ fun MicButton(onText: (String) -> Unit) {
     }) { Text("Speak instead") }
 }
 
+/** Recently shown pictures, so lists do not flicker or re-read files while scrolling. */
+private val thumbs = android.util.LruCache<String, ImageBitmap>(40)
+
 /** Shows an image file, decoded small and off the main thread. */
 @Composable
 fun PathImage(path: String, modifier: Modifier = Modifier, maxSide: Int = 700) {
     val stamp = if (path.isBlank()) 0L else File(path).lastModified()
-    val bmp by produceState<ImageBitmap?>(null, path, stamp) {
-        value = withContext(Dispatchers.IO) { ImageTools.decode(path, maxSide)?.asImageBitmap() }
+    val key = "$path|$stamp|$maxSide"
+    val bmp by produceState<ImageBitmap?>(thumbs.get(key), key) {
+        if (value == null) value = withContext(Dispatchers.IO) { ImageTools.decode(path, maxSide)?.asImageBitmap()?.also { thumbs.put(key, it) } }
     }
     val b = bmp
     if (b != null) Image(b, null, modifier, contentScale = ContentScale.Fit)

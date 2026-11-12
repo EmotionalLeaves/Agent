@@ -438,24 +438,32 @@ fun ShareScreen(nav: NavController) {
 fun More(nav: NavController) {
     Screen("More", nav, back = false) {
         listOf(
-            Triple("Guide", "Every setup step, one at a time", "guide"),
-            Triple("Where this is going", "The five levels and what opens each one", "path"),
-            Triple("Plain answers", "What a call, a series, an edition and the rest actually mean", "basics"),
-            Triple("Calls", "Open calls, ranked for you", "calls"),
-            Triple("People", "Venues, curators, your email list", "outreach"),
-            Triple("Your week", "Studio times, pause, session history", "week"),
-            Triple("Materials", "Interview, statement, bio, CV, portfolio", "materials"),
-            Triple("Admin pass", "Everything waiting for your yes", "admin"),
-            Triple("Ready-made emails", "What to say to a print lab, a gallery, a library", "letters"),
-            Triple("Receipts", "Everything sent, and what the app did on its own", "receipts"),
-            Triple("Records and logistics", "Checklists, fees, sales, reports", "records"),
-            Triple("Ideas", "Parked for later", "ideas"),
-            Triple("Call sources", "Pages and senders the app reads", "sources"),
-            Triple("Settings", "You, your rules, AI, email, backup", "settings")
-        ).forEach { (title, sub, route) -> Panel(onClick = { nav.navigate(route) }) { Text(title, fontWeight = FontWeight.SemiBold); Note(sub) } }
+            "Help" to listOf(
+                Triple("Guide", "Every setup step, one at a time", "guide"),
+                Triple("Plain answers", "What a call, a series, an edition and the rest mean", "basics"),
+                Triple("Where this is going", "The five levels and what opens each one", "path")
+            ),
+            "Do" to listOf(
+                Triple("Calls", "Open calls, ranked for you", "calls"),
+                Triple("People", "Openings, venues, your email list", "outreach"),
+                Triple("Materials", "Interview, statement, bio, CV, portfolio", "materials"),
+                Triple("Ready-made emails", "What to say to a print lab, a gallery, a library", "letters"),
+                Triple("Your week", "Studio times, pause, session history", "week"),
+                Triple("Ideas", "Parked for later", "ideas"),
+                Triple("Admin pass", "Everything waiting for your yes", "admin")
+            ),
+            "Look up" to listOf(
+                Triple("Receipts", "Everything sent, and what the app did on its own", "receipts"),
+                Triple("Records and logistics", "To-dos, fees, sales, reports", "records"),
+                Triple("Call sources", "Pages and senders the app reads", "sources"),
+                Triple("Settings", "You, your rules, AI, email, backup", "settings")
+            )
+        ).forEach { (group, items) ->
+            H(group)
+            items.forEach { (title, sub, route) -> Panel(onClick = { nav.navigate(route) }) { Text(title, fontWeight = FontWeight.SemiBold); Small(sub) } }
+        }
     }
 }
-
 
 /** A three-minute look at the week ahead, offered once at the weekend. One decision: which piece. */
 @Composable

@@ -128,6 +128,17 @@ object Papers {
         }
     }
 
+    private fun cell(s: String): String = "\"" + s.replace("\"", "'").replace("\n", " ") + "\""
+
+    /** The whole catalog as a spreadsheet file: one row per piece. */
+    fun inventoryCsv(works: List<Artwork>, seriesNames: Map<Long, String>): String = buildString {
+        appendLine("title,year,medium,height_in,width_in,series,status,price,edition,prints_made,location,tags")
+        works.forEach { a ->
+            appendLine(listOf(cell(a.title), a.year.toString(), cell(medium(a)), Texts.dim(a.heightIn), Texts.dim(a.widthIn), cell(seriesNames[a.seriesId].orEmpty()),
+                a.status, if (a.nfs) "NFS" else "%.0f".format(a.price), a.editionSize.toString(), a.editionUsed.toString(), cell(a.location), cell(a.tags)).joinToString(","))
+        }
+    }
+
     fun escape(s: String): String = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
 
     /** A single static page: works, statement, CV, contact. No feeds, no trackers. */

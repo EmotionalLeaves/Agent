@@ -15,6 +15,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -469,6 +475,8 @@ fun WebFill(nav: NavController, id: Long) {
     var web by remember { mutableStateOf<WebView?>(null) }
     var chooser by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
     val picked = remember { mutableStateListOf<String>() }
+    var copying by remember { mutableStateOf(false) }
+    val clipboard = LocalClipboardManager.current
     var status by remember { mutableStateOf("Sign in if the site asks; it stays signed in here. Then tap Fill.") }
 
     Scaffold(
@@ -491,6 +499,7 @@ fun WebFill(nav: NavController, id: Long) {
                             web?.evaluateJavascript(FILL_JS + "(" + d.toString() + ")") { r -> status = "Filled ${r ?: "0"} fields. Read each one, then press the site's own submit button." }
                         }
                     }) { Text("Fill") }
+                    TextButton(onClick = { copying = !copying }) { Text(if (copying) "Hide" else "Copy") }
                     TextButton(onClick = {
                         val w = web
                         if (a != null && w != null) scope.io({ status = it }) {
@@ -511,6 +520,21 @@ fun WebFill(nav: NavController, id: Long) {
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize()) {
             Text(status, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
+            if (copying && a != null) {
+                // When Fill misses a box: tap a line to copy it, then long-press the box on the form and paste.
+                val chosen = works.filter { it.id in Engine.workIds(a) }
+                val bio = docs.filter { it.type == "bio" && it.text.isNotBlank() }.maxByOrNull { if (it.approved) 1 else 0 }?.text.orEmpty()
+                val items = listOf("Name" to st.fullName, "Email" to st.email, "Phone" to st.phone, "Website" to st.website, "City" to st.city,
+                    "Statement" to a.statement, "How the work fits" to a.themeText, "Bio" to bio) +
+                    chosen.flatMap { w -> listOf("Title" to w.title, "Details of ${w.title}" to Papers.caption(w), "Price of ${w.title}" to Papers.priceLine(w)) } +
+                    Engine.answers(a).map { it.first to it.second }
+                Column(Modifier.heightIn(max = 240.dp).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp)) {
+                    items.filter { it.second.isNotBlank() }.forEach { (label, value) ->
+                        Text("$label: " + value.take(70) + (if (value.length > 70) "..." else ""), style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.fillMaxWidth().clickable { clipboard.setText(AnnotatedString(value)); status = "Copied: $label. Long-press the box on the form and choose Paste." }.padding(vertical = 8.dp))
+                    }
+                }
+            }
             val cb = chooser
             if (cb != null && a != null) {
                 Column(Modifier.padding(horizontal = 12.dp)) {

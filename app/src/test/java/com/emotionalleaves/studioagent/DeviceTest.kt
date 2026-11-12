@@ -97,7 +97,7 @@ class AppTest {
             "settings" to "Your rules", "settings/you" to "Sizes in", "settings/hours" to "Change my studio times", "settings/rules" to "What matters most when ranking",
             "settings/writing" to "These apply to everything", "settings/ai" to "Test the key", "settings/email" to "Send me a test email",
             "settings/github" to "Back up to GitHub now", "settings/backup" to "Choose a backup folder", "settings/permissions" to "Allow Do Not Disturb",
-            "guide" to "Tell the app who you are", "receipts" to "What the app did on its own", "settings/calm" to "Finished means finished", "done" to "Session saved", "week" to "Change these", "sessions" to "No sessions yet", "more" to "Call sources", "share" to "Park as an idea"
+            "guide" to "Tell the app who you are", "receipts" to "What the app did on its own", "settings/calm" to "Finished means finished", "done" to "Session saved", "week" to "Change these", "sessions" to "No sessions yet", "more" to "Look up", "share" to "Park as an idea"
         ).forEach { (route, expect) -> opens(route, expect) }
     }
 
@@ -132,7 +132,7 @@ class AppTest {
             "crop/${ids["work"]}" to "Drag each dot", "ideas" to "Fridge light series", "materials" to "Cover letter", "doc/${ids["doc"]}" to "Ready when these are all true",
             "facts" to "BFA, State University", "calls" to "Winter Open", "call/${ids["opp"]}" to "The basics", "appl/${ids["draft"]}" to "Questions this call asks (1)",
             "appl/${ids["sent"]}" to "Submitted. Done.", "sources" to "CaFE alerts", "outreach" to "Campus Gallery", "contact/${ids["contact"]}" to "How realistic right now",
-            "records" to "Buy frames", "guide" to "of 16 done", "week" to "Coming up", "sessions" to "Glaze the sky"
+            "records" to "Buy frames", "guide" to "of 17 done", "week" to "Coming up", "sessions" to "Glaze the sky"
         ).forEach { (route, expect) -> opens(route, expect) }
     }
 

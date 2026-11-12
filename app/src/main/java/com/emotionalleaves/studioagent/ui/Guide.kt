@@ -64,6 +64,10 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
             listOf("Look at the suggested times.", "Tap Change these to edit the days, times and lengths.", "Tap Save and re-plan."),
             "week", "Open your week", st.weekTemplate.isNotBlank() || events.any { it.type == "studio" } || m("week"), optional = true, manual = true),
 
+        GuideStep("print", a, "Get one piece printed and framed",
+            "This is the moment digital work becomes something that can hang. The app walks each step and tells you what to ask for.",
+            listOf("Open a finished piece in Studio.", "Open Getting it printed.", "Do only the highlighted step, then tap Done.", "Ready-made emails (under More) has the message to send a print lab."),
+            "works", "Open Studio", works.any { it.printStage >= 5 } || m("print"), optional = true, manual = true),
         GuideStep("ai", b, "Add an AI key",
             "This lets the app write statements and emails and read calls out of links and flyers. It is pay-as-you-go and separate from any chat subscription. The app stops at your monthly cap (5 to start).",
             listOf("In your phone's browser, open platform.claude.com and sign in or create an account.", "Add a small amount of credit in the billing section.", "Open Settings, then API keys, and create a key.",

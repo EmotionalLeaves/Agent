@@ -81,6 +81,9 @@ class PartsTest {
         val facts = listOf(Fact(category = "education", year = 2020, text = "BFA, State University"), Fact(category = "group", year = 2026, text = "Winter Open, Riverside"))
         assertEquals("Piece 1, 2026, Archival pigment print, 20 x 16 in (50.8 x 40.6 cm), Edition of 5", Papers.caption(works[0]))
         assertTrue(Papers.printOrder(s, works).contains("300 ppi"))
+        val csv = Papers.inventoryCsv(works.take(1).map { it.copy(title = "Say \"hi\"", tags = "blue, night") }, mapOf(0L to ""))
+        assertEquals(2, csv.trim().lines().size)
+        assertTrue(csv.contains("\"Say 'hi'\",2026,\"Archival pigment print\",20,16") && csv.contains("\"blue, night\""))
         val html = Papers.portfolioHtml(s, works.map { it to "a<b>.jpg" }, "Line one\nLine <two>", "Bio", "CV")
         assertTrue(html.contains("Jade Leaves") && html.contains("Line &lt;two&gt;") && !html.contains("<two>"))
     }

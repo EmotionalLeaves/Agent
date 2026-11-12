@@ -53,3 +53,23 @@ build-1 database. The camera, calendar, email, AI services, GitHub and the web f
 | 4 Start over | When a piece is marked documented, blanks are filled with safe defaults and listed; sentence starters for every interview question; help for an empty CV |
 
 Still not possible to test without a phone: PDFs, the camera, the calendar, real email, real AI services, GitHub, folder backup, the web form filler.
+
+## Builds 12 to 17: fifteen more cycles
+
+| Cycle | Added |
+| --- | --- |
+| 1 | Bring in work you have already made: pick several files and each becomes a finished piece with title, size, edition and price filled in. "Make another like this" |
+| 2 | Calls are read without an AI key: deadline, fee, link, email, kind and reach are picked out by pattern matching |
+| 3 | Statements and bios can be built from your own interview answers and CV facts, with no AI |
+| 4 | Getting it printed: five plain steps per piece from file to framed, with costs that go into your records |
+| 5 | "Is this series ready to show?": objective checks, nothing to perfect beyond them |
+| 6 | Ready-made emails for nine common situations (print lab quote, asking a campus gallery, saying yes, withdrawing, thank you...) |
+| 7 | Openings log with a gentle one-a-month count and how to find and survive one |
+| 8 | A starter list of four places every campus and town has, each with what to find out |
+| 9 | "Where this is going": the five levels, what each opens, and your progress |
+| 10 | The screen stays on during a session so the time bar is always visible |
+| 11 | A three-minute weekend look-ahead: what you did, one piece for next week, your studio times |
+| 12 | A question you have answered before is pre-filled with your earlier answer |
+| 13 | A Copy list in the entry-form browser for boxes that Fill misses |
+| 14 | Inventory export as a spreadsheet file; pictures in lists are cached so scrolling is smooth |
+| 15 | Re-audit: the More menu is grouped into Help, Do and Look up; the Guide gained a printing step |

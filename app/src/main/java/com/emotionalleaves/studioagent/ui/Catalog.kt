@@ -122,6 +122,13 @@ fun Works(nav: NavController) {
                 Field("Search title, tag, medium or series", search)
                 Choice("", listOf("all") + workStatuses.filter { x -> works.any { it.status == x } }, show) { show = it }
             }
+            if (works.isNotEmpty()) TextButton(onClick = {
+                scope.io({ importStatus = it }) {
+                    val f = File(ImageTools.exportDir(ctx), "StudioAgent_inventory.csv")
+                    f.writeText(Papers.inventoryCsv(works, series.associate { it.id to it.name }))
+                    withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "text/csv") }
+                }
+            }) { Text("Export my inventory as a spreadsheet file") }
             val q = search.value.trim().lowercase()
             works.filter { w ->
                 (show == "all" || w.status == show) && (q.isBlank() || listOf(w.title, w.tags, w.medium, w.status, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).any { it.lowercase().contains(q) })
