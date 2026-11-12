@@ -358,7 +358,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Count("Notifications a day, at most", st.notifCap, 0, 10) { st.notifCap = it }
                 Toggle("Book studio time in my calendar", useCal) { useCal = it; st.useCalendar = it }
                 Toggle("Silence my phone during sessions", dnd) { dnd = it; st.dndInSession = it }
-                Small("Your studio times themselves are on Today: tap This week.")
+                Small("Your studio times themselves are on Today: tap Your week.")
             }
             "rules" -> {
                 Intro("rules", "The defaults follow the plan: start free and local, climb when a gate is met. Every one of them is yours to change.")

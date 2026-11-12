@@ -251,4 +251,12 @@ class DomainTest {
         assertTrue(fit.contains("["))
         assertEquals("[Your answer, in a sentence or two]", com.emotionalleaves.studioagent.ui.Starter.answer(""))
     }
+
+    @Test fun everyScreenBelongsToOneTab() {
+        val tabs = listOf("home", "works", "calls", "outreach", "more")
+        val expect = mapOf("home" to "home", "session" to "home", "week" to "home", "admin" to "home", "works" to "works", "work/3" to "works", "ideas" to "works",
+            "calls" to "calls", "call/2" to "calls", "appl/4" to "calls", "sources" to "calls", "outreach" to "outreach", "contact/1" to "outreach", "letters" to "outreach",
+            "more" to "more", "materials" to "more", "guide" to "more", "settings/ai" to "more", "records" to "more", "receipts" to "more", "basics" to "more", "tour" to "more")
+        expect.forEach { (route, tab) -> assertEquals(route, tab, com.emotionalleaves.studioagent.ui.tabFor(route, tabs)) }
+    }
 }
