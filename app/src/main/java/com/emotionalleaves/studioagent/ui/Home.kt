@@ -546,6 +546,7 @@ fun More(nav: NavController) {
         Section("Help")
         IconRow(Icons.Default.PlayArrow, "The tour", "How it all fits, in two minutes") { nav.navigate("tour") }
         IconRow(Icons.Default.Info, "Plain answers", "What the art-world words mean") { nav.navigate("basics") }
+        IconRow(Icons.Default.Info, "About this app", "Version, privacy, credits") { nav.navigate("about") }
     }
 }
 

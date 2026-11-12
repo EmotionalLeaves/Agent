@@ -355,8 +355,10 @@ object Texts {
     fun clean(s: String): String = s.replace(Regex("[^A-Za-z0-9]+"), "").take(40)
 
     /** Lastname_Title_Year_Medium_Size.jpg */
-    fun fileName(lastName: String, title: String, year: Int, medium: String, wIn: Double, hIn: Double, ext: String = "jpg"): String {
-        val parts = mutableListOf(clean(lastName).ifBlank { "Artist" }, clean(title).ifBlank { "Untitled" })
+    fun fileName(lastName: String, title: String, year: Int, medium: String, wIn: Double, hIn: Double, ext: String = "jpg", number: Int = 0): String {
+        val parts = mutableListOf(clean(lastName).ifBlank { "Artist" })
+        if (number > 0) parts += "%02d".format(number)
+        parts += clean(title).ifBlank { "Untitled" }
         if (year > 0) parts += year.toString()
         if (medium.isNotBlank()) parts += clean(medium)
         if (wIn > 0 && hIn > 0) parts += "${dim(hIn)}x${dim(wIn)}in"
@@ -367,8 +369,8 @@ object Texts {
 
     fun dims(wIn: Double, hIn: Double, dIn: Double = 0.0): String {
         if (wIn <= 0 || hIn <= 0) return ""
-        val inches = "${dim(hIn)} x ${dim(wIn)}" + (if (dIn > 0) " x ${dim(dIn)}" else "") + " in"
-        val cm = "${dim1(hIn * 2.54)} x ${dim1(wIn * 2.54)}" + (if (dIn > 0) " x ${dim1(dIn * 2.54)}" else "") + " cm"
+        val inches = "${dim(hIn)} \u00D7 ${dim(wIn)}" + (if (dIn > 0) " \u00D7 ${dim(dIn)}" else "") + " in"
+        val cm = "${dim1(hIn * 2.54)} \u00D7 ${dim1(wIn * 2.54)}" + (if (dIn > 0) " \u00D7 ${dim1(dIn * 2.54)}" else "") + " cm"
         return "$inches ($cm)"
     }
 
@@ -427,6 +429,11 @@ object Texts {
             if (lines.isNotEmpty()) out += heading to lines
         }
         return out
+    }
+
+    /** CV sections in the usual order, newest first inside each, for documents that lay the years out in a column. */
+    fun cvSections(facts: List<Fact>): List<Pair<String, List<Fact>>> = cvOrder.mapNotNull { (key, heading) ->
+        facts.filter { it.category == key && it.text.isNotBlank() }.sortedByDescending { it.year }.takeIf { it.isNotEmpty() }?.let { heading to it }
     }
 
     fun cvText(name: String, contact: String, facts: List<Fact>): String =

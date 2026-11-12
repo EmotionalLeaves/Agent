@@ -187,6 +187,7 @@ fun Root(incoming: MutableState<Incoming?>) {
         ) {
             composable("home") { Home(nav) }
             composable("tour") { Tour(nav) }
+            composable("about") { About(nav) }
             composable("session") { SessionScreen(nav) }
             composable("admin") { Admin(nav) }
             composable("share") { ShareScreen(nav) }

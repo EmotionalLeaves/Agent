@@ -367,6 +367,25 @@ object Engine {
         return fit?.text ?: pool.minByOrNull { Texts.words(it.text) }?.let { Texts.trimToWords(it.text, cap) }.orEmpty()
     }
 
+    /** The covering email for an application: short, formal, and naming exactly what is attached. */
+    fun applicationEmail(opp: Opp, chosen: List<Artwork>, statement: String): String = buildString {
+        val to = listOf(opp.organiser, opp.venue).firstOrNull { it.isNotBlank() }
+        appendLine(if (to != null) "Dear $to team," else "Dear selection committee,")
+        appendLine()
+        appendLine("Please find attached my submission for ${opp.title.ifBlank { "your open call" }}. " +
+            (if (chosen.size == 1) "It includes one work:" else "It includes ${chosen.size} works:"))
+        appendLine()
+        chosen.forEachIndexed { i, a -> appendLine("${i + 1}. ${Papers.caption(a)}") }
+        appendLine()
+        appendLine("The image files are numbered to match this list. My CV, image list" + (if (statement.isNotBlank()) " and artist statement are" else " are") + " attached as PDFs.")
+        appendLine()
+        appendLine("Thank you for considering my work.")
+        appendLine()
+        appendLine("Kind regards,")
+        appendLine()
+        append(Papers.signature(st))
+    }
+
     suspend fun createApplication(ctx: Context, opp: Opp): Long {
         dao.applsNow().firstOrNull { it.oppId == opp.id }?.let { return it.id }
         val works = dao.artworksNow().filter { available(it) }
@@ -375,13 +394,12 @@ object Engine {
         val chosen = (bySeries + works.filter { it !in bySeries }).take(want)
         val statement = pickStatement(opp.statementLimit)
         val list = chosen.mapIndexed { i, a -> "${i + 1}. ${Papers.caption(a)}" }.joinToString("\n")
-        val body = "Hello,\n\nPlease find my submission for ${opp.title} attached.\n\n$list\n\n" +
-            (if (statement.isNotBlank()) "Artist statement:\n$statement\n\n" else "") + "Thank you for your time.\n\n${st.fullName}\n${st.email}\n${st.website}".trim()
+        val body = applicationEmail(opp, chosen, statement)
         val id = dao.put(
             Appl(
                 oppId = opp.id, workIds = chosen.joinToString(",") { it.id.toString() }, statement = statement,
                 method = if (opp.email.isNotBlank()) "email" else "web", emailTo = opp.email,
-                emailSubject = "Submission: ${opp.title} / ${st.fullName}", emailBody = body, createdAt = System.currentTimeMillis()
+                emailSubject = "${opp.title}: submission from ${st.fullName.ifBlank { "the artist" }}", emailBody = body, createdAt = System.currentTimeMillis()
             )
         )
         dao.put(opp.copy(status = "yes"))
@@ -421,19 +439,23 @@ object Engine {
         return out
     }
 
-    /** Exports images to the call's exact spec and names, plus CV, image list and statement. */
+    /**
+     * Exports images to the call's exact spec, numbered to match the image list, plus CV, image list, statement and answers.
+     * Every file starts with the artist's last name, so nothing gets lost among other applicants' files.
+     */
     suspend fun buildPack(ctx: Context, a: Appl, o: Opp): File = withContext(Dispatchers.IO) {
         val dir = File(ImageTools.exportDir(ctx), "pack_${a.id}").apply { deleteRecursively(); mkdirs() }
-        val works = dao.artworksNow().filter { it.id in workIds(a) }
+        val ids = workIds(a)
+        val works = dao.artworksNow().filter { it.id in ids }.sortedBy { ids.indexOf(it.id) }
         val (px, bytes) = ImageTools.parseSpecs(o.imageSpecs)
-        works.forEach { w ->
-            ImageTools.export(w.imagePath, px, bytes, File(dir, Texts.fileName(st.lastName, w.title, w.year, Papers.medium(w), w.widthIn, w.heightIn)))
-        }
-        Papers.imageList(ctx, st, works, withPrices = true, dir = dir)
-        Papers.cv(ctx, st, dao.factsNow()).copyTo(File(dir, Texts.clean(st.lastName).ifBlank { "Artist" } + "_CV.pdf"), overwrite = true)
-        File(dir, "Statement.txt").writeText(a.statement + (if (a.themeText.isNotBlank()) "\n\n" + a.themeText else ""))
-        val qa = answers(a)
-        if (qa.isNotEmpty()) File(dir, "Answers.txt").writeText(qa.joinToString("\n\n") { (q, ans) -> "$q\n$ans" })
+        val names = works.mapIndexed { i, w -> Texts.fileName(st.lastName.ifBlank { st.firstName }, w.title, w.year, Papers.medium(w), w.widthIn, w.heightIn, number = i + 1) }
+        works.forEachIndexed { i, w -> ImageTools.export(w.imagePath, px, bytes, File(dir, names[i]), st.fullName, Papers.caption(w)) }
+        Papers.imageList(ctx, st, works, withPrices = true, dir = dir, files = names)
+        Papers.cv(ctx, st, dao.factsNow()).copyTo(File(dir, Papers.docName(st, "CV")), overwrite = true)
+        if (a.statement.isNotBlank() || a.themeText.isNotBlank())
+            Papers.textDoc(ctx, st, "Artist statement", listOfNotNull(a.statement.takeIf { it.isNotBlank() }?.let { "" to it }, a.themeText.takeIf { it.isNotBlank() }?.let { "On the theme" to it }), dir, Papers.docName(st, "Statement"))
+        val qa = answers(a).filter { it.second.isNotBlank() }
+        if (qa.isNotEmpty()) Papers.textDoc(ctx, st, "Answers for ${o.title}", qa, dir, Papers.docName(st, "Answers"))
         dao.put(a.copy(packDir = dir.absolutePath))
         dir
     }
@@ -620,10 +642,10 @@ object Engine {
         val pairs = works.map { a ->
             val name = Texts.fileName(st.lastName, a.title, a.year, "", 0.0, 0.0).replace(".jpg", "_${a.id}.jpg")
             val f = File(tmp, name)
-            if (ImageTools.export(a.imagePath, 1600, 900_000, f)) GitHub.putFile(st.ghPagesRepo, "img/$name", f.readBytes(), "Add ${a.title}", st.ghToken)
+            if (ImageTools.export(a.imagePath, 1600, 900_000, f, st.fullName, Papers.caption(a))) GitHub.putFile(st.ghPagesRepo, "img/$name", f.readBytes(), "Add ${a.title}", st.ghToken)
             a to name
         }
-        val html = Papers.portfolioHtml(st, pairs, statement, bio, Texts.cvText("", "", dao.factsNow()).trim())
+        val html = Papers.portfolioHtml(st, pairs, statement, bio, dao.factsNow())
         GitHub.putFile(st.ghPagesRepo, "index.html", html.toByteArray(), "Update portfolio", st.ghToken)
         GitHub.enablePages(st.ghPagesRepo, st.ghToken)
         val url = GitHub.pagesUrl(st.ghPagesRepo)

@@ -71,7 +71,7 @@ class PartsTest {
         assertEquals(null, com.emotionalleaves.studioagent.domain.Texts.suggestedPrintSize(0, 0))
     }
 
-    // PDFs themselves cannot be produced without a phone, so this covers the words that go into them.
+    // The words that go into every document and email.
     @Test fun captionsOrdersAndThePortfolioPageReadRight() {
         ctx
         val s = G.settings
@@ -79,13 +79,35 @@ class PartsTest {
         val img = picture("work.jpg")
         val works = (1..3).map { Artwork(id = it.toLong(), title = "Piece $it", year = 2026, widthIn = 16.0, heightIn = 20.0, price = 300.0, editionSize = 5, imagePath = img.absolutePath, pixelW = 4800, pixelH = 6000) }
         val facts = listOf(Fact(category = "education", year = 2020, text = "BFA, State University"), Fact(category = "group", year = 2026, text = "Winter Open, Riverside"))
-        assertEquals("Piece 1, 2026, Archival pigment print, 20 x 16 in (50.8 x 40.6 cm), Edition of 5", Papers.caption(works[0]))
+        assertEquals("Piece 1, 2026, Archival pigment print, 20 \u00D7 16 in (50.8 \u00D7 40.6 cm), Edition of 5", Papers.caption(works[0]))
         assertTrue(Papers.printOrder(s, works).contains("300 ppi"))
         val csv = Papers.inventoryCsv(works.take(1).map { it.copy(title = "Say \"hi\"", tags = "blue, night") }, mapOf(0L to ""))
         assertEquals(2, csv.trim().lines().size)
-        assertTrue(csv.contains("\"Say 'hi'\",2026,\"Archival pigment print\",20,16") && csv.contains("\"blue, night\""))
-        val html = Papers.portfolioHtml(s, works.map { it to "a<b>.jpg" }, "Line one\nLine <two>", "Bio", "CV")
+        assertTrue(csv, csv.contains("JL-2026-001,\"Say \"\"hi\"\"\",2026,\"Archival pigment print\",20,16,") && csv.contains("\"blue, night\""))
+        val html = Papers.portfolioHtml(s, works.map { it to "a<b>.jpg" }, "Line one\nLine <two>", "Bio", facts)
         assertTrue(html.contains("Jade Leaves") && html.contains("Line &lt;two&gt;") && !html.contains("<two>"))
+        assertTrue(html.contains("<em>Piece 1</em>, 2026") && html.contains("<dt>2020</dt><dd>BFA, State University</dd>"))
+        // Covering letters and emails close with the full signature, never a bare first name.
+        assertTrue(Papers.signature(s).startsWith("Jade Leaves\njade@example.com"))
+        assertEquals("Leaves_02_BlueHour_2026.jpg", com.emotionalleaves.studioagent.domain.Texts.fileName("Leaves", "Blue Hour", 2026, "", 0.0, 0.0, number = 2))
+        assertEquals("$1,250", Papers.money(s, 1250.0))
+    }
+
+    /** Every document a gallery sees is really written, starts like a PDF, and is named Lastname_What.pdf. */
+    @Test fun documentsAreWrittenAndNamedProperly() {
+        ctx
+        val s = G.settings
+        s.firstName = "Jade"; s.lastName = "Leaves"; s.email = "jade@example.com"; s.city = "Austin"
+        val img = picture("doc.jpg")
+        val works = (1..9).map { Artwork(id = it.toLong(), title = "Piece $it", year = 2026, widthIn = 16.0, heightIn = 20.0, price = 1300.0, editionSize = 5, imagePath = img.absolutePath, pixelW = 4800, pixelH = 6000) }
+        val facts = (1..30).map { Fact(category = if (it % 2 == 0) "group" else "education", year = 2000 + it % 26, text = "Entry number $it, a long enough line to wrap across the column on a letter page") }
+        val files = try {
+            listOf(Papers.cv(ctx, s, facts), Papers.portfolio(ctx, s, works, "A statement.", 5), Papers.imageList(ctx, s, works, true),
+                Papers.labels(ctx, s, works), Papers.certificate(ctx, s, works[0], 2), Papers.billOfSale(ctx, s, works[0], "Sam Buyer", 1300.0, 1),
+                Papers.proposal(ctx, s, "Riverside Gallery", "Night", "A statement.", "A bio.", works))
+        } catch (e: Throwable) { org.junit.Assume.assumeTrue("PDF drawing is not available off a phone: $e", false); return }
+        assertEquals(listOf("Leaves_CV.pdf", "Leaves_Portfolio.pdf", "Leaves_Price_list.pdf", "Leaves_Wall_labels.pdf", "Leaves_Certificate_Piece1_2.pdf", "Leaves_Bill_of_sale_Piece1.pdf", "Leaves_Proposal_RiversideGallery.pdf"), files.map { it.name })
+        files.forEach { f -> assertTrue(f.name, f.length() > 300 && String(f.readBytes().copyOf(5)) == "%PDF-") }
     }
 
     @Test fun existingFilesComeInAsFinishedPieces() = runBlocking {

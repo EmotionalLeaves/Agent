@@ -20,28 +20,28 @@ data class Letter(val title: String, val whenToUse: String, val subject: String,
 
 val letters = listOf(
     Letter("Ask a print lab for a quote", "Before your first print order.", "Quote for fine-art prints",
-        "Hello,\n\nI am an artist looking to have digital work printed as archival pigment prints on matte cotton rag paper. Could you tell me your price for one print at about 16 x 20 inches, how you would like the file supplied, and whether you offer a small proof first?\n\nThank you,\n[ME]"),
+        "Hello,\n\nI am an artist looking to have digital work printed as archival pigment prints on matte cotton rag paper. Could you tell me your price for one print at about 16 \u00D7 20 inches, how you would like the file supplied, and whether you offer a small proof first?\n\nThank you,\n\n[ME]"),
     Letter("Ask how staff can show work on campus", "Your first, lowest-pressure step toward a wall.", "Showing artwork as a staff member",
-        "Hello [THEM],\n\nI work at the university and I am also an artist. Does [PLACE] ever show work by staff, or is there a staff or community exhibition I could enter? If there is someone else I should ask, I would be grateful for their name.\n\nThank you,\n[ME]"),
+        "Hello [THEM],\n\nI work at the university and I am also an artist. Does [PLACE] ever show work by staff, or is there a staff or community exhibition I could enter? If there is someone else I should ask, I would be grateful for their name.\n\nThank you,\n\n[ME]"),
     Letter("Ask a library or cafe about showing work", "Community spaces often have a wall and a simple sign-up.", "Displaying artwork at [PLACE]",
-        "Hello [THEM],\n\nI am a local artist. Does [PLACE] display work by local artists, and if so how do you choose it and how far ahead do you book? I can send a few images or a link.\n\nThank you,\n[ME]"),
+        "Hello [THEM],\n\nI am a local artist. Does [PLACE] display work by local artists, and if so how do you choose it and how far ahead do you book? I can send a few images or a link.\n\nThank you,\n\n[ME]"),
     Letter("Say yes after being accepted", "Reply within a couple of days of an acceptance.", "Confirming my participation",
-        "Hello [THEM],\n\nThank you. I am glad to confirm that I will take part. Could you confirm the delivery dates and times, and whether work needs to be wired for hanging?\n\nBest,\n[ME]"),
+        "Hello [THEM],\n\nThank you. I am glad to confirm that I will take part. Could you confirm the delivery dates and times, and whether work needs to be wired for hanging?\n\nKind regards,\n\n[ME]"),
     Letter("Ask about delivery details", "When the acceptance email leaves something unclear.", "Delivery details",
-        "Hello [THEM],\n\nA quick question about delivering my work to [PLACE]: which entrance should I use, during which hours, and is there anything I should bring besides the work itself?\n\nThank you,\n[ME]"),
+        "Hello [THEM],\n\nA quick question about delivering my work to [PLACE]: which entrance should I use, during which hours, and is there anything I should bring besides the work itself?\n\nThank you,\n\n[ME]"),
     Letter("Withdraw an application", "If a piece sold or you cannot take part after all.", "Withdrawing my entry",
-        "Hello [THEM],\n\nI need to withdraw my entry. I am sorry for any inconvenience, and thank you for your time. I hope to apply again in future.\n\nBest,\n[ME]"),
+        "Hello [THEM],\n\nI need to withdraw my entry. I am sorry for any inconvenience, and thank you for your time. I hope to apply again in future.\n\nKind regards,\n\n[ME]"),
     Letter("Thank you after a show", "The week a show comes down. People remember it.", "Thank you",
-        "Hello [THEM],\n\nThank you for including my work at [PLACE] and for all the effort that went into the show. I would be glad to hear about future calls.\n\nBest,\n[ME]"),
+        "Hello [THEM],\n\nThank you for including my work at [PLACE] and for all the effort that went into the show. I would be glad to hear about future calls.\n\nKind regards,\n\n[ME]"),
     Letter("Follow up after meeting someone at an opening", "Within a few days, while they remember you.", "Good to meet you at [PLACE]",
-        "Hello [THEM],\n\nIt was good to meet you at [PLACE]. I enjoyed the show. If you would ever like to see what I make, there is a short portfolio here: [LINK]\n\nBest,\n[ME]"),
+        "Hello [THEM],\n\nIt was good to meet you at [PLACE]. I enjoyed the show. If you would ever like to see what I make, there is a short portfolio here: [LINK]\n\nKind regards,\n\n[ME]"),
     Letter("Ask about payment for a sale", "If a sale has not been paid a few weeks after a show ends.", "Payment for sold work",
-        "Hello [THEM],\n\nI understand a piece of mine sold during the show at [PLACE]. Could you let me know when I can expect payment and whether you need anything from me?\n\nThank you,\n[ME]")
+        "Hello [THEM],\n\nI understand a piece of mine sold during the show at [PLACE]. Could you let me know when I can expect payment and whether you need anything from me?\n\nThank you,\n\n[ME]")
 )
 
 fun fillLetter(text: String, them: String, place: String): String =
-    text.replace("[THEM]", them.trim().ifBlank { "there" }).replace("[PLACE]", place.trim().ifBlank { "your space" })
-        .replace("[ME]", st.fullName.ifBlank { "(your name)" }).replace("[LINK]", st.website.ifBlank { "(your portfolio link)" })
+    text.replace("Hello [THEM],", if (them.isBlank()) "Hello," else "Dear ${them.trim()},").replace("[THEM]", them.trim().ifBlank { "there" }).replace("[PLACE]", place.trim().ifBlank { "your space" })
+        .replace("[ME]", if (st.fullName.isBlank()) "(your name)" else com.emotionalleaves.studioagent.work.Papers.signature(st)).replace("[LINK]", st.website.ifBlank { "(your portfolio link)" })
 
 @Composable
 fun Letters(nav: NavController) {

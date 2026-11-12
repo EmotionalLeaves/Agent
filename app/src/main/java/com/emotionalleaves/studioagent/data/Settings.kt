@@ -63,6 +63,8 @@ class Settings(ctx: Context) {
     var website by S("website")
     var city by S("city")
     var region by S("region")
+    /** Optional CV line, for example "b. 1998, Chicago". */
+    var born by S("born")
     var mediums by S("mediums", "digital, archival print")
     var route by S("route", "print")
     var goals by S("goals", "first group show")

@@ -1,6 +1,8 @@
 package com.emotionalleaves.studioagent.work
 
 import android.content.Context
+import android.graphics.Paint
+import android.text.SpannableStringBuilder
 import com.emotionalleaves.studioagent.data.Artwork
 import com.emotionalleaves.studioagent.data.Fact
 import com.emotionalleaves.studioagent.data.Settings
@@ -8,13 +10,33 @@ import com.emotionalleaves.studioagent.domain.Texts
 import com.emotionalleaves.studioagent.media.ImageTools
 import com.emotionalleaves.studioagent.media.Pdf
 import java.io.File
+import java.text.NumberFormat
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.util.Locale
 
-/** Every paper document the app produces. All built from catalog and CV facts only. */
+/**
+ * Every paper document the app produces, built from catalog and CV facts only. Nothing is invented.
+ * They follow the conventions galleries expect: titles of works in italics, height before width,
+ * inches with centimetres, the artist's name and page number on every page, and one file name pattern.
+ */
 object Papers {
     private fun out(ctx: Context, name: String) = File(ImageTools.exportDir(ctx), name)
 
-    fun contactLine(s: Settings): String = listOf(s.city, s.email, s.website).filter { it.isNotBlank() }.joinToString("  |  ")
+    private fun last(s: Settings) = Texts.clean(s.lastName).ifBlank { Texts.clean(s.firstName) }.ifBlank { "Artist" }
+
+    /** Lastname_What.pdf, the one naming pattern for every document. */
+    fun docName(s: Settings, what: String, ext: String = "pdf") = last(s) + "_" + what + "." + ext
+
+    private fun name(s: Settings) = s.fullName.ifBlank { "Artist" }
+
+    fun place(s: Settings): String = listOf(s.city, s.region).filter { it.isNotBlank() }.joinToString(", ")
+
+    fun contactLine(s: Settings): String = listOf(s.email, s.phone, s.website).filter { it.isNotBlank() }.joinToString("    ")
+
+    /** The lines that close every email and letter. */
+    fun signature(s: Settings): String = listOf(name(s), s.website, s.email, s.phone, place(s)).filter { it.isNotBlank() }.joinToString("\n")
 
     fun medium(a: Artwork): String = when {
         a.medium.isNotBlank() -> a.medium
@@ -23,139 +45,308 @@ object Papers {
         else -> ""
     }
 
-    fun caption(a: Artwork): String {
-        val parts = mutableListOf(a.title.ifBlank { "Untitled" })
-        if (a.year > 0) parts += a.year.toString()
-        medium(a).takeIf { it.isNotBlank() }?.let { parts += it }
-        Texts.dims(a.widthIn, a.heightIn, a.depthIn).takeIf { it.isNotBlank() }?.let { parts += it }
-        if (a.editionSize > 0) parts += "Edition of ${a.editionSize}"
-        return parts.joinToString(", ")
+    fun edition(a: Artwork): String = if (a.editionSize > 0) "Edition of ${a.editionSize}" else ""
+
+    /** A stable catalog number: initials, year, number. JL-2026-007. */
+    fun inventoryNo(s: Settings, a: Artwork): String {
+        val ini = (s.firstName.take(1) + s.lastName.take(1)).uppercase().filter { it.isLetter() }.ifBlank { "A" }
+        val year = if (a.year > 0) a.year else if (a.createdAt > 0) Instant.ofEpochMilli(a.createdAt).atZone(ZoneId.systemDefault()).year else LocalDate.now().year
+        return "$ini-$year-${"%03d".format(a.id)}"
     }
 
-    fun priceLine(a: Artwork): String = if (a.nfs) "NFS" else if (a.price > 0) com.emotionalleaves.studioagent.G.settings.currency + "%.0f".format(a.price) else ""
+    private fun details(a: Artwork): List<String> =
+        listOf(medium(a), Texts.dims(a.widthIn, a.heightIn, a.depthIn), edition(a)).filter { it.isNotBlank() }
+
+    /** Plain caption for emails and forms: Title, year, medium, size, edition. */
+    fun caption(a: Artwork): String =
+        (listOf(a.title.ifBlank { "Untitled" }) + listOfNotNull(a.year.takeIf { it > 0 }?.toString()) + details(a)).joinToString(", ")
+
+    /** The same caption with the title in italics, for documents. */
+    fun caption(pdf: Pdf, a: Artwork): CharSequence = SpannableStringBuilder().apply {
+        append(pdf.em(a.title.ifBlank { "Untitled" }))
+        if (a.year > 0) append(", ${a.year}")
+        details(a).forEach { append(", $it") }
+    }
+
+    fun money(s: Settings, v: Double): String {
+        val f = NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = if (v % 1.0 == 0.0) 0 else 2; minimumFractionDigits = if (v % 1.0 == 0.0) 0 else 2 }
+        return s.currency + f.format(v)
+    }
+
+    fun priceLine(a: Artwork): String = priceLine(com.emotionalleaves.studioagent.G.settings, a)
+
+    fun priceLine(s: Settings, a: Artwork): String = if (a.nfs) "Not for sale" else if (a.price > 0) money(s, a.price) else "Price on request"
+
+    // ------------------------------------------------------------ CV
 
     fun cv(ctx: Context, s: Settings, facts: List<Fact>): File {
-        val pdf = Pdf()
-        val sections = Texts.cv(s.fullName.ifBlank { "Artist" }, contactLine(s), facts)
-        sections.forEachIndexed { i, (heading, lines) ->
-            if (i == 0) { pdf.text(heading, 20f, bold = true, gap = 2f); lines.forEach { pdf.text(it, 10f, grey = true) }; pdf.space(10f) }
-            else { pdf.text(heading.uppercase(), 10f, bold = true, gap = 4f); pdf.rule(); lines.forEach { pdf.text(it, 11f, gap = 3f) }; pdf.space(10f) }
+        val pdf = Pdf(ctx, name(s), "Curriculum vitae")
+        pdf.text(name(s), 26f, face = Pdf.Face.DISPLAY, gap = 4f)
+        val about = listOfNotNull(s.born.takeIf { it.isNotBlank() }, place(s).takeIf { it.isNotBlank() }?.let { "Lives and works in $it" })
+        if (about.isNotEmpty()) pdf.text(about.joinToString(". "), 10.5f, gap = 2f)
+        contactLine(s).takeIf { it.isNotBlank() }?.let { pdf.text(it, 9.5f, grey = true, gap = 2f) }
+        pdf.space(16f)
+        val sections = Texts.cvSections(facts)
+        if (sections.isEmpty()) pdf.text("No entries yet.", 10.5f, grey = true)
+        sections.forEach { (heading, lines) ->
+            pdf.keep(60f)
+            pdf.text(heading, 12f, face = Pdf.Face.DISPLAY, gap = 4f)
+            pdf.rule()
+            lines.forEach { f -> pdf.hang(if (f.year > 0) f.year.toString() else "", f.text) }
+            pdf.space(12f)
         }
-        return pdf.save(out(ctx, Texts.clean(s.lastName).ifBlank { "Artist" } + "_CV.pdf"))
+        return pdf.save(out(ctx, docName(s, "CV")))
     }
+
+    // ------------------------------------------------------------ portfolio
 
     fun portfolio(ctx: Context, s: Settings, works: List<Artwork>, statement: String, count: Int): File {
-        val pdf = Pdf()
-        pdf.text(s.fullName.ifBlank { "Artist" }, 22f, bold = true, gap = 2f)
-        pdf.text(contactLine(s), 10f, grey = true)
-        if (statement.isNotBlank()) { pdf.space(12f); pdf.text(statement, 11f) }
-        works.take(count).forEach { a ->
+        val pdf = Pdf(ctx, name(s), "Portfolio")
+        val shown = works.take(count)
+        // Cover: name, years, contact. Nothing else.
+        pdf.space(220f)
+        pdf.text(name(s), 34f, face = Pdf.Face.DISPLAY, gap = 8f)
+        val years = shown.map { it.year }.filter { it > 0 }
+        pdf.text("Selected works" + (if (years.isNotEmpty()) ", " + (if (years.min() == years.max()) "${years.min()}" else "${years.min()} to ${years.max()}") else ""), 13f, gap = 4f)
+        place(s).takeIf { it.isNotBlank() }?.let { pdf.text(it, 11f, grey = true, gap = 2f) }
+        contactLine(s).takeIf { it.isNotBlank() }?.let { pdf.text(it, 10f, grey = true) }
+        if (statement.isNotBlank()) {
             pdf.newPage()
-            pdf.image(a.imagePath, 560f)
-            pdf.text(caption(a), 10f)
+            pdf.text("Artist statement", 16f, face = Pdf.Face.DISPLAY, gap = 10f)
+            pdf.text(statement, 11.5f, gap = 8f)
         }
-        return pdf.save(out(ctx, Texts.clean(s.lastName).ifBlank { "Artist" } + "_Portfolio_$count.pdf"))
+        shown.forEachIndexed { i, a ->
+            pdf.newPage()
+            pdf.image(a.imagePath, 540f)
+            pdf.space(4f)
+            pdf.text(caption(pdf, a), 10.5f, gap = 2f)
+            pdf.text("${i + 1} of ${shown.size}    ${inventoryNo(s, a)}", 8.5f, grey = true)
+        }
+        return pdf.save(out(ctx, docName(s, "Portfolio")))
     }
 
-    fun imageList(ctx: Context, s: Settings, works: List<Artwork>, withPrices: Boolean, dir: File? = null): File {
-        val pdf = Pdf()
-        pdf.text(s.fullName.ifBlank { "Artist" } + ": image list", 16f, bold = true)
+    // ------------------------------------------------------------ image list and price list
+
+    /**
+     * Numbered list of works. The numbers match the numbered image files in an application folder,
+     * so a juror can match each picture to its details.
+     */
+    fun imageList(ctx: Context, s: Settings, works: List<Artwork>, withPrices: Boolean, dir: File? = null, files: List<String> = emptyList()): File {
+        val title = if (withPrices) "Price list" else "Image list"
+        val pdf = Pdf(ctx, name(s), title)
+        pdf.text(title, 20f, face = Pdf.Face.DISPLAY, gap = 2f)
+        pdf.text(name(s), 11f, grey = true, gap = 14f)
         works.forEachIndexed { i, a ->
-            pdf.text("${i + 1}. ${caption(a)}" + (if (withPrices && priceLine(a).isNotBlank()) "  " + priceLine(a) else ""), 11f)
+            pdf.keep(50f)
+            pdf.hang("%02d".format(i + 1), caption(pdf, a), col = 36f, gap = 2f, right = if (withPrices) priceLine(s, a) else "")
+            files.getOrNull(i)?.let { pdf.text(it, 8.5f, grey = true, indent = 36f, gap = 2f) }
+            pdf.text(inventoryNo(s, a), 8.5f, grey = true, indent = 36f, gap = 10f)
         }
-        return pdf.save(File(dir ?: ImageTools.exportDir(ctx), Texts.clean(s.lastName).ifBlank { "Artist" } + "_ImageList.pdf"))
+        return pdf.save(File(dir ?: ImageTools.exportDir(ctx), docName(s, title.replace(' ', '_'))))
     }
 
+    // ------------------------------------------------------------ wall labels
+
+    /** Eight labels to a page, two across, with light corner marks to cut along. */
     fun labels(ctx: Context, s: Settings, works: List<Artwork>): File {
-        val pdf = Pdf()
-        works.forEach { a ->
-            pdf.text(s.fullName, 13f, bold = true, gap = 2f)
-            pdf.text(a.title.ifBlank { "Untitled" } + (if (a.year > 0) ", ${a.year}" else ""), 12f, gap = 2f)
-            pdf.text(listOf(medium(a), Texts.dims(a.widthIn, a.heightIn, a.depthIn), if (a.editionSize > 0) "Edition of ${a.editionSize}" else "").filter { it.isNotBlank() }.joinToString("\n"), 10f, gap = 2f)
-            if (priceLine(a).isNotBlank()) pdf.text(priceLine(a), 11f)
-            pdf.space(6f); pdf.rule(); pdf.space(6f)
+        val pdf = Pdf(ctx, "", "", margin = 36)
+        val cols = 2; val rows = 4
+        val cw = pdf.width / cols.toFloat()
+        val ch = (pdf.pageHeight - 72) / rows.toFloat()
+        val guide = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFBDBEBA.toInt(); strokeWidth = 0.5f }
+        works.forEachIndexed { i, a ->
+            if (i % (cols * rows) == 0) pdf.newPage()
+            val c = pdf.canvas()
+            val col = (i % (cols * rows)) % cols; val row = (i % (cols * rows)) / cols
+            val x = pdf.left + col * cw; val y = 36f + row * ch
+            // Corner marks only, so nothing shows once cut.
+            val m = 8f
+            listOf(x to y, x + cw to y, x to y + ch, x + cw to y + ch).forEach { (px, py) ->
+                c.drawLine(px - m, py, px + m, py, guide); c.drawLine(px, py - m, px, py + m, guide)
+            }
+            val pad = 20f
+            var ty = y + pad
+            fun put(t: CharSequence, size: Float, face: Pdf.Face = Pdf.Face.BODY, grey: Boolean = false, gap: Float = 3f) {
+                val l = pdf.layout(t, (cw - 2 * pad).toInt(), size, face, grey)
+                c.save(); c.translate(x + pad, ty); l.draw(c); c.restore(); ty += l.height + gap
+            }
+            put(name(s), 12f, Pdf.Face.BOLD, gap = 6f)
+            put(SpannableStringBuilder(pdf.em(a.title.ifBlank { "Untitled" })).append(if (a.year > 0) ", ${a.year}" else ""), 11.5f, gap = 6f)
+            details(a).forEach { put(it, 9.5f) }
+            if (!a.nfs && a.price > 0) { ty += 4f; put(money(s, a.price), 10.5f) }
+            ty += 2f; put(inventoryNo(s, a), 7.5f, grey = true)
         }
-        return pdf.save(out(ctx, "Wall_labels.pdf"))
+        return pdf.save(out(ctx, docName(s, "Wall_labels")))
     }
+
+    // ------------------------------------------------------------ certificate
 
     fun certificate(ctx: Context, s: Settings, a: Artwork, number: Int): File {
-        val pdf = Pdf()
-        pdf.text("Certificate of Authenticity", 20f, bold = true, gap = 14f)
-        pdf.image(a.imagePath, 260f)
-        pdf.space(8f)
-        pdf.text("Artist: ${s.fullName}", 12f)
-        pdf.text("Title: ${a.title.ifBlank { "Untitled" }}", 12f)
-        if (a.year > 0) pdf.text("Year: ${a.year}", 12f)
-        pdf.text("Medium: ${medium(a)}", 12f)
-        Texts.dims(a.widthIn, a.heightIn).takeIf { it.isNotBlank() }?.let { pdf.text("Size: $it", 12f) }
-        if (a.editionSize > 0) pdf.text("Edition: $number of ${a.editionSize}", 12f)
-        pdf.space(20f)
-        pdf.text("I certify that this is an original work made by me.", 11f)
-        pdf.space(30f)
-        pdf.text("Signed: ______________________________      Date: ${com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis())}", 11f)
-        return pdf.save(out(ctx, "COA_" + Texts.clean(a.title).ifBlank { "Untitled" } + "_$number.pdf"))
+        val pdf = Pdf(ctx, "", "", margin = 72)
+        pdf.newPage()
+        val c = pdf.canvas()
+        val frame = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = 0xFF2A2C2E.toInt(); strokeWidth = 0.8f }
+        c.drawRect(40f, 40f, pdf.pageWidth - 40f, pdf.pageHeight - 40f, frame)
+        c.drawRect(46f, 46f, pdf.pageWidth - 46f, pdf.pageHeight - 46f, frame.apply { strokeWidth = 0.4f })
+        pdf.space(6f)
+        pdf.text("Certificate of Authenticity", 24f, face = Pdf.Face.DISPLAY, center = true, gap = 18f)
+        if (pdf.image(a.imagePath, 230f)) pdf.space(10f)
+        pdf.row("Artist", name(s))
+        pdf.row("Title", pdf.em(a.title.ifBlank { "Untitled" }))
+        if (a.year > 0) pdf.row("Year", a.year.toString())
+        medium(a).takeIf { it.isNotBlank() }?.let { pdf.row("Medium", it) }
+        Texts.dims(a.widthIn, a.heightIn, a.depthIn).takeIf { it.isNotBlank() }?.let { pdf.row("Dimensions", it) }
+        pdf.row("Edition", if (a.editionSize > 0) "$number of ${a.editionSize}" else "Unique work")
+        pdf.row("Catalog number", inventoryNo(s, a))
+        pdf.space(14f)
+        pdf.text("I, ${name(s)}, certify that the work described above is an original work of art made by me" +
+            (if (a.editionSize > 0) ", and that this is number $number in an edition limited to ${a.editionSize}." else "."), 10.5f)
+        pdf.text("The artist keeps the copyright and all reproduction rights to this work.", 10.5f, grey = true)
+        pdf.space(40f)
+        pdf.amount("Signature  ______________________________", "Date  ________________", 10.5f)
+        return pdf.save(out(ctx, docName(s, "Certificate_" + Texts.clean(a.title).ifBlank { "Untitled" } + (if (a.editionSize > 0) "_$number" else ""))))
     }
+
+    // ------------------------------------------------------------ bill of sale
+
+    /** A receipt for a buyer: who sold what to whom, for how much, and that copyright stays with the artist. */
+    fun billOfSale(ctx: Context, s: Settings, a: Artwork, buyer: String, price: Double, number: Int, date: Long = System.currentTimeMillis()): File {
+        val pdf = Pdf(ctx, name(s), "Bill of sale")
+        val day = com.emotionalleaves.studioagent.ui.fmtDate(date)
+        val year = Instant.ofEpochMilli(date).atZone(ZoneId.systemDefault()).year
+        pdf.text("Bill of sale", 24f, face = Pdf.Face.DISPLAY, gap = 14f)
+        pdf.row("Number", "$year-${"%03d".format(number)}")
+        pdf.row("Date", day)
+        pdf.space(8f)
+        pdf.row("Seller", listOf(name(s), place(s), s.email, s.phone).filter { it.isNotBlank() }.joinToString("\n"))
+        pdf.row("Buyer", buyer.ifBlank { "______________________________" })
+        pdf.space(10f)
+        pdf.rule(dark = true)
+        pdf.amount(caption(pdf, a), money(s, price))
+        pdf.text(inventoryNo(s, a), 8.5f, grey = true)
+        pdf.rule()
+        pdf.amount("Total", money(s, price), 12f, Pdf.Face.BOLD)
+        pdf.space(14f)
+        pdf.text("Received in full. Ownership of the physical work passes to the buyer on this date. " +
+            "The artist keeps the copyright and reproduction rights, and may show images of the work in a portfolio with credit to the collection.", 10f)
+        pdf.space(36f)
+        pdf.amount("Artist  ______________________________", "Buyer  ______________________", 10.5f)
+        return pdf.save(out(ctx, docName(s, "Bill_of_sale_" + Texts.clean(a.title).ifBlank { "Untitled" })))
+    }
+
+    // ------------------------------------------------------------ proposal
 
     fun proposal(ctx: Context, s: Settings, venue: String, seriesName: String, statement: String, bio: String, works: List<Artwork>): File {
-        val pdf = Pdf()
-        pdf.text("Exhibition proposal" + (if (venue.isNotBlank()) " for $venue" else ""), 18f, bold = true, gap = 2f)
-        pdf.text(s.fullName + "  |  " + contactLine(s), 10f, grey = true)
-        pdf.space(10f)
-        if (seriesName.isNotBlank()) pdf.text("Proposed body of work: $seriesName (${works.size} works)", 12f, bold = true)
-        if (statement.isNotBlank()) { pdf.text("About the work", 11f, bold = true, gap = 3f); pdf.text(statement) }
-        if (bio.isNotBlank()) { pdf.space(6f); pdf.text("About the artist", 11f, bold = true, gap = 3f); pdf.text(bio) }
-        pdf.space(6f)
-        pdf.text("Works and space needed", 11f, bold = true, gap = 3f)
+        val pdf = Pdf(ctx, name(s), "Exhibition proposal")
+        pdf.text("Exhibition proposal", 24f, face = Pdf.Face.DISPLAY, gap = 4f)
+        pdf.text(listOf(name(s), venue.takeIf { it.isNotBlank() }?.let { "for $it" }).filterNotNull().joinToString(" "), 12f, gap = 2f)
+        contactLine(s).takeIf { it.isNotBlank() }?.let { pdf.text(it, 9.5f, grey = true) }
+        pdf.space(14f)
+        if (seriesName.isNotBlank()) { pdf.row("Body of work", SpannableStringBuilder(pdf.em(seriesName)).append(", ${works.size} works")) }
         val wall = works.sumOf { if (it.widthIn > 0) it.widthIn + 12 else 0.0 }
-        if (wall > 0) pdf.text("Hung in one row with 12 in between works, the series needs about ${"%.0f".format(wall / 12)} linear feet of wall.")
-        works.forEachIndexed { i, a -> pdf.text("${i + 1}. ${caption(a)}", 10f, gap = 2f) }
-        works.take(6).forEach { a -> pdf.newPage(); pdf.image(a.imagePath, 560f); pdf.text(caption(a), 10f) }
-        return pdf.save(out(ctx, "Proposal_" + Texts.clean(venue).ifBlank { "Venue" } + ".pdf"))
+        if (wall > 0) pdf.row("Wall needed", "About ${"%.0f".format(Math.ceil(wall / 12))} linear feet, hung in one row with 12 in between works")
+        pdf.space(8f)
+        if (statement.isNotBlank()) { pdf.keep(60f); pdf.text("About the work", 13f, face = Pdf.Face.DISPLAY, gap = 4f); pdf.text(statement, 11f, gap = 10f) }
+        if (bio.isNotBlank()) { pdf.keep(60f); pdf.text("About the artist", 13f, face = Pdf.Face.DISPLAY, gap = 4f); pdf.text(bio, 11f, gap = 10f) }
+        pdf.keep(60f)
+        pdf.text("Works", 13f, face = Pdf.Face.DISPLAY, gap = 6f)
+        works.forEachIndexed { i, a -> pdf.hang("%02d".format(i + 1), caption(pdf, a), col = 30f) }
+        works.take(8).forEachIndexed { i, a -> pdf.newPage(); pdf.image(a.imagePath, 540f); pdf.space(4f); pdf.hang("%02d".format(i + 1), caption(pdf, a), col = 30f) }
+        return pdf.save(out(ctx, docName(s, "Proposal_" + Texts.clean(venue).ifBlank { "Venue" })))
     }
 
-    /** Ready-to-send text for a fine-art print lab and a framer. */
+    /** A short document of plain text with a title, used for statements and answers inside an application. */
+    fun textDoc(ctx: Context, s: Settings, title: String, sections: List<Pair<String, String>>, dir: File, file: String): File {
+        val pdf = Pdf(ctx, name(s), title)
+        pdf.text(title, 20f, face = Pdf.Face.DISPLAY, gap = 2f)
+        pdf.text(name(s), 11f, grey = true, gap = 14f)
+        sections.forEach { (h, body) ->
+            if (h.isNotBlank()) { pdf.keep(50f); pdf.text(h, 11.5f, face = Pdf.Face.BOLD, gap = 4f) }
+            pdf.text(body, 11f, gap = 12f)
+        }
+        return pdf.save(File(dir, file))
+    }
+
+    // ------------------------------------------------------------ texts for other people
+
+    /** Ready-to-send request to a fine-art print lab or framer. */
     fun printOrder(s: Settings, works: List<Artwork>): String = buildString {
-        appendLine("Print order from ${s.fullName}")
-        appendLine("Paper: archival cotton rag, matte (tell me if you recommend another for these files)")
-        appendLine("Please confirm a proof before the full run.")
+        appendLine("Hello,")
+        appendLine()
+        appendLine("I would like a quote for the prints below, with a proof of each before the full run. " +
+            "I have planned for archival cotton rag paper with a matte finish; please tell me if you recommend another paper for these files.")
         appendLine()
         works.forEachIndexed { i, a ->
             appendLine("${i + 1}. ${a.title.ifBlank { "Untitled" }}")
             appendLine("   Image size: ${Texts.dims(a.widthIn, a.heightIn).ifBlank { "to confirm" }}")
-            appendLine("   File: ${a.pixelW} x ${a.pixelH} px (${Texts.ppi(a.pixelW, a.pixelH, a.widthIn, a.heightIn)} ppi at this size)")
+            if (a.pixelW > 0) appendLine("   File: ${a.pixelW} × ${a.pixelH} px (${Texts.ppi(a.pixelW, a.pixelH, a.widthIn, a.heightIn)} ppi at this size)")
             appendLine("   Quantity: 1" + (if (a.editionSize > 0) " (edition of ${a.editionSize})" else ""))
-            if (a.framed) appendLine("   Frame: simple gallery frame, white mat, wire for hanging. Outer size about ${Texts.dim(a.heightIn + 6)} x ${Texts.dim(a.widthIn + 6)} in")
+            if (a.framed) appendLine("   Framing: simple gallery frame, white mat, wired for hanging; outer size about ${Texts.dim(a.heightIn + 6)} × ${Texts.dim(a.widthIn + 6)} in")
         }
+        appendLine()
+        appendLine("Could you let me know the price and how long it would take?")
+        appendLine()
+        appendLine("Thank you,")
+        appendLine()
+        append(signature(s))
     }
 
-    private fun cell(s: String): String = "\"" + s.replace("\"", "'").replace("\n", " ") + "\""
+    private fun cell(s: String): String = "\"" + s.replace("\"", "\"\"").replace("\n", " ") + "\""
 
-    /** The whole catalog as a spreadsheet file: one row per piece. */
-    fun inventoryCsv(works: List<Artwork>, seriesNames: Map<Long, String>): String = buildString {
-        appendLine("title,year,medium,height_in,width_in,series,status,price,edition,prints_made,location,tags")
+    /** The whole catalog as a spreadsheet file: one row per piece, the columns a registrar would expect. */
+    fun inventoryCsv(works: List<Artwork>, seriesNames: Map<Long, String>, s: Settings = com.emotionalleaves.studioagent.G.settings): String = buildString {
+        appendLine("catalog_no,title,year,medium,height_in,width_in,depth_in,height_cm,width_cm,framed,edition,prints_made,series,status,price,location,tags")
         works.forEach { a ->
-            appendLine(listOf(cell(a.title), a.year.toString(), cell(medium(a)), Texts.dim(a.heightIn), Texts.dim(a.widthIn), cell(seriesNames[a.seriesId].orEmpty()),
-                a.status, if (a.nfs) "NFS" else "%.0f".format(a.price), a.editionSize.toString(), a.editionUsed.toString(), cell(a.location), cell(a.tags)).joinToString(","))
+            appendLine(listOf(inventoryNo(s, a), cell(a.title), if (a.year > 0) a.year.toString() else "", cell(medium(a)),
+                Texts.dim(a.heightIn), Texts.dim(a.widthIn), if (a.depthIn > 0) Texts.dim(a.depthIn) else "",
+                "%.1f".format(a.heightIn * 2.54), "%.1f".format(a.widthIn * 2.54), if (a.framed) "yes" else "no",
+                if (a.editionSize > 0) a.editionSize.toString() else "unique", a.editionUsed.toString(), cell(seriesNames[a.seriesId].orEmpty()),
+                a.status, if (a.nfs) "NFS" else if (a.price > 0) "%.2f".format(a.price) else "", cell(a.location), cell(a.tags)).joinToString(","))
         }
     }
 
     fun escape(s: String): String = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
 
-    /** A single static page: works, statement, CV, contact. No feeds, no trackers. */
-    fun portfolioHtml(s: Settings, works: List<Pair<Artwork, String>>, statement: String, bio: String, cvText: String): String = buildString {
+    /** A single static page: works, statement, CV, contact. No feeds, no trackers, no scripts. */
+    fun portfolioHtml(s: Settings, works: List<Pair<Artwork, String>>, statement: String, bio: String, facts: List<Fact>): String = buildString {
+        val n = escape(name(s))
+        val desc = escape(bio.ifBlank { "Artworks by ${name(s)}" }.take(160))
         append("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
-        append("<title>${escape(s.fullName)}</title><style>")
-        append("body{font-family:Georgia,serif;margin:0;color:#222;background:#faf9f6}main{max-width:900px;margin:0 auto;padding:24px}")
-        append("h1{font-weight:normal;font-size:2em;margin:.5em 0}h2{font-weight:normal;font-size:1.2em;margin-top:2.5em;border-bottom:1px solid #ccc;padding-bottom:4px}")
-        append("figure{margin:0 0 40px}img{max-width:100%;height:auto;display:block}figcaption{font-size:.9em;color:#555;margin-top:8px}pre{font-family:inherit;white-space:pre-wrap}a{color:#2f5d50}")
-        append("</style></head><body><main>")
-        append("<h1>${escape(s.fullName)}</h1>")
-        if (bio.isNotBlank()) append("<p>${escape(bio)}</p>")
-        append("<h2>Work</h2>")
-        works.forEach { (a, file) -> append("<figure><img loading=\"lazy\" src=\"img/${escape(file)}\" alt=\"${escape(a.title)}\"><figcaption>${escape(caption(a))}</figcaption></figure>") }
-        if (statement.isNotBlank()) append("<h2>Statement</h2><p>${escape(statement).replace("\n", "<br>")}</p>")
-        if (cvText.isNotBlank()) append("<h2>CV</h2><pre>${escape(cvText)}</pre>")
-        if (s.email.isNotBlank()) append("<h2>Contact</h2><p><a href=\"mailto:${escape(s.email)}\">${escape(s.email)}</a></p>")
-        append("</main></body></html>")
+        append("<title>$n</title><meta name=\"description\" content=\"$desc\"><meta property=\"og:title\" content=\"$n\"><meta property=\"og:description\" content=\"$desc\">")
+        works.firstOrNull()?.let { append("<meta property=\"og:image\" content=\"img/${escape(it.second)}\">") }
+        append("<style>")
+        append(":root{--ink:#2A2C2E;--pencil:#63676B;--wall:#F2F2EF;--line:#DADBD6;--link:#2B4ACB}")
+        append("*{box-sizing:border-box}body{margin:0;background:var(--wall);color:var(--ink);font:17px/1.55 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}")
+        append("header,main,footer{max-width:980px;margin:0 auto;padding:0 24px}header{padding-top:56px;padding-bottom:24px}")
+        append("h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.05;margin:0 0 .4em;font-weight:650;letter-spacing:-.01em}")
+        append("h2{font-size:1.25rem;margin:3.5rem 0 1rem;padding-bottom:.4rem;border-bottom:1px solid var(--line);font-weight:650}")
+        append("nav a{margin-right:1.2em}a{color:var(--link)}a:focus-visible{outline:2px solid var(--link);outline-offset:2px}.lede{max-width:62ch;color:var(--pencil)}")
+        append("figure{margin:0 0 64px}img{display:block;max-width:100%;max-height:86vh;height:auto;margin:0 auto;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.12)}")
+        append("figcaption{margin-top:12px;font-size:.92rem;color:var(--pencil);text-align:center}figcaption em{color:var(--ink)}")
+        append(".text{max-width:66ch}dl{display:grid;grid-template-columns:4.5em 1fr;gap:.35em 1em;margin:0 0 1.5em}dt{color:var(--pencil)}dd{margin:0}h3{font-size:1rem;margin:1.6em 0 .5em}")
+        append("footer{padding-top:48px;padding-bottom:48px;color:var(--pencil);font-size:.85rem}")
+        append("</style></head><body><header>")
+        append("<h1>$n</h1>")
+        if (bio.isNotBlank()) append("<p class=\"lede\">${escape(bio)}</p>")
+        append("<nav><a href=\"#work\">Work</a>")
+        if (statement.isNotBlank()) append("<a href=\"#statement\">Statement</a>")
+        if (facts.isNotEmpty()) append("<a href=\"#cv\">CV</a>")
+        append("<a href=\"#contact\">Contact</a></nav></header><main>")
+        append("<h2 id=\"work\">Work</h2>")
+        works.forEach { (a, file) ->
+            val cap = "<em>${escape(a.title.ifBlank { "Untitled" })}</em>" + (if (a.year > 0) ", ${a.year}" else "") + details(a).joinToString("") { ", " + escape(it) }
+            append("<figure><img loading=\"lazy\" src=\"img/${escape(file)}\" alt=\"${escape(a.title.ifBlank { "Untitled" })} by $n\"><figcaption>$cap</figcaption></figure>")
+        }
+        if (statement.isNotBlank()) append("<h2 id=\"statement\">Statement</h2><div class=\"text\">" + statement.split(Regex("\\n\\s*\\n")).joinToString("") { "<p>${escape(it.trim()).replace("\n", "<br>")}</p>" } + "</div>")
+        val sections = Texts.cvSections(facts)
+        if (sections.isNotEmpty()) {
+            append("<h2 id=\"cv\">CV</h2><div class=\"text\">")
+            sections.forEach { (h, list) -> append("<h3>${escape(h)}</h3><dl>"); list.forEach { append("<dt>${if (it.year > 0) it.year else ""}</dt><dd>${escape(it.text)}</dd>") }; append("</dl>") }
+            append("</div>")
+        }
+        append("<h2 id=\"contact\">Contact</h2><p>")
+        if (s.email.isNotBlank()) append("<a href=\"mailto:${escape(s.email)}\">${escape(s.email)}</a><br>")
+        place(s).takeIf { it.isNotBlank() }?.let { append(escape(it)) }
+        append("</p></main><footer>&copy; ${LocalDate.now().year} $n. All images are the artist's; please ask before using them.</footer></body></html>")
     }
 }

@@ -113,14 +113,28 @@ object ImageTools {
     }
 
     /** Export a JPEG with the long side at [longSide] px and, if [maxBytes] > 0, under that file size. */
-    fun export(path: String, longSide: Int, maxBytes: Long, dest: File): Boolean {
+    fun export(path: String, longSide: Int, maxBytes: Long, dest: File, artist: String = "", caption: String = ""): Boolean {
         val b = decode(path, longSide) ?: return false
         var q = 92
         while (true) {
             saveJpeg(b, dest, q)
-            if (maxBytes <= 0 || dest.length() <= maxBytes || q <= 40) return true
+            if (maxBytes <= 0 || dest.length() <= maxBytes || q <= 40) break
             q -= 8
         }
+        if (artist.isNotBlank()) credit(dest, artist, caption)
+        return true
+    }
+
+    /** Writes the artist's name, a copyright line and the caption into the picture file itself, so the credit travels with it. */
+    fun credit(file: File, artist: String, caption: String) {
+        try {
+            val ascii = { t: String -> java.text.Normalizer.normalize(t.replace('\u00D7', 'x'), java.text.Normalizer.Form.NFD).replace(Regex("[^\\x20-\\x7E]"), "") }
+            val e = android.media.ExifInterface(file.absolutePath)
+            e.setAttribute(android.media.ExifInterface.TAG_ARTIST, ascii(artist))
+            e.setAttribute(android.media.ExifInterface.TAG_COPYRIGHT, "Copyright ${java.time.LocalDate.now().year} ${ascii(artist)}. All rights reserved.")
+            if (caption.isNotBlank()) e.setAttribute(android.media.ExifInterface.TAG_IMAGE_DESCRIPTION, ascii(caption).take(300))
+            e.saveAttributes()
+        } catch (x: Exception) { }
     }
 
     /** Pull "1920" and "5 MB" style limits out of a call's image spec text. */
@@ -132,62 +146,154 @@ object ImageTools {
     }
 }
 
-/** Small page-flow PDF writer on top of Android's PdfDocument. US Letter by default. */
-class Pdf(private val w: Int = 612, private val h: Int = 792, private val margin: Int = 54) {
+/**
+ * Writes the documents that go to galleries and jurors.
+ * Titles in the app's display face, text in its reading face, a running footer with the artist's name,
+ * the document's name and the page number, and helpers for the aligned columns real CVs and invoices use.
+ */
+class Pdf(ctx: Context? = null, private val owner: String = "", private val docTitle: String = "",
+          private val w: Int = 612, private val h: Int = 792, private val margin: Int = 60) {
+    enum class Face { DISPLAY, BODY, BOLD, ITALIC }
+
     private val doc = PdfDocument()
     private var page: PdfDocument.Page? = null
     private var y = 0f
     private var n = 0
+    private fun font(ctx: Context?, id: Int): Typeface? = try { ctx?.let { androidx.core.content.res.ResourcesCompat.getFont(it, id) } } catch (e: Exception) { null }
+    private val display = font(ctx, com.emotionalleaves.studioagent.R.font.bricolage_semibold) ?: Typeface.DEFAULT_BOLD
+    private val body = font(ctx, com.emotionalleaves.studioagent.R.font.atkinson_regular) ?: Typeface.DEFAULT
+    private val bodyBold = font(ctx, com.emotionalleaves.studioagent.R.font.atkinson_bold) ?: Typeface.DEFAULT_BOLD
+    private val bodyItalic = font(ctx, com.emotionalleaves.studioagent.R.font.atkinson_italic) ?: Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
+    private val ink = 0xFF1F2124.toInt()
+    private val pencil = 0xFF5F6368.toInt()
+
+    /** Usable width between the margins, in points. */
+    val width: Int get() = w - 2 * margin
+    val pageWidth: Int get() = w
+    val pageHeight: Int get() = h
+    val left: Float get() = margin.toFloat()
+
+    /** Text set in the reading face's true italic, for titles of works. */
+    fun em(s: CharSequence): CharSequence = android.text.SpannableString(s).apply { setSpan(FaceSpan(bodyItalic), 0, length, 0) }
+
+    fun paint(size: Float, face: Face = Face.BODY, grey: Boolean = false) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+        textSize = size; color = if (grey) pencil else ink
+        typeface = when (face) { Face.DISPLAY -> display; Face.BODY -> body; Face.BOLD -> bodyBold; Face.ITALIC -> bodyItalic }
+    }
+
+    /** Lays text out without drawing it. Italic spans in the text (titles of works) are kept. */
+    fun layout(s: CharSequence, width: Int, size: Float, face: Face = Face.BODY, grey: Boolean = false, center: Boolean = false): StaticLayout =
+        StaticLayout.Builder.obtain(s, 0, s.length, paint(size, face, grey), width.coerceAtLeast(10))
+            .setAlignment(if (center) android.text.Layout.Alignment.ALIGN_CENTER else android.text.Layout.Alignment.ALIGN_NORMAL)
+            .setLineSpacing(size * 0.25f, 1f).build()
 
     fun newPage() {
-        page?.let { doc.finishPage(it) }
+        finishPage()
         n++
         page = doc.startPage(PdfDocument.PageInfo.Builder(w, h, n).create())
         y = margin.toFloat()
     }
 
+    private fun finishPage() {
+        val p = page ?: return
+        if (owner.isNotBlank() || docTitle.isNotBlank()) {
+            val tp = paint(8f, Face.BODY, true)
+            val base = h - margin / 2f
+            p.canvas.drawText(listOf(owner, docTitle).filter { it.isNotBlank() }.joinToString(", "), margin.toFloat(), base, tp)
+            val num = "Page $n"
+            p.canvas.drawText(num, w - margin - tp.measureText(num), base, tp)
+        }
+        doc.finishPage(p)
+        page = null
+    }
+
+    fun canvas(): Canvas { if (page == null) newPage(); return page!!.canvas }
+
     private fun room(space: Float) { if (page == null || y + space > h - margin) newPage() }
 
-    fun text(s: String, size: Float = 11f, bold: Boolean = false, gap: Float = 6f, grey: Boolean = false) {
-        val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            textSize = size; typeface = if (bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT; color = if (grey) Color.DKGRAY else Color.BLACK
-        }
-        for (para in s.split("\n")) {
-            val line = para.ifEmpty { " " }
-            val layout = StaticLayout.Builder.obtain(line, 0, line.length, tp, w - 2 * margin).setLineSpacing(2f, 1f).build()
-            room(layout.height.toFloat())
+    /** Starts a new page first if [need] points will not fit, so a heading never sits alone at the foot of a page. */
+    fun keep(need: Float) = room(need)
+
+    fun text(s: CharSequence, size: Float = 11f, bold: Boolean = false, gap: Float = 6f, grey: Boolean = false,
+             face: Face? = null, indent: Float = 0f, center: Boolean = false) {
+        val f = face ?: if (bold) Face.BOLD else Face.BODY
+        val str = s.toString()
+        var start = 0
+        while (start <= str.length) {
+            val end = str.indexOf('\n', start).let { if (it < 0) str.length else it }
+            val part: CharSequence = if (end > start) s.subSequence(start, end) else " "
+            val l = layout(part, (width - indent).toInt(), size, f, grey, center)
+            room(l.height.toFloat())
             val c = page!!.canvas
-            c.save(); c.translate(margin.toFloat(), y); layout.draw(c); c.restore()
-            y += layout.height + gap
+            c.save(); c.translate(margin + indent, y); l.draw(c); c.restore()
+            y += l.height + gap
+            start = end + 1
         }
+    }
+
+    /** A label in a fixed left column and its value beside it, with an optional amount on the right edge. */
+    fun row(label: String, value: CharSequence, labelWidth: Float = 130f, size: Float = 11f, gap: Float = 6f, right: String = "") {
+        val tp = paint(size)
+        val rw = if (right.isBlank()) 0f else tp.measureText(right) + 18f
+        val lv = layout(value, (width - labelWidth - rw).toInt(), size)
+        val ll = layout(label, (labelWidth - 10).toInt(), size, Face.BODY, grey = true)
+        val tall = max(lv.height, ll.height).toFloat()
+        room(tall)
+        val c = page!!.canvas
+        c.save(); c.translate(margin.toFloat(), y); ll.draw(c); c.restore()
+        c.save(); c.translate(margin + labelWidth, y); lv.draw(c); c.restore()
+        if (right.isNotBlank()) c.drawText(right, w - margin - tp.measureText(right), y + lv.getLineBaseline(0), tp)
+        y += tall + gap
+    }
+
+    /** A CV line: the year in its own column, the entry hanging beside it. */
+    fun hang(year: String, entry: CharSequence, col: Float = 52f, size: Float = 10.5f, gap: Float = 5f, right: String = "") = row(year, entry, col, size, gap, right)
+
+    /** A line with text on the left and an amount on the right edge. */
+    fun amount(label: CharSequence, value: String, size: Float = 11f, face: Face = Face.BODY, gap: Float = 6f) {
+        val tp = paint(size, face)
+        val vw = tp.measureText(value)
+        val l = layout(label, (width - vw - 24).toInt(), size, face)
+        room(l.height.toFloat())
+        val c = page!!.canvas
+        c.save(); c.translate(margin.toFloat(), y); l.draw(c); c.restore()
+        c.drawText(value, w - margin - vw, y + l.getLineBaseline(0), tp)
+        y += l.height + gap
     }
 
     fun space(px: Float) { y += px }
 
     fun image(path: String, maxH: Float): Boolean {
-        val b = ImageTools.decode(path, 1600) ?: return false
-        val availW = (w - 2 * margin).toFloat()
+        val b = ImageTools.decode(path, 1800) ?: return false
+        val availW = width.toFloat()
         val k = min(availW / b.width, maxH / b.height)
         val dw = b.width * k; val dh = b.height * k
-        room(dh + 8)
+        room(dh + 10)
         val left = margin + (availW - dw) / 2
         page!!.canvas.drawBitmap(b, null, RectF(left, y, left + dw, y + dh), Paint(Paint.FILTER_BITMAP_FLAG))
-        y += dh + 8
+        y += dh + 10
         return true
     }
 
-    fun rule() {
-        room(10f)
-        page!!.canvas.drawLine(margin.toFloat(), y, (w - margin).toFloat(), y, Paint().apply { color = Color.LTGRAY; strokeWidth = 1f })
-        y += 10
+    fun rule(dark: Boolean = false) {
+        room(12f)
+        page!!.canvas.drawLine(margin.toFloat(), y, (w - margin).toFloat(), y,
+            Paint().apply { color = if (dark) ink else 0xFFD5D6D2.toInt(); strokeWidth = if (dark) 0.8f else 0.6f })
+        y += 12
     }
 
     fun save(file: File): File {
-        if (page == null) newPage()
-        page?.let { doc.finishPage(it) }
+        if (page == null && n == 0) newPage()
+        finishPage()
         file.parentFile?.mkdirs()
         file.outputStream().use { doc.writeTo(it) }
         doc.close()
         return file
     }
+}
+
+/** Sets a whole typeface on a span of text, so italics use the real italic font instead of a slanted copy. */
+class FaceSpan(private val face: Typeface) : android.text.style.MetricAffectingSpan() {
+    override fun updateDrawState(tp: TextPaint) { tp.typeface = face }
+    override fun updateMeasureState(tp: TextPaint) { tp.typeface = face }
 }

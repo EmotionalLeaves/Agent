@@ -82,6 +82,8 @@ fun Records(nav: NavController) {
     var saleWork by remember { mutableStateOf(0L) }
     var salePrice by remember { mutableStateOf(0.0) }
     var saleCommission by remember { mutableStateOf(0.0) }
+    val buyer = rememberSaveable { mutableStateOf("") }
+    var lastSale by remember { mutableStateOf<Triple<Long, Double, String>?>(null) }
     var status by remember { mutableStateOf("") }
     val todo = rememberSaveable { mutableStateOf("") }
     val todoDate = rememberSaveable { mutableStateOf("") }
@@ -142,11 +144,13 @@ fun Records(nav: NavController) {
             }
             key(saleWork) { Num("Sale price, " + st.currency, salePrice) { salePrice = it } }
             Num("Venue commission, %", saleCommission) { saleCommission = it }
+            Field("Buyer's name, for the bill of sale", buyer)
             Button(enabled = saleWork != 0L && salePrice > 0, onClick = {
                 val w = works.firstOrNull { it.id == saleWork }
-                val price = salePrice; val pct = saleCommission; saleWork = 0L
+                val price = salePrice; val pct = saleCommission; val who = buyer.value.trim(); saleWork = 0L; buyer.value = ""
+                lastSale = w?.let { Triple(it.id, price, who) }
                 scope.io {
-                    dao.put(Ledger(kind = "sale", amount = price, date = now(), note = w?.title.orEmpty(), artworkId = w?.id ?: 0))
+                    dao.put(Ledger(kind = "sale", amount = price, date = now(), note = w?.title.orEmpty() + (if (who.isNotBlank()) ", to $who" else ""), artworkId = w?.id ?: 0))
                     if (pct > 0) dao.put(Ledger(kind = "commission", amount = -price * pct / 100, date = now(), note = "Commission on ${w?.title.orEmpty()}", artworkId = w?.id ?: 0))
                     if (w != null) dao.put(if (w.editionSize > 1) w.copy(editionUsed = w.editionUsed + 1) else w.copy(status = "sold", location = "Sold"))
                     status = "Sale recorded. You keep ${money(price * (1 - pct / 100))}."
@@ -154,6 +158,17 @@ fun Records(nav: NavController) {
             }) { Text("Record sale") }
         }
         Status(status)
+        lastSale?.let { (id, price, who) ->
+            OutlinedButton(onClick = {
+                scope.io({ status = it }) {
+                    val w = dao.artworksNow().firstOrNull { it.id == id } ?: return@io
+                    val year = java.time.LocalDate.now().year
+                    val n = ledger.count { it.kind == "sale" && java.time.Instant.ofEpochMilli(it.date).atZone(java.time.ZoneId.systemDefault()).year == year }.coerceAtLeast(1)
+                    val f = com.emotionalleaves.studioagent.work.Papers.billOfSale(ctx, st, w, who, price, n)
+                    withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
+                }
+            }) { Text("Make the bill of sale") }
+        }
 
         }
 
@@ -340,6 +355,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 SText("Website or portfolio page", st.website) { st.website = it }
                 SText("City", st.city) { st.city = it }
                 SText("State or region", st.region) { st.region = it }
+                SText("Born (optional, for your CV, like \"b. 1998, Chicago\")", st.born) { st.born = it }
                 Section("Your work")
                 SText("Mediums", st.mediums) { st.mediums = it }
                 Multi("How your work is shown (pick every one that applies)", listOf("print", "physical", "screen"), st.routes) { st.route = it.joinToString(",") }

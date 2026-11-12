@@ -393,8 +393,8 @@ fun WorkDetail(nav: NavController, id: Long) {
                     val out = ImageTools.exportDir(ctx)
                     val base = Texts.fileName(st.lastName, w.title, w.year, Papers.medium(w), w.widthIn, w.heightIn).removeSuffix(".jpg")
                     val jury = File(out, "$base.jpg"); val web = File(out, "${base}_web.jpg")
-                    ImageTools.export(w.imagePath, 1920, 5L * 1024 * 1024, jury)
-                    ImageTools.export(w.imagePath, 1600, 2L * 1024 * 1024, web)
+                    ImageTools.export(w.imagePath, 1920, 5L * 1024 * 1024, jury, st.fullName, Papers.caption(w))
+                    ImageTools.export(w.imagePath, 1600, 2L * 1024 * 1024, web, st.fullName, Papers.caption(w))
                     val files = mutableListOf(jury, web)
                     if (w.originalPath.isNotBlank() && File(w.originalPath).exists()) files += File(w.originalPath).copyTo(File(out, "${base}_original.jpg"), overwrite = true)
                     status = "Exported: jury size (1920 px), web size (under 2 MB) and the untouched original."

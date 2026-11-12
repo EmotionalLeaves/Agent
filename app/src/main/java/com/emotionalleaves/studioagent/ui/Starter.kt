@@ -33,12 +33,13 @@ object Starter {
         val first = st.firstName.ifBlank { "[your name]" }
         val where = if (st.city.isNotBlank()) ", based in ${st.city}" else ""
         val make = st.mediums.ifBlank { "[what you make, in a few words]" }
-        val hello = when { c.name.isNotBlank() -> "Hello ${c.name}"; c.venue.isNotBlank() -> "Hello ${c.venue} team"; else -> "Hello" }
+        val hello = when { c.name.isNotBlank() -> "Dear ${c.name}"; c.venue.isNotBlank() -> "Dear ${c.venue} team"; else -> "Hello" }
+        val sign = if (st.fullName.isBlank()) first else com.emotionalleaves.studioagent.work.Papers.signature(st)
         val body = "$hello,\n\nI am $me, an artist$where. I make $make.\n\n" +
             "[One sentence on something specific you saw at ${c.venue.ifBlank { "their space" }}, or why your work suits it.]\n\n" +
             (if (st.website.isNotBlank()) "You can see the work at ${st.website}.\n\n" else "") +
-            "Would you be open to me sending a few images?\n\nThank you,\n$first"
-        val follow = "Hello again,\n\nJust following up once on my note from a few weeks ago. No need to reply if it is not a fit.\n\nThank you,\n$first"
+            "Would you be open to me sending a few images?\n\nKind regards,\n\n$sign"
+        val follow = "$hello,\n\nI am following up once on my note from a few weeks ago about showing my work. If it is not a fit, no reply is needed.\n\nKind regards,\n\n$sign"
         return Triple("Introducing my work: $me", body, follow)
     }
 
