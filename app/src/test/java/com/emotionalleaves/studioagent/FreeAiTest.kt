@@ -55,6 +55,20 @@ class FreeAiTest {
         assertEquals("entries@riverside.example.org", o.email); assertEquals("local", o.scope); assertEquals(3, o.maxWorks)
     }
 
+    @Test fun anEmailTheHelperWritesEndsWithTheRealSignature() = runBlocking {
+        ctx
+        G.settings.aiKey = ""; G.settings.freeAi = true
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"; G.settings.email = "jade@example.com"; G.settings.website = ""; G.settings.phone = ""; G.settings.city = "Austin"
+        val reply = JSONObject().put("subject", "Showing at Campus Gallery").put("body", "Dear Ms Reyes,\n\nI make graphite drawings of kitchens at dawn.\n\nBest,\nJade")
+            .put("follow_up", "Dear Ms Reyes,\n\nA short follow-up to my note.\n\nKind regards,")
+        up.enqueue(answer(reply.toString()))
+        Ai.freeOverride = listOf(Triple(up.url("/v1").toString(), "b", "Up"))
+        val (_, body, follow) = G.ai.outreach("Campus Gallery", "", "", "", "")
+        val sig = "Kind regards,\n\nJade Leaves\njade@example.com\nAustin"
+        assertTrue(body, body.endsWith("kitchens at dawn.\n\n$sig"))
+        assertTrue(follow, follow.endsWith("follow-up to my note.\n\n$sig"))
+    }
+
     @Test fun whenEveryServiceIsDownTheMessageIsPlain() = runBlocking {
         ctx
         G.settings.aiKey = ""; G.settings.freeAi = true

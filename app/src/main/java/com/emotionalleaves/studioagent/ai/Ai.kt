@@ -244,11 +244,16 @@ class Ai(private val settings: Settings) {
         val sys = writerSystem(voice) + " " + dataRule + " Reply with only JSON: {\"subject\": \"\", \"body\": \"\", \"follow_up\": \"\"}."
         val out = complete(sys, "Write a first email to a venue, under 150 words, polite and specific. Mention one concrete thing about the venue only if it is in the venue notes. " +
             "Follow the venue's stated submission instructions if any. Link to the portfolio instead of attaching images: $portfolioUrl\n" +
-            "Then write a follow-up of under 60 words to send 3 to 4 weeks later if there is no reply.\n\nFacts you may use:\n$facts\n\n<data>\nVenue: $venue\nVenue notes: $venueNotes\n</data>", maxTokens = 900)
-        return try {
+            "Then write a follow-up of under 60 words to send 3 to 4 weeks later if there is no reply. End both with \"Kind regards,\" and nothing after it; the signature is added for you." +
+            "\n\nFacts you may use:\n$facts\n\n<data>\nVenue: $venue\nVenue notes: $venueNotes\n</data>", maxTokens = 900)
+        val (subject, body, follow) = try {
             val j = JSONObject(jsonSlice(out, '{', '}'))
             Triple(j.optString("subject"), j.optString("body"), j.optString("follow_up"))
         } catch (e: Exception) { Triple("", out, "") }
+        // Every email closes the same way: the full signature, never a made-up one.
+        fun sign(t: String) = if (t.isBlank()) t else t.trimEnd().replace(Regex("(?s)\\n(Kind regards|Best|Best regards|Thank you|Thanks|Sincerely|Warm regards)[,!.]?(\\s*\\n.*)?$"), "").trimEnd() +
+            "\n\nKind regards,\n\n" + com.emotionalleaves.studioagent.work.Papers.signature(settings)
+        return Triple(subject, sign(body), sign(follow))
     }
 
     /** Summarise a venue's public page: what it shows, whether it takes submissions, how, and a contact. */
