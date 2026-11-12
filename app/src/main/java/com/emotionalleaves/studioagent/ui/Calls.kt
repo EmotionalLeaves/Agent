@@ -668,16 +668,19 @@ fun Sources(nav: NavController) {
         LaunchedEffect(Unit) { Engine.seedSources() }
         if (sources.isEmpty()) Empty("No sources yet. Calls you share or paste still arrive without one.")
         Explain("What can I add here?", "Email source: the sender's address or domain (for example callforentry.org). Needs email set up in You, Settings, Email. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
+        // One row per source: the switch is the only control. Removing one sits behind the details.
         sources.forEach { s ->
-            Panel {
-                Toggle("${s.name}  (${s.kind})", s.enabled) { on -> scope.io { dao.put(s.copy(enabled = on)) } }
-                Note(s.url)
-                if (s.lastStatus.isNotBlank()) Note("${fmtDate(s.lastFetched)}: ${s.lastStatus}")
-                TextButton(onClick = { scope.remove("the source", { dao.del(s) }, { dao.put(s) }) }) { Text("Remove") }
-            }
+            val where = if (s.kind == "email") "Email alerts from ${s.url}" else (try { java.net.URI(s.url).host.removePrefix("www.") } catch (e: Exception) { s.url })
+            Toggle(s.name, s.enabled) { on -> scope.io { dao.put(s.copy(enabled = on)) } }
+            Small(where + (if (s.lastStatus.isNotBlank()) ". ${fmtDate(s.lastFetched)}: ${s.lastStatus}" else ""))
+            Hair()
+        }
+        if (sources.isNotEmpty()) Expand("Remove a source") {
+            Small("Turning a source off keeps it for later. Removing it can be undone for a few seconds.")
+            sources.forEach { s -> TextButton(onClick = { scope.remove("the source", { dao.del(s) }, { dao.put(s) }) }) { Text("Remove ${s.name}") } }
         }
         H("Add a source")
-        Choice("Kind", listOf("email", "url"), kind) { kind = it }
+        Choice("Kind", listOf("email", "url"), kind, names = { if (it == "email") "Email alerts" else "Listing page" }) { kind = it }
         Field("Name", name)
         Field(if (kind == "email") "Sender address or domain" else "Page address", value)
         // Appears once there is something to add, like Park it.

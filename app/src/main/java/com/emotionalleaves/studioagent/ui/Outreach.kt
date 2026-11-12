@@ -217,7 +217,7 @@ fun ContactScreen(nav: NavController, id: Long) {
         when {
             !allowed -> Panel {
                 Text("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}. You are at Level $level.")
-                Note("For now: go to their openings, join their mailing list, and note who you meet here. That is what makes a later email welcome. (This limit can be turned off in You, Your rules.)")
+                Note("For now: go to their openings, join their mailing list, and note who you meet here. That is what makes a later email welcome. (This limit can be turned off in You, Settings, Your rules.)")
             }
             !c.acceptsSubmissions -> Panel {
                 Text("They do not take unsolicited submissions, so no email.")
