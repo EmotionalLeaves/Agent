@@ -298,30 +298,33 @@ fun WorkDetail(nav: NavController, id: Long) {
             OutlinedButton(onClick = { save(w.copy(status = "finished")) }) { Text(if (w.doneWhen.isNotBlank()) "It meets my finish line: call it finished" else "Call it finished") }
         }
 
-        H("Details")
-        Whole("Year", w.year) { save(w.copy(year = it)) }
-        Field("Medium (blank uses the default for its format)", w.medium, { save(w.copy(medium = it)) })
-        Choice("Format", listOf("print", "physical", "screen", "digital"), w.format) { save(w.copy(format = it)) }
-        Explain("Not sure which format?", "Print: a digital file that will be printed and framed. Physical: made by hand. Screen: shown on a monitor. Digital: a file with no plan yet. If unsure, leave it on print.")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(Modifier.weight(1f)) { Dim("Width", w.widthIn) { save(w.copy(widthIn = it)) } }
-            Column(Modifier.weight(1f)) { Dim("Height", w.heightIn) { save(w.copy(heightIn = it)) } }
-            Column(Modifier.weight(1f)) { Dim("Depth", w.depthIn) { save(w.copy(depthIn = it)) } }
-        }
-        if (w.format == "print" || w.format == "digital") {
-            Panel { Text("Print check", fontWeight = FontWeight.SemiBold); Text(Texts.printVerdict(w.pixelW, w.pixelH, w.widthIn, w.heightIn)) }
-            val size = Texts.suggestedPrintSize(w.pixelW, w.pixelH)
-            if (size != null && (w.widthIn <= 0 || w.heightIn <= 0)) OutlinedButton(onClick = { save(w.copy(widthIn = size.first, heightIn = size.second)); status = "Size filled in. Reopen this piece to see it in the boxes." }) {
-                Text("I do not know the size: use ${Texts.dim(size.second)} x ${Texts.dim(size.first)} in, the largest sharp print")
-            }
-        }
-        Toggle("Framed", w.framed) { save(w.copy(framed = it)) }
-        if (series.isNotEmpty()) Choice("Series", series.map { it.name }, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()) { n -> series.firstOrNull { it.name == n }?.let { save(w.copy(seriesId = it.id)) } }
-        else Note("No series yet. Add one under Studio, Series.")
+        H("Where it stands")
         Choice("Status", workStatuses, w.status) { save(w.copy(status = it)) }
         Explain("What do these mean?", "In progress: still making it. Finished: done, not photographed yet. Documented or available: has its image and can be sent to calls. Pending: sent to a call, waiting. Shown and sold: the app sets these for you.")
         Field("Next step (shown when you start a session)", w.nextStep, { save(w.copy(nextStep = it)) })
-        Field("Tags (your own labels, comma separated)", w.tags, { save(w.copy(tags = it)) })
+        // The rest only matters once a piece is heading out, so it stays folded until then.
+        Expand("Size, year, medium, series", startOpen = w.widthIn <= 0 && w.status in setOf("finished", "documented")) {
+            Whole("Year", w.year) { save(w.copy(year = it)) }
+            Field("Medium (blank uses the default for its format)", w.medium, { save(w.copy(medium = it)) })
+            Choice("Format", listOf("print", "physical", "screen", "digital"), w.format) { save(w.copy(format = it)) }
+            Explain("Not sure which format?", "Print: a digital file that will be printed and framed. Physical: made by hand. Screen: shown on a monitor. Digital: a file with no plan yet. If unsure, leave it on print.")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.weight(1f)) { Dim("Width", w.widthIn) { save(w.copy(widthIn = it)) } }
+                Column(Modifier.weight(1f)) { Dim("Height", w.heightIn) { save(w.copy(heightIn = it)) } }
+                Column(Modifier.weight(1f)) { Dim("Depth", w.depthIn) { save(w.copy(depthIn = it)) } }
+            }
+            if (w.format == "print" || w.format == "digital") {
+                Panel { Text("Print check", fontWeight = FontWeight.SemiBold); Text(Texts.printVerdict(w.pixelW, w.pixelH, w.widthIn, w.heightIn)) }
+                val size = Texts.suggestedPrintSize(w.pixelW, w.pixelH)
+                if (size != null && (w.widthIn <= 0 || w.heightIn <= 0)) OutlinedButton(onClick = { save(w.copy(widthIn = size.first, heightIn = size.second)); status = "Size filled in. Reopen this piece to see it in the boxes." }) {
+                    Text("I do not know the size: use ${Texts.dim(size.second)} x ${Texts.dim(size.first)} in, the largest sharp print")
+                }
+            }
+            Toggle("Framed", w.framed) { save(w.copy(framed = it)) }
+            if (series.isNotEmpty()) Choice("Series", series.map { it.name }, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()) { n -> series.firstOrNull { it.name == n }?.let { save(w.copy(seriesId = it.id)) } }
+            else Note("No series yet. Add one under Studio, Series.")
+            Field("Tags (your own labels, comma separated)", w.tags, { save(w.copy(tags = it)) })
+        }
 
         if (w.format == "print") Expand("Getting it printed (step ${w.printStage.coerceIn(0, 5)} of 5 done)") {
             Small("You do not need to know how any of this works. Do the highlighted step; ignore the rest.")
