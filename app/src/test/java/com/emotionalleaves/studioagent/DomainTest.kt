@@ -186,6 +186,12 @@ class DomainTest {
         assertEquals(null, CallReader.deadline("No dates here", today))
         assertEquals(0.0, CallReader.fee("There is no entry fee. Prize of $500."), 0.0)
         assertEquals("residency", CallReader.read("Artist residency, international", today, zone, "x", 1L).kind)
+        // Seen on real listing pages: a prize is not a fee, and a menu word does not decide the kind.
+        assertEquals(0.0, CallReader.fee("The Homiens Art Prize ($12,000 Annually). Entries open to all."), 0.0)
+        assertEquals(0.0, CallReader.fee("$1K Open Theme Competition. Entry is free."), 0.0)
+        assertEquals(30.0, CallReader.fee("Application fee: $30. Grant of $5,000."), 0.0)
+        assertEquals("exhibition", CallReader.read("Winter Juried Exhibit\nMenu: residencies, grants, jobs", today, zone, "x", 1L).kind)
+        assertEquals("Creative Futures 2027", CallReader.cleanTitle("Home | Creative Futures 2027"))
     }
 
     @Test fun draftsAreBuiltOnlyFromWhatTheArtistSaid() {
