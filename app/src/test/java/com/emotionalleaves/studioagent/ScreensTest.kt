@@ -132,6 +132,9 @@ class ScreensTest {
         shot("37_dark_you", "more", "Plain answers")
         shot("38_dark_tour", "tour", "From the studio to a wall")
         shot("39_dark_done", "done", "It is all stored")
+        shot("49_dark_interview", "interview", "Save answers")
+        shot("59_dark_hours", "settings/hours", "Your studio times themselves")
+        shot("70_dark_call", "call/${ids["opp"]}", "Details")
     }
 
     /** Phone text size turned up, to catch anything that clips or collides. */

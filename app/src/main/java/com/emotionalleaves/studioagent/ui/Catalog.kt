@@ -126,7 +126,9 @@ fun Works(nav: NavController) {
         if (tab == "ideas") IdeasBody(nav)
         else if (tab == "works") {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = { scope.io { val id = dao.put(newWork()); withContext(Dispatchers.Main) { nav.navigate("work/$id") } } }, modifier = Modifier.weight(1f)) { Text("Add a piece") }
+                // One tap makes one piece, however fast the second tap comes.
+                var adding by remember { mutableStateOf(false) }
+                Button(enabled = !adding, onClick = { adding = true; scope.io({ adding = false }) { val id = dao.put(newWork()); withContext(Dispatchers.Main) { adding = false; nav.navigate("work/$id") } } }, modifier = Modifier.weight(1f)) { Text("Add a piece") }
                 OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Bring in files") }
             }
             Status(importStatus)
