@@ -204,13 +204,13 @@ fun Field(label: String, state: MutableState<String>, lines: Int = 1, number: Bo
     Field(label, state.value, { state.value = it }, lines, number, mic = mic)
 
 @Composable
-fun Choice(label: String, options: List<String>, selected: String, onSelect: (String) -> Unit) {
+fun Choice(label: String, options: List<String>, selected: String, names: ((String) -> String)? = null, onSelect: (String) -> Unit) {
     // Two or three short options that switch a view read best as one joined bar, like tabs.
-    if (label.isBlank() && options.size in 2..3 && options.all { it.length <= 12 } && selected in options) { Segments(options, selected, onSelect); return }
+    if (names == null && label.isBlank() && options.size in 2..3 && options.all { it.length <= 12 } && selected in options) { Segments(options, selected, onSelect); return }
     Column {
         if (label.isNotBlank()) Small(label)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            options.forEach { o -> FilterChip(selected = o == selected, onClick = { onSelect(o) }, label = { Text(o.replace('_', ' ').replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodyMedium, fontWeight = if (o == selected) FontWeight.Bold else FontWeight.Normal) }) }
+            options.forEach { o -> FilterChip(selected = o == selected, onClick = { onSelect(o) }, label = { Text(names?.invoke(o) ?: o.replace('_', ' ').replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodyMedium, fontWeight = if (o == selected) FontWeight.Bold else FontWeight.Normal) }) }
         }
     }
 }

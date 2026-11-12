@@ -133,7 +133,7 @@ fun Works(nav: NavController) {
             if (works.isEmpty()) Empty("No pieces yet. Start one, or bring in work you have already made.")
             if (works.size > 5) {
                 Field("Search title, tag, medium or series", search)
-                Choice("", listOf("all") + workStatuses.filter { x -> works.any { it.status == x } }, show) { show = it }
+                Choice("", listOf("all") + workStatuses.filter { x -> works.any { it.status == x } }, show, names = { if (it == "all") "All" else statusWords(it) }) { show = it }
             }
             val q = search.value.trim().lowercase()
             works.filter { w ->
@@ -300,8 +300,8 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
 
         H("Where it stands")
-        Choice("Status", workStatuses, w.status) { save(w.copy(status = it)) }
-        Explain("What do these mean?", "In progress: still making it. Finished: done, not photographed yet. Documented or available: has its image and can be sent to calls. Pending: sent to a call, waiting. Shown and sold: the app sets these for you.")
+        Choice("Status", workStatuses, w.status, names = ::statusWords) { save(w.copy(status = it)) }
+        Explain("What do these mean?", "In progress: still making it. Finished: done, not photographed yet. Ready to send or available: has its image and can be sent to calls. Out on a call: sent to a call, waiting. Shown and sold: the app sets these for you.")
         Field("Next step (shown when you start a session)", w.nextStep, { save(w.copy(nextStep = it)) })
         // The rest only matters once a piece is heading out, so it stays folded until then.
         Expand("Size, year, medium, series", startOpen = w.widthIn <= 0 && w.status in setOf("finished", "documented")) {
