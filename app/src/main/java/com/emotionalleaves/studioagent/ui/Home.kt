@@ -5,6 +5,9 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.activity.compose.BackHandler
@@ -147,7 +150,7 @@ fun Home(nav: NavController) {
         val n = next
         WallLabel(onClick = { n?.let { if (it.route != "home") nav.navigate(it.route) } }) {
             Row(verticalAlignment = Alignment.Top) {
-                Text(n?.title ?: "One moment", Modifier.weight(1f), style = MaterialTheme.typography.headlineMedium)
+                Text(n?.title ?: "Finding your next step", Modifier.weight(1f), style = MaterialTheme.typography.headlineMedium, color = if (n == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
                 if (st.onboarded) Box {
                     IconButton(onClick = { menu = true }, modifier = Modifier.offset(x = 12.dp, y = (-10).dp)) { Icon(Icons.Default.MoreVert, "Change today's step", tint = MaterialTheme.colorScheme.onSurfaceVariant) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -247,7 +250,8 @@ fun Home(nav: NavController) {
         }
 
         if (st.onboarded) {
-            Section("Elsewhere")
+            val todo0 = guide.filter { !it.done }
+            if (pendingCount > 0 || (!st.guideHidden && todo0.isNotEmpty()) || !st.simpleMode) Section("Elsewhere")
             if (pendingCount > 0) IconRow(Icons.Default.Done, "$pendingCount waiting for your yes", "One tap each") { nav.navigate("admin") }
             val todo = guide.filter { !it.done }
             val must = todo.firstOrNull { !it.optional } ?: todo.firstOrNull()
@@ -285,7 +289,11 @@ fun DoneScreen(nav: NavController) {
     val s = sessions.firstOrNull()
     Screen("Session saved", nav, bare = true) {
         Space(40)
-        Text("Saved.", style = MaterialTheme.typography.displayLarge)
+        // The one moment of motion in the app: the word settles into place once.
+        var shownIn by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) { shownIn = true }
+        val lift by animateFloatAsState(if (shownIn) 0f else 1f, tween(520), label = "saved")
+        Text("Saved.", Modifier.graphicsLayer { translationY = lift * 40f; alpha = 1f - lift }, style = MaterialTheme.typography.displayLarge)
         if (s != null) {
             val mins = ((s.end - s.start) / 60000).coerceAtLeast(0)
             Text("$mins minutes" + (works.firstOrNull { it.id == s.artworkId }?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".", style = MaterialTheme.typography.headlineSmall)
@@ -474,10 +482,11 @@ fun SessionScreen(nav: NavController) {
             val part = if (goal > 0) (secs / (goal * 60f)).coerceIn(0f, 1f) else 0f
             // A ring that fills as time passes: the whole session visible at a glance.
             Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
+                val shown by animateFloatAsState(part, tween(900), label = "ring")
                 Canvas(Modifier.size(250.dp)) {
                     val w = 10.dp.toPx()
                     drawArc(track, -90f, 360f, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
-                    if (part > 0f) drawArc(fill, -90f, 360f * part, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
+                    if (shown > 0f) drawArc(fill, -90f, 360f * shown, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text((if (secs >= 3600) "%d:%02d:%02d".format(secs / 3600, (secs / 60) % 60, secs % 60) else "%d:%02d".format(secs / 60, secs % 60)), style = MaterialTheme.typography.displayMedium)

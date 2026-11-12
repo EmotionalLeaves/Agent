@@ -169,7 +169,7 @@ fun Works(nav: NavController) {
                     }
                     Field("What ties these works together? (used for the series statement)", notes, { notes = it; scope.io { dao.put(s.copy(notes = it, name = name.trim().ifBlank { s.name })) } }, lines = 2, mic = true)
                     Whole("How many works you are aiming for", s.targetCount) { n -> if (n > 0) scope.io { dao.put(s.copy(targetCount = n, notes = notes, name = name.trim().ifBlank { s.name })) } }
-                    TextButton(onClick = { val members = works.filter { it.seriesId == s.id }; scope.remove("the series", { members.forEach { dao.put(it.copy(seriesId = 0)) }; dao.del(s) }, { dao.put(s); members.forEach { dao.put(it) } }) }) { Text("Delete this series (its works are kept)") }
+                    DangerButton(onClick = { val members = works.filter { it.seriesId == s.id }; scope.remove("the series", { members.forEach { dao.put(it.copy(seriesId = 0)) }; dao.del(s) }, { dao.put(s); members.forEach { dao.put(it) } }) }) { Text("Delete this series (its works are kept)") }
                 }
             } }
             Field("New series name", newSeries)
@@ -230,7 +230,15 @@ fun WorkDetail(nav: NavController, id: Long) {
         // The picture comes first, on a white sheet, the way it will be seen.
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(3.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(if (w.imagePath.isNotBlank()) 12.dp else 22.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (w.imagePath.isNotBlank()) PathImage(w.imagePath, Modifier.fillMaxWidth().height(300.dp), 1000)
+            if (w.imagePath.isNotBlank()) {
+                PathImage(w.imagePath, Modifier.fillMaxWidth().height(300.dp), 1000)
+                // Its wall label, as it would hang in a show.
+                Column(Modifier.padding(top = 4.dp)) {
+                    Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleMedium)
+                    val facts = listOfNotNull(w.year.takeIf { it > 0 }?.toString(), w.medium.ifBlank { null }, if (w.widthIn > 0 && w.heightIn > 0) Texts.dims(w.widthIn, w.heightIn) else null)
+                    if (facts.isNotEmpty()) Small(facts.joinToString(", "))
+                }
+            }
             else {
                 Text("No picture yet", style = MaterialTheme.typography.titleLarge)
                 Small("Photograph the work, or bring in the file. Everything else can come later.")
@@ -378,7 +386,7 @@ fun WorkDetail(nav: NavController, id: Long) {
         TextButton(onClick = {
             scope.io { val copy = dao.put(w.copy(id = 0, title = (w.title + " (copy)").trim(), imagePath = "", originalPath = "", detailPath = "", extraImages = "", pixelW = 0, pixelH = 0, status = "in_progress", steps = "", nextStep = "", createdAt = now())); withContext(Dispatchers.Main) { nav.navigate("work/$copy") } }
         }) { Text("Make another like this (same details, new image)") }
-        TextButton(onClick = { scope.remove(w.title.ifBlank { "the piece" }, { dao.del(w) }, { dao.put(w) }); nav.popBackStack() }) { Text("Delete this piece") }
+        DangerButton(onClick = { scope.remove(w.title.ifBlank { "the piece" }, { dao.del(w) }, { dao.put(w) }); nav.popBackStack() }) { Text("Delete this piece") }
         }
     }
 }

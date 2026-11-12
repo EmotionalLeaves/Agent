@@ -314,7 +314,7 @@ fun DocScreen(nav: NavController, id: Long) {
             }
             if (!G.ai.ready) Note("No AI key is needed for this. With one, the app writes a smoother draft.")
         }
-        if (d.type == "custom") TextButton(onClick = { scope.remove(d.title.ifBlank { "the document" }, { dao.del(d) }, { dao.put(d) }); nav.popBackStack() }) { Text("Delete this document") }
+        if (d.type == "custom") DangerButton(onClick = { scope.remove(d.title.ifBlank { "the document" }, { dao.del(d) }, { dao.put(d) }); nav.popBackStack() }) { Text("Delete this document") }
     }
 }
 

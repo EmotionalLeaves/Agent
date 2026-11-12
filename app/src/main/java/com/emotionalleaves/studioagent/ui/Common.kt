@@ -179,7 +179,7 @@ fun fitLabel(score: Int): String = if (st.fitWords) Texts.fitWord(score) else "F
 fun Field(label: String, value: String, onValue: (String) -> Unit, lines: Int = 1, number: Boolean = false, secret: Boolean = false, mic: Boolean = false) {
     val speak = if (mic) rememberMic { said -> onValue((value + " " + said).trim()) } else null
     // Short labels float inside the box; long ones (a question, a hint) sit above it so they never wrap into the border.
-    val above = label.length > 34
+    val above = label.length > 40
     if (above) Text(label, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp))
     OutlinedTextField(
         value = value, onValueChange = onValue, label = if (above || label.isBlank()) null else ({ Text(label) }), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
@@ -191,7 +191,8 @@ fun Field(label: String, value: String, onValue: (String) -> Unit, lines: Int = 
         trailingIcon = if (speak != null) ({ IconButton(onClick = speak) { MicIcon() } }) else null,
         keyboardOptions = KeyboardOptions(
             keyboardType = if (number) KeyboardType.Decimal else if (secret) KeyboardType.Password else KeyboardType.Text,
-            capitalization = if (number || secret) KeyboardCapitalization.None else KeyboardCapitalization.Sentences
+            capitalization = if (number || secret) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
+            imeAction = if (lines == 1) androidx.compose.ui.text.input.ImeAction.Next else androidx.compose.ui.text.input.ImeAction.Default
         ),
         visualTransformation = if (secret) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None
     )

@@ -120,13 +120,13 @@ fun Calls(nav: NavController) {
             "this week" -> {
                 val list = Engine.shortlist(opps.filter { kindOk(it) }, p, now(), Engine.stretchOk(now()), st.shortlistSize)
                 val cap = Levels.feeCap(p.level, p.rules)
-                Note(if (p.rules.showAllLevels) "Showing calls from every level (you turned level limits off in Settings)."
+                LevelLine(nav, if (p.rules.showAllLevels) "Showing calls from every level (you turned level limits off in Settings)."
                 else "Level ${p.level}: " + (if (cap <= 0.0) "free calls only. " else if (cap == Double.MAX_VALUE) "no fee cap. " else "fees up to ${money(cap)}. ") + when (p.level) {
                     0 -> "Online or on your doorstep. The priority right now is making the series."
                     1 -> "Local, campus and community calls."
                     2 -> "Regional juried shows."
                     else -> "Competitive calls, judged case by case."
-                } + " Change this in Settings, Your rules.")
+                })
                 if (list.isEmpty()) Empty("No calls waiting. When you see one anywhere, tap Share and choose Studio Agent, or paste it below.")
                 list.forEach { o ->
                     key(o.id) {
@@ -312,7 +312,7 @@ fun CallDetail(nav: NavController, id: Long) {
         }
         Row {
             if (o.organiser.isNotBlank()) TextButton(onClick = { st.blocked = (st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() } + o.organiser).distinct().joinToString(", "); status = "Blocked. Their calls will be held back." }) { Text("Block this organiser") }
-            TextButton(onClick = { scope.remove(o.title.ifBlank { "the call" }, { dao.del(o) }, { dao.put(o) }); nav.popBackStack() }) { Text("Delete") }
+            DangerButton(onClick = { scope.remove(o.title.ifBlank { "the call" }, { dao.del(o) }, { dao.put(o) }); nav.popBackStack() }) { Text("Delete") }
         }
     }
 }
@@ -640,6 +640,7 @@ fun Sources(nav: NavController) {
     var busy by remember { mutableStateOf(false) }
     Screen("Call sources", nav) {
         Intro("sources", "The safest sources need no page-reading: sharing a link or flyer into the app, and email alerts from listing sites you have signed up to.")
+        if (sources.isEmpty()) Empty("No sources yet. Calls you share or paste still arrive without one.")
         Explain("What can I add here?", "Email source: the sender's address or domain (for example callforentry.org). Needs email set up in Settings. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
         sources.forEach { s ->
             Panel {
@@ -678,5 +679,15 @@ fun StageHead(n: Int, title: String, done: Boolean) {
             else Text("$n", style = MaterialTheme.typography.labelLarge, color = cs.onSurface)
         }
         Text(title, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+
+/** What your level lets through, in one line, with the way to change it right beside it. */
+@Composable
+fun LevelLine(nav: NavController, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        TextButton(onClick = { nav.navigate("settings/rules") }) { Text("Change") }
     }
 }

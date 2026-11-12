@@ -101,7 +101,7 @@ class ScreensTest {
 
     @Test fun inUse() {
         val ids = seed()
-        shot("10_home", "home", "Start now")
+        shot("10_home", "home", "Block in the big shapes")
         shot("11_studio", "works", "Blue Hour")
         shot("12_piece", "work/${ids["wip"]}", "Small steps")
         shot("13_session_setup", "session", "Two-minute start")

@@ -189,7 +189,7 @@ fun Screen(
             bottomBar = { UndoBar() },
             topBar = {
                 if (back && !bare) TopAppBar(
-                    title = { Text(title, maxLines = 1, style = MaterialTheme.typography.titleLarge) },
+                    title = { Text(title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, style = MaterialTheme.typography.titleLarge) },
                     navigationIcon = { IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                     actions = { actions(); helpButton() },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background, scrolledContainerColor = MaterialTheme.colorScheme.background)
@@ -297,3 +297,9 @@ fun IconRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String
         HorizontalDivider(color = cs.outlineVariant)
     }
 }
+
+/** For deleting: quiet, red, and always undoable from the bar that appears. */
+@Composable
+fun DangerButton(onClick: () -> Unit, content: @Composable RowScope.() -> Unit) =
+    androidx.compose.material3.TextButton(onClick, Modifier.heightIn(min = 48.dp), shape = ButtonShape,
+        colors = androidx.compose.material3.ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.secondary), content = content)
