@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -186,15 +187,22 @@ fun Interview(nav: NavController) {
     val ownQuestion = rememberSaveable { mutableStateOf("") }
     Screen("Interview", nav) {
         Intro("interview", "About 10 minutes, once. Talk or type. Rough is good: your own words are what make the writing sound like you. You can stop and come back.")
-        Small("${answers.values.count { it.isNotBlank() }} of ${interviewQuestions.size} answered. Rough is good; three is enough to start.")
-        interviewQuestions.forEach { (k, q) ->
-            key(k) {
-                Field(q, answers[k].orEmpty(), { answers[k] = it }, lines = 3, mic = true)
-                interviewStarters[k]?.let { Explain("Not sure what to say?", it) }
-            }
+        // One question at a time, so the screen never looks like a form to get through.
+        val all = interviewQuestions + answers.keys.filter { it.startsWith("own:") }.sorted().map { it to it.removePrefix("own:") }
+        var at by rememberSaveable { mutableStateOf(all.indexOfFirst { answers[it.first].isNullOrBlank() }.coerceAtLeast(0)) }
+        val i = at.coerceIn(0, all.lastIndex)
+        val (k, q) = all[i]
+        LinearProgressIndicator(progress = { (i + 1f) / all.size }, modifier = Modifier.fillMaxWidth().height(4.dp), trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
+        Small("Question ${i + 1} of ${all.size}. ${answers.values.count { it.isNotBlank() }} answered; three is enough to start.")
+        Text(q, style = MaterialTheme.typography.headlineSmall)
+        key(k) {
+            Field("", answers[k].orEmpty(), { answers[k] = it }, lines = 5, mic = true)
+            interviewStarters[k]?.let { Explain("Not sure what to say?", it) }
         }
-        answers.keys.filter { it.startsWith("own:") }.sorted().forEach { k ->
-            key(k) { Field(k.removePrefix("own:"), answers[k].orEmpty(), { answers[k] = it }, lines = 3, mic = true) }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (i > 0) TextButton(onClick = { at = i - 1 }) { Text("Back") }
+            Spacer(Modifier.weight(1f))
+            if (i < all.lastIndex) OutlinedButton(onClick = { at = i + 1 }) { Text(if (answers[k].isNullOrBlank()) "Skip this one" else "Next question") }
         }
         Expand("Add your own question") {
             Note("Something about your work these questions miss. Your answer is used in the writing like the others.")
