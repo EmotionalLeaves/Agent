@@ -314,8 +314,8 @@ fun SessionScreen(nav: NavController) {
     val active = works.filter { it.status == "in_progress" || it.status == "idea" }
 
     if (start == 0L) {
-        var kind by remember { mutableStateOf(if (st.energyDay == LocalDate.now().toString() && st.energy == "wiped") "light" else "make") }
-        var workId by remember(works.size) { mutableStateOf((Engine.currentPiece(works) ?: active.firstOrNull())?.id ?: 0L) }
+        var kind by rememberSaveable { mutableStateOf(if (st.energyDay == LocalDate.now().toString() && st.energy == "wiped") "light" else "make") }
+        var workId by rememberSaveable(works.size) { mutableStateOf((Engine.currentPiece(works) ?: active.firstOrNull())?.id ?: 0L) }
         val work = works.firstOrNull { it.id == workId }
         Screen("Start a session", nav) {
             Section("What kind?")
@@ -392,7 +392,7 @@ fun SessionScreen(nav: NavController) {
                 withContext(Dispatchers.Main) { nav.navigate(if (save) "done" else "home") { popUpTo("home") { inclusive = !save } } }
             }
         }
-        var stopping by remember { mutableStateOf(false) }
+        var stopping by rememberSaveable { mutableStateOf(false) }
         val goal = st.sessionGoalMin
         Screen("In session", nav, bare = true) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

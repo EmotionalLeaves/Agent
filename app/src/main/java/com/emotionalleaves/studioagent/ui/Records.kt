@@ -292,8 +292,11 @@ fun SettingsScreen(nav: NavController, section: String) {
             status = "Folder chosen. Tap Back up there now to make the first one."
         }
     }
-    val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) scope.io({ status = it }) {
+    // Restoring cannot be undone, so it is the one place the app asks first.
+    var restoreFrom by remember { mutableStateOf<android.net.Uri?>(null) }
+    val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> restoreFrom = uri }
+    fun doRestore(uri: android.net.Uri) {
+        scope.io({ status = it }) {
             G.db.close()
             Backup.restore(ctx, st, uri)
             status = "Restored. The app will close now; open it again."
@@ -480,6 +483,16 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Note("One file with your whole catalog, images and settings. Keys and passwords are left out. Restoring replaces everything in the app with the file's contents.")
                 OutlinedButton(onClick = { export.launch("studio-agent-backup-${LocalDate.now()}.zip") }) { Text("Save a backup") }
                 OutlinedButton(onClick = { restore.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Text("Restore from a backup") }
+                restoreFrom?.let { uri ->
+                    Panel(strong = true) {
+                        Text("Replace everything in the app with this backup?", style = MaterialTheme.typography.titleSmall)
+                        Small("What is in the app now is replaced and cannot be brought back. Save a backup first if you are not sure.")
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            DangerButton(onClick = { restoreFrom = null; doRestore(uri) }) { Text("Replace everything") }
+                            TextButton(onClick = { restoreFrom = null }) { Text("Cancel") }
+                        }
+                    }
+                }
             }
             "permissions" -> {
                 Small("All three are optional. Each one only makes something easier.")

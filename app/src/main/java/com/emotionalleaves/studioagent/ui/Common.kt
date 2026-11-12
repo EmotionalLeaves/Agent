@@ -121,7 +121,21 @@ fun jargon(text: String): List<String> = Texts.jargonIn(text, st.jargonExtra)
 
 /** Run database or network work off the main thread; errors land in [onError] instead of crashing. */
 fun CoroutineScope.io(onError: (String) -> Unit = {}, block: suspend () -> Unit) = launch(Dispatchers.IO) {
-    try { block() } catch (e: Exception) { withContext(Dispatchers.Main) { onError(e.message ?: "Something went wrong") } }
+    try { block() } catch (e: Exception) { withContext(Dispatchers.Main) { onError(plainError(e)) } }
+}
+
+/** Turns a technical failure into what happened and what to do, in plain words. Messages the app wrote itself pass through. */
+fun plainError(e: Throwable): String {
+    val m = e.message.orEmpty()
+    return when {
+        e is java.net.UnknownHostException || e is java.net.ConnectException || m.contains("Unable to resolve host") -> "No internet connection right now. Nothing was lost; try again when you are online."
+        e is java.net.SocketTimeoutException || m.contains("timeout", true) -> "The other end took too long to answer. Try again in a minute."
+        m.contains("401") || m.contains("403") || m.contains("invalid x-api-key", true) || m.contains("authentication", true) -> "The key or password was not accepted. Check it in You, under AI or Email."
+        m.contains("429") || m.contains("rate limit", true) -> "The service is busy. Try again in a few minutes."
+        e is javax.net.ssl.SSLException -> "A secure connection could not be made. Try again on another network."
+        m.isBlank() || m.startsWith("java.") || m.startsWith("kotlin.") || m.length > 220 -> "Something went wrong. Nothing was lost; try again."
+        else -> m
+    }
 }
 
 /** The last thing removed, kept for a short while so a slip of the thumb costs nothing. */
@@ -292,14 +306,14 @@ private val thumbs = android.util.LruCache<String, ImageBitmap>(40)
 
 /** Shows an image file, decoded small and off the main thread. */
 @Composable
-fun PathImage(path: String, modifier: Modifier = Modifier, maxSide: Int = 700, scale: ContentScale = ContentScale.Fit) {
+fun PathImage(path: String, modifier: Modifier = Modifier, maxSide: Int = 700, scale: ContentScale = ContentScale.Fit, description: String? = null) {
     val stamp = if (path.isBlank()) 0L else File(path).lastModified()
     val key = "$path|$stamp|$maxSide"
     val bmp by produceState<ImageBitmap?>(thumbs.get(key), key) {
         if (value == null) value = withContext(Dispatchers.IO) { ImageTools.decode(path, maxSide)?.asImageBitmap()?.also { thumbs.put(key, it) } }
     }
     val b = bmp
-    if (b != null) Image(b, null, modifier, contentScale = scale)
+    if (b != null) Image(b, description, modifier, contentScale = scale)
     else Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant))
 }
 
@@ -309,7 +323,7 @@ fun Explain(question: String, answer: String) {
     var open by remember { mutableStateOf(false) }
     Column {
         Text(question, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.clickable(role = Role.Button) { open = !open }.semantics { stateDescription = if (open) "open" else "closed" }.heightIn(min = 40.dp).padding(vertical = 10.dp))
+            modifier = Modifier.clickable(role = Role.Button) { open = !open }.semantics { stateDescription = if (open) "open" else "closed" }.heightIn(min = 48.dp).padding(vertical = 12.dp))
         AnimatedVisibility(open) { Panel { Text(answer) } }
     }
 }

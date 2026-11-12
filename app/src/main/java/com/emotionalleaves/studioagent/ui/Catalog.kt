@@ -235,7 +235,7 @@ fun WorkDetail(nav: NavController, id: Long) {
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(3.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(if (w.imagePath.isNotBlank()) 12.dp else 22.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (w.imagePath.isNotBlank()) {
-                PathImage(w.imagePath, Modifier.fillMaxWidth().height(300.dp), 1000)
+                PathImage(w.imagePath, Modifier.fillMaxWidth().height(300.dp), 1000, description = "Picture of " + w.title.ifBlank { "this piece" })
                 // Its wall label, as it would hang in a show.
                 Column(Modifier.padding(top = 4.dp)) {
                     Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleMedium)
