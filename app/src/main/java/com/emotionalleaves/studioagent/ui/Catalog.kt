@@ -300,8 +300,11 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
 
         H("Where it stands")
-        Choice("Status", workStatuses, w.status, names = ::statusWords) { save(w.copy(status = it)) }
-        Explain("What do these mean?", "In progress: still making it. Finished: done, not photographed yet. Ready to send or available: has its image and can be sent to calls. Out on a call: sent to a call, waiting. Shown and sold: the app sets these for you.")
+        // Four you set; the rest (out on a call, shown, sold) the app sets when they happen.
+        val manual = listOf("idea", "in_progress", "finished", "documented")
+        if (w.status in manual || w.status == "available") Choice("Status", manual, if (w.status == "available") "documented" else w.status, names = ::statusWords) { save(w.copy(status = it)) }
+        else Row { Tag(statusWords(w.status), strong = true) }
+        Explain("What do these mean?", "Idea: not started. In progress: still making it. Finished: done, not photographed yet. Ready to send: has its picture and details and can go to calls. Out on a call, Shown and Sold are set by the app when they happen.")
         Field("Next step (shown when you start a session)", w.nextStep, { save(w.copy(nextStep = it)) })
         // The rest only matters once a piece is heading out, so it stays folded until then.
         Expand("Size, year, medium, series", startOpen = w.widthIn <= 0 && w.status in setOf("finished", "documented")) {

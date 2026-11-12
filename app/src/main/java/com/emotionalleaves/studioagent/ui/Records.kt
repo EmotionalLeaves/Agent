@@ -365,25 +365,30 @@ fun SettingsScreen(nav: NavController, section: String) {
                 H("Level")
                 Choice("My level", listOf("automatic", "0", "1", "2", "3", "4"), levelPick) { levelPick = it; st.levelOverride = it.toIntOrNull() ?: -1 }
                 Note("Automatic works it out from your catalog and CV. Pick a number if you already have a history the app does not know about.")
-                Count("Level 1: finished works in one series", st.gateWorks, 1, 30) { st.gateWorks = it }
-                Count("Level 2: shows you have been in", st.gateShows1, 1, 30) { st.gateShows1 = it }
-                Count("Level 3: shows, plus an award or invitation", st.gateShows2, 1, 50) { st.gateShows2 = it }
+                Expand("When each level opens") {
+                    Count("Level 1: finished works in one series", st.gateWorks, 1, 30) { st.gateWorks = it }
+                    Count("Level 2: shows you have been in", st.gateShows1, 1, 30) { st.gateShows1 = it }
+                    Count("Level 3: shows, plus an award or invitation", st.gateShows2, 1, 50) { st.gateShows2 = it }
+                }
                 H("Calls")
                 Toggle("Show calls from every level, whatever mine is", showAll) { showAll = it; st.showAllLevels = it }
-                Num("Fee cap per entry at Level 0", st.feeCap0) { st.feeCap0 = it }
-                Num("Fee cap per entry at Level 1", st.feeCap1) { st.feeCap1 = it }
-                Num("Fee cap per entry at Level 2", st.feeCap2) { st.feeCap2 = it }
-                Num("Fee budget a month", st.feeBudget) { st.feeBudget = it }
-                Note("A call with a fee is only shown when it is under your level's cap and this month's budget still covers it. Budget 0 means free calls only.")
-                Multi("Kinds of call to show", Ai.callKinds, st.kinds) { st.callKinds = it.joinToString(",") }
+                Expand("Fee caps and monthly budget") {
+                    Num("Fee cap per entry at Level 0", st.feeCap0) { st.feeCap0 = it }
+                    Num("Fee cap per entry at Level 1", st.feeCap1) { st.feeCap1 = it }
+                    Num("Fee cap per entry at Level 2", st.feeCap2) { st.feeCap2 = it }
+                    Num("Fee budget a month", st.feeBudget) { st.feeBudget = it }
+                    Note("A call with a fee is only shown when it is under your level's cap and this month's budget still covers it. Budget 0 means free calls only.")
+                    Multi("Kinds of call to show", Ai.callKinds, st.kinds) { st.callKinds = it.joinToString(",") }
+                }
                 Count("Calls on the weekly short list", st.shortlistSize, 1, 10) { st.shortlistSize = it }
                 SText("Blocked organisers (comma separated)", st.blocked) { st.blocked = it }
-                H("What matters most when ranking")
-                listOf("Theme fits my work", "Good for my CV", "Costs little", "Good odds", "Little effort", "Matches my goals").forEachIndexed { i, label ->
-                    Choice(label, listOf("low", "normal", "high"), listOf("low", "normal", "high")[weights[i].coerceIn(1, 3) - 1]) { pick ->
-                        weights = weights.toMutableList().also { it[i] = listOf("low", "normal", "high").indexOf(pick) + 1 }
-                        st.weights = weights.joinToString(",")
-                        scope.io { Engine.rescore() }
+                Expand("What matters most when ranking") {
+                    listOf("Theme fits my work", "Good for my CV", "Costs little", "Good odds", "Little effort", "Matches my goals").forEachIndexed { i, label ->
+                        Choice(label, listOf("low", "normal", "high"), listOf("low", "normal", "high")[weights[i].coerceIn(1, 3) - 1]) { pick ->
+                            weights = weights.toMutableList().also { it[i] = listOf("low", "normal", "high").indexOf(pick) + 1 }
+                            st.weights = weights.joinToString(",")
+                            scope.io { Engine.rescore() }
+                        }
                     }
                 }
                 H("Outreach")
@@ -399,7 +404,6 @@ fun SettingsScreen(nav: NavController, section: String) {
                 H("Less on screen")
                 Toggle("Hide the small grey explanations", shortText) { shortText = it; st.shortText = it }
                 Toggle("Show fit as words (Strong, Good, Fair), not a score", fitWords) { fitWords = it; st.fitWords = it }
-                Count("Notifications a day, at most", st.notifCap, 0, 10) { st.notifCap = it }
                 H("Finished means finished")
                 Toggle("Lock texts once I approve them", lockApproved) { lockApproved = it; st.lockApproved = it }
                 Count("Rewrites before a text is called ready", st.revisionLimit, 1, 5) { st.revisionLimit = it }

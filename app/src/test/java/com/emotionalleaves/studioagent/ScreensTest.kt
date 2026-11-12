@@ -207,5 +207,6 @@ class ScreensTest {
             }
         }
         File(dir, "a11y.txt").writeText(out.toString())
+        org.junit.Assert.assertFalse(out.toString(), out.contains("unlabelled"))
     }
 }
