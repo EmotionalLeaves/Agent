@@ -80,6 +80,36 @@ class Settings(ctx: Context) {
     var dndInSession by B("dndInSession", true)
     var useCalendar by B("useCalendar", true)
 
+    // Your own week and rules
+    var weekTemplate by S("weekTemplate")
+    var pausedUntil by L("pausedUntil", 0)
+    var pinnedStep by S("pinnedStep")
+    var snoozeDay by S("snoozeDay")
+    var levelOverride by I("levelOverride", -1)
+    var gateWorks by I("gateWorks", 10)
+    var gateShows1 by I("gateShows1", 3)
+    var gateShows2 by I("gateShows2", 8)
+    var feeCap0 by D("feeCap0", 0.0)
+    var feeCap1 by D("feeCap1", 25.0)
+    var feeCap2 by D("feeCap2", 40.0)
+    var feeCap3 by D("feeCap3", -1.0)
+    var showAllLevels by B("showAllLevels", false)
+    var gateOutreach by B("gateOutreach", true)
+    var weights by S("weights", "2,2,2,2,2,2")
+    var shortlistSize by I("shortlistSize", 7)
+    var callKinds by S("callKinds", "exhibition,residency,grant,publication,fair,commission,other")
+    var units by S("units", "in")
+    var currency by S("currency", "$")
+    var writingNotes by S("writingNotes")
+    var extraJargon by S("extraJargon")
+    var aiBaseUrl by S("aiBaseUrl", "https://api.openai.com/v1")
+    var simpleMode by B("simpleMode", true)
+    var guideHidden by B("guideHidden", false)
+    var seenIntros by S("seenIntros")
+    var guideManual by S("guideManual")
+    var sessionPausedAt by L("sessionPausedAt", 0)
+    var sessionPausedTotal by L("sessionPausedTotal", 0)
+
     // Money
     var feeBudget by D("feeBudget", 0.0)
     var outreachWeeklyCap by I("outreachWeeklyCap", 3)
@@ -119,6 +149,9 @@ class Settings(ctx: Context) {
     var lastDaily by L("lastDaily", 0)
     var lastDailyStatus by S("lastDailyStatus")
 
+    val routes: List<String> get() = route.split(",").map { it.trim() }.filter { it.isNotBlank() }
+    val kinds: List<String> get() = callKinds.split(",").map { it.trim() }.filter { it.isNotBlank() }
+    val jargonExtra: List<String> get() = extraJargon.split(",").map { it.trim() }.filter { it.isNotBlank() }
     val fullName get() = "$firstName $lastName".trim()
     val onboarded get() = firstName.isNotBlank()
     val mailReady get() = mailUser.isNotBlank() && mailPass.isNotBlank()

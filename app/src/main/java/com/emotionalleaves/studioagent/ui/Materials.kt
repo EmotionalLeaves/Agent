@@ -53,7 +53,7 @@ private val docSlots = listOf(
     listOf("bio", "first", "Bio, first person, short")
 )
 
-fun docTarget(d: Doc): Int = d.variant.toIntOrNull() ?: if (d.variant == "first") 40 else 100
+fun docTarget(d: Doc): Int = if (d.target > 0) d.target else d.variant.toIntOrNull() ?: if (d.variant == "first") 40 else 100
 
 @Composable
 fun Materials(nav: NavController) {
@@ -65,6 +65,9 @@ fun Materials(nav: NavController) {
     val series by dao.series().collectAsState(emptyList())
     var status by remember { mutableStateOf("") }
     val answered = docs.count { it.type == "interview" && it.text.isNotBlank() }
+    val newTitle = remember { mutableStateOf("") }
+    val newBrief = remember { mutableStateOf("") }
+    var newTarget by remember { mutableStateOf(150) }
 
     fun open(type: String, variant: String, seriesId: Long = 0) {
         scope.io {
@@ -75,6 +78,7 @@ fun Materials(nav: NavController) {
     }
 
     Screen("Materials", nav) {
+        Intro("materials", "The written things every call asks for. You answer the interview once; the app drafts each document; you approve it once and it is reused everywhere.")
         Panel(onClick = { nav.navigate("interview") }, strong = answered == 0) {
             Text("Interview", fontWeight = FontWeight.SemiBold)
             Note("$answered of ${interviewQuestions.size} answered. Everything below is written from these answers and your records, nothing else.")
@@ -99,6 +103,25 @@ fun Materials(nav: NavController) {
                 Text("${s.name}, 100 words")
                 Note(when { d == null || d.text.isBlank() -> "Not written yet"; d.approved -> "Approved"; else -> "Draft, waiting for your yes" })
             }
+        }
+
+        H("Your own documents")
+        Note("Anything else you need written: a cover letter, a project description, an answer you get asked often. Any name, any length.")
+        docs.filter { it.type == "custom" }.forEach { d ->
+            Panel(onClick = { nav.navigate("doc/${d.id}") }) {
+                Text(d.title.ifBlank { "Untitled document" })
+                Note(when { d.text.isBlank() -> "Not written yet"; d.approved -> "Approved, ${Texts.words(d.text)} words"; else -> "Draft, waiting for your yes" })
+            }
+        }
+        Expand("New document") {
+            Field("Name (for example: Cover letter)", newTitle)
+            Field("What is it for? Who reads it? (the app writes from this)", newBrief, lines = 2)
+            Whole("About how many words", newTarget) { newTarget = it }
+            Button(enabled = newTitle.value.isNotBlank(), onClick = {
+                val d = Doc(type = "custom", variant = "c${now()}", title = newTitle.value.trim(), brief = newBrief.value.trim(), target = newTarget.coerceAtLeast(20), updatedAt = now())
+                newTitle.value = ""; newBrief.value = ""
+                scope.io { val id = dao.put(d); withContext(Dispatchers.Main) { nav.navigate("doc/$id") } }
+            }) { Text("Create") }
         }
 
         H("CV and portfolio")
@@ -136,16 +159,25 @@ fun Interview(nav: NavController) {
         docs.filter { it.type == "interview" }.forEach { if (answers[it.variant] == null) answers[it.variant] = it.text }
     }
     var status by remember { mutableStateOf("") }
+    val ownQuestion = remember { mutableStateOf("") }
     Screen("Interview", nav) {
         Note("About 10 minutes, once. Talk or type. Rough is good: your own words are what make the writing sound like you. You can stop and come back.")
         interviewQuestions.forEach { (k, q) ->
             key(k) { Field(q, answers[k].orEmpty(), { answers[k] = it }, lines = 3, mic = true) }
         }
+        answers.keys.filter { it.startsWith("own:") }.sorted().forEach { k ->
+            key(k) { Field(k.removePrefix("own:"), answers[k].orEmpty(), { answers[k] = it }, lines = 3, mic = true) }
+        }
+        Expand("Add your own question") {
+            Note("Something about your work these questions miss. Your answer is used in the writing like the others.")
+            Field("Your question or topic", ownQuestion)
+            OutlinedButton(enabled = ownQuestion.value.isNotBlank(), onClick = { answers["own:" + ownQuestion.value.trim().take(80)] = ""; ownQuestion.value = "" }) { Text("Add") }
+        }
         Status(status)
         Button(modifier = Modifier.fillMaxWidth(), onClick = {
             scope.io({ status = it }) {
                 val existing = dao.docsNow()
-                interviewQuestions.forEach { (k, _) ->
+                (interviewQuestions.map { it.first } + answers.keys.filter { it.startsWith("own:") }).forEach { k ->
                     val old = existing.firstOrNull { it.type == "interview" && it.variant == k }
                     val text = answers[k].orEmpty().trim()
                     if (old != null || text.isNotBlank()) dao.put((old ?: Doc(type = "interview", variant = k)).copy(text = text, updatedAt = now()))
@@ -175,11 +207,12 @@ fun DocScreen(nav: NavController, id: Long) {
 
     val target = docTarget(d)
     val words = Texts.words(d.text)
-    val jargon = Texts.jargonIn(d.text)
+    val jargon = Texts.jargonIn(d.text, st.jargonExtra)
     val lengthOk = d.text.isNotBlank() && words <= target && words >= target * 0.5
     val limit = st.revisionLimit
     val seriesName = series.firstOrNull { it.id == d.seriesId }?.name.orEmpty()
     val kind = when {
+        d.type == "custom" -> d.title.ifBlank { "a document" }
         d.type == "bio" && d.variant == "first" -> "a short artist bio in the first person"
         d.type == "bio" -> "an artist bio in the third person"
         d.seriesId != 0L -> "a statement for the series \"$seriesName\""
@@ -189,7 +222,8 @@ fun DocScreen(nav: NavController, id: Long) {
     fun generate() {
         busy = true; status = "Writing..."
         scope.io({ status = it; busy = false }) {
-            val extra = series.firstOrNull { it.id == d.seriesId }?.let { "About this series, in the artist's words: ${it.notes}" }.orEmpty()
+            val extra = series.firstOrNull { it.id == d.seriesId }?.let { "About this series, in the artist's words: ${it.notes}" }.orEmpty() +
+                (if (d.type == "custom") "What this document is for: ${d.brief}" else "")
             val text = G.ai.write(kind, target, Engine.factsText(), Engine.voice(), extra)
             val x = d.copy(text = Texts.trimToWords(text, target), approved = false, revisions = d.revisions + (if (d.text.isBlank()) 0 else 1), updatedAt = now())
             d = x; dao.put(x); status = ""; busy = false
@@ -197,6 +231,11 @@ fun DocScreen(nav: NavController, id: Long) {
     }
 
     Screen(kind.replaceFirstChar { it.uppercase() }, nav) {
+        if (d.type == "custom") {
+            Field("Name", d.title, { save(d.copy(title = it)) })
+            Field("What it is for", d.brief, { save(d.copy(brief = it)) }, lines = 2)
+            Whole("About how many words", d.target) { n -> if (n > 0) save(d.copy(target = n)) }
+        }
         Field("Text", d.text, {
             val first = !editedHere && d.text.isNotBlank()
             editedHere = true
@@ -232,6 +271,7 @@ fun DocScreen(nav: NavController, id: Long) {
             Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = { generate() }) { Text("Write it for me") }
             if (!G.ai.ready) Note("Add an AI key in Settings to have this written for you, or type it yourself above.")
         }
+        if (d.type == "custom") TextButton(onClick = { scope.io { dao.del(d) }; nav.popBackStack() }) { Text("Delete this document") }
     }
 }
 
@@ -242,23 +282,32 @@ fun Facts(nav: NavController) {
     var category by remember { mutableStateOf("education") }
     var year by remember { mutableStateOf(LocalDate.now().year) }
     val text = remember { mutableStateOf("") }
+    var editing by remember { mutableStateOf<Fact?>(null) }
     Screen("CV facts", nav) {
         Note("Only true, finished things. A show you applied to is not a line; a show you were in is. Accepted applications are added here automatically.")
         Choice("Kind", Texts.factCategories, category) { category = it }
-        Whole("Year", year) { year = it }
+        key(editing?.id) { Whole("Year", year) { year = it } }
         Field(when (category) {
             "education" -> "Degree or course, school, city"
             "solo", "group", "invited" -> "Show title, venue, city"
             "skill" -> "Skill or tool"
             else -> "What, where"
         }, text)
-        Button(enabled = text.value.isNotBlank(), onClick = { val t = text.value.trim(); text.value = ""; scope.io { dao.put(Fact(category = category, year = year, text = t)) } }) { Text("Add line") }
+        Button(enabled = text.value.isNotBlank(), onClick = {
+            val t = text.value.trim(); val old = editing; text.value = ""; editing = null
+            scope.io { dao.put((old ?: Fact()).copy(category = category, year = year, text = t)) }
+        }) { Text(if (editing != null) "Save changes" else "Add line") }
+        if (editing != null) TextButton(onClick = { editing = null; text.value = "" }) { Text("Cancel the edit") }
         Texts.factCategories.forEach { c ->
             val lines = facts.filter { it.category == c }
             if (lines.isNotEmpty()) {
                 H(c.replaceFirstChar { it.uppercase() })
                 lines.forEach { f ->
-                    Row { Text((if (f.year > 0) "${f.year}  " else "") + f.text, Modifier.weight(1f)); TextButton(onClick = { scope.io { dao.del(f) } }) { Text("Remove") } }
+                    Row {
+                        Text((if (f.year > 0) "${f.year}  " else "") + f.text, Modifier.weight(1f))
+                        TextButton(onClick = { editing = f; category = f.category; year = f.year; text.value = f.text }) { Text("Edit") }
+                        TextButton(onClick = { scope.io { dao.del(f) } }) { Text("Remove") }
+                    }
                 }
             }
         }

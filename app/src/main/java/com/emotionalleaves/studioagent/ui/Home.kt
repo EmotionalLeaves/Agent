@@ -51,6 +51,7 @@ import java.time.LocalTime
 
 @Composable
 fun Home(nav: NavController) {
+    val ctx = LocalContext.current
     val works by dao.artworks().collectAsState(emptyList())
     val docs by dao.docs().collectAsState(emptyList())
     val facts by dao.facts().collectAsState(emptyList())
@@ -60,22 +61,38 @@ fun Home(nav: NavController) {
     val tick by st.changed.collectAsState()
     var next by remember { mutableStateOf<NextStep?>(null) }
     var pendingCount by remember { mutableStateOf(0) }
+    var guide by remember { mutableStateOf<List<GuideStep>>(emptyList()) }
+    var pinning by remember { mutableStateOf(false) }
+    val pinText = remember { mutableStateOf("") }
     LaunchedEffect(works, docs, sessions, events, tick) {
         withContext(Dispatchers.IO) {
-            try { next = Engine.nextStep(); pendingCount = Engine.pending().size } catch (e: Exception) { }
+            try { next = Engine.nextStep(); pendingCount = Engine.pending().size; guide = guideSteps(ctx) } catch (e: Exception) { }
         }
     }
+    val rules = Engine.rules()
     val stats = Engine.statsOf(works, docs, facts)
-    val level = Levels.level(stats)
-    val gate = Levels.gate(stats)
+    val level = Levels.level(stats, rules)
+    val gate = Levels.gate(stats, rules)
     val today = LocalDate.now()
 
     Screen("Studio Agent", nav, back = false) {
         val n = next
-        Panel(strong = true, onClick = { n?.let { nav.navigate(it.route) } }) {
+        Panel(strong = true, onClick = { n?.let { if (it.route != "home") nav.navigate(it.route) } }) {
             Text("NEXT", style = MaterialTheme.typography.labelMedium)
             Text(n?.title ?: "One moment", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
             if (n != null) Text(n.detail)
+        }
+        if (st.onboarded) Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (st.pinnedStep.isNotBlank()) TextButton(onClick = { st.pinnedStep = "" }) { Text("Done, clear my pin") }
+            else {
+                if (st.snoozeDay == today.toString()) TextButton(onClick = { st.snoozeDay = "" }) { Text("Bring today's step back") }
+                else TextButton(onClick = { st.snoozeDay = today.toString() }) { Text("Not today") }
+                TextButton(onClick = { pinning = !pinning }) { Text("Pin my own") }
+            }
+        }
+        if (pinning) {
+            Field("What do you want to see here instead?", pinText)
+            Button(enabled = pinText.value.isNotBlank(), onClick = { st.pinnedStep = pinText.value.trim(); pinText.value = ""; pinning = false }) { Text("Pin it") }
         }
 
         val workEnd = Planner.time(st.workEnd, LocalTime.of(15, 30))
@@ -95,36 +112,44 @@ fun Home(nav: NavController) {
             Text(if (st.sessionStart > 0) "Back to session" else "Start session")
         }
 
-        Panel {
-            Text("Level $level: ${Levels.names[level]}", fontWeight = FontWeight.SemiBold)
-            LinearProgressIndicator(progress = { gate.progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
-            Note(if (level < 4) "To reach Level ${level + 1}: ${gate.text}" else gate.text)
+        val todo = guide.filter { !it.done }
+        val must = todo.firstOrNull { !it.optional } ?: todo.firstOrNull()
+        if (!st.guideHidden && must != null) Panel(onClick = { nav.navigate("guide") }) {
+            Text("Guide: ${guide.count { it.done }} of ${guide.size} done", fontWeight = FontWeight.SemiBold)
+            Note("Next: ${must.title}. Tap for the exact steps.")
         }
 
-        val hours = Engine.hoursThisWeek(sessions)
-        Panel {
-            Text("This week: ${"%.1f".format(hours)} of ${st.weeklyHours} hours")
-            LinearProgressIndicator(progress = { (hours / st.weeklyHours.coerceAtLeast(1)).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
-            events.firstOrNull { it.type == "studio" && it.date > now() }?.let { Note("Next studio block: ${fmtDate(it.date)}") }
-        }
-
-        val deadlines = events.filter { it.type == "deadline" && !it.done && it.date > now() }.take(3)
-        if (deadlines.isNotEmpty()) Panel {
-            deadlines.forEach { e ->
-                val left = ((e.date - now()) / (30.0 * 86_400_000)).toFloat().coerceIn(0f, 1f)
-                Text(e.title.removePrefix("Deadline: "))
-                LinearProgressIndicator(progress = { left }, modifier = Modifier.fillMaxWidth())
-                Note(Planner.weekendsLeft(today, Engine.date(e.date)))
+        Expand("Progress and deadlines", startOpen = !st.simpleMode) {
+            Panel {
+                Text("Level $level: ${Levels.names[level]}", fontWeight = FontWeight.SemiBold)
+                LinearProgressIndicator(progress = { gate.progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                Note(if (level < 4) "To reach Level ${level + 1}: ${gate.text}" else gate.text)
             }
+            val hours = Engine.hoursThisWeek(sessions)
+            Panel(onClick = { nav.navigate("week") }) {
+                Text("This week: ${"%.1f".format(hours)} of ${st.weeklyHours} hours")
+                LinearProgressIndicator(progress = { (hours / st.weeklyHours.coerceAtLeast(1)).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                if (st.pausedUntil > now()) Note("Planning is paused until ${fmtDate(st.pausedUntil)}.")
+                else events.firstOrNull { it.type == "studio" && it.date > now() }?.let { Note("Next studio block: ${fmtDate(it.date)}. Tap to change your week.") }
+            }
+            val deadlines = events.filter { it.type == "deadline" && !it.done && it.date > now() }.take(3)
+            if (deadlines.isNotEmpty()) Panel {
+                deadlines.forEach { e ->
+                    val left = ((e.date - now()) / (30.0 * 86_400_000)).toFloat().coerceIn(0f, 1f)
+                    Text(e.title.removePrefix("Deadline: "))
+                    LinearProgressIndicator(progress = { left }, modifier = Modifier.fillMaxWidth())
+                    Note(Planner.weekendsLeft(today, Engine.date(e.date)))
+                }
+            }
+            if (st.feeBudget > 0 || G.ai.ready) Note(
+                "Fees this month: ${money(Engine.feesThisMonth(ledger))} of ${money(st.feeBudget)}.  AI this month: about ${money(G.ai.spentThisMonth())} of ${money(st.aiCapUsd)}."
+            )
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { nav.navigate("ideas") }) { Text("Park an idea") }
             if (pendingCount > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("Admin pass ($pendingCount)") }
         }
-        if (st.feeBudget > 0 || G.ai.ready) Note(
-            "Fees this month: ${money(Engine.feesThisMonth(ledger))} of ${money(st.feeBudget)}.  AI this month: about ${money(G.ai.spentThisMonth())} of ${money(st.aiCapUsd)}."
-        )
     }
 }
 
@@ -187,7 +212,7 @@ fun SessionScreen(nav: NavController) {
                 if (active.isNotEmpty()) Choice("Which piece?", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, work?.title?.ifBlank { "Untitled #${work.id}" }.orEmpty()) { picked ->
                     active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == picked }?.let { workId = it.id }
                 }
-                TextButton(onClick = { scope.io { workId = dao.put(Artwork(status = "in_progress", format = if (st.route == "screen") "screen" else if (st.route == "physical") "physical" else "print", year = LocalDate.now().year, createdAt = now())) } }) { Text("Start a new piece") }
+                TextButton(onClick = { scope.io { workId = dao.put(newWork()) } }) { Text("Start a new piece") }
             }
             val left = work?.nextStep.orEmpty().ifBlank { sessions.firstOrNull { it.artworkId == workId && it.nextStep.isNotBlank() }?.nextStep.orEmpty() }
             Panel(strong = true) {
@@ -200,6 +225,7 @@ fun SessionScreen(nav: NavController) {
                 })
             }
             Button(onClick = {
+                st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
                 if (st.dndInSession) Notifier.dnd(ctx, true)
             }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Start") }
@@ -213,11 +239,12 @@ fun SessionScreen(nav: NavController) {
         var photo by remember { mutableStateOf("") }
         val photoFile = remember(start) { File(ImageTools.mediaDir(ctx), "progress_$start.jpg") }
         val take = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok -> if (ok) photo = photoFile.absolutePath }
-        val secs = ((nowMs - start) / 1000).coerceAtLeast(0)
+        val paused = st.sessionPausedAt > 0
+        val secs = (Engine.sessionElapsed(nowMs) / 1000).coerceAtLeast(0)
         val work = works.firstOrNull { it.id == st.sessionArtwork }
         fun finish(save: Boolean) {
-            val end = now(); val kind = st.sessionKind; val artId = st.sessionArtwork
-            st.sessionStart = 0L
+            val end = start + Engine.sessionElapsed(now()); val kind = st.sessionKind; val artId = st.sessionArtwork
+            st.sessionStart = 0L; st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
             Notifier.dnd(ctx, false)
             scope.io {
                 if (save) {
@@ -233,6 +260,10 @@ fun SessionScreen(nav: NavController) {
             if (Planner.isWindDown(LocalDateTime.now(), Planner.time(st.bedtime, LocalTime.of(22, 30)))) Panel(strong = true) {
                 Text("Wind-down time. A good place to stop: write your next step below so nothing is lost.")
             }
+            OutlinedButton(onClick = {
+                if (paused) { st.sessionPausedTotal = st.sessionPausedTotal + (now() - st.sessionPausedAt); st.sessionPausedAt = 0L }
+                else st.sessionPausedAt = now()
+            }) { Text(if (paused) "Resume" else "Pause (a break does not count against you)") }
             H("When you stop")
             Field("Next time, start with...", nextStep, mic = true)
             Field("Anything to note (optional)", note, lines = 2)
@@ -307,12 +338,16 @@ fun ShareScreen(nav: NavController) {
 fun More(nav: NavController) {
     Screen("More", nav, back = false) {
         listOf(
+            Triple("Guide", "Every setup step, one at a time", "guide"),
+            Triple("Calls", "Open calls, ranked for you", "calls"),
+            Triple("People", "Venues, curators, your email list", "outreach"),
+            Triple("Your week", "Studio times, pause, session history", "week"),
             Triple("Materials", "Interview, statement, bio, CV, portfolio", "materials"),
             Triple("Admin pass", "Everything waiting for your yes", "admin"),
             Triple("Records and logistics", "Checklists, fees, sales, reports", "records"),
             Triple("Ideas", "Parked for later", "ideas"),
             Triple("Call sources", "Pages and senders the app reads", "sources"),
-            Triple("Settings", "Your week, AI, email, backup", "settings")
+            Triple("Settings", "You, your rules, AI, email, backup", "settings")
         ).forEach { (title, sub, route) -> Panel(onClick = { nav.navigate(route) }) { Text(title, fontWeight = FontWeight.SemiBold); Note(sub) } }
     }
 }

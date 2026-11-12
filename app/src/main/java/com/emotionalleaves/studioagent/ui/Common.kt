@@ -40,8 +40,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -53,6 +57,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emotionalleaves.studioagent.G
+import com.emotionalleaves.studioagent.domain.Texts
 import com.emotionalleaves.studioagent.media.ImageTools
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -70,7 +75,8 @@ fun now() = System.currentTimeMillis()
 
 private val dateFmt = DateTimeFormatter.ofPattern("EEE d MMM yyyy")
 fun fmtDate(ms: Long): String = if (ms <= 0) "no date" else Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(dateFmt)
-fun money(d: Double): String = (if (d < 0) "-$" else "$") + "%.2f".format(kotlin.math.abs(d))
+fun money(d: Double): String = (if (d < 0) "-" else "") + st.currency + "%.2f".format(kotlin.math.abs(d))
+fun jargon(text: String): List<String> = Texts.jargonIn(text, st.jargonExtra)
 
 /** Run database or network work off the main thread; errors land in [onError] instead of crashing. */
 fun CoroutineScope.io(onError: (String) -> Unit = {}, block: suspend () -> Unit) = launch(Dispatchers.IO) {
@@ -174,6 +180,36 @@ fun PathImage(path: String, modifier: Modifier = Modifier, maxSide: Int = 700) {
     val b = bmp
     if (b != null) Image(b, null, modifier, contentScale = ContentScale.Fit)
     else Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant))
+}
+
+/** A section that stays folded until asked for, so long screens start short. */
+@Composable
+fun Expand(title: String, startOpen: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
+    var open by remember { mutableStateOf(startOpen) }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.fillMaxWidth().clickable { open = !open }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(if (open) "Hide" else "Show", color = MaterialTheme.colorScheme.primary)
+        }
+        if (open) content()
+    }
+}
+
+/** One short explanation the first time a screen is opened. Gone for good after "Got it". */
+@Composable
+fun Intro(key: String, text: String) {
+    val tick by st.changed.collectAsState()
+    if (tick >= 0 && key !in st.seenIntros.split(",")) Panel(strong = true) {
+        Text(text)
+        TextButton(onClick = { st.seenIntros = st.seenIntros + "," + key }) { Text("Got it") }
+    }
+}
+
+/** A size box that shows inches or centimetres, whichever you chose, and always stores inches. */
+@Composable
+fun Dim(label: String, valueIn: Double, onIn: (Double) -> Unit) {
+    val cm = st.units == "cm"
+    Num("$label, " + (if (cm) "cm" else "in"), if (cm) Math.round(valueIn * 25.4) / 10.0 else valueIn) { onIn(if (cm) it / 2.54 else it) }
 }
 
 @Composable

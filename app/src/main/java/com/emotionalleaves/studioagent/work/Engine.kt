@@ -25,6 +25,7 @@ import com.emotionalleaves.studioagent.domain.CareerStats
 import com.emotionalleaves.studioagent.domain.Levels
 import com.emotionalleaves.studioagent.domain.Planner
 import com.emotionalleaves.studioagent.domain.Profile
+import com.emotionalleaves.studioagent.domain.Rules
 import com.emotionalleaves.studioagent.domain.Scoring
 import com.emotionalleaves.studioagent.domain.Texts
 import com.emotionalleaves.studioagent.media.ImageTools
@@ -78,23 +79,31 @@ object Engine {
         return Levels.stats(facts, best, approved)
     }
 
+    fun rules(): Rules = Rules(
+        gateWorks = st.gateWorks.coerceAtLeast(1), gateShows1 = st.gateShows1.coerceAtLeast(1), gateShows2 = st.gateShows2.coerceAtLeast(1),
+        feeCaps = listOf(st.feeCap0, st.feeCap1, st.feeCap2, st.feeCap3, st.feeCap3),
+        levelOverride = st.levelOverride, showAllLevels = st.showAllLevels, gateOutreach = st.gateOutreach,
+        weights = st.weights.split(",").map { it.trim().toIntOrNull() ?: 2 }
+    )
+
+    fun levelOf(works: List<Artwork>, docs: List<Doc>, facts: List<Fact>): Int = Levels.level(statsOf(works, docs, facts), rules())
+
+    fun profileOf(works: List<Artwork>, docs: List<Doc>, facts: List<Fact>, ledger: List<Ledger>): Profile = Profile(
+        level = levelOf(works, docs, facts), routes = st.routes, rules = rules(), kinds = st.kinds,
+        availableWorks = works.count { available(it) },
+        feeBudgetLeft = (st.feeBudget - feesThisMonth(ledger)).coerceAtLeast(0.0),
+        goals = st.goals, blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts()
+    )
+
     suspend fun stats(): CareerStats = statsOf(dao.artworksNow(), dao.docsNow(), dao.factsNow())
-    suspend fun level(): Int = Levels.level(stats())
+    suspend fun level(): Int = Levels.level(stats(), rules())
 
     fun feesThisMonth(ledger: List<Ledger>): Double {
         val ym = YearMonth.now()
         return ledger.filter { it.kind == "fee" && YearMonth.from(date(it.date)) == ym }.sumOf { -it.amount }
     }
 
-    suspend fun profile(): Profile {
-        val works = dao.artworksNow()
-        val level = Levels.level(statsOf(works, dao.docsNow(), dao.factsNow()))
-        return Profile(
-            level = level, route = st.route, availableWorks = works.count { available(it) },
-            feeBudgetLeft = (st.feeBudget - feesThisMonth(dao.ledgerNow())).coerceAtLeast(0.0),
-            goals = st.goals, blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts()
-        )
-    }
+    suspend fun profile(): Profile = profileOf(dao.artworksNow(), dao.docsNow(), dao.factsNow(), dao.ledgerNow())
 
     // ------------------------------------------------------------ facts the writer may use
 
@@ -160,9 +169,10 @@ object Engine {
     }
 
     /** This week's short list: eligible calls at your level, best first, plus at most one stretch call a month. */
-    fun shortlist(opps: List<Opp>, p: Profile, now: Long, stretchOk: Boolean): List<Opp> {
+    fun shortlist(opps: List<Opp>, p: Profile, now: Long, stretchOk: Boolean, size: Int = 7): List<Opp> {
         val ok = opps.filter { it.status == "new" && Scoring.ineligible(it, p, now).isEmpty() }
-        val normal = ok.filter { !Scoring.isStretch(it, p) }.sortedByDescending { it.fitScore }.take(7)
+        if (p.rules.showAllLevels) return ok.sortedByDescending { it.fitScore }.take(size.coerceAtLeast(1))
+        val normal = ok.filter { !Scoring.isStretch(it, p) }.sortedByDescending { it.fitScore }.take(size.coerceAtLeast(1))
         val stretch = if (stretchOk) ok.filter { Scoring.isStretch(it, p) }.maxByOrNull { it.fitScore } else null
         return normal + listOfNotNull(stretch)
     }
@@ -175,14 +185,28 @@ object Engine {
         val now = System.currentTimeMillis()
         val events = dao.eventsNow()
         events.filter { it.type == "studio" && it.date < now - 14 * DAY }.forEach { dao.del(it) }
+        if (st.pausedUntil > now) return
+        val template = Planner.parseTemplate(st.weekTemplate)
+        val custom = template.isNotEmpty()
         val planned = events.filter { it.type == "studio" && it.date >= now - DAY }.map { date(it.date) }.toMutableSet()
-        val slots = Planner.plan(
+        val plannedStarts = events.filter { it.type == "studio" }.map { it.date }.toSet()
+        val slots = if (custom) Planner.planFromTemplate(LocalDate.now(), template) else Planner.plan(
             LocalDate.now(), Planner.days(st.workDays), Planner.time(st.workEnd, LocalTime.of(15, 30)), st.bufferMin,
             Planner.time(st.bedtime, LocalTime.of(22, 30)), st.weeklyHours
         )
         for (slot in slots) {
             var start = slot.start
-            if (millis(start) < now || start.toLocalDate() in planned) continue
+            if (millis(start) < now) continue
+            // Your own template is followed exactly; the suggested week keeps to one block a day and steps around clashes.
+            if (custom) {
+                if (millis(start) in plannedStarts) continue
+                val s = millis(start); val e = millis(start.plusMinutes(slot.minutes.toLong()))
+                val calId = if (st.useCalendar) Cal.add(ctx, "Studio time", s, e, "Planned by Studio Agent from your own week.") else 0L
+                dao.put(Evt(type = "studio", title = "Studio time", date = s, endDate = e, calendarId = calId))
+                remind(ctx, s, now)
+                continue
+            }
+            if (start.toLocalDate() in planned) continue
             if (st.useCalendar && Cal.busy(ctx, millis(start), millis(start.plusMinutes(slot.minutes.toLong())))) {
                 start = start.plusHours(1)
                 if (Cal.busy(ctx, millis(start), millis(start.plusMinutes(slot.minutes.toLong())))) continue
@@ -191,13 +215,47 @@ object Engine {
             val calId = if (st.useCalendar) Cal.add(ctx, "Studio time", s, e, "Planned by Studio Agent. Move it if you need to.") else 0L
             dao.put(Evt(type = "studio", title = "Studio time", date = s, endDate = e, calendarId = calId))
             planned += start.toLocalDate()
-            val delay = s - now - 15 * 60_000
-            if (delay > 0) {
-                val req = OneTimeWorkRequestBuilder<ReminderWorker>().setInitialDelay(delay, TimeUnit.MILLISECONDS)
-                    .setInputData(workDataOf("title" to "Studio in 15 minutes", "route" to "session")).build()
-                WorkManager.getInstance(ctx).enqueueUniqueWork("studio-$s", ExistingWorkPolicy.KEEP, req)
-            }
+            remind(ctx, s, now)
         }
+    }
+
+    private fun remind(ctx: Context, s: Long, now: Long) {
+        val delay = s - now - 15 * 60_000
+        if (delay <= 0) return
+        val req = OneTimeWorkRequestBuilder<ReminderWorker>().setInitialDelay(delay, TimeUnit.MILLISECONDS)
+            .setInputData(workDataOf("title" to "Studio in 15 minutes", "route" to "session")).build()
+        try { WorkManager.getInstance(ctx).enqueueUniqueWork("studio-$s", ExistingWorkPolicy.KEEP, req) } catch (e: Exception) { }
+    }
+
+    /** Throw away the studio blocks still ahead and plan again. Used after you change your week or pause. */
+    suspend fun replan(ctx: Context) {
+        val now = System.currentTimeMillis()
+        dao.eventsNow().filter { it.type == "studio" && it.date > now }.forEach { e ->
+            Cal.remove(ctx, e.calendarId)
+            try { WorkManager.getInstance(ctx).cancelUniqueWork("studio-${e.date}") } catch (x: Exception) { }
+            dao.del(e)
+        }
+        planWeek(ctx)
+    }
+
+    /** Milliseconds actually worked in the running session, with pauses taken out. */
+    fun sessionElapsed(now: Long): Long {
+        if (st.sessionStart == 0L) return 0
+        val until = if (st.sessionPausedAt > 0) st.sessionPausedAt else now
+        return (until - st.sessionStart - st.sessionPausedTotal).coerceAtLeast(0)
+    }
+
+    // ------------------------------------------------------------ custom application questions
+
+    fun answers(a: Appl): List<Pair<String, String>> = try {
+        val arr = org.json.JSONArray(a.answers.ifBlank { "[]" })
+        (0 until arr.length()).mapNotNull { i -> arr.optJSONObject(i)?.let { it.optString("q") to it.optString("a") } }
+    } catch (e: Exception) { emptyList() }
+
+    fun answersJson(list: List<Pair<String, String>>): String {
+        val arr = org.json.JSONArray()
+        list.forEach { (q, a) -> arr.put(org.json.JSONObject().put("q", q).put("a", a)) }
+        return arr.toString()
     }
 
     fun hoursThisWeek(sessions: List<com.emotionalleaves.studioagent.data.Sess>): Double {
@@ -260,7 +318,9 @@ object Engine {
         out += "Every work has a title, year and size" to (chosen.isNotEmpty() && chosen.all { it.title.isNotBlank() && it.year > 0 && it.widthIn > 0 && it.heightIn > 0 })
         out += "Statement included" to a.statement.isNotBlank()
         if (o.statementLimit > 0) out += "Statement within ${o.statementLimit} words (${Texts.words(a.statement)})" to (Texts.words(a.statement) <= o.statementLimit)
-        out += "No stock art jargon" to Texts.jargonIn(a.statement + " " + a.themeText).isEmpty()
+        out += "No stock art jargon" to Texts.jargonIn(a.statement + " " + a.themeText, st.jargonExtra).isEmpty()
+        val qa = answers(a)
+        if (qa.isNotEmpty()) out += "Every question answered (${qa.count { it.second.isNotBlank() }} of ${qa.size})" to qa.all { it.second.isNotBlank() }
         if (o.fee > 0) out += "Fee of $${"%.0f".format(o.fee)} fits this month's budget" to (o.fee <= feeLeft)
         if (a.method == "email") out += "Submission email address known" to a.emailTo.contains("@")
         return out
@@ -277,6 +337,8 @@ object Engine {
         Papers.imageList(ctx, st, works, withPrices = true, dir = dir)
         Papers.cv(ctx, st, dao.factsNow()).copyTo(File(dir, Texts.clean(st.lastName).ifBlank { "Artist" } + "_CV.pdf"), overwrite = true)
         File(dir, "Statement.txt").writeText(a.statement + (if (a.themeText.isNotBlank()) "\n\n" + a.themeText else ""))
+        val qa = answers(a)
+        if (qa.isNotEmpty()) File(dir, "Answers.txt").writeText(qa.joinToString("\n\n") { (q, ans) -> "$q\n$ans" })
         dao.put(a.copy(packDir = dir.absolutePath))
         dir
     }
@@ -290,6 +352,14 @@ object Engine {
         dao.oppsNow().firstOrNull { it.id == a.oppId }?.let { dao.put(it.copy(status = "applied")) }
         dao.artworksNow().filter { it.id in workIds(a) && available(it) }.forEach { dao.put(it.copy(status = "pending")) }
         dao.eventsNow().filter { it.applId == a.id && it.type in setOf("pack", "submit", "deadline") }.forEach { dao.put(it.copy(done = true)) }
+    }
+
+    /** Unlocks a submitted application, for the rare case it really has to change. */
+    suspend fun reopen(a: Appl) {
+        dao.put(a.copy(status = "ready", proofText = "Reopened on ${LocalDate.now()}. Earlier note: ${a.proofText}".take(600)))
+        dao.oppsNow().firstOrNull { it.id == a.oppId }?.let { dao.put(it.copy(status = "yes")) }
+        dao.artworksNow().filter { it.id in workIds(a) && it.status == "pending" }.forEach { dao.put(it.copy(status = "available")) }
+        dao.eventsNow().filter { it.applId == a.id && it.type in setOf("pack", "submit", "deadline") }.forEach { dao.put(it.copy(done = false)) }
     }
 
     suspend fun sendApplication(ctx: Context, id: Long): Boolean {
@@ -357,7 +427,7 @@ object Engine {
         var contacts = dao.contactsNow()
         for (c in contacts.filter { it.status == "approved" && it.email.contains("@") }) {
             if (sentThisWeek(contacts, now) >= st.outreachWeeklyCap) break
-            if (!Levels.outreachAllowed(level, c.kind) || !c.acceptsSubmissions) continue
+            if (!Levels.outreachAllowed(level, c.kind, rules()) || !c.acceptsSubmissions) continue
             try {
                 Mail.send(st.smtpHost, st.mailUser, st.mailPass, c.email, c.draftSubject, c.draftBody)
                 dao.put(c.copy(status = "sent", sentAt = now, followUpAt = now + 24 * DAY))
@@ -450,8 +520,8 @@ object Engine {
     suspend fun pending(): List<Pending> {
         val now = System.currentTimeMillis()
         val out = mutableListOf<Pending>()
-        dao.docsNow().filter { it.type in setOf("statement", "bio", "proposal") && it.text.isNotBlank() && !it.approved && it.parkedUntil < now }
-            .forEach { out += Pending("Approve ${it.type} (${it.variant})", "${Texts.words(it.text)} words", "doc/${it.id}") }
+        dao.docsNow().filter { it.type in setOf("statement", "bio", "proposal", "custom") && it.text.isNotBlank() && !it.approved && it.parkedUntil < now }
+            .forEach { out += Pending("Approve " + (if (it.type == "custom") it.title.ifBlank { "document" } else "${it.type} (${it.variant})"), "${Texts.words(it.text)} words", "doc/${it.id}") }
         val opps = dao.oppsNow().associateBy { it.id }
         dao.applsNow().filter { it.status == "draft" || it.status == "ready" }
             .forEach { out += Pending("Application: ${opps[it.oppId]?.title.orEmpty()}", if (it.status == "ready") "Ready to send" else "Review the pack", "appl/${it.id}") }
@@ -471,6 +541,9 @@ object Engine {
         val now = System.currentTimeMillis(); val today = LocalDate.now()
         if (st.sessionStart > 0) return NextStep("Session in progress", "Tap to go back to it.", "session")
         if (!st.onboarded) return NextStep("Set up in 2 minutes", "Your name, your week and how you want to show work.", "onboarding")
+        if (st.pinnedStep.isNotBlank()) return NextStep(st.pinnedStep, "Pinned by you. Clear it below when it is done.", "home")
+        if (st.snoozeDay == today.toString()) return NextStep("Nothing else needs you today", "You set today's step aside. It will be back tomorrow.", "session")
+        if (st.pausedUntil > now) return NextStep("Planning is paused", "Until ${date(st.pausedUntil)}. Nothing is being counted or missed. Start a session any time you feel like it.", "session")
         val works = dao.artworksNow(); val docs = dao.docsNow(); val series = dao.seriesNow()
         val soon = dao.eventsNow().filter { it.type == "submit" && !it.done && it.date in (now - DAY)..(now + 4 * DAY) }
         val appls = dao.applsNow()
@@ -497,7 +570,7 @@ object Engine {
         val best = works.filter { documented(it) }.groupBy { it.seriesId }.values.maxOfOrNull { it.size } ?: 0
         if (best >= 5 && docs.none { it.type == "statement" && it.text.isNotBlank() })
             return NextStep("Generate your statement", "It is written from your interview. You approve it in one tap.", "materials")
-        if (best < 10) return NextStep("Start the next piece", "$best of 10 in your series so far.", "works")
+        if (best < st.gateWorks) return NextStep("Start the next piece", "$best of ${st.gateWorks} in your series so far.", "works")
         if (pend.isNotEmpty()) return NextStep("${pend.size} to approve", pend.first().title, "admin")
         return NextStep("Start a session", "Nothing else needs you today.", "session")
     }

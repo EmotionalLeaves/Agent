@@ -68,11 +68,7 @@ import org.json.JSONObject
 import java.io.File
 import java.time.LocalDate
 
-fun profileOf(works: List<Artwork>, docs: List<Doc>, facts: List<Fact>, ledger: List<Ledger>) = Profile(
-    level = Levels.level(Engine.statsOf(works, docs, facts)), route = st.route, availableWorks = works.count { Engine.available(it) },
-    feeBudgetLeft = (st.feeBudget - Engine.feesThisMonth(ledger)).coerceAtLeast(0.0), goals = st.goals,
-    blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts()
-)
+fun profileOf(works: List<Artwork>, docs: List<Doc>, facts: List<Fact>, ledger: List<Ledger>): Profile = Engine.profileOf(works, docs, facts, ledger)
 
 @Composable
 fun Flags(o: Opp) {
@@ -98,19 +94,26 @@ fun Calls(nav: NavController) {
     val paste = remember { mutableStateOf("") }
     val p = remember(works, docs, facts, ledger, tick) { profileOf(works, docs, facts, ledger) }
     val today = LocalDate.now()
+    var kindFilter by remember { mutableStateOf("every kind") }
+    val kindsPresent = opps.map { it.kind }.distinct().filter { it.isNotBlank() }
+    fun kindOk(o: Opp) = kindFilter == "every kind" || o.kind == kindFilter
 
-    Screen("Calls", nav, back = false) {
+    Screen("Calls", nav, back = st.simpleMode) {
+        Intro("calls", "Open calls you could apply to. The app checks each one against your level, budget and work, and shows the few worth a look. You only answer Yes, No or Not this year.")
         Choice("", listOf("this week", "all", "applied"), tab) { tab = it }
+        if (kindsPresent.size > 1 && tab != "applied") Choice("", listOf("every kind") + kindsPresent, kindFilter) { kindFilter = it }
         Status(status)
         when (tab) {
             "this week" -> {
-                val list = Engine.shortlist(opps, p, now(), Engine.stretchOk(now()))
-                Note("Level ${p.level}: " + when (p.level) {
-                    0 -> "free calls only, online or on your doorstep. The priority right now is making the series."
-                    1 -> "local, campus and community calls, free or under $25."
-                    2 -> "regional juried shows, up to $40 a fee."
-                    else -> "competitive calls, judged case by case."
-                })
+                val list = Engine.shortlist(opps.filter { kindOk(it) }, p, now(), Engine.stretchOk(now()), st.shortlistSize)
+                val cap = Levels.feeCap(p.level, p.rules)
+                Note(if (p.rules.showAllLevels) "Showing calls from every level (you turned level limits off in Settings)."
+                else "Level ${p.level}: " + (if (cap <= 0.0) "free calls only. " else if (cap == Double.MAX_VALUE) "no fee cap. " else "fees up to ${money(cap)}. ") + when (p.level) {
+                    0 -> "Online or on your doorstep. The priority right now is making the series."
+                    1 -> "Local, campus and community calls."
+                    2 -> "Regional juried shows."
+                    else -> "Competitive calls, judged case by case."
+                } + " These limits are yours to change in Settings, Your rules.")
                 if (list.isEmpty()) Panel { Text("No calls waiting for you."); Note("Share a link or a flyer photo into Studio Agent from any app, paste one below, or add sources under More.") }
                 list.forEach { o ->
                     key(o.id) {
@@ -158,11 +161,11 @@ fun Calls(nav: NavController) {
             }
             "all" -> {
                 Note("Everything found, including calls the rules are holding back and why.")
-                opps.filter { it.status in setOf("new", "later", "no", "expired") }.forEach { o ->
+                opps.filter { it.status in setOf("new", "later", "no", "expired") && kindOk(it) }.forEach { o ->
                     val why = Scoring.ineligible(o, p, now())
                     Panel(onClick = { nav.navigate("call/${o.id}") }) {
                         Text(o.title, fontWeight = FontWeight.SemiBold)
-                        Note(whereLine(o) + "  ·  " + fmtDate(o.deadline) + "  ·  " + (if (o.fee > 0) money(o.fee) else "free"))
+                        Note(o.kind + "  ·  " + whereLine(o) + "  ·  " + fmtDate(o.deadline) + "  ·  " + (if (o.fee > 0) money(o.fee) else "free"))
                         Note(when { o.status != "new" -> "You said: ${o.status}"; why.isEmpty() -> "Eligible, fit ${o.fitScore}"; else -> "Held back: " + why.joinToString("; ") })
                         Flags(o)
                     }
@@ -226,15 +229,19 @@ fun CallDetail(nav: NavController, id: Long) {
                 }
             }) { Text("Read the page for me") }
         }
-        H("Details")
+        H("The basics")
         Field("Title", o.title, { save(o.copy(title = it)) })
+        Choice("Kind of call", Ai.callKinds, o.kind) { save(o.copy(kind = it)) }
+        Field("Deadline (YYYY-MM-DD)", deadlineText, { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0 || it.isBlank()) save(o.copy(deadline = ms)) })
+        Num("Entry fee, " + st.currency, o.fee) { save(o.copy(fee = it)) }
+        Choice("Reach", listOf("campus", "local", "online", "regional", "national", "international"), o.scope) { save(o.copy(scope = it)) }
+        Field("Link", o.url, { save(o.copy(url = it.trim())) })
+        Note("Saved automatically.")
+        Expand("All the details", startOpen = o.organiser.isBlank() && o.rawText.isBlank()) {
         Field("Organiser", o.organiser, { save(o.copy(organiser = it)) })
         Field("Venue", o.venue, { save(o.copy(venue = it)) })
         Field("City", o.city, { save(o.copy(city = it)) })
         Toggle("Online only", o.online) { save(o.copy(online = it)) }
-        Choice("Reach", listOf("campus", "local", "online", "regional", "national", "international"), o.scope) { save(o.copy(scope = it)) }
-        Field("Deadline (YYYY-MM-DD)", deadlineText, { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0 || it.isBlank()) save(o.copy(deadline = ms)) })
-        Num("Entry fee, $", o.fee) { save(o.copy(fee = it)) }
         Field("Prizes", o.prizes, { save(o.copy(prizes = it)) })
         Field("Theme", o.theme, { save(o.copy(theme = it)) }, lines = 2)
         Field("Jurors", o.jurors, { save(o.copy(jurors = it)) })
@@ -245,13 +252,12 @@ fun CallDetail(nav: NavController, id: Long) {
         }
         Field("Image rules (for example: JPEG, 1920 px, under 5 MB)", o.imageSpecs, { save(o.copy(imageSpecs = it)) })
         Whole("Statement word limit", o.statementLimit) { save(o.copy(statementLimit = it)) }
-        Field("Link", o.url, { save(o.copy(url = it.trim())) })
         Field("Send entries to (email, if entries go by email)", o.email, { save(o.copy(email = it.trim())) })
         Toggle("Accepts prints of digital work", o.acceptsPrints) { save(o.copy(acceptsPrints = it)) }
         Toggle("Accepts screen-based work", o.acceptsNewMedia) { save(o.copy(acceptsNewMedia = it)) }
         Toggle("Paying the fee guarantees a place", o.guaranteed) { save(o.copy(guaranteed = it)) }
         Toggle("Terms take broad rights to my images", o.rightsGrab) { save(o.copy(rightsGrab = it)) }
-        Note("Saved automatically.")
+        }
         Row {
             if (o.organiser.isNotBlank()) TextButton(onClick = { st.blocked = (st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() } + o.organiser).distinct().joinToString(", "); status = "Blocked. Their calls will be held back." }) { Text("Block this organiser") }
             TextButton(onClick = { scope.io { dao.del(o) }; nav.popBackStack() }) { Text("Delete") }
@@ -313,6 +319,10 @@ fun ApplScreen(nav: NavController, id: Long) {
                 if (o.commission > 0) Note("Commission ${"%.0f".format(o.commission)}%: " + chosen.filter { it.price > 0 && !it.nfs }.joinToString("; ") { "${it.title}: you receive ${money(it.price * (1 - o.commission / 100))}" })
                 Note("Shipping: box about 4 in larger than the work on every side, corner protectors, glassine over the face, never tape on the work. Take condition photos before it leaves.")
             }
+            if (loaded.status == "submitted") Expand("Something really has to change") {
+                Note("Only for a real reason, such as the organiser asking you to resend. Reopening unlocks the pack and frees the works.")
+                TextButton(onClick = { scope.io { Engine.reopen(loaded) } }) { Text("Reopen this application") }
+            }
         }
         return
     }
@@ -323,6 +333,7 @@ fun ApplScreen(nav: NavController, id: Long) {
     val allGreen = checks.all { it.second }
     val chosenIds = Engine.workIds(a)
     val files = remember(a.packDir, status) { Engine.packFiles(a) }
+    val newQuestion = remember { mutableStateOf("") }
 
     Screen(o.title, nav) {
         Note((if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.")
@@ -346,6 +357,28 @@ fun ApplScreen(nav: NavController, id: Long) {
                 val x = a.copy(themeText = t, revisions = a.revisions + 1, packDir = ""); a = x; dao.put(x); status = ""; busy = false
             }
         }) { Text(if (a.themeText.isBlank()) "Write the fit paragraph for me" else "Rewrite it") }
+
+        val qa = Engine.answers(a)
+        Expand("Questions this call asks (" + qa.size + ")", startOpen = qa.isNotEmpty()) {
+            Note("If the entry form has its own questions, add each one here. The answers go into the pack and are ready to paste.")
+            qa.forEachIndexed { i, (q, ans) ->
+                key(i, q) {
+                    Field(q, ans, { v -> save(a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to v else p }), packDir = "")) }, lines = 3)
+                    Row {
+                        if (G.ai.ready) TextButton(enabled = !busy, onClick = {
+                            busy = true; status = "Writing..."
+                            scope.io({ status = it; busy = false }) {
+                                val t = G.ai.write("an answer to this application question: $q", 120, Engine.factsText(chosenIds), Engine.voice(), "The call: ${o.title}. Theme: ${o.theme}")
+                                val x = a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to t else p }), packDir = ""); a = x; dao.put(x); status = ""; busy = false
+                            }
+                        }) { Text("Draft an answer") }
+                        TextButton(onClick = { save(a.copy(answers = Engine.answersJson(qa.filterIndexed { j, _ -> j != i }), packDir = "")) }) { Text("Remove") }
+                    }
+                }
+            }
+            Field("Add a question", newQuestion)
+            OutlinedButton(enabled = newQuestion.value.isNotBlank(), onClick = { save(a.copy(answers = Engine.answersJson(qa + (newQuestion.value.trim() to "")), packDir = "")); newQuestion.value = "" }) { Text("Add") }
+        }
 
         Panel(strong = allGreen) {
             Text(if (allGreen) "Every check passes. This is ready." else "Ready when these are all true", fontWeight = FontWeight.SemiBold)

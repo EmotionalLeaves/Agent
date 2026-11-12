@@ -61,7 +61,7 @@ val workStatuses = listOf("idea", "in_progress", "finished", "documented", "avai
 
 fun newWork(): Artwork = Artwork(
     status = "in_progress", year = LocalDate.now().year, createdAt = now(),
-    format = when (st.route) { "physical" -> "physical"; "screen" -> "screen"; else -> "print" }
+    format = when (st.routes.firstOrNull()) { "physical" -> "physical"; "screen" -> "screen"; else -> "print" }
 )
 
 @Composable
@@ -83,12 +83,22 @@ fun Works(nav: NavController) {
     val series by dao.series().collectAsState(emptyList())
     var tab by remember { mutableStateOf("works") }
     val newSeries = remember { mutableStateOf("") }
+    val search = remember { mutableStateOf("") }
+    var show by remember { mutableStateOf("all") }
     Screen("Studio", nav, back = false) {
+        Intro("studio", "Every piece you make lives here, with its image and details. Works are single pieces; Series are groups that belong together.")
         Choice("", listOf("works", "series"), tab) { tab = it }
         if (tab == "works") {
             Button(onClick = { scope.io { val id = dao.put(newWork()); withContext(Dispatchers.Main) { nav.navigate("work/$id") } } }, modifier = Modifier.fillMaxWidth()) { Text("Add a piece") }
             if (works.isEmpty()) Note("Nothing here yet. Add a piece, then photograph it or import the file.")
-            works.forEach { w ->
+            if (works.size > 5) {
+                Field("Search title, tag, medium or series", search)
+                Choice("", listOf("all") + workStatuses.filter { x -> works.any { it.status == x } }, show) { show = it }
+            }
+            val q = search.value.trim().lowercase()
+            works.filter { w ->
+                (show == "all" || w.status == show) && (q.isBlank() || listOf(w.title, w.tags, w.medium, w.status, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).any { it.lowercase().contains(q) })
+            }.forEach { w ->
                 Panel(onClick = { nav.navigate("work/${w.id}") }) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         PathImage(w.imagePath, Modifier.size(64.dp), 200)
@@ -104,11 +114,14 @@ fun Works(nav: NavController) {
             series.forEach { s -> key(s.id) {
                 val done = works.count { it.seriesId == s.id && Engine.documented(it) }
                 var notes by remember(s.id) { mutableStateOf(s.notes) }
+                var name by remember(s.id) { mutableStateOf(s.name) }
                 Panel {
-                    Text(s.name, fontWeight = FontWeight.SemiBold)
+                    Field("Series name", name, { name = it; if (it.isNotBlank()) scope.io { dao.put(s.copy(name = it.trim(), notes = notes)) } })
                     LinearProgressIndicator(progress = { (done.toFloat() / s.targetCount.coerceAtLeast(1)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                     Note("$done of ${s.targetCount} documented, ${works.count { it.seriesId == s.id }} started")
-                    Field("What ties these works together? (used for the series statement)", notes, { notes = it; scope.io { dao.put(s.copy(notes = it)) } }, lines = 2, mic = true)
+                    Field("What ties these works together? (used for the series statement)", notes, { notes = it; scope.io { dao.put(s.copy(notes = it, name = name.trim().ifBlank { s.name })) } }, lines = 2, mic = true)
+                    Whole("How many works you are aiming for", s.targetCount) { n -> if (n > 0) scope.io { dao.put(s.copy(targetCount = n, notes = notes, name = name.trim().ifBlank { s.name })) } }
+                    TextButton(onClick = { scope.io { works.filter { it.seriesId == s.id }.forEach { dao.put(it.copy(seriesId = 0)) }; dao.del(s) } }) { Text("Delete this series (its works are kept)") }
                 }
             } }
             Field("New series name", newSeries)
@@ -155,6 +168,15 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
     }
 
+    val pickExtra = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) scope.io({ status = it }) {
+            val f = File(dir, "work_${id}_x_${now()}.jpg")
+            if (!ImageTools.copyUri(ctx, uri, f)) throw Exception("Could not copy that file.")
+            val next = w.copy(extraImages = (w.extraImages.split("|").filter { it.isNotBlank() } + f.absolutePath).joinToString("|"))
+            w = next; dao.put(next)
+        }
+    }
+
     Screen(w.title.ifBlank { "Untitled" }, nav) {
         if (w.imagePath.isNotBlank()) PathImage(w.imagePath, Modifier.fillMaxWidth().height(260.dp), 1000)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -173,9 +195,9 @@ fun WorkDetail(nav: NavController, id: Long) {
         Field("Medium (blank uses the default for its format)", w.medium, { save(w.copy(medium = it)) })
         Choice("Format", listOf("print", "physical", "screen", "digital"), w.format) { save(w.copy(format = it)) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(Modifier.weight(1f)) { Num("Width, in", w.widthIn) { save(w.copy(widthIn = it)) } }
-            Column(Modifier.weight(1f)) { Num("Height, in", w.heightIn) { save(w.copy(heightIn = it)) } }
-            Column(Modifier.weight(1f)) { Num("Depth, in", w.depthIn) { save(w.copy(depthIn = it)) } }
+            Column(Modifier.weight(1f)) { Dim("Width", w.widthIn) { save(w.copy(widthIn = it)) } }
+            Column(Modifier.weight(1f)) { Dim("Height", w.heightIn) { save(w.copy(heightIn = it)) } }
+            Column(Modifier.weight(1f)) { Dim("Depth", w.depthIn) { save(w.copy(depthIn = it)) } }
         }
         if (w.format == "print" || w.format == "digital") Panel { Text("Print check", fontWeight = FontWeight.SemiBold); Text(Texts.printVerdict(w.pixelW, w.pixelH, w.widthIn, w.heightIn)) }
         Toggle("Framed", w.framed) { save(w.copy(framed = it)) }
@@ -183,9 +205,21 @@ fun WorkDetail(nav: NavController, id: Long) {
         else Note("No series yet. Add one under Studio, Series.")
         Choice("Status", workStatuses, w.status) { save(w.copy(status = it)) }
         Field("Next step (shown when you start a session)", w.nextStep, { save(w.copy(nextStep = it)) })
+        Field("Tags (your own labels, comma separated)", w.tags, { save(w.copy(tags = it)) })
+        Note("Saved automatically as you type.")
 
-        H("Price and edition")
-        Num("Price, $", w.price) { save(w.copy(price = it)) }
+        Expand("More pictures of this piece") {
+            Note("A detail, the back, the piece on a wall. Kept with the piece and backed up.")
+            val extras = w.extraImages.split("|").filter { it.isNotBlank() }
+            extras.forEach { path ->
+                PathImage(path, Modifier.fillMaxWidth().height(160.dp), 700)
+                TextButton(onClick = { save(w.copy(extraImages = extras.filter { it != path }.joinToString("|"))) }) { Text("Remove this picture") }
+            }
+            OutlinedButton(onClick = { pickExtra.launch("image/*") }) { Text("Add a picture") }
+        }
+
+        Expand("Price and edition") {
+        Num("Price, " + st.currency, w.price) { save(w.copy(price = it)) }
         if (w.widthIn > 0 && w.heightIn > 0) TextButton(onClick = { save(w.copy(price = Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))); status = "Price set from your rule. Reopen this piece to see it in the box." }) {
             Text("Use my price rule: ${money(Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))}")
         }
@@ -196,9 +230,9 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
         Field("Where it is now", w.location, { save(w.copy(location = it)) })
         Field("Notes", w.notes, { save(w.copy(notes = it)) }, lines = 2)
-        Note("Saved automatically as you type.")
+        }
 
-        H("Files and papers")
+        Expand("Files and papers") {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(enabled = w.imagePath.isNotBlank(), onClick = {
                 status = "Exporting..."
@@ -218,6 +252,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, listOf(w))) }) { Text("Print order") }
         }
         TextButton(onClick = { scope.io { dao.del(w) }; nav.popBackStack() }) { Text("Delete this piece") }
+        }
     }
 }
 

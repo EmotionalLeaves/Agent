@@ -55,13 +55,14 @@ fun Outreach(nav: NavController) {
     val works by dao.artworks().collectAsState(emptyList())
     val docs by dao.docs().collectAsState(emptyList())
     val facts by dao.facts().collectAsState(emptyList())
-    val level = Levels.level(Engine.statsOf(works, docs, facts))
+    val level = Engine.levelOf(works, docs, facts)
     val url = remember { mutableStateOf("") }
     val subName = remember { mutableStateOf("") }
     val subEmail = remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
-    Screen("People", nav, back = false) {
+    Screen("People", nav, back = st.simpleMode) {
+        Intro("people", "Venues and people worth knowing, and what has passed between you. The app drafts short, personal emails and remembers to follow up once. Nothing is sent without your yes.")
         Panel(strong = true) {
             Text("Level $level", fontWeight = FontWeight.SemiBold)
             Text(when (level) {
@@ -99,7 +100,7 @@ fun Outreach(nav: NavController) {
             Panel(onClick = { nav.navigate("contact/${c.id}") }) {
                 Text(c.venue.ifBlank { c.name.ifBlank { "New contact" } }, fontWeight = FontWeight.SemiBold)
                 Note(c.kind.replace('_', ' ') + "  ·  " + statusWords(c))
-                if (!Levels.outreachAllowed(level, c.kind)) Note("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}.")
+                if (!Levels.outreachAllowed(level, c.kind, Engine.rules())) Note("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}.")
             }
         }
 
@@ -138,8 +139,8 @@ fun ContactScreen(nav: NavController, id: Long) {
     var busy by remember { mutableStateOf(false) }
     val reply = remember { mutableStateOf("") }
     fun save(x: Contact) { c = x; scope.io { dao.put(x) } }
-    val level = Levels.level(Engine.statsOf(works, docs, facts))
-    val allowed = Levels.outreachAllowed(level, c.kind)
+    val level = Engine.levelOf(works, docs, facts)
+    val allowed = Levels.outreachAllowed(level, c.kind, Engine.rules())
     val limit = st.revisionLimit
 
     Screen(c.venue.ifBlank { c.name.ifBlank { "Contact" } }, nav) {
@@ -160,7 +161,7 @@ fun ContactScreen(nav: NavController, id: Long) {
         when {
             !allowed -> Panel(strong = true) {
                 Text("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}. You are at Level $level.")
-                Note("For now: go to their openings, join their mailing list, and note who you meet here. That is what makes a later email welcome.")
+                Note("For now: go to their openings, join their mailing list, and note who you meet here. That is what makes a later email welcome. (This limit can be turned off in Settings, Your rules.)")
             }
             !c.acceptsSubmissions -> Panel(strong = true) {
                 Text("They do not take unsolicited submissions, so no email.")

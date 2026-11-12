@@ -32,7 +32,7 @@ object Papers {
         return parts.joinToString(", ")
     }
 
-    fun priceLine(a: Artwork): String = if (a.nfs) "NFS" else if (a.price > 0) "$" + "%.0f".format(a.price) else ""
+    fun priceLine(a: Artwork): String = if (a.nfs) "NFS" else if (a.price > 0) com.emotionalleaves.studioagent.G.settings.currency + "%.0f".format(a.price) else ""
 
     fun cv(ctx: Context, s: Settings, facts: List<Fact>): File {
         val pdf = Pdf()

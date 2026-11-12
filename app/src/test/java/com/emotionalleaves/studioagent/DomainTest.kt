@@ -5,6 +5,7 @@ import com.emotionalleaves.studioagent.domain.CareerStats
 import com.emotionalleaves.studioagent.domain.Levels
 import com.emotionalleaves.studioagent.domain.Planner
 import com.emotionalleaves.studioagent.domain.Profile
+import com.emotionalleaves.studioagent.domain.Rules
 import com.emotionalleaves.studioagent.domain.Scoring
 import com.emotionalleaves.studioagent.domain.Texts
 import org.junit.Assert.assertEquals
@@ -110,6 +111,56 @@ class DomainTest {
         assertTrue(Texts.words(Texts.trimToWords("One two three. Four five six. Seven eight nine ten.", 7)) <= 7)
         assertTrue(Texts.jargonIn("My work explores the liminal.").contains("liminal"))
         assertTrue(Texts.jargonIn("I paint the kitchen at 5am.").isEmpty())
+    }
+
+    @Test fun rulesCanBeLoosened() {
+        val stats = CareerStats(bestSeriesDocumented = 6, statementApproved = true)
+        assertEquals(0, Levels.level(stats))
+        assertEquals(1, Levels.level(stats, Rules(gateWorks = 6)))
+        assertEquals(3, Levels.level(CareerStats(), Rules(levelOverride = 3)))
+        assertEquals(15.0, Levels.feeCap(0, Rules(feeCaps = listOf(15.0, 25.0, 40.0, -1.0, -1.0))), 0.001)
+        assertEquals(Double.MAX_VALUE, Levels.feeCap(3), 0.0)
+
+        val national = Opp(title = "Big national", scope = "national", fee = 45.0, deadline = future)
+        val strict = Profile(level = 0, feeBudgetLeft = 100.0)
+        assertTrue(Scoring.ineligible(national, strict, now).isNotEmpty())
+        assertTrue(Scoring.ineligible(national, strict.copy(rules = Rules(showAllLevels = true)), now).isEmpty())
+        assertFalse(Levels.outreachAllowed(0, "commercial", Rules()))
+        assertTrue(Levels.outreachAllowed(0, "commercial", Rules(gateOutreach = false)))
+    }
+
+    @Test fun formatsAndKindsFilterCalls() {
+        val screenOnly = Opp(title = "Video night", scope = "local", acceptsPrints = false, acceptsNewMedia = true, deadline = future)
+        assertTrue(Scoring.ineligible(screenOnly, Profile(routes = listOf("print")), now).isNotEmpty())
+        assertTrue(Scoring.ineligible(screenOnly, Profile(routes = listOf("print", "screen")), now).isEmpty())
+        val residency = Opp(title = "Residency", scope = "local", kind = "residency", deadline = future)
+        assertTrue(Scoring.ineligible(residency, Profile(kinds = listOf("exhibition")), now).any { it.contains("turned off") })
+        assertTrue(Scoring.ineligible(residency, Profile(kinds = listOf("exhibition", "residency")), now).isEmpty())
+    }
+
+    @Test fun whatMattersMostChangesTheRanking() {
+        val cheapPoorFit = Opp(title = "A", scope = "local", fee = 0.0, themeFit = 20)
+        val paidGreatFit = Opp(title = "B", scope = "local", fee = 25.0, themeFit = 95)
+        val moneyFirst = Profile(level = 1, rules = Rules(weights = listOf(1, 2, 3, 2, 2, 2)))
+        val themeFirst = Profile(level = 1, rules = Rules(weights = listOf(3, 2, 1, 2, 2, 2)))
+        assertTrue(Scoring.score(cheapPoorFit, moneyFirst).first > Scoring.score(paidGreatFit, moneyFirst).first)
+        assertTrue(Scoring.score(paidGreatFit, themeFirst).first > Scoring.score(cheapPoorFit, themeFirst).first)
+    }
+
+    @Test fun yourOwnWeekIsFollowedExactly() {
+        val t = Planner.parseTemplate("3@18:30/45;7@09:00/120;bad;9@10:00/30")
+        assertEquals(2, t.size)
+        assertEquals(t, Planner.parseTemplate(Planner.formatTemplate(t)))
+        val slots = Planner.planFromTemplate(LocalDate.of(2026, 11, 9), t)
+        assertEquals(2, slots.size)
+        assertEquals(LocalDateTime.of(2026, 11, 11, 18, 30), slots[0].start)
+        assertEquals(LocalDateTime.of(2026, 11, 15, 9, 0), slots[1].start)
+        val suggested = Planner.suggestedTemplate(setOf(1, 2, 3, 4, 5), LocalTime.of(15, 30), 90, LocalTime.of(22, 30), 4)
+        assertEquals(240, suggested.sumOf { it.minutes })
+    }
+
+    @Test fun yourOwnBannedWordsAreCaught() {
+        assertTrue(Texts.jargonIn("It was a journey.", listOf("Journey")).contains("journey"))
     }
 
     @Test fun sameCallFromTwoSitesIsOneCall() {

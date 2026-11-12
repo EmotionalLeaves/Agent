@@ -10,6 +10,8 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 /** status: idea, in_progress, finished, documented, available, pending, shown, sold.
@@ -40,7 +42,11 @@ data class Artwork(
     val detailPath: String = "",
     val notes: String = "",
     val nextStep: String = "",
-    val createdAt: Long = 0
+    val createdAt: Long = 0,
+    /** More pictures of the same piece (detail, installed view), paths joined by "|". */
+    val extraImages: String = "",
+    /** Your own labels, comma separated. */
+    val tags: String = ""
 )
 
 @Entity
@@ -87,7 +93,11 @@ data class Doc(
     val approved: Boolean = false,
     val revisions: Int = 0,
     val updatedAt: Long = 0,
-    val parkedUntil: Long = 0
+    val parkedUntil: Long = 0,
+    /** For type "custom": your name for the document, its word target, and what it is for. */
+    val title: String = "",
+    val target: Int = 0,
+    val brief: String = ""
 )
 
 /** A true line for the CV. category: education, solo, group, award, invited, grant, residency, collection, press, publication, skill. */
@@ -138,7 +148,9 @@ data class Opp(
     val status: String = "new",
     val noReason: String = "",
     val createdAt: Long = 0,
-    val dedupeKey: String = ""
+    val dedupeKey: String = "",
+    /** exhibition, residency, grant, publication, fair, commission, other. */
+    val kind: String = "exhibition"
 )
 
 /** status: draft, ready, sending, submitted, accepted, declined. method: email, web. */
@@ -255,6 +267,8 @@ interface Dao {
     @Delete suspend fun del(x: Evt)
     @Delete suspend fun del(x: Ledger)
     @Delete suspend fun del(x: Source)
+    @Delete suspend fun del(x: Sess)
+    @Delete suspend fun del(x: Appl)
 
     @Query("SELECT * FROM Artwork ORDER BY createdAt DESC") fun artworks(): Flow<List<Artwork>>
     @Query("SELECT * FROM Series ORDER BY createdAt DESC") fun series(): Flow<List<Series>>
@@ -286,7 +300,7 @@ interface Dao {
 @Database(
     entities = [Artwork::class, Series::class, Sess::class, Idea::class, Doc::class, Fact::class, Opp::class,
         Appl::class, Contact::class, Evt::class, Ledger::class, Source::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class Db : RoomDatabase() {
@@ -295,6 +309,18 @@ abstract class Db : RoomDatabase() {
     companion object {
         const val NAME = "studio.db"
         fun open(c: Context): Db =
-            Room.databaseBuilder(c, Db::class.java, NAME).setJournalMode(JournalMode.TRUNCATE).build()
+            Room.databaseBuilder(c, Db::class.java, NAME).setJournalMode(JournalMode.TRUNCATE).addMigrations(MIGRATION_1_2).build()
+
+        /** Build 2 added columns only; nothing from build 1 is dropped or rewritten. */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Artwork ADD COLUMN extraImages TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Artwork ADD COLUMN tags TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Doc ADD COLUMN title TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Doc ADD COLUMN target INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Doc ADD COLUMN brief TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE Opp ADD COLUMN kind TEXT NOT NULL DEFAULT 'exhibition'")
+            }
+        }
     }
 }

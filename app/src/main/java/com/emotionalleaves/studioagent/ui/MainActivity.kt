@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -26,6 +27,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -97,7 +99,12 @@ fun Root(incoming: MutableState<Incoming?>) {
     }
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route.orEmpty()
-    val tabs = listOf(
+    val tick by st.changed.collectAsState()
+    // Simple layout keeps the bar to four things. Calls and People are still one tap away under More.
+    val tabs = if (tick >= 0 && st.simpleMode) listOf(
+        Triple("home", "Home", Icons.Default.Home), Triple("works", "Studio", Icons.Default.Create),
+        Triple("guide", "Guide", Icons.Default.Info), Triple("more", "More", Icons.Default.Menu)
+    ) else listOf(
         Triple("home", "Home", Icons.Default.Home), Triple("works", "Studio", Icons.Default.Create), Triple("calls", "Calls", Icons.Default.Search),
         Triple("outreach", "People", Icons.Default.Person), Triple("more", "More", Icons.Default.Menu)
     )
@@ -137,7 +144,11 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("outreach") { Outreach(nav) }
             composable("contact/{id}") { ContactScreen(nav, it.id()) }
             composable("records") { Records(nav) }
-            composable("settings") { SettingsScreen(nav) }
+            composable("settings") { SettingsScreen(nav, "") }
+            composable("settings/{section}") { SettingsScreen(nav, it.arguments?.getString("section").orEmpty()) }
+            composable("guide") { Guide(nav) }
+            composable("week") { WeekScreen(nav) }
+            composable("sessions") { SessionsScreen(nav) }
             composable("more") { More(nav) }
         }
     }

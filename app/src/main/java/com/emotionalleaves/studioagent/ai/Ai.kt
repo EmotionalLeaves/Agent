@@ -43,8 +43,11 @@ class Ai(private val settings: Settings) {
             if (!ready) throw AiException("Add an AI key in Settings to use this.")
             if (spentThisMonth() >= settings.aiCapUsd) throw AiException("Monthly AI spend cap reached. Raise it in Settings if you want to continue.")
             val model = if (fast) settings.aiModelFast else settings.aiModelWrite
-            if (settings.aiProvider == "gemini") gemini(model, system, user, imageJpeg, maxTokens, fast)
-            else anthropic(model, system, user, imageJpeg, maxTokens, fast)
+            when (settings.aiProvider) {
+                "gemini" -> gemini(model, system, user, imageJpeg, maxTokens, fast)
+                "custom" -> openAiStyle(model, system, user, imageJpeg, maxTokens, fast)
+                else -> anthropic(model, system, user, imageJpeg, maxTokens, fast)
+            }
         }
 
     private fun anthropic(model: String, system: String, user: String, image: ByteArray?, maxTokens: Int, fast: Boolean): String {
@@ -96,6 +99,26 @@ class Ai(private val settings: Settings) {
         }
     }
 
+    /** Any service that speaks the OpenAI chat format: OpenAI itself, OpenRouter, a local server, and so on. */
+    private fun openAiStyle(model: String, system: String, user: String, image: ByteArray?, maxTokens: Int, fast: Boolean): String {
+        val userContent: Any = if (image == null) user else JSONArray()
+            .put(JSONObject().put("type", "text").put("text", user))
+            .put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", "data:image/jpeg;base64," + Base64.encodeToString(image, Base64.NO_WRAP))))
+        val body = JSONObject().put("model", model).put("max_tokens", maxTokens).put(
+            "messages", JSONArray().put(JSONObject().put("role", "system").put("content", system)).put(JSONObject().put("role", "user").put("content", userContent))
+        )
+        val req = Request.Builder().url(settings.aiBaseUrl.trim().trimEnd('/') + "/chat/completions")
+            .header("Authorization", "Bearer " + settings.aiKey).post(body.toString().toRequestBody(json)).build()
+        return http.newCall(req).execute().use { r ->
+            val text = r.body?.string().orEmpty()
+            if (!r.isSuccessful) throw AiException("AI request failed (${r.code}): " + errorMessage(text))
+            val o = JSONObject(text)
+            val u = o.optJSONObject("usage")
+            addSpend(u?.optInt("prompt_tokens") ?: 0, u?.optInt("completion_tokens") ?: 0, fast)
+            o.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message")?.optString("content").orEmpty().trim()
+        }
+    }
+
     private fun errorMessage(body: String): String = try {
         JSONObject(body).optJSONObject("error")?.optString("message") ?: body.take(200)
     } catch (e: Exception) { body.take(200) }
@@ -109,7 +132,7 @@ class Ai(private val settings: Settings) {
     /** Page, email or flyer text (or a flyer photo) to structured call records. */
     suspend fun extractCalls(text: String, sourceName: String, image: ByteArray? = null): List<Opp> {
         val sys = "You extract open calls for artists into strict JSON. $dataRule " +
-            "Reply with only a JSON array. Each item has keys: title, organiser, venue, city, online (bool), " +
+            "Reply with only a JSON array. Each item has keys: title, kind (one of exhibition, residency, grant, publication, fair, commission, other), organiser, venue, city, online (bool), " +
             "deadline (YYYY-MM-DD or \"\"), fee (number, 0 if free or unknown), prizes, eligibility, " +
             "scope (one of campus, local, online, regional, national, international), mediums, min_works (int), max_works (int), " +
             "image_specs, statement_word_limit (int, 0 if none), theme, jurors, exhibition_dates, delivery, commission (number, percent), " +
@@ -136,7 +159,8 @@ class Ai(private val settings: Settings) {
                 sourceName = sourceName, rawText = text.take(6000), guaranteed = o.optBoolean("guaranteed_acceptance"),
                 rightsGrab = o.optBoolean("rights_grab"), acceptsPrints = o.optBoolean("accepts_prints", true),
                 acceptsNewMedia = o.optBoolean("accepts_new_media"), createdAt = now,
-                dedupeKey = Texts.dedupeKey(o.optString("organiser"), deadline, title)
+                dedupeKey = Texts.dedupeKey(o.optString("organiser"), deadline, title),
+                kind = o.optString("kind").lowercase().takeIf { it in callKinds } ?: "exhibition"
             )
         }
         return list
@@ -154,7 +178,10 @@ class Ai(private val settings: Settings) {
             "Rules: use only facts given to you; never invent exhibitions, awards, education, dates or claims. " +
             "No art-world jargon (for example: liminal, interrogates, explores notions of, juxtaposition, the human condition). " +
             "Concrete nouns and verbs, short sentences, first person unless told otherwise. No headings, no lists, no quotation marks around the text. " +
-            "Reply with only the text itself." + (if (voice.isNotBlank()) "\n\nHow the artist writes (their own sentences):\n$voice" else "")
+            "Reply with only the text itself." +
+            (if (settings.writingNotes.isNotBlank()) "\n\nStanding notes from the artist, always follow them: ${settings.writingNotes}" else "") +
+            (if (settings.jargonExtra.isNotEmpty()) "\nNever use these words or phrases: ${settings.jargonExtra.joinToString(", ")}" else "") +
+            (if (voice.isNotBlank()) "\n\nHow the artist writes (their own sentences):\n$voice" else "")
 
     suspend fun write(kind: String, wordTarget: Int, facts: String, voice: String, extra: String = ""): String =
         complete(writerSystem(voice), "Write: $kind\nLength: about $wordTarget words, never more.\n$extra\n\nFacts you may use:\n$facts", maxTokens = 1500)
@@ -201,6 +228,8 @@ class Ai(private val settings: Settings) {
     }
 
     companion object {
+        val callKinds = listOf("exhibition", "residency", "grant", "publication", "fair", "commission", "other")
+
         fun jsonSlice(s: String, open: Char, close: Char): String {
             val a = s.indexOf(open); val b = s.lastIndexOf(close)
             return if (a >= 0 && b > a) s.substring(a, b + 1) else if (open == '[') "[]" else "{}"

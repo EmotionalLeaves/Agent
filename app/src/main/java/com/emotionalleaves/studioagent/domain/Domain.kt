@@ -22,30 +22,47 @@ data class CareerStats(
 
 data class Gate(val text: String, val progress: Float)
 
+/** Every rule the artist can loosen or tighten. Defaults are the outline's ladder. */
+data class Rules(
+    val gateWorks: Int = 10,
+    val gateShows1: Int = 3,
+    val gateShows2: Int = 8,
+    /** Fee cap per entry for levels 0 to 4. Negative means no cap. */
+    val feeCaps: List<Double> = listOf(0.0, 25.0, 40.0, -1.0, -1.0),
+    /** 0 to 4 to set the level by hand, anything else to let the gates decide. */
+    val levelOverride: Int = -1,
+    val showAllLevels: Boolean = false,
+    val gateOutreach: Boolean = true,
+    /** Importance 1 (low) to 3 (high) of theme, career, money, odds, effort, goal. */
+    val weights: List<Int> = listOf(2, 2, 2, 2, 2, 2)
+)
+
 object Levels {
     val names = listOf("Foundation", "First walls", "Regional", "Recognised", "Established")
 
-    fun level(s: CareerStats): Int = when {
-        !(s.bestSeriesDocumented >= 10 && s.statementApproved) -> 0
-        s.exhibitions < 3 -> 1
-        !(s.exhibitions >= 8 && s.awardOrInvited) -> 2
+    fun level(s: CareerStats, r: Rules = Rules()): Int = when {
+        r.levelOverride in 0..4 -> r.levelOverride
+        !(s.bestSeriesDocumented >= r.gateWorks && s.statementApproved) -> 0
+        s.exhibitions < r.gateShows1 -> 1
+        !(s.exhibitions >= r.gateShows2 && s.awardOrInvited) -> 2
         !(s.solo >= 1 && s.residencyOrGrant) -> 3
         else -> 4
     }
 
-    fun gate(s: CareerStats): Gate = when (level(s)) {
+    fun gate(s: CareerStats, r: Rules = Rules()): Gate = when (level(s, r)) {
         0 -> {
-            val n = min(s.bestSeriesDocumented, 10)
+            val want = r.gateWorks.coerceAtLeast(1)
+            val n = min(s.bestSeriesDocumented, want)
             Gate(
-                "$n of 10 documented works in one series, statement " + (if (s.statementApproved) "approved" else "not approved yet"),
-                n / 10f * 0.9f + (if (s.statementApproved) 0.1f else 0f)
+                "$n of $want documented works in one series, statement " + (if (s.statementApproved) "approved" else "not approved yet"),
+                n.toFloat() / want * 0.9f + (if (s.statementApproved) 0.1f else 0f)
             )
         }
-        1 -> Gate("${min(s.exhibitions, 3)} of 3 exhibitions on your CV", min(s.exhibitions, 3) / 3f)
-        2 -> Gate(
-            "${min(s.exhibitions, 8)} of 8 shows, " + (if (s.awardOrInvited) "award or invitation done" else "plus an award or an invited show"),
-            min(s.exhibitions, 8) / 8f * 0.8f + (if (s.awardOrInvited) 0.2f else 0f)
-        )
+        1 -> { val want = r.gateShows1.coerceAtLeast(1); Gate("${min(s.exhibitions, want)} of $want exhibitions on your CV", min(s.exhibitions, want).toFloat() / want) }
+        2 -> { val want = r.gateShows2.coerceAtLeast(1); Gate(
+            "${min(s.exhibitions, want)} of $want shows, " + (if (s.awardOrInvited) "award or invitation done" else "plus an award or an invited show"),
+            min(s.exhibitions, want).toFloat() / want * 0.8f + (if (s.awardOrInvited) 0.2f else 0f)
+        ) }
         3 -> Gate(
             (if (s.solo >= 1) "Solo show done" else "A solo show") + ", " + (if (s.residencyOrGrant) "residency or grant done" else "plus a residency or grant"),
             (if (s.solo >= 1) 0.5f else 0f) + (if (s.residencyOrGrant) 0.5f else 0f)
@@ -54,12 +71,17 @@ object Levels {
     }
 
     /** Default fee cap per entry. */
-    fun feeCap(level: Int): Double = when (level) { 0 -> 0.0; 1 -> 25.0; 2 -> 40.0; else -> Double.MAX_VALUE }
+    fun feeCap(level: Int, r: Rules = Rules()): Double {
+        val c = r.feeCaps.getOrElse(level) { -1.0 }
+        return if (c < 0) Double.MAX_VALUE else c
+    }
 
     /** Highest call tier shown as a normal (non-stretch) call. */
     fun maxTier(level: Int): Int = if (level <= 0) 1 else min(level, 4)
 
     fun hoursAsk(level: Int): IntRange = when (level) { 0 -> 3..5; 1 -> 4..6; 2 -> 5..8; else -> 6..10 }
+
+    fun outreachAllowed(level: Int, kind: String, r: Rules): Boolean = !r.gateOutreach || outreachAllowed(level, kind)
 
     fun outreachAllowed(level: Int, kind: String): Boolean = when (kind) {
         "subscriber" -> true
@@ -84,7 +106,11 @@ object Levels {
 
 data class Profile(
     val level: Int = 0,
-    val route: String = "print",
+    /** Formats the artist shows: print, physical, screen. */
+    val routes: List<String> = listOf("print"),
+    val rules: Rules = Rules(),
+    /** Kinds of call the artist wants to see. Empty means all. */
+    val kinds: List<String> = emptyList(),
     val availableWorks: Int = 0,
     val feeBudgetLeft: Double = 0.0,
     val goals: String = "",
@@ -116,13 +142,14 @@ object Scoring {
     fun ineligible(o: Opp, p: Profile, now: Long): List<String> {
         val r = mutableListOf<String>()
         if (o.deadline in 1..now) r += "Deadline has passed"
-        if (o.fee > Levels.feeCap(p.level)) r += "Entry fee is over your Level ${p.level} cap"
+        if (!p.rules.showAllLevels && o.fee > Levels.feeCap(p.level, p.rules)) r += "Entry fee is over your Level ${p.level} cap"
         else if (o.fee > 0 && o.fee > p.feeBudgetLeft) r += "Over this month's fee budget"
-        if (tier(o) > Levels.maxTier(p.level) + 1) r += "Above your current level"
+        if (!p.rules.showAllLevels && tier(o) > Levels.maxTier(p.level) + 1) r += "Above your current level"
+        if (p.kinds.isNotEmpty() && o.kind.isNotBlank() && o.kind !in p.kinds) r += "You have ${o.kind} calls turned off"
         if (o.minWorks > p.availableWorks) r += "Needs ${o.minWorks} works, you have ${p.availableWorks} ready"
         if (p.blocked.any { it.isNotBlank() && o.organiser.contains(it.trim(), ignoreCase = true) }) r += "Organiser is on your blocked list"
-        if (p.route == "print" && !o.acceptsPrints) r += "Does not accept prints of digital work"
-        if (p.route == "screen" && !o.acceptsNewMedia) r += "Does not accept screen-based work"
+        val fits = p.routes.isEmpty() || p.routes.any { it == "physical" || (it == "print" && o.acceptsPrints) || (it == "screen" && o.acceptsNewMedia) }
+        if (!fits) r += if (p.routes == listOf("screen")) "Does not accept screen-based work" else "Does not accept prints of digital work"
         if (o.guaranteed && o.fee > 0) r += "Pay-to-show"
         return r
     }
@@ -162,7 +189,10 @@ object Scoring {
         val hay = (o.title + " " + o.theme + " " + o.prizes + " " + o.eligibility).lowercase()
         val goal = if (goalWords.any { hay.contains(it) }) 80 else 50
 
-        val total = theme * 0.30 + career * 0.20 + money * 0.15 + odds * 0.15 + effort * 0.10 + goal * 0.10
+        val base = listOf(0.30, 0.20, 0.15, 0.15, 0.10, 0.10)
+        val w = base.mapIndexed { i, b -> b * p.rules.weights.getOrElse(i) { 2 }.coerceIn(1, 3) / 2.0 }
+        val parts = listOf(theme, career, money, odds, effort, goal)
+        val total = parts.indices.sumOf { parts[it] * w[it] } / w.sum()
         return total.roundToInt().coerceIn(0, 100) to reasons
     }
 }
@@ -171,11 +201,33 @@ object Scoring {
 
 data class Slot(val start: LocalDateTime, val minutes: Int)
 
+/** One studio slot in the artist's own weekly template. day: 1 = Monday to 7 = Sunday. */
+data class TemplateSlot(val day: Int, val time: LocalTime, val minutes: Int)
+
 object Planner {
     fun time(s: String, def: LocalTime): LocalTime =
         try { LocalTime.parse(if (s.length == 4) "0$s" else s) } catch (e: Exception) { def }
 
     fun days(s: String): Set<Int> = s.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+
+    /** Template text looks like "2@17:00/40;6@10:00/160". */
+    fun parseTemplate(s: String): List<TemplateSlot> = s.split(";").mapNotNull { part ->
+        val d = part.substringBefore("@").trim().toIntOrNull()
+        val m = part.substringAfter("/", "").trim().toIntOrNull()
+        if (d == null || m == null || d !in 1..7 || m <= 0) null
+        else TemplateSlot(d, time(part.substringAfter("@").substringBefore("/").trim(), LocalTime.of(17, 0)), m)
+    }
+
+    fun formatTemplate(l: List<TemplateSlot>): String = l.joinToString(";") { "${it.day}@${it.time}/${it.minutes}" }
+
+    fun planFromTemplate(from: LocalDate, template: List<TemplateSlot>): List<Slot> = (0..6).flatMap { i ->
+        val date = from.plusDays(i.toLong())
+        template.filter { it.day == date.dayOfWeek.value }.map { Slot(date.atTime(it.time), it.minutes) }
+    }.sortedBy { it.start }
+
+    /** The suggested week, as a template the artist can then edit. */
+    fun suggestedTemplate(workDays: Set<Int>, workEnd: LocalTime, bufferMin: Int, bedtime: LocalTime, weeklyHours: Int): List<TemplateSlot> =
+        plan(LocalDate.of(2024, 1, 1), workDays, workEnd, bufferMin, bedtime, weeklyHours).map { TemplateSlot(it.start.dayOfWeek.value, it.start.toLocalTime(), it.minutes) }
 
     /**
      * Default week: short sessions on two work-day evenings after the recovery buffer,
@@ -254,7 +306,10 @@ object Texts {
 
     fun words(s: String): Int = s.trim().split(Regex("\\s+")).count { it.isNotBlank() }
 
-    fun jargonIn(s: String): List<String> { val l = s.lowercase(); return jargon.filter { l.contains(it) } }
+    fun jargonIn(s: String, extra: List<String> = emptyList()): List<String> {
+        val l = s.lowercase()
+        return (jargon + extra.map { it.trim().lowercase() }.filter { it.isNotBlank() }).distinct().filter { l.contains(it) }
+    }
 
     fun trimToWords(s: String, limit: Int): String {
         val w = s.trim().split(Regex("\\s+"))
