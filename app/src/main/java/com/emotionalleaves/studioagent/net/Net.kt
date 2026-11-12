@@ -63,7 +63,7 @@ object Robots {
 
     fun allowed(url: String): Boolean {
         val u = try { java.net.URI(url) } catch (e: Exception) { return false }
-        val host = u.scheme + "://" + u.host
+        val host = u.scheme + "://" + u.host + (if (u.port > 0) ":${u.port}" else "")
         val now = System.currentTimeMillis()
         val rules = cache[host]?.takeIf { now - it.first < 86_400_000 }?.second ?: run {
             val txt = Fetch.get("$host/robots.txt").orEmpty()
