@@ -336,8 +336,9 @@ fun Dim(label: String, valueIn: Double, onIn: (Double) -> Unit) {
 @Composable
 fun Tag(text: String, strong: Boolean = false) {
     Text(text.replace('_', ' ').replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelMedium,
-        color = if (strong) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.background(if (strong) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(4.dp)).padding(horizontal = 7.dp, vertical = 2.dp))
+        // Strong tags use the cobalt tint; tape yellow is kept for "do this now" only.
+        color = if (strong) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.background(if (strong) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(4.dp)).padding(horizontal = 7.dp, vertical = 2.dp))
 }
 
 /** A piece's picture in a list, or its initial on a quiet tile when there is no picture yet. */

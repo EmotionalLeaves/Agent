@@ -87,7 +87,7 @@ fun profileOf(works: List<Artwork>, docs: List<Doc>, facts: List<Fact>, ledger: 
 
 @Composable
 fun Flags(o: Opp) {
-    Scoring.trustFlags(o).forEach { Text("Worth knowing: $it", color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall) }
+    Scoring.trustFlags(o).forEach { Text("Worth knowing: " + it.replaceFirstChar { c -> c.lowercase() }, color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall) }
 }
 
 fun whereLine(o: Opp): String = listOf(o.organiser, if (o.online) "online" else o.city).filter { it.isNotBlank() }.joinToString(", ")
@@ -157,7 +157,7 @@ fun Calls(nav: NavController) {
                                     }
                                 }
                             } else FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = { scope.io({ status = it }) { val id = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$id") } } }) { Text("Yes") }
+                                Button(onClick = { scope.io({ status = it }) { val id = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$id") } } }) { Text("Yes, apply") }
                                 OutlinedButton(onClick = { saidNo = o.id }) { Text("No") }
                             }
                         }
@@ -286,7 +286,7 @@ fun CallDetail(nav: NavController, id: Long) {
                 }
             }) { Text("Read the page for me") }
         }
-        Expand("Edit the details", startOpen = o.title.isBlank() || o.title == "New call" || o.deadline <= 0) {
+        Expand("Details", startOpen = o.title.isBlank() || o.title == "New call" || o.deadline <= 0) {
         Field("Title", o.title, { save(o.copy(title = it)) })
         Choice("Kind of call", Ai.callKinds, o.kind) { save(o.copy(kind = it)) }
         Field("Deadline (YYYY-MM-DD)", deadlineText, { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0 || it.isBlank()) save(o.copy(deadline = ms)) })
@@ -294,8 +294,7 @@ fun CallDetail(nav: NavController, id: Long) {
         Choice("Reach", listOf("campus", "local", "online", "regional", "national", "international"), o.scope) { save(o.copy(scope = it)) }
         Field("Link", o.url, { save(o.copy(url = it.trim())) })
         SavedLine()
-        }
-        Expand("Everything else", startOpen = false) {
+
         Field("Organiser", o.organiser, { save(o.copy(organiser = it)) })
         Field("Venue", o.venue, { save(o.copy(venue = it)) })
         Field("City", o.city, { save(o.copy(city = it)) })

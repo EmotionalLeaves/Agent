@@ -588,7 +588,7 @@ fun Review(nav: NavController) {
         else coming.forEach { Check(false, fmtDate(it.date) + ", ${(it.endDate - it.date) / 60000} min", small = true) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { nav.navigate("week") }) { Text("Change studio times") }
-            if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("$pending to approve") }
+            if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("Approve $pending") }
         }
         Button(onClick = { st.lastReviewWeek = Engine.weekId(); nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Done for the week") }
     }

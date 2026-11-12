@@ -105,7 +105,7 @@ class ScreensTest {
         shot("12_piece", "work/${ids["wip"]}", "Small steps")
         shot("13_session_setup", "session", "Two-minute start")
         shot("14_calls", "calls", "Winter Open")
-        shot("15_call", "call/${ids["opp"]}", "Edit the details")
+        shot("15_call", "call/${ids["opp"]}", "Details")
         shot("16_application", "appl/${ids["draft"]}", "Statement")
         shot("17_materials", "materials", "Interview")
         shot("18_document", "doc/${ids["doc"]}", "Ready when")
@@ -142,7 +142,7 @@ class ScreensTest {
         shot("41_big_calls", "calls", "Winter Open")
         shot("42_big_session", "startnow", "Now: Block in the big shapes")
         shot("43_big_studio", "works", "Blue Hour")
-        shot("44_big_call", "call/${ids["opp"]}", "Edit the details")
+        shot("44_big_call", "call/${ids["opp"]}", "Details")
     }
 
     @Test fun moreScreens() {
