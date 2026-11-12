@@ -24,6 +24,15 @@ import java.util.Locale
 object Papers {
     private fun out(ctx: Context, name: String) = File(ImageTools.exportDir(ctx), name)
 
+    /** US Letter where it is the custom (the Americas' letter countries and the Philippines), A4 everywhere else. */
+    fun paper(country: String = Locale.getDefault().country): Pair<Int, Int> =
+        if (country.uppercase() in setOf("US", "CA", "MX", "PH", "CL", "CO", "VE", "GT", "CR", "PA", "DO", "PR", "SV", "NI", "HN", "BO")) 612 to 792 else 595 to 842
+
+    private fun pdf(ctx: Context, s: Settings, title: String, margin: Int = 60, footer: Boolean = true): Pdf {
+        val (w, h) = paper()
+        return if (footer) Pdf(ctx, name(s), title, w, h, margin) else Pdf(ctx, "", "", w, h, margin)
+    }
+
     private fun last(s: Settings) = Texts.clean(s.lastName).ifBlank { Texts.clean(s.firstName) }.ifBlank { "Artist" }
 
     /** Lastname_What.pdf, the one naming pattern for every document. */
@@ -80,7 +89,7 @@ object Papers {
     // ------------------------------------------------------------ CV
 
     fun cv(ctx: Context, s: Settings, facts: List<Fact>): File {
-        val pdf = Pdf(ctx, name(s), "Curriculum vitae")
+        val pdf = pdf(ctx, s, "Curriculum vitae")
         pdf.text(name(s), 26f, face = Pdf.Face.DISPLAY, gap = 4f)
         val about = listOfNotNull(s.born.takeIf { it.isNotBlank() }, place(s).takeIf { it.isNotBlank() }?.let { "Lives and works in $it" })
         if (about.isNotEmpty()) pdf.text(about.joinToString(". "), 10.5f, gap = 2f)
@@ -101,7 +110,7 @@ object Papers {
     // ------------------------------------------------------------ portfolio
 
     fun portfolio(ctx: Context, s: Settings, works: List<Artwork>, statement: String, count: Int): File {
-        val pdf = Pdf(ctx, name(s), "Portfolio").apply { coverPage = true }
+        val pdf = pdf(ctx, s, "Portfolio").apply { coverPage = true }
         val shown = works.take(count)
         // Cover: name, years, contact. Nothing else.
         pdf.space(220f)
@@ -133,7 +142,7 @@ object Papers {
      */
     fun imageList(ctx: Context, s: Settings, works: List<Artwork>, withPrices: Boolean, dir: File? = null, files: List<String> = emptyList()): File {
         val title = if (withPrices) "Price list" else "Image list"
-        val pdf = Pdf(ctx, name(s), title)
+        val pdf = pdf(ctx, s, title)
         pdf.text(title, 20f, face = Pdf.Face.DISPLAY, gap = 2f)
         pdf.text(name(s), 11f, grey = true, gap = 14f)
         works.forEachIndexed { i, a ->
@@ -149,7 +158,7 @@ object Papers {
 
     /** Eight labels to a page, two across, with light corner marks to cut along. */
     fun labels(ctx: Context, s: Settings, works: List<Artwork>): File {
-        val pdf = Pdf(ctx, "", "", margin = 36)
+        val pdf = pdf(ctx, s, "", margin = 36, footer = false)
         val cols = 2; val rows = 4
         val cw = pdf.width / cols.toFloat()
         val ch = (pdf.pageHeight - 72) / rows.toFloat()
@@ -182,7 +191,7 @@ object Papers {
     // ------------------------------------------------------------ certificate
 
     fun certificate(ctx: Context, s: Settings, a: Artwork, number: Int): File {
-        val pdf = Pdf(ctx, "", "", margin = 72)
+        val pdf = pdf(ctx, s, "", margin = 72, footer = false)
         pdf.newPage()
         val c = pdf.canvas()
         val frame = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = 0xFF2A2C2E.toInt(); strokeWidth = 0.8f }
@@ -211,7 +220,7 @@ object Papers {
 
     /** A receipt for a buyer: who sold what to whom, for how much, and that copyright stays with the artist. */
     fun billOfSale(ctx: Context, s: Settings, a: Artwork, buyer: String, price: Double, number: Int, date: Long = System.currentTimeMillis()): File {
-        val pdf = Pdf(ctx, name(s), "Bill of sale")
+        val pdf = pdf(ctx, s, "Bill of sale")
         val day = com.emotionalleaves.studioagent.ui.fmtDate(date)
         val year = Instant.ofEpochMilli(date).atZone(ZoneId.systemDefault()).year
         pdf.text("Bill of sale", 24f, face = Pdf.Face.DISPLAY, gap = 14f)
@@ -237,7 +246,7 @@ object Papers {
     // ------------------------------------------------------------ proposal
 
     fun proposal(ctx: Context, s: Settings, venue: String, seriesName: String, statement: String, bio: String, works: List<Artwork>): File {
-        val pdf = Pdf(ctx, name(s), "Exhibition proposal")
+        val pdf = pdf(ctx, s, "Exhibition proposal")
         pdf.text("Exhibition proposal", 24f, face = Pdf.Face.DISPLAY, gap = 4f)
         pdf.text(listOf(name(s), venue.takeIf { it.isNotBlank() }?.let { "for $it" }).filterNotNull().joinToString(" "), 12f, gap = 2f)
         contactLine(s).takeIf { it.isNotBlank() }?.let { pdf.text(it, 9.5f, grey = true) }
@@ -257,7 +266,7 @@ object Papers {
 
     /** A short document of plain text with a title, used for statements and answers inside an application. */
     fun textDoc(ctx: Context, s: Settings, title: String, sections: List<Pair<String, String>>, dir: File, file: String): File {
-        val pdf = Pdf(ctx, name(s), title)
+        val pdf = pdf(ctx, s, title)
         pdf.text(title, 20f, face = Pdf.Face.DISPLAY, gap = 2f)
         pdf.text(name(s), 11f, grey = true, gap = 14f)
         sections.forEach { (h, body) ->

@@ -402,6 +402,18 @@ object Texts {
         }
     }
 
+    private val filler = setOf("call", "calls", "open", "entry", "entries", "for", "artists", "artist", "the", "and", "annual", "submissions", "exhibition", "juried")
+
+    private fun words(t: String) = t.lowercase().replace(Regex("[^a-z0-9 ]"), " ").split(" ").filter { it.length > 2 && it !in filler }.toSet()
+
+    /** The same call seen on two listing sites: same deadline day and mostly the same words in the title. */
+    fun sameCall(aTitle: String, aDeadline: Long, bTitle: String, bDeadline: Long): Boolean {
+        if (aDeadline <= 0 || bDeadline <= 0 || aDeadline / 86_400_000L != bDeadline / 86_400_000L) return false
+        val a = words(aTitle); val b = words(bTitle)
+        if (a.isEmpty() || b.isEmpty()) return false
+        return a.intersect(b).size.toDouble() / minOf(a.size, b.size) >= 0.75
+    }
+
     fun dedupeKey(organiser: String, deadline: Long, title: String): String {
         val day = if (deadline > 0) deadline / 86_400_000L else 0
         val t = title.lowercase().replace(Regex("[^a-z0-9 ]"), "").split(" ").filter { it.length > 3 }.sorted().take(4).joinToString("")

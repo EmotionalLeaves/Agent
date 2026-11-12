@@ -192,6 +192,11 @@ class DomainTest {
         assertEquals(30.0, CallReader.fee("Application fee: $30. Grant of $5,000."), 0.0)
         assertEquals("exhibition", CallReader.read("Winter Juried Exhibit\nMenu: residencies, grants, jobs", today, zone, "x", 1L).kind)
         assertEquals("Creative Futures 2027", CallReader.cleanTitle("Home | Creative Futures 2027"))
+        // The same call on two listing sites is kept once; different calls on the same day are not merged.
+        val day = 1_800_000_000_000L
+        assertTrue(Texts.sameCall("Albuquerque Open 2027", day, "Call for Entries: Albuquerque Open 2027", day + 3600_000))
+        assertTrue(!Texts.sameCall("Albuquerque Open 2027", day, "Santa Fe Small Works 2027", day))
+        assertTrue(!Texts.sameCall("Albuquerque Open 2027", day, "Albuquerque Open 2027", day + 3 * 86_400_000L))
     }
 
     @Test fun draftsAreBuiltOnlyFromWhatTheArtistSaid() {

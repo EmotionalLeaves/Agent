@@ -154,6 +154,7 @@ object Engine {
         for (o in found) {
             if (o.dedupeKey in keys) continue
             if (o.url.isNotBlank() && existing.any { it.url == o.url && it.title.equals(o.title, true) }) continue
+            if (existing.any { Texts.sameCall(it.title, it.deadline, o.title, o.deadline) }) continue
             keys += o.dedupeKey
             dao.put(scored(o, p)); added++
         }
@@ -829,6 +830,16 @@ object Engine {
             val pend = pending()
             if (LocalDate.now().dayOfWeek == DayOfWeek.SUNDAY && pend.isNotEmpty())
                 Notifier.post(ctx, st, 100, "Waiting for your yes", "${pend.size} " + (if (pend.size == 1) "thing" else "things") + ", about 10 minutes. One tap each.", "admin")
+            // Once a week, on Saturday, one calm line if calls fit you: the app found them, you decide.
+            if (LocalDate.now().dayOfWeek == DayOfWeek.SATURDAY && now - st.lastCallsNotice > 5 * DAY) {
+                val fit = shortlist(dao.oppsNow(), profile(), now, stretchOk(now), st.shortlistSize)
+                if (fit.isNotEmpty()) {
+                    val soonest = fit.filter { it.deadline > 0 }.minByOrNull { it.deadline }
+                    Notifier.post(ctx, st, 102, if (fit.size == 1) "A call fits you this week" else "${fit.size} calls fit you this week",
+                        "Yes or No on each takes a minute." + (soonest?.let { " Nearest deadline: ${com.emotionalleaves.studioagent.ui.fmtDate(it.deadline)}." } ?: ""), "calls")
+                    st.lastCallsNotice = now
+                }
+            }
             dao.eventsNow().firstOrNull { it.type == "submit" && !it.done && it.date in (now - DAY)..(now + 2 * DAY) }?.let {
                 Notifier.post(ctx, st, 101, it.title, "This one has a deadline this week.", "appl/${it.applId}")
             }

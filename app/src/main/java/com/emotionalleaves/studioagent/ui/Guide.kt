@@ -135,6 +135,11 @@ fun Guide(nav: NavController) {
             Small("${steps.count { it.done && !it.optional }} of ${steps.count { !it.optional }} needed steps done" + (if (steps.any { it.optional }) ". ${steps.count { it.optional }} more are optional." else ""))
         }
         steps.groupBy { it.group }.forEach { (group, list) ->
+            // A finished group folds to one line, so the page shows what is left.
+            if (list.all { it.done } && list.none { it.id == openId }) {
+                Expand("$group: all ${list.size} done") { list.forEach { Check(true, it.title) } }
+                return@forEach
+            }
             H(group)
             Column {
                 list.forEachIndexed { idx, s ->
