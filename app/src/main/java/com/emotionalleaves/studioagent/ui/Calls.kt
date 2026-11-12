@@ -639,8 +639,8 @@ fun Sources(nav: NavController) {
     var status by remember { mutableStateOf(if (st.lastDaily > 0) "Last daily check ${fmtDate(st.lastDaily)}: ${st.lastDailyStatus}" else "") }
     var busy by remember { mutableStateOf(false) }
     Screen("Call sources", nav) {
-        Note("The safest sources are the two that need no page-reading: sharing a link or flyer into the app, and email alerts from listing sites you have signed up to.")
-        Note("Email source: the sender's address or domain (for example callforentry.org). Needs email set up in Settings. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
+        Intro("sources", "The safest sources need no page-reading: sharing a link or flyer into the app, and email alerts from listing sites you have signed up to.")
+        Explain("What can I add here?", "Email source: the sender's address or domain (for example callforentry.org). Needs email set up in Settings. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
         sources.forEach { s ->
             Panel {
                 Toggle("${s.name}  (${s.kind})", s.enabled) { on -> scope.io { dao.put(s.copy(enabled = on)) } }

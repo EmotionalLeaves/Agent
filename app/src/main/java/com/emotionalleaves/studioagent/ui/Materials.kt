@@ -174,7 +174,8 @@ fun Interview(nav: NavController) {
     var status by remember { mutableStateOf("") }
     val ownQuestion = remember { mutableStateOf("") }
     Screen("Interview", nav) {
-        Note("About 10 minutes, once. Talk or type. Rough is good: your own words are what make the writing sound like you. You can stop and come back.")
+        Intro("interview", "About 10 minutes, once. Talk or type. Rough is good: your own words are what make the writing sound like you. You can stop and come back.")
+        Small("${answers.values.count { it.isNotBlank() }} of ${interviewQuestions.size} answered. Rough is good; three is enough to start.")
         interviewQuestions.forEach { (k, q) ->
             key(k) {
                 Field(q, answers[k].orEmpty(), { answers[k] = it }, lines = 3, mic = true)
@@ -326,7 +327,7 @@ fun Facts(nav: NavController) {
     val text = remember { mutableStateOf("") }
     var editing by remember { mutableStateOf<Fact?>(null) }
     Screen("CV facts", nav) {
-        Note("Only true, finished things. A show you applied to is not a line; a show you were in is. Accepted applications are added here automatically.")
+        Intro("facts", "Only true, finished things. A show you applied to is not a line; a show you were in is. Accepted applications are added here automatically.")
         Explain("I have nothing to put here", "Everyone starts there. Add where you studied (or \"self-taught\"), and one or two skills or tools you really use. No exhibitions yet is normal and honest; the app adds each one as it happens, and early calls do not expect a long list.")
         Choice("Kind", Texts.factCategories, category) { category = it }
         key(editing?.id) { Whole("Year", year) { year = it } }

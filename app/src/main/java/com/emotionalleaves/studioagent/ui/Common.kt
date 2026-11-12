@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -176,8 +178,11 @@ fun fitLabel(score: Int): String = if (st.fitWords) Texts.fitWord(score) else "F
 @Composable
 fun Field(label: String, value: String, onValue: (String) -> Unit, lines: Int = 1, number: Boolean = false, secret: Boolean = false, mic: Boolean = false) {
     val speak = if (mic) rememberMic { said -> onValue((value + " " + said).trim()) } else null
+    // Short labels float inside the box; long ones (a question, a hint) sit above it so they never wrap into the border.
+    val above = label.length > 34
+    if (above) Text(label, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp))
     OutlinedTextField(
-        value = value, onValueChange = onValue, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
+        value = value, onValueChange = onValue, label = if (above || label.isBlank()) null else ({ Text(label) }), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest, focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
@@ -199,6 +204,8 @@ fun Field(label: String, state: MutableState<String>, lines: Int = 1, number: Bo
 
 @Composable
 fun Choice(label: String, options: List<String>, selected: String, onSelect: (String) -> Unit) {
+    // Two or three short options that switch a view read best as one joined bar, like tabs.
+    if (label.isBlank() && options.size in 2..3 && options.all { it.length <= 12 } && selected in options) { Segments(options, selected, onSelect); return }
     Column {
         if (label.isNotBlank()) Small(label)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -393,4 +400,21 @@ fun Status(text: String) {
     // What just happened, in a small tinted strip that is easy to spot and easy to ignore.
     if (text.isNotBlank()) Text(text, Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.secondaryContainer).padding(horizontal = 14.dp, vertical = 10.dp),
         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+}
+
+
+/** A joined bar of two or three options; the chosen one is filled. */
+@Composable
+fun Segments(options: List<String>, selected: String, onSelect: (String) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(cs.surfaceContainer).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        options.forEach { o ->
+            val on = o == selected
+            Box(Modifier.weight(1f).heightIn(min = 42.dp).clip(RoundedCornerShape(9.dp)).background(if (on) cs.surfaceContainerLowest else Color.Transparent)
+                .selectable(selected = on, role = Role.Tab) { onSelect(o) }, contentAlignment = Alignment.Center) {
+                Text(o.replace('_', ' ').replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, color = if (on) cs.onSurface else cs.onSurfaceVariant)
+            }
+        }
+    }
 }
