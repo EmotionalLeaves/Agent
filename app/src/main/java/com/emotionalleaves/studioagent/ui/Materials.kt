@@ -280,7 +280,7 @@ fun DocScreen(nav: NavController, id: Long) {
             Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = { generate() }) { Text("Write it for me") }
             if (!G.ai.ready) Note("Add an AI key in Settings to have this written for you, or type it yourself above.")
         }
-        if (d.type == "custom") TextButton(onClick = { scope.io { dao.del(d) }; nav.popBackStack() }) { Text("Delete this document") }
+        if (d.type == "custom") TextButton(onClick = { scope.remove(d.title.ifBlank { "the document" }, { dao.del(d) }, { dao.put(d) }); nav.popBackStack() }) { Text("Delete this document") }
     }
 }
 
@@ -315,7 +315,7 @@ fun Facts(nav: NavController) {
                     Row {
                         Text((if (f.year > 0) "${f.year}  " else "") + f.text, Modifier.weight(1f))
                         TextButton(onClick = { editing = f; category = f.category; year = f.year; text.value = f.text }) { Text("Edit") }
-                        TextButton(onClick = { scope.io { dao.del(f) } }) { Text("Remove") }
+                        TextButton(onClick = { scope.remove("the CV line", { dao.del(f) }, { dao.put(f) }) }) { Text("Remove") }
                     }
                 }
             }

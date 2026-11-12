@@ -260,7 +260,7 @@ fun CallDetail(nav: NavController, id: Long) {
         }
         Row {
             if (o.organiser.isNotBlank()) TextButton(onClick = { st.blocked = (st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() } + o.organiser).distinct().joinToString(", "); status = "Blocked. Their calls will be held back." }) { Text("Block this organiser") }
-            TextButton(onClick = { scope.io { dao.del(o) }; nav.popBackStack() }) { Text("Delete") }
+            TextButton(onClick = { scope.remove(o.title.ifBlank { "the call" }, { dao.del(o) }, { dao.put(o) }); nav.popBackStack() }) { Text("Delete") }
         }
     }
 }

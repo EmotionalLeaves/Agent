@@ -283,7 +283,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.certificate(ctx, st, w, (w.editionUsed + 1).coerceAtLeast(1)); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Certificate") }
             OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, listOf(w))) }) { Text("Print order") }
         }
-        TextButton(onClick = { scope.io { dao.del(w) }; nav.popBackStack() }) { Text("Delete this piece") }
+        TextButton(onClick = { scope.remove(w.title.ifBlank { "the piece" }, { dao.del(w) }, { dao.put(w) }); nav.popBackStack() }) { Text("Delete this piece") }
         }
     }
 }
@@ -378,7 +378,7 @@ fun Ideas(nav: NavController) {
                             withContext(Dispatchers.Main) { nav.navigate("work/$id") }
                         }
                     }) { Text("Start as a piece") }
-                    TextButton(onClick = { scope.io { dao.del(i) } }) { Text("Remove") }
+                    TextButton(onClick = { scope.remove("the idea", { dao.del(i) }, { dao.put(i) }) }) { Text("Remove") }
                 }
             }
         }

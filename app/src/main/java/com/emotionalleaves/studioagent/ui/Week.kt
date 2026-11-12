@@ -153,7 +153,7 @@ fun SessionsScreen(nav: NavController) {
                 if (s.nextStep.isNotBlank()) Note("Next time: ${s.nextStep}")
                 if (s.note.isNotBlank()) Note(s.note)
                 if (s.photoPath.isNotBlank()) PathImage(s.photoPath, Modifier.fillMaxWidth(), 500)
-                TextButton(onClick = { scope.io { dao.del(s) } }) { Text("Remove") }
+                TextButton(onClick = { scope.remove("the session", { dao.del(s) }, { dao.put(s) }) }) { Text("Remove") }
             }
         }
     }

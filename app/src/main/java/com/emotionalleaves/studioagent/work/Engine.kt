@@ -626,6 +626,9 @@ object Engine {
         step("outreach") { withContext(Dispatchers.IO) { sendOutreach(now) } }
         step("rescore") { rescore() }
         step("backup") { backupToGitHub(ctx) }
+        step("folder backup") {
+            if (st.backupFolder.isNotBlank()) withContext(Dispatchers.IO) { val name = com.emotionalleaves.studioagent.sys.Backup.toFolder(ctx, st); st.log("Backup saved to your folder: $name") }
+        }
         step("notify") {
             val pend = pending()
             if (LocalDate.now().dayOfWeek == DayOfWeek.SUNDAY && pend.isNotEmpty())

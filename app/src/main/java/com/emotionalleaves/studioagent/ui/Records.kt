@@ -242,6 +242,13 @@ fun SettingsScreen(nav: NavController, section: String) {
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null) scope.io({ status = it }) { Backup.export(ctx, st, uri); status = "Backup saved. Keys and passwords are not in it." }
     }
+    val folder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) {
+            try { ctx.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION) } catch (e: Exception) { }
+            st.backupFolder = uri.toString(); st.guideManual = st.guideManual + ",autobackup"
+            status = "Folder chosen. Tap Back up there now to make the first one."
+        }
+    }
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.io({ status = it }) {
             G.db.close()
@@ -403,6 +410,16 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Note("The portfolio page is published from Materials. The first time, also open the public repository's Settings, Pages, and choose the main branch.")
             }
             "backup" -> {
+                H("Automatic")
+                Text(if (tick >= 0 && st.backupFolder.isBlank()) "Not on yet. Choose a folder once and the app saves a backup there every day by itself, keeping the newest five."
+                else "On. " + (if (st.lastAutoBackup > 0) "Last backup ✓ ${fmtDate(st.lastAutoBackup)}." else "The first one is made with the next daily check, or now with the button below."))
+                Small("Pick a folder that is copied off the phone if you can (for example one inside Google Drive's files), so a lost phone does not lose your catalog.")
+                OutlinedButton(onClick = { folder.launch(null) }) { Text(if (st.backupFolder.isBlank()) "Choose a backup folder" else "Choose a different folder") }
+                if (st.backupFolder.isNotBlank()) Button(enabled = !busy, onClick = {
+                    busy = true; status = "Backing up..."
+                    scope.io({ status = "That did not work: $it"; busy = false }) { val name = Backup.toFolder(ctx, st); st.log("Backup saved to your folder: $name"); status = "Saved $name ✓"; busy = false }
+                }) { Text("Back up there now") }
+                H("By hand")
                 Note("One file with your whole catalog, images and settings. Keys and passwords are left out. Restoring replaces everything in the app with the file's contents.")
                 OutlinedButton(onClick = { export.launch("studio-agent-backup-${LocalDate.now()}.zip") }) { Text("Save a backup") }
                 OutlinedButton(onClick = { restore.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) { Text("Restore from a backup") }

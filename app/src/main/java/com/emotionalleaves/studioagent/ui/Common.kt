@@ -39,6 +39,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -83,6 +86,32 @@ fun CoroutineScope.io(onError: (String) -> Unit = {}, block: suspend () -> Unit)
     try { block() } catch (e: Exception) { withContext(Dispatchers.Main) { onError(e.message ?: "Something went wrong") } }
 }
 
+/** The last thing removed, kept for a short while so a slip of the thumb costs nothing. */
+object Undo {
+    val label = mutableStateOf("")
+    var restore: (suspend () -> Unit)? = null
+    fun clear() { label.value = ""; restore = null }
+}
+
+/** Removes something now and offers to put it back, instead of asking "are you sure?" beforehand. */
+fun CoroutineScope.remove(label: String, delete: suspend () -> Unit, restore: suspend () -> Unit) {
+    io { delete(); Undo.restore = restore; Undo.label.value = label }
+}
+
+@Composable
+fun UndoBar() {
+    val label = Undo.label.value
+    if (label.isBlank()) return
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(label) { delay(30_000); if (Undo.label.value == label) Undo.clear() }
+    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.inverseSurface)) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("Removed $label", Modifier.weight(1f), color = MaterialTheme.colorScheme.inverseOnSurface)
+            TextButton(onClick = { val r = Undo.restore; Undo.clear(); if (r != null) scope.io { r() } }) { Text("Put it back", color = MaterialTheme.colorScheme.inversePrimary) }
+        }
+    }
+}
+
 @Composable
 fun Screen(
     title: String, nav: NavController, back: Boolean = true,
@@ -91,6 +120,7 @@ fun Screen(
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        bottomBar = { UndoBar() },
         topBar = {
             TopAppBar(
                 title = { Text(title, maxLines = 1) },

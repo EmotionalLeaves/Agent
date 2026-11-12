@@ -14,6 +14,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.CalendarContract
+import android.provider.DocumentsContract
 import android.service.quicksettings.TileService
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -200,6 +201,35 @@ object Backup {
                 zip.putNextEntry(ZipEntry("settings.json")); zip.write(j.toString().toByteArray()); zip.closeEntry()
             }
         }
+    }
+
+    /**
+     * Writes today's backup into the folder you chose and keeps only the newest [keep].
+     * Returns the file name. Throws with a plain message if the folder can no longer be written to.
+     */
+    fun toFolder(ctx: Context, s: Settings, keep: Int = 5): String {
+        if (s.backupFolder.isBlank()) throw Exception("No backup folder chosen yet.")
+        val tree = Uri.parse(s.backupFolder)
+        val cr = ctx.contentResolver
+        val rootId = DocumentsContract.getTreeDocumentId(tree)
+        val root = DocumentsContract.buildDocumentUriUsingTree(tree, rootId)
+        val name = "studio-agent-" + LocalDate.now() + ".zip"
+        fun existing(): List<Pair<String, String>> {
+            val out = mutableListOf<Pair<String, String>>()
+            cr.query(DocumentsContract.buildChildDocumentsUriUsingTree(tree, rootId),
+                arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { c ->
+                while (c.moveToNext()) { val n = c.getString(1).orEmpty(); if (n.startsWith("studio-agent-") && n.endsWith(".zip")) out += c.getString(0) to n }
+            }
+            return out
+        }
+        existing().filter { it.second == name }.forEach { DocumentsContract.deleteDocument(cr, DocumentsContract.buildDocumentUriUsingTree(tree, it.first)) }
+        val doc = DocumentsContract.createDocument(cr, root, "application/zip", name) ?: throw Exception("The folder would not accept a new file. Choose the folder again.")
+        export(ctx, s, doc)
+        existing().sortedByDescending { it.second }.drop(keep).forEach {
+            try { DocumentsContract.deleteDocument(cr, DocumentsContract.buildDocumentUriUsingTree(tree, it.first)) } catch (e: Exception) { }
+        }
+        s.lastAutoBackup = System.currentTimeMillis()
+        return name
     }
 
     /** Restores a backup over the current data. The caller must close the database first and restart the app after. */

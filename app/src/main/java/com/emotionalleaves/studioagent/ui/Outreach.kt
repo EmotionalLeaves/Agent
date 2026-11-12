@@ -233,6 +233,6 @@ fun ContactScreen(nav: NavController, id: Long) {
                 }
             }) { Text("Build an exhibition proposal PDF") }
         }
-        TextButton(onClick = { scope.io { dao.del(c) }; nav.popBackStack() }) { Text("Delete") }
+        TextButton(onClick = { scope.remove(c.venue.ifBlank { c.name.ifBlank { "the contact" } }, { dao.del(c) }, { dao.put(c) }); nav.popBackStack() }) { Text("Delete") }
     }
 }
