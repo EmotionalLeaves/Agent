@@ -1,0 +1,11 @@
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_button"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#2F5D50"
+    android:gravity="center"
+    android:padding="8dp"
+    android:text="@string/start_session"
+    android:textColor="#FFFFFF"
+    android:textSize="16sp"
+    android:textStyle="bold" />

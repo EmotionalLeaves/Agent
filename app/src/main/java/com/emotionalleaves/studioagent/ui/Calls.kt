@@ -1,0 +1,549 @@
+package com.emotionalleaves.studioagent.ui
+
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.net.Uri
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavController
+import com.emotionalleaves.studioagent.G
+import com.emotionalleaves.studioagent.ai.Ai
+import com.emotionalleaves.studioagent.data.Artwork
+import com.emotionalleaves.studioagent.data.Doc
+import com.emotionalleaves.studioagent.data.Fact
+import com.emotionalleaves.studioagent.data.Ledger
+import com.emotionalleaves.studioagent.data.Opp
+import com.emotionalleaves.studioagent.data.Source
+import com.emotionalleaves.studioagent.domain.Levels
+import com.emotionalleaves.studioagent.domain.Planner
+import com.emotionalleaves.studioagent.domain.Profile
+import com.emotionalleaves.studioagent.domain.Scoring
+import com.emotionalleaves.studioagent.domain.Texts
+import com.emotionalleaves.studioagent.media.ImageTools
+import com.emotionalleaves.studioagent.net.Fetch
+import com.emotionalleaves.studioagent.sys.Share
+import com.emotionalleaves.studioagent.work.Engine
+import com.emotionalleaves.studioagent.work.Papers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.io.File
+import java.time.LocalDate
+
+fun profileOf(works: List<Artwork>, docs: List<Doc>, facts: List<Fact>, ledger: List<Ledger>) = Profile(
+    level = Levels.level(Engine.statsOf(works, docs, facts)), route = st.route, availableWorks = works.count { Engine.available(it) },
+    feeBudgetLeft = (st.feeBudget - Engine.feesThisMonth(ledger)).coerceAtLeast(0.0), goals = st.goals,
+    blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts()
+)
+
+@Composable
+fun Flags(o: Opp) {
+    Scoring.trustFlags(o).forEach { Text("! $it", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+}
+
+fun whereLine(o: Opp): String = listOf(o.organiser, if (o.online) "online" else o.city).filter { it.isNotBlank() }.joinToString("  ·  ")
+
+@Composable
+fun Calls(nav: NavController) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val opps by dao.opps().collectAsState(emptyList())
+    val works by dao.artworks().collectAsState(emptyList())
+    val docs by dao.docs().collectAsState(emptyList())
+    val facts by dao.facts().collectAsState(emptyList())
+    val ledger by dao.ledger().collectAsState(emptyList())
+    val appls by dao.appls().collectAsState(emptyList())
+    val tick by st.changed.collectAsState()
+    var tab by remember { mutableStateOf("this week") }
+    var status by remember { mutableStateOf("") }
+    var saidNo by remember { mutableStateOf(0L) }
+    val paste = remember { mutableStateOf("") }
+    val p = remember(works, docs, facts, ledger, tick) { profileOf(works, docs, facts, ledger) }
+    val today = LocalDate.now()
+
+    Screen("Calls", nav, back = false) {
+        Choice("", listOf("this week", "all", "applied"), tab) { tab = it }
+        Status(status)
+        when (tab) {
+            "this week" -> {
+                val list = Engine.shortlist(opps, p, now(), Engine.stretchOk(now()))
+                Note("Level ${p.level}: " + when (p.level) {
+                    0 -> "free calls only, online or on your doorstep. The priority right now is making the series."
+                    1 -> "local, campus and community calls, free or under $25."
+                    2 -> "regional juried shows, up to $40 a fee."
+                    else -> "competitive calls, judged case by case."
+                })
+                if (list.isEmpty()) Panel { Text("No calls waiting for you."); Note("Share a link or a flyer photo into Studio Agent from any app, paste one below, or add sources under More.") }
+                list.forEach { o ->
+                    key(o.id) {
+                        Panel {
+                            Text(o.title, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth())
+                            Note(whereLine(o))
+                            Text("Fit ${o.fitScore}" + (if (o.deadline > 0) "  ·  " + Planner.weekendsLeft(today, Engine.date(o.deadline)) else ""))
+                            o.fitReasons.lines().filter { it.isNotBlank() }.take(4).forEach { Note("· $it") }
+                            Flags(o)
+                            if (saidNo == o.id) {
+                                Choice("Why not? (optional, it teaches the ranking)", listOf("too far", "fee", "wrong vibe", "no reason"), "") { r ->
+                                    saidNo = 0L
+                                    if (r != "no reason") st.addNoReason(r)
+                                    scope.io { dao.put(o.copy(status = "no", noReason = r)); Engine.rescore() }
+                                }
+                            } else Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(onClick = { scope.io({ status = it }) { val id = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$id") } } }) { Text("Yes") }
+                                OutlinedButton(onClick = { saidNo = o.id }) { Text("No") }
+                                TextButton(onClick = { scope.io { dao.put(o.copy(status = "later")) } }) { Text("Not this year") }
+                                TextButton(onClick = { nav.navigate("call/${o.id}") }) { Text("Details") }
+                            }
+                        }
+                    }
+                }
+                H("Add a call")
+                Field("Paste a link or the call text", paste, lines = 2)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(enabled = paste.value.isNotBlank(), onClick = {
+                        val t = paste.value.trim(); status = "Reading it..."
+                        scope.io({ status = it }) {
+                            val isUrl = t.startsWith("http") && !t.contains(" ")
+                            if (!G.ai.ready) {
+                                val id = dao.put(Engine.scored(Opp(title = if (isUrl) "Call from link" else t.lines().first().take(60), url = if (isUrl) t else "", rawText = t, sourceName = "Pasted", createdAt = now()), p))
+                                status = "Saved. Without an AI key the details are yours to fill in."
+                                withContext(Dispatchers.Main) { paste.value = ""; nav.navigate("call/$id") }
+                            } else {
+                                val n = Engine.ingest(if (isUrl) "Link: $t\n" + Fetch.pageText(t) else t, "Pasted")
+                                status = if (n > 0) "Added $n." else "No new call found in that."
+                                withContext(Dispatchers.Main) { paste.value = "" }
+                            }
+                        }
+                    }) { Text("Add") }
+                    OutlinedButton(onClick = { scope.io { val id = dao.put(Opp(title = "New call", sourceName = "By hand", createdAt = now())); withContext(Dispatchers.Main) { nav.navigate("call/$id") } } }) { Text("By hand") }
+                }
+            }
+            "all" -> {
+                Note("Everything found, including calls the rules are holding back and why.")
+                opps.filter { it.status in setOf("new", "later", "no", "expired") }.forEach { o ->
+                    val why = Scoring.ineligible(o, p, now())
+                    Panel(onClick = { nav.navigate("call/${o.id}") }) {
+                        Text(o.title, fontWeight = FontWeight.SemiBold)
+                        Note(whereLine(o) + "  ·  " + fmtDate(o.deadline) + "  ·  " + (if (o.fee > 0) money(o.fee) else "free"))
+                        Note(when { o.status != "new" -> "You said: ${o.status}"; why.isEmpty() -> "Eligible, fit ${o.fitScore}"; else -> "Held back: " + why.joinToString("; ") })
+                        Flags(o)
+                    }
+                }
+            }
+            else -> {
+                if (appls.isEmpty()) Note("Nothing applied to yet.")
+                appls.forEach { a ->
+                    val o = opps.firstOrNull { it.id == a.oppId }
+                    Panel(onClick = { nav.navigate("appl/${a.id}") }) {
+                        Text(o?.title ?: "Application", fontWeight = FontWeight.SemiBold)
+                        Note(when (a.status) {
+                            "submitted" -> "Submitted ${fmtDate(a.submittedAt)}. Done. The result will come to you."
+                            "accepted" -> "Accepted"
+                            "declined" -> "Not this time"
+                            "sending" -> "Sending shortly"
+                            else -> "Pack in progress"
+                        })
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CallDetail(nav: NavController, id: Long) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val opps by dao.opps().collectAsState(emptyList())
+    val works by dao.artworks().collectAsState(emptyList())
+    val docs by dao.docs().collectAsState(emptyList())
+    val facts by dao.facts().collectAsState(emptyList())
+    val ledger by dao.ledger().collectAsState(emptyList())
+    val loaded = opps.firstOrNull { it.id == id }
+    if (loaded == null) { Screen("Call", nav) { Note("One moment") }; return }
+    var o by remember(id) { mutableStateOf(loaded) }
+    var status by remember { mutableStateOf("") }
+    var deadlineText by remember { mutableStateOf(if (loaded.deadline > 0) Engine.date(loaded.deadline).toString() else "") }
+    val p = profileOf(works, docs, facts, ledger)
+    fun save(x: Opp) { val s = Engine.scored(x.copy(dedupeKey = Texts.dedupeKey(x.organiser, x.deadline, x.title)), p); o = s; scope.io { dao.put(s) } }
+    val why = Scoring.ineligible(o, p, now())
+
+    Screen(o.title.ifBlank { "Call" }, nav) {
+        Panel(strong = true) {
+            Text("Fit ${o.fitScore} of 100", fontWeight = FontWeight.SemiBold)
+            o.fitReasons.lines().filter { it.isNotBlank() }.forEach { Text("· $it") }
+            if (why.isNotEmpty()) Text("Held back: " + why.joinToString("; "), color = MaterialTheme.colorScheme.error)
+            Flags(o)
+        }
+        Status(status)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (o.status in setOf("new", "later", "no")) Button(onClick = { scope.io({ status = it }) { val aid = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Yes, apply") }
+            if (o.url.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, o.url) }) { Text("Open link") }
+            if (o.url.isNotBlank() && G.ai.ready) OutlinedButton(onClick = {
+                status = "Reading the page..."
+                scope.io({ status = it }) {
+                    val found = G.ai.extractCalls("Link: ${o.url}\n" + Fetch.pageText(o.url), o.sourceName).firstOrNull() ?: throw Exception("Could not find a call on that page. It may load its content in a way the app cannot read; fill in the details by hand.")
+                    val merged = Engine.scored(found.copy(id = o.id, url = o.url.ifBlank { found.url }, status = o.status, createdAt = o.createdAt), p)
+                    o = merged; dao.put(merged); status = "Details filled in from the page. Check the deadline and fee against the page yourself."
+                }
+            }) { Text("Read the page for me") }
+        }
+        H("Details")
+        Field("Title", o.title, { save(o.copy(title = it)) })
+        Field("Organiser", o.organiser, { save(o.copy(organiser = it)) })
+        Field("Venue", o.venue, { save(o.copy(venue = it)) })
+        Field("City", o.city, { save(o.copy(city = it)) })
+        Toggle("Online only", o.online) { save(o.copy(online = it)) }
+        Choice("Reach", listOf("campus", "local", "online", "regional", "national", "international"), o.scope) { save(o.copy(scope = it)) }
+        Field("Deadline (YYYY-MM-DD)", deadlineText, { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0 || it.isBlank()) save(o.copy(deadline = ms)) })
+        Num("Entry fee, $", o.fee) { save(o.copy(fee = it)) }
+        Field("Prizes", o.prizes, { save(o.copy(prizes = it)) })
+        Field("Theme", o.theme, { save(o.copy(theme = it)) }, lines = 2)
+        Field("Jurors", o.jurors, { save(o.copy(jurors = it)) })
+        Field("Mediums accepted", o.mediums, { save(o.copy(mediums = it)) })
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.weight(1f)) { Whole("Fewest works", o.minWorks) { save(o.copy(minWorks = it)) } }
+            Column(Modifier.weight(1f)) { Whole("Most works", o.maxWorks) { save(o.copy(maxWorks = it)) } }
+        }
+        Field("Image rules (for example: JPEG, 1920 px, under 5 MB)", o.imageSpecs, { save(o.copy(imageSpecs = it)) })
+        Whole("Statement word limit", o.statementLimit) { save(o.copy(statementLimit = it)) }
+        Field("Link", o.url, { save(o.copy(url = it.trim())) })
+        Field("Send entries to (email, if entries go by email)", o.email, { save(o.copy(email = it.trim())) })
+        Toggle("Accepts prints of digital work", o.acceptsPrints) { save(o.copy(acceptsPrints = it)) }
+        Toggle("Accepts screen-based work", o.acceptsNewMedia) { save(o.copy(acceptsNewMedia = it)) }
+        Toggle("Paying the fee guarantees a place", o.guaranteed) { save(o.copy(guaranteed = it)) }
+        Toggle("Terms take broad rights to my images", o.rightsGrab) { save(o.copy(rightsGrab = it)) }
+        Note("Saved automatically.")
+        Row {
+            if (o.organiser.isNotBlank()) TextButton(onClick = { st.blocked = (st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() } + o.organiser).distinct().joinToString(", "); status = "Blocked. Their calls will be held back." }) { Text("Block this organiser") }
+            TextButton(onClick = { scope.io { dao.del(o) }; nav.popBackStack() }) { Text("Delete") }
+        }
+    }
+}
+
+@Composable
+fun ApplScreen(nav: NavController, id: Long) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val appls by dao.appls().collectAsState(emptyList())
+    val opps by dao.opps().collectAsState(emptyList())
+    val works by dao.artworks().collectAsState(emptyList())
+    val ledger by dao.ledger().collectAsState(emptyList())
+    val events by dao.events().collectAsState(emptyList())
+    val loaded = appls.firstOrNull { it.id == id }
+    val o = opps.firstOrNull { it.id == loaded?.oppId }
+    if (loaded == null || o == null) { Screen("Application", nav) { Note("One moment") }; return }
+    var status by remember { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    val resultText = remember { mutableStateOf("") }
+    val feeLeft = (st.feeBudget - Engine.feesThisMonth(ledger)).coerceAtLeast(0.0)
+
+    if (loaded.status in setOf("submitted", "accepted", "declined")) {
+        val chosen = works.filter { it.id in Engine.workIds(loaded) }
+        Screen(o.title, nav) {
+            Panel(strong = true) {
+                Text(when (loaded.status) { "accepted" -> "Accepted"; "declined" -> "Not this time"; else -> "Submitted. Done." }, fontWeight = FontWeight.SemiBold)
+                Text("Sent ${fmtDate(loaded.submittedAt)}.")
+                if (loaded.proofText.isNotBlank()) Note(loaded.proofText)
+                if (loaded.status == "submitted") Note("This application is locked. There is nothing left to check: the result comes to you" + (if (st.mailReady) " automatically." else " by email, and you record it below."))
+                if (loaded.status == "declined") Note("The works are free again and will be offered to the next call that fits.")
+            }
+            if (loaded.proofPath.isNotBlank()) PathImage(loaded.proofPath, Modifier.fillMaxWidth())
+            chosen.forEach { Note("· " + Papers.caption(it)) }
+            Status(status)
+            if (loaded.status == "submitted") {
+                H("Result")
+                Field("Paste the result email (optional: builds your checklist)", resultText, lines = 3)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(enabled = !busy, onClick = { busy = true; status = "Setting up your checklist..."; scope.io({ status = it; busy = false }) { Engine.recordResult(ctx, loaded, true, resultText.value); status = ""; busy = false } }) { Text("Accepted") }
+                    OutlinedButton(enabled = !busy, onClick = { scope.io { Engine.recordResult(ctx, loaded, false, resultText.value) } }) { Text("Not this time") }
+                }
+            }
+            if (loaded.status == "accepted") {
+                H("Checklist")
+                events.filter { it.applId == id && it.type == "task" }.forEach { e ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = e.done, onCheckedChange = { c -> scope.io { dao.put(e.copy(done = c)) } })
+                        Column { Text(e.title); if (e.date > 0) Note(fmtDate(e.date)) }
+                    }
+                }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.labels(ctx, st, chosen); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Wall labels") }
+                    OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.imageList(ctx, st, chosen, true); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Price list") }
+                    OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, chosen)) }) { Text("Print and framing order") }
+                }
+                if (o.commission > 0) Note("Commission ${"%.0f".format(o.commission)}%: " + chosen.filter { it.price > 0 && !it.nfs }.joinToString("; ") { "${it.title}: you receive ${money(it.price * (1 - o.commission / 100))}" })
+                Note("Shipping: box about 4 in larger than the work on every side, corner protectors, glassine over the face, never tape on the work. Take condition photos before it leaves.")
+            }
+        }
+        return
+    }
+
+    var a by remember(id) { mutableStateOf(loaded) }
+    fun save(x: com.emotionalleaves.studioagent.data.Appl) { a = x; scope.io { dao.put(x) } }
+    val checks = Engine.checklist(a, o, works, feeLeft, now())
+    val allGreen = checks.all { it.second }
+    val chosenIds = Engine.workIds(a)
+    val files = remember(a.packDir, status) { Engine.packFiles(a) }
+
+    Screen(o.title, nav) {
+        Note((if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.")
+        H("Works")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            works.filter { Engine.available(it) || it.id in chosenIds }.forEach { w ->
+                FilterChip(selected = w.id in chosenIds, onClick = {
+                    val next = if (w.id in chosenIds) chosenIds - w.id else chosenIds + w.id
+                    save(a.copy(workIds = next.joinToString(","), packDir = ""))
+                }, label = { Text(w.title.ifBlank { "Untitled #${w.id}" }) })
+            }
+        }
+        H("Statement")
+        Field("Statement" + (if (o.statementLimit > 0) " (limit ${o.statementLimit} words)" else ""), a.statement, { save(a.copy(statement = it, packDir = "")) }, lines = 5)
+        Note("${Texts.words(a.statement)} words")
+        Field("How these works fit this call (2 to 3 sentences)", a.themeText, { save(a.copy(themeText = it, packDir = "")) }, lines = 3)
+        if (G.ai.ready && a.revisions < st.revisionLimit + 1) TextButton(enabled = !busy, onClick = {
+            busy = true; status = "Writing..."
+            scope.io({ status = it; busy = false }) {
+                val t = G.ai.themeParagraph(o, Engine.factsText(chosenIds), Engine.voice())
+                val x = a.copy(themeText = t, revisions = a.revisions + 1, packDir = ""); a = x; dao.put(x); status = ""; busy = false
+            }
+        }) { Text(if (a.themeText.isBlank()) "Write the fit paragraph for me" else "Rewrite it") }
+
+        Panel(strong = allGreen) {
+            Text(if (allGreen) "Every check passes. This is ready." else "Ready when these are all true", fontWeight = FontWeight.SemiBold)
+            checks.forEach { (label, ok) -> Text((if (ok) "✓ " else "○ ") + label) }
+        }
+        Status(status)
+
+        H("Pack")
+        if (files.isEmpty()) Button(enabled = !busy && chosenIds.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = {
+            busy = true; status = "Building the pack..."
+            scope.io({ status = it; busy = false }) { val dir = Engine.buildPack(ctx, a, o); a = a.copy(packDir = dir.absolutePath); status = "Pack built."; busy = false }
+        }) { Text("Build the pack") }
+        else {
+            files.forEach { Note("· ${it.name}  (${it.length() / 1024} KB)") }
+            OutlinedButton(onClick = { Share.files(ctx, files) }) { Text("Share or save the files") }
+        }
+
+        H("Send")
+        Choice("This call takes entries by", listOf("email", "web"), a.method) { save(a.copy(method = it)) }
+        if (o.fee > 0) {
+            if (a.feePaid > 0) Note("Fee of ${money(a.feePaid)} logged.")
+            else OutlinedButton(onClick = {
+                scope.io { dao.put(Ledger(kind = "fee", amount = -o.fee, date = now(), note = o.title, oppId = o.id)) }
+                save(a.copy(feePaid = o.fee))
+            }) { Text("I paid the ${money(o.fee)} fee: log it") }
+            Note("The app never pays for you. You pay on the organiser's page; it keeps the record.")
+        }
+        if (a.method == "email") {
+            Field("To", a.emailTo, { save(a.copy(emailTo = it.trim())) })
+            Field("Subject", a.emailSubject, { save(a.copy(emailSubject = it)) })
+            Field("Email", a.emailBody, { save(a.copy(emailBody = it)) }, lines = 6)
+            if (a.status == "sending") Panel(strong = true) {
+                Text("Approved. It sends in about 10 minutes.")
+                OutlinedButton(onClick = { Engine.cancelSend(ctx, a.id); save(a.copy(status = "ready")) }) { Text("Undo") }
+            } else if (st.mailReady) Button(enabled = allGreen && files.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = {
+                save(a.copy(status = "sending")); Engine.queueSend(ctx, a.id)
+            }) { Text("Approve and send") }
+            else {
+                Button(enabled = allGreen && files.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = { Share.email(ctx, a.emailTo, a.emailSubject, a.emailBody, files) }) { Text("Open in my mail app, filled in") }
+                OutlinedButton(onClick = { scope.io { Engine.markSubmitted(a, "Sent from your mail app to ${a.emailTo} on ${LocalDate.now()}.") } }) { Text("I sent it: lock as done") }
+                Note("Add your email and an app password in Settings and the app sends it for you instead.")
+            }
+        } else {
+            Button(enabled = o.url.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = { nav.navigate("web/${a.id}") }) { Text("Open the entry form and fill it") }
+            OutlinedButton(onClick = { scope.io { Engine.markSubmitted(a, "Submitted on the organiser's site on ${LocalDate.now()}.") } }) { Text("I submitted it: lock as done") }
+        }
+        if (!allGreen) Note("Sending unlocks when every check above passes.")
+    }
+}
+
+private const val FILL_JS = """
+(function(d){
+ function key(el){var s=(el.name||'')+' '+(el.id||'')+' '+(el.placeholder||'')+' '+(el.getAttribute('aria-label')||'');
+  if(el.labels&&el.labels.length){s+=' '+el.labels[0].innerText;} return s.toLowerCase();}
+ function setv(el,v){var p=el.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;
+  var set=Object.getOwnPropertyDescriptor(p,'value').set; set.call(el,v);
+  el.dispatchEvent(new Event('input',{bubbles:true})); el.dispatchEvent(new Event('change',{bubbles:true}));}
+ var rules=[['first',d.first],['last',d.last],['surname',d.last],['email',d.email],['phone',d.phone],['website',d.website],['url',d.website],
+  ['portfolio',d.website],['city',d.city],['statement',d.statement],['bio',d.bio],['title',d.title],['medium',d.medium],
+  ['dimension',d.dims],['size',d.dims],['year',d.year],['price',d.price],['name',d.name]];
+ var n=0; var els=document.querySelectorAll('input[type=text],input[type=email],input[type=tel],input[type=url],input:not([type]),textarea');
+ els.forEach(function(el){ if(el.value){return;} var k=key(el);
+  for(var i=0;i<rules.length;i++){ if(rules[i][1] && k.indexOf(rules[i][0])>=0){ setv(el,rules[i][1]); n++; break; } } });
+ return n;
+})
+"""
+
+@Composable
+fun WebFill(nav: NavController, id: Long) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val appls by dao.appls().collectAsState(emptyList())
+    val opps by dao.opps().collectAsState(emptyList())
+    val works by dao.artworks().collectAsState(emptyList())
+    val docs by dao.docs().collectAsState(emptyList())
+    val a = appls.firstOrNull { it.id == id }
+    val o = opps.firstOrNull { it.id == a?.oppId }
+    var web by remember { mutableStateOf<WebView?>(null) }
+    var chooser by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
+    val picked = remember { mutableStateListOf<String>() }
+    var status by remember { mutableStateOf("Sign in if the site asks; it stays signed in here. Then tap Fill.") }
+
+    Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        topBar = {
+            TopAppBar(
+                title = { Text("Entry form", maxLines = 1) },
+                navigationIcon = { IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                actions = {
+                    TextButton(onClick = {
+                        if (a != null) {
+                            val first = works.firstOrNull { it.id in Engine.workIds(a) }
+                            val bio = docs.filter { it.type == "bio" && it.text.isNotBlank() }.maxByOrNull { if (it.approved) 1 else 0 }?.text.orEmpty()
+                            val d = JSONObject().put("first", st.firstName).put("last", st.lastName).put("name", st.fullName).put("email", st.email)
+                                .put("phone", st.phone).put("website", st.website).put("city", st.city).put("statement", a.statement).put("bio", bio)
+                                .put("title", first?.title.orEmpty()).put("medium", first?.let { Papers.medium(it) }.orEmpty())
+                                .put("dims", first?.let { Texts.dims(it.widthIn, it.heightIn) }.orEmpty())
+                                .put("year", first?.year?.takeIf { it > 0 }?.toString().orEmpty())
+                                .put("price", first?.price?.takeIf { it > 0 }?.let { "%.0f".format(it) }.orEmpty())
+                            web?.evaluateJavascript(FILL_JS + "(" + d.toString() + ")") { r -> status = "Filled ${r ?: "0"} fields. Read each one, then press the site's own submit button." }
+                        }
+                    }) { Text("Fill") }
+                    TextButton(onClick = {
+                        val w = web
+                        if (a != null && w != null) scope.io({ status = it }) {
+                            val f = File(ImageTools.mediaDir(ctx), "proof_${a.id}.jpg")
+                            val shot = withContext(Dispatchers.Main) {
+                                val b = Bitmap.createBitmap(w.width.coerceAtLeast(1), w.height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+                                w.draw(Canvas(b)); b
+                            }
+                            ImageTools.saveJpeg(shot, f, 85)
+                            val proof = withContext(Dispatchers.Main) { "Submitted on ${w.title.orEmpty()} (${w.url.orEmpty()}) on ${LocalDate.now()}." }
+                            Engine.markSubmitted(a, proof, f.absolutePath)
+                            withContext(Dispatchers.Main) { nav.navigate("appl/${a.id}") { popUpTo("calls") } }
+                        }
+                    }) { Text("Submitted") }
+                }
+            )
+        }
+    ) { pad ->
+        Column(Modifier.padding(pad).fillMaxSize()) {
+            Text(status, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
+            val cb = chooser
+            if (cb != null && a != null) {
+                Column(Modifier.padding(horizontal = 12.dp)) {
+                    Text("The form is asking for a file. Pick from your pack:", fontWeight = FontWeight.SemiBold)
+                    Engine.packFiles(a).forEach { f ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = f.absolutePath in picked, onCheckedChange = { c -> if (c) picked.add(f.absolutePath) else picked.remove(f.absolutePath) })
+                            Text(f.name)
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { cb.onReceiveValue(picked.map { Uri.fromFile(File(it)) }.toTypedArray()); picked.clear(); chooser = null }) { Text("Attach") }
+                        TextButton(onClick = { cb.onReceiveValue(null); picked.clear(); chooser = null }) { Text("Cancel") }
+                    }
+                }
+            }
+            if (o != null && o.url.isNotBlank()) {
+                val url = if (o.url.startsWith("http")) o.url else "https://${o.url}"
+                AndroidView(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    factory = { c ->
+                        WebView(c).apply {
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            webViewClient = WebViewClient()
+                            webChromeClient = object : WebChromeClient() {
+                                override fun onShowFileChooser(view: WebView?, callback: ValueCallback<Array<Uri>>?, params: WebChromeClient.FileChooserParams?): Boolean {
+                                    chooser?.onReceiveValue(null)
+                                    chooser = callback
+                                    return true
+                                }
+                            }
+                            loadUrl(url)
+                            web = this
+                        }
+                    }
+                )
+            } else Text("This call has no link yet. Add one on the call's details page.", Modifier.padding(16.dp))
+        }
+    }
+}
+
+@Composable
+fun Sources(nav: NavController) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sources by dao.sources().collectAsState(emptyList())
+    val name = remember { mutableStateOf("") }
+    val value = remember { mutableStateOf("") }
+    var kind by remember { mutableStateOf("email") }
+    var status by remember { mutableStateOf(if (st.lastDaily > 0) "Last daily check ${fmtDate(st.lastDaily)}: ${st.lastDailyStatus}" else "") }
+    var busy by remember { mutableStateOf(false) }
+    Screen("Call sources", nav) {
+        Note("The safest sources are the two that need no page-reading: sharing a link or flyer into the app, and email alerts from listing sites you have signed up to.")
+        Note("Email source: the sender's address or domain (for example callforentry.org). Needs email set up in Settings. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
+        sources.forEach { s ->
+            Panel {
+                Toggle("${s.name}  (${s.kind})", s.enabled) { on -> scope.io { dao.put(s.copy(enabled = on)) } }
+                Note(s.url)
+                if (s.lastStatus.isNotBlank()) Note("${fmtDate(s.lastFetched)}: ${s.lastStatus}")
+                TextButton(onClick = { scope.io { dao.del(s) } }) { Text("Remove") }
+            }
+        }
+        H("Add a source")
+        Choice("Kind", listOf("email", "url"), kind) { kind = it }
+        Field("Name", name)
+        Field(if (kind == "email") "Sender address or domain" else "Page address", value)
+        Button(enabled = name.value.isNotBlank() && value.value.isNotBlank(), onClick = {
+            val s = Source(name = name.value.trim(), kind = kind, url = value.value.trim()); name.value = ""; value.value = ""
+            scope.io { dao.put(s) }
+        }) { Text("Add") }
+        Status(status)
+        OutlinedButton(enabled = !busy, onClick = {
+            busy = true; status = "Running the daily check..."
+            scope.io({ status = it; busy = false }) { status = Engine.runDaily(ctx); busy = false }
+        }) { Text("Run the daily check now") }
+        if (!G.ai.ready) Note("Reading calls out of pages and emails needs an AI key (Settings).")
+    }
+}

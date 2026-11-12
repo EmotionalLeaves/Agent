@@ -1,0 +1,266 @@
+package com.emotionalleaves.studioagent.ui
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.emotionalleaves.studioagent.G
+import com.emotionalleaves.studioagent.data.Doc
+import com.emotionalleaves.studioagent.data.Fact
+import com.emotionalleaves.studioagent.domain.Texts
+import com.emotionalleaves.studioagent.sys.Share
+import com.emotionalleaves.studioagent.work.DAY
+import com.emotionalleaves.studioagent.work.Engine
+import com.emotionalleaves.studioagent.work.Papers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
+
+val interviewQuestions = listOf(
+    "what" to "What do you make? Describe it to someone who cannot see it.",
+    "why" to "Why this work? What keeps pulling you back to it?",
+    "how" to "How do you make it? Tools, steps, materials.",
+    "looking" to "What are you looking at, reading or listening to that feeds it?",
+    "background" to "Where did you grow up and train? Anything that shaped your eye, including jobs outside art.",
+    "viewer" to "What should someone notice or feel standing in front of it?",
+    "words" to "Two or three sentences about your work, the way you would say them to a friend."
+)
+
+/** type, variant, label, word target */
+private val docSlots = listOf(
+    listOf("statement", "50", "Statement, 50 words"), listOf("statement", "150", "Statement, 150 words"),
+    listOf("statement", "300", "Statement, 300 words"), listOf("statement", "500", "Statement, 500 words"),
+    listOf("bio", "50", "Bio, third person, 50 words"), listOf("bio", "150", "Bio, third person, 150 words"),
+    listOf("bio", "first", "Bio, first person, short")
+)
+
+fun docTarget(d: Doc): Int = d.variant.toIntOrNull() ?: if (d.variant == "first") 40 else 100
+
+@Composable
+fun Materials(nav: NavController) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val docs by dao.docs().collectAsState(emptyList())
+    val facts by dao.facts().collectAsState(emptyList())
+    val works by dao.artworks().collectAsState(emptyList())
+    val series by dao.series().collectAsState(emptyList())
+    var status by remember { mutableStateOf("") }
+    val answered = docs.count { it.type == "interview" && it.text.isNotBlank() }
+
+    fun open(type: String, variant: String, seriesId: Long = 0) {
+        scope.io {
+            val existing = dao.docsNow().firstOrNull { it.type == type && it.variant == variant && it.seriesId == seriesId }
+            val id = existing?.id ?: dao.put(Doc(type = type, variant = variant, seriesId = seriesId, updatedAt = now()))
+            withContext(Dispatchers.Main) { nav.navigate("doc/$id") }
+        }
+    }
+
+    Screen("Materials", nav) {
+        Panel(onClick = { nav.navigate("interview") }, strong = answered == 0) {
+            Text("Interview", fontWeight = FontWeight.SemiBold)
+            Note("$answered of ${interviewQuestions.size} answered. Everything below is written from these answers and your records, nothing else.")
+        }
+        Panel(onClick = { nav.navigate("facts") }) {
+            Text("CV facts", fontWeight = FontWeight.SemiBold)
+            Note("${facts.size} lines. Education, shows, awards. The CV only ever contains what is listed here.")
+        }
+
+        H("Statements and bios")
+        docSlots.forEach { (type, variant, label) ->
+            val d = docs.firstOrNull { it.type == type && it.variant == variant && it.seriesId == 0L }
+            Panel(onClick = { open(type, variant) }) {
+                Text(label)
+                Note(when { d == null || d.text.isBlank() -> "Not written yet"; d.approved -> "Approved, ${Texts.words(d.text)} words"; else -> "Draft, waiting for your yes" })
+            }
+        }
+        if (series.isNotEmpty()) H("Series statements")
+        series.forEach { s ->
+            val d = docs.firstOrNull { it.type == "statement" && it.variant == "100" && it.seriesId == s.id }
+            Panel(onClick = { open("statement", "100", s.id) }) {
+                Text("${s.name}, 100 words")
+                Note(when { d == null || d.text.isBlank() -> "Not written yet"; d.approved -> "Approved"; else -> "Draft, waiting for your yes" })
+            }
+        }
+
+        H("CV and portfolio")
+        Status(status)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.cv(ctx, st, facts); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("CV PDF") }
+            listOf(10, 15, 20).forEach { n ->
+                OutlinedButton(onClick = {
+                    scope.io({ status = it }) {
+                        val statement = Engine.pickStatement(150)
+                        val f = Papers.portfolio(ctx, st, works.filter { Engine.documented(it) }, statement, n)
+                        withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
+                    }
+                }) { Text("Portfolio $n") }
+            }
+        }
+        Panel {
+            Text("Portfolio web page", fontWeight = FontWeight.SemiBold)
+            Note("One plain page with your documented works, approved statement, CV and email. Published to your own GitHub Pages repo. No feed, no follower counts.")
+            Button(onClick = {
+                status = "Publishing... this uploads each image, so it can take a minute."
+                scope.io({ status = it }) { val url = Engine.publishPortfolio(ctx); status = "Published: $url (GitHub can take a few minutes to show changes)" }
+            }) { Text("Publish or update") }
+            if (st.website.isNotBlank()) TextButton(onClick = { Share.open(ctx, st.website) }) { Text("Open ${st.website}") }
+        }
+    }
+}
+
+@Composable
+fun Interview(nav: NavController) {
+    val scope = rememberCoroutineScope()
+    val docs by dao.docs().collectAsState(emptyList())
+    val answers = remember { mutableStateMapOf<String, String>() }
+    LaunchedEffect(docs) {
+        docs.filter { it.type == "interview" }.forEach { if (answers[it.variant] == null) answers[it.variant] = it.text }
+    }
+    var status by remember { mutableStateOf("") }
+    Screen("Interview", nav) {
+        Note("About 10 minutes, once. Talk or type. Rough is good: your own words are what make the writing sound like you. You can stop and come back.")
+        interviewQuestions.forEach { (k, q) ->
+            key(k) { Field(q, answers[k].orEmpty(), { answers[k] = it }, lines = 3, mic = true) }
+        }
+        Status(status)
+        Button(modifier = Modifier.fillMaxWidth(), onClick = {
+            scope.io({ status = it }) {
+                val existing = dao.docsNow()
+                interviewQuestions.forEach { (k, _) ->
+                    val old = existing.firstOrNull { it.type == "interview" && it.variant == k }
+                    val text = answers[k].orEmpty().trim()
+                    if (old != null || text.isNotBlank()) dao.put((old ?: Doc(type = "interview", variant = k)).copy(text = text, updatedAt = now()))
+                }
+                val words = answers["words"].orEmpty().trim()
+                val voice = existing.firstOrNull { it.type == "voice" }
+                if (words.isNotBlank() && (voice == null || !voice.text.contains(words))) dao.put((voice ?: Doc(type = "voice", variant = "samples")).copy(text = (words + "\n" + voice?.text.orEmpty()).take(2500), updatedAt = now()))
+                status = "Saved."
+                withContext(Dispatchers.Main) { nav.popBackStack() }
+            }
+        }) { Text("Save answers") }
+    }
+}
+
+@Composable
+fun DocScreen(nav: NavController, id: Long) {
+    val scope = rememberCoroutineScope()
+    val docs by dao.docs().collectAsState(emptyList())
+    val series by dao.series().collectAsState(emptyList())
+    val loaded = docs.firstOrNull { it.id == id }
+    if (loaded == null) { Screen("Document", nav) { Note("One moment") }; return }
+    var d by remember(id) { mutableStateOf(loaded) }
+    var status by remember { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    var editedHere by remember { mutableStateOf(false) }
+    fun save(x: Doc) { d = x; scope.io { dao.put(x) } }
+
+    val target = docTarget(d)
+    val words = Texts.words(d.text)
+    val jargon = Texts.jargonIn(d.text)
+    val lengthOk = d.text.isNotBlank() && words <= target && words >= target * 0.5
+    val limit = st.revisionLimit
+    val seriesName = series.firstOrNull { it.id == d.seriesId }?.name.orEmpty()
+    val kind = when {
+        d.type == "bio" && d.variant == "first" -> "a short artist bio in the first person"
+        d.type == "bio" -> "an artist bio in the third person"
+        d.seriesId != 0L -> "a statement for the series \"$seriesName\""
+        else -> "an artist statement"
+    }
+
+    fun generate() {
+        busy = true; status = "Writing..."
+        scope.io({ status = it; busy = false }) {
+            val extra = series.firstOrNull { it.id == d.seriesId }?.let { "About this series, in the artist's words: ${it.notes}" }.orEmpty()
+            val text = G.ai.write(kind, target, Engine.factsText(), Engine.voice(), extra)
+            val x = d.copy(text = Texts.trimToWords(text, target), approved = false, revisions = d.revisions + (if (d.text.isBlank()) 0 else 1), updatedAt = now())
+            d = x; dao.put(x); status = ""; busy = false
+        }
+    }
+
+    Screen(kind.replaceFirstChar { it.uppercase() }, nav) {
+        Field("Text", d.text, {
+            val first = !editedHere && d.text.isNotBlank()
+            editedHere = true
+            save(d.copy(text = it, approved = false, revisions = d.revisions + (if (first) 1 else 0), updatedAt = now()))
+        }, lines = 8)
+        Panel {
+            Text("Ready when these are all true", fontWeight = FontWeight.SemiBold)
+            Text((if (lengthOk) "✓ " else "○ ") + "Length: $words words (target $target or fewer)")
+            Text((if (d.text.isNotBlank() && jargon.isEmpty()) "✓ " else "○ ") + (if (jargon.isEmpty()) "No stock art jargon" else "Jargon to cut: " + jargon.joinToString(", ")))
+            Text("✓ Written only from your interview and CV facts")
+        }
+        Status(status)
+        if (d.approved) Panel(strong = true) { Text("Approved. This is the version the app uses. Editing it un-approves it.") }
+        else if (d.text.isNotBlank()) {
+            if (d.revisions >= limit) Panel(strong = true) {
+                Text("That is ${d.revisions} revision passes. " + (if (lengthOk && jargon.isEmpty()) "It meets every check, so it is ready as it is." else "Fix the open check above, then it is ready."))
+                Note("More passes rarely make it better. Approve it, or park it for a week and look with fresh eyes.")
+            }
+            Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
+                val x = d.copy(approved = true, updatedAt = now()); save(x)
+                if (editedHere) scope.io {
+                    val voice = dao.docsNow().firstOrNull { it.type == "voice" }
+                    dao.put((voice ?: Doc(type = "voice", variant = "samples")).copy(text = (x.text.take(400) + "\n" + voice?.text.orEmpty()).take(2500), updatedAt = now()))
+                }
+                nav.popBackStack()
+            }) { Text("Approve") }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(enabled = !busy, onClick = { save(d.copy(parkedUntil = now() + 7 * DAY)); nav.popBackStack() }) { Text("Park for a week") }
+                TextButton(enabled = !busy, onClick = { generate() }) { Text(if (d.revisions >= limit) "One more pass anyway" else "Rewrite") }
+            }
+        }
+        if (d.text.isBlank()) {
+            Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = { generate() }) { Text("Write it for me") }
+            if (!G.ai.ready) Note("Add an AI key in Settings to have this written for you, or type it yourself above.")
+        }
+    }
+}
+
+@Composable
+fun Facts(nav: NavController) {
+    val scope = rememberCoroutineScope()
+    val facts by dao.facts().collectAsState(emptyList())
+    var category by remember { mutableStateOf("education") }
+    var year by remember { mutableStateOf(LocalDate.now().year) }
+    val text = remember { mutableStateOf("") }
+    Screen("CV facts", nav) {
+        Note("Only true, finished things. A show you applied to is not a line; a show you were in is. Accepted applications are added here automatically.")
+        Choice("Kind", Texts.factCategories, category) { category = it }
+        Whole("Year", year) { year = it }
+        Field(when (category) {
+            "education" -> "Degree or course, school, city"
+            "solo", "group", "invited" -> "Show title, venue, city"
+            "skill" -> "Skill or tool"
+            else -> "What, where"
+        }, text)
+        Button(enabled = text.value.isNotBlank(), onClick = { val t = text.value.trim(); text.value = ""; scope.io { dao.put(Fact(category = category, year = year, text = t)) } }) { Text("Add line") }
+        Texts.factCategories.forEach { c ->
+            val lines = facts.filter { it.category == c }
+            if (lines.isNotEmpty()) {
+                H(c.replaceFirstChar { it.uppercase() })
+                lines.forEach { f ->
+                    Row { Text((if (f.year > 0) "${f.year}  " else "") + f.text, Modifier.weight(1f)); TextButton(onClick = { scope.io { dao.del(f) } }) { Text("Remove") } }
+                }
+            }
+        }
+    }
+}

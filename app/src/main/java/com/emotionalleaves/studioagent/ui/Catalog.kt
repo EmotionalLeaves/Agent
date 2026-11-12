@@ -1,0 +1,319 @@
+package com.emotionalleaves.studioagent.ui
+
+import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.emotionalleaves.studioagent.data.Artwork
+import com.emotionalleaves.studioagent.data.Idea
+import com.emotionalleaves.studioagent.data.Series
+import com.emotionalleaves.studioagent.domain.Texts
+import com.emotionalleaves.studioagent.media.ImageTools
+import com.emotionalleaves.studioagent.sys.Share
+import com.emotionalleaves.studioagent.work.Engine
+import com.emotionalleaves.studioagent.work.Papers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.time.LocalDate
+import kotlin.math.min
+import kotlin.math.roundToInt
+
+val workStatuses = listOf("idea", "in_progress", "finished", "documented", "available", "pending", "shown", "sold")
+
+fun newWork(): Artwork = Artwork(
+    status = "in_progress", year = LocalDate.now().year, createdAt = now(),
+    format = when (st.route) { "physical" -> "physical"; "screen" -> "screen"; else -> "print" }
+)
+
+@Composable
+fun Num(label: String, value: Double, onValue: (Double) -> Unit) {
+    var t by remember { mutableStateOf(if (value == 0.0) "" else Texts.dim(value)) }
+    Field(label, t, { t = it; onValue(it.toDoubleOrNull() ?: 0.0) }, number = true)
+}
+
+@Composable
+fun Whole(label: String, value: Int, onValue: (Int) -> Unit) {
+    var t by remember { mutableStateOf(if (value == 0) "" else value.toString()) }
+    Field(label, t, { t = it; onValue(it.trim().toIntOrNull() ?: 0) }, number = true)
+}
+
+@Composable
+fun Works(nav: NavController) {
+    val scope = rememberCoroutineScope()
+    val works by dao.artworks().collectAsState(emptyList())
+    val series by dao.series().collectAsState(emptyList())
+    var tab by remember { mutableStateOf("works") }
+    val newSeries = remember { mutableStateOf("") }
+    Screen("Studio", nav, back = false) {
+        Choice("", listOf("works", "series"), tab) { tab = it }
+        if (tab == "works") {
+            Button(onClick = { scope.io { val id = dao.put(newWork()); withContext(Dispatchers.Main) { nav.navigate("work/$id") } } }, modifier = Modifier.fillMaxWidth()) { Text("Add a piece") }
+            if (works.isEmpty()) Note("Nothing here yet. Add a piece, then photograph it or import the file.")
+            works.forEach { w ->
+                Panel(onClick = { nav.navigate("work/${w.id}") }) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        PathImage(w.imagePath, Modifier.size(64.dp), 200)
+                        Column {
+                            Text(w.title.ifBlank { "Untitled #${w.id}" }, fontWeight = FontWeight.SemiBold)
+                            Note(listOf(w.status.replace('_', ' '), series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).filter { it.isNotBlank() }.joinToString("  ·  "))
+                        }
+                    }
+                }
+            }
+        } else {
+            Note("A series is a group of works that belong together. Most calls and every solo show want one. Ten documented works in one series opens Level 1.")
+            series.forEach { s -> key(s.id) {
+                val done = works.count { it.seriesId == s.id && Engine.documented(it) }
+                var notes by remember(s.id) { mutableStateOf(s.notes) }
+                Panel {
+                    Text(s.name, fontWeight = FontWeight.SemiBold)
+                    LinearProgressIndicator(progress = { (done.toFloat() / s.targetCount.coerceAtLeast(1)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                    Note("$done of ${s.targetCount} documented, ${works.count { it.seriesId == s.id }} started")
+                    Field("What ties these works together? (used for the series statement)", notes, { notes = it; scope.io { dao.put(s.copy(notes = it)) } }, lines = 2, mic = true)
+                }
+            } }
+            Field("New series name", newSeries)
+            Button(enabled = newSeries.value.isNotBlank(), onClick = { val n = newSeries.value.trim(); newSeries.value = ""; scope.io { dao.put(Series(name = n, createdAt = now())) } }) { Text("Add series") }
+        }
+    }
+}
+
+@Composable
+fun WorkDetail(nav: NavController, id: Long) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val works by dao.artworks().collectAsState(emptyList())
+    val series by dao.series().collectAsState(emptyList())
+    val loaded = works.firstOrNull { it.id == id }
+    if (loaded == null) { Screen("Piece", nav) { Note("One moment") }; return }
+    var w by remember(id) { mutableStateOf(loaded) }
+    var status by remember { mutableStateOf("") }
+    fun save(x: Artwork) { w = x; scope.io { dao.put(x) } }
+
+    val dir = ImageTools.mediaDir(ctx)
+    val orig = File(dir, "work_${id}_orig.jpg")
+    val main = File(dir, "work_${id}_main.jpg")
+
+    /** A new photo or file: keep the original untouched and make a working copy for screens and juries. */
+    fun attached(photo: Boolean) {
+        status = "Preparing the image..."
+        scope.io({ status = it }) {
+            val (pw, ph) = ImageTools.size(orig.absolutePath)
+            var b: Bitmap = ImageTools.decode(orig.absolutePath, 2400) ?: throw Exception("That file could not be read as an image.")
+            if (photo) b = ImageTools.autoFix(b)
+            ImageTools.saveJpeg(b, main)
+            val next = w.copy(originalPath = orig.absolutePath, imagePath = main.absolutePath, pixelW = pw, pixelH = ph)
+            w = next; dao.put(next)
+            status = if (photo) "Photo added and colour-corrected. Straighten it next if the edges are not square." else "File imported at $pw x $ph px."
+        }
+    }
+
+    val take = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok -> if (ok) attached(true) }
+    val pick = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) scope.io({ status = it }) {
+            if (!ImageTools.copyUri(ctx, uri, orig)) throw Exception("Could not copy that file.")
+            withContext(Dispatchers.Main) { attached(false) }
+        }
+    }
+
+    Screen(w.title.ifBlank { "Untitled" }, nav) {
+        if (w.imagePath.isNotBlank()) PathImage(w.imagePath, Modifier.fillMaxWidth().height(260.dp), 1000)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Photograph") }
+            OutlinedButton(onClick = { pick.launch("image/*") }) { Text("Import file") }
+            if (w.imagePath.isNotBlank()) OutlinedButton(onClick = { nav.navigate("crop/$id") }) { Text("Straighten and crop") }
+        }
+        Note("Photographing: daylight from the side, no flash, the work flat against a wall, phone parallel to it. A grey card in one corner helps the colour.")
+        Status(status)
+        if (w.imagePath.isNotBlank() && (w.status == "in_progress" || w.status == "finished"))
+            Button(onClick = { save(w.copy(status = "documented")) }, modifier = Modifier.fillMaxWidth()) { Text("Finished and documented") }
+
+        H("Details")
+        Field("Title", w.title, { save(w.copy(title = it)) })
+        Whole("Year", w.year) { save(w.copy(year = it)) }
+        Field("Medium (blank uses the default for its format)", w.medium, { save(w.copy(medium = it)) })
+        Choice("Format", listOf("print", "physical", "screen", "digital"), w.format) { save(w.copy(format = it)) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.weight(1f)) { Num("Width, in", w.widthIn) { save(w.copy(widthIn = it)) } }
+            Column(Modifier.weight(1f)) { Num("Height, in", w.heightIn) { save(w.copy(heightIn = it)) } }
+            Column(Modifier.weight(1f)) { Num("Depth, in", w.depthIn) { save(w.copy(depthIn = it)) } }
+        }
+        if (w.format == "print" || w.format == "digital") Panel { Text("Print check", fontWeight = FontWeight.SemiBold); Text(Texts.printVerdict(w.pixelW, w.pixelH, w.widthIn, w.heightIn)) }
+        Toggle("Framed", w.framed) { save(w.copy(framed = it)) }
+        if (series.isNotEmpty()) Choice("Series", series.map { it.name }, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()) { n -> series.firstOrNull { it.name == n }?.let { save(w.copy(seriesId = it.id)) } }
+        else Note("No series yet. Add one under Studio, Series.")
+        Choice("Status", workStatuses, w.status) { save(w.copy(status = it)) }
+        Field("Next step (shown when you start a session)", w.nextStep, { save(w.copy(nextStep = it)) })
+
+        H("Price and edition")
+        Num("Price, $", w.price) { save(w.copy(price = it)) }
+        if (w.widthIn > 0 && w.heightIn > 0) TextButton(onClick = { save(w.copy(price = Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))); status = "Price set from your rule. Reopen this piece to see it in the box." }) {
+            Text("Use my price rule: ${money(Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))}")
+        }
+        Toggle("Not for sale", w.nfs) { save(w.copy(nfs = it)) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.weight(1f)) { Whole("Edition size", w.editionSize) { save(w.copy(editionSize = it)) } }
+            Column(Modifier.weight(1f)) { Whole("Prints made", w.editionUsed) { save(w.copy(editionUsed = it)) } }
+        }
+        Field("Where it is now", w.location, { save(w.copy(location = it)) })
+        Field("Notes", w.notes, { save(w.copy(notes = it)) }, lines = 2)
+        Note("Saved automatically as you type.")
+
+        H("Files and papers")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(enabled = w.imagePath.isNotBlank(), onClick = {
+                status = "Exporting..."
+                scope.io({ status = it }) {
+                    val out = ImageTools.exportDir(ctx)
+                    val base = Texts.fileName(st.lastName, w.title, w.year, Papers.medium(w), w.widthIn, w.heightIn).removeSuffix(".jpg")
+                    val jury = File(out, "$base.jpg"); val web = File(out, "${base}_web.jpg")
+                    ImageTools.export(w.imagePath, 1920, 5L * 1024 * 1024, jury)
+                    ImageTools.export(w.imagePath, 1600, 2L * 1024 * 1024, web)
+                    val files = mutableListOf(jury, web)
+                    if (w.originalPath.isNotBlank() && File(w.originalPath).exists()) files += File(w.originalPath).copyTo(File(out, "${base}_original.jpg"), overwrite = true)
+                    status = "Exported: jury size (1920 px), web size (under 2 MB) and the untouched original."
+                    withContext(Dispatchers.Main) { Share.files(ctx, files, "image/jpeg") }
+                }
+            }) { Text("Export images") }
+            OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.certificate(ctx, st, w, (w.editionUsed + 1).coerceAtLeast(1)); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Certificate") }
+            OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, listOf(w))) }) { Text("Print order") }
+        }
+        TextButton(onClick = { scope.io { dao.del(w) }; nav.popBackStack() }) { Text("Delete this piece") }
+    }
+}
+
+@Composable
+fun CropScreen(nav: NavController, id: Long) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val works by dao.artworks().collectAsState(emptyList())
+    val w = works.firstOrNull { it.id == id }
+    if (w == null) { Screen("Straighten", nav) { Note("One moment") }; return }
+    val src = w.originalPath.ifBlank { w.imagePath }
+    val preview by produceState<Bitmap?>(null, src) { value = withContext(Dispatchers.IO) { ImageTools.decode(src, 1200) } }
+    val pts = remember { mutableStateListOf(Offset(0.06f, 0.06f), Offset(0.94f, 0.06f), Offset(0.94f, 0.94f), Offset(0.06f, 0.94f)) }
+    var active by remember { mutableStateOf(-1) }
+    var fix by remember { mutableStateOf(w.format == "physical") }
+    var status by remember { mutableStateOf("") }
+    Screen("Straighten and crop", nav) {
+        Note("Drag each dot onto a corner of the artwork. The result is squared up to those corners.")
+        val bmp = preview
+        if (bmp != null) {
+            val img = remember(bmp) { bmp.asImageBitmap() }
+            val line = MaterialTheme.colorScheme.primary
+            BoxWithConstraints(Modifier.fillMaxWidth().height(440.dp)) {
+                val bw = constraints.maxWidth.toFloat(); val bh = constraints.maxHeight.toFloat()
+                val k = min(bw / bmp.width, bh / bmp.height)
+                val dw = bmp.width * k; val dh = bmp.height * k
+                val ox = (bw - dw) / 2; val oy = (bh - dh) / 2
+                Canvas(
+                    Modifier.fillMaxSize().pointerInput(bmp, bw, bh) {
+                        detectDragGestures(
+                            onDragStart = { p -> active = pts.indices.minByOrNull { i -> (Offset(ox + pts[i].x * dw, oy + pts[i].y * dh) - p).getDistance() } ?: -1 },
+                            onDragEnd = { active = -1 }, onDragCancel = { active = -1 },
+                            onDrag = { change, drag ->
+                                change.consume()
+                                val i = active
+                                if (i >= 0) { val q = pts[i]; pts[i] = Offset((q.x + drag.x / dw).coerceIn(0f, 1f), (q.y + drag.y / dh).coerceIn(0f, 1f)) }
+                            }
+                        )
+                    }
+                ) {
+                    drawImage(img, dstOffset = IntOffset(ox.roundToInt(), oy.roundToInt()), dstSize = IntSize(dw.roundToInt(), dh.roundToInt()))
+                    for (i in 0..3) {
+                        val a = pts[i]; val b = pts[(i + 1) % 4]
+                        drawLine(line, Offset(ox + a.x * dw, oy + a.y * dh), Offset(ox + b.x * dw, oy + b.y * dh), strokeWidth = 4f)
+                    }
+                    pts.forEach { p ->
+                        val c = Offset(ox + p.x * dw, oy + p.y * dh)
+                        drawCircle(line, 24f, c); drawCircle(Color.White, 9f, c)
+                    }
+                }
+            }
+            Toggle("Also neutralise the colour cast (for photos of physical work)", fix) { fix = it }
+            Status(status)
+            Button(modifier = Modifier.fillMaxWidth(), onClick = {
+                status = "Working..."
+                scope.io({ status = it }) {
+                    val big = ImageTools.decode(src, 2400) ?: throw Exception("Could not open the image.")
+                    val corners = FloatArray(8) { i -> if (i % 2 == 0) pts[i / 2].x else pts[i / 2].y }
+                    val aspect = if (w.widthIn > 0 && w.heightIn > 0) w.widthIn / w.heightIn else 0.0
+                    var out = ImageTools.straighten(big, corners, aspect)
+                    if (fix) out = ImageTools.autoFix(out)
+                    val main = File(ImageTools.mediaDir(ctx), "work_${id}_main.jpg")
+                    ImageTools.saveJpeg(out, main)
+                    dao.put(w.copy(imagePath = main.absolutePath))
+                    withContext(Dispatchers.Main) { nav.popBackStack() }
+                }
+            }) { Text("Apply") }
+            Note("Your original file is kept untouched, so you can redo this any time.")
+        } else Note("Loading the image")
+    }
+}
+
+@Composable
+fun Ideas(nav: NavController) {
+    val scope = rememberCoroutineScope()
+    val ideas by dao.ideas().collectAsState(emptyList())
+    val text = remember { mutableStateOf("") }
+    Screen("Ideas", nav) {
+        Note("Park it here and go back to the piece in front of you. Nothing parked here is lost.")
+        Field("New idea", text, lines = 2, mic = true)
+        Button(enabled = text.value.isNotBlank(), onClick = { val t = text.value.trim(); text.value = ""; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
+        ideas.filter { !it.done }.forEach { i ->
+            Panel {
+                if (i.photoPath.isNotBlank()) PathImage(i.photoPath, Modifier.fillMaxWidth().height(140.dp))
+                Text(i.text.ifBlank { "(picture)" })
+                Row {
+                    TextButton(onClick = {
+                        scope.io {
+                            val id = dao.put(newWork().copy(notes = i.text, nextStep = "Start: " + i.text.take(60)))
+                            dao.put(i.copy(done = true))
+                            withContext(Dispatchers.Main) { nav.navigate("work/$id") }
+                        }
+                    }) { Text("Start as a piece") }
+                    TextButton(onClick = { scope.io { dao.del(i) } }) { Text("Remove") }
+                }
+            }
+        }
+    }
+}
