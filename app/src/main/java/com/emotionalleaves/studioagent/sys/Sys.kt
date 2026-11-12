@@ -44,6 +44,31 @@ object Notifier {
         nm.createNotificationChannel(NotificationChannel(CHANNEL, "Studio Agent", NotificationManager.IMPORTANCE_DEFAULT).apply {
             description = "At most a couple of quiet notifications a day"
         })
+        nm.createNotificationChannel(NotificationChannel(SESSION, "Session running", NotificationManager.IMPORTANCE_LOW).apply {
+            description = "A silent note while a session runs, so you can get back to it"
+            setSound(null, null)
+        })
+    }
+
+    private const val SESSION = "session"
+    private const val SESSION_ID = 7
+
+    /** A silent, ongoing note with the session's clock while one runs. Tap it to get back. Not counted toward the daily limit. */
+    fun session(ctx: Context, start: Long, title: String) {
+        if (!allowed(ctx)) return
+        try {
+            channel(ctx)
+            val pi = PendingIntent.getActivity(ctx, SESSION_ID, Intent(ctx, MainActivity::class.java).putExtra("route", "session").addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val n = NotificationCompat.Builder(ctx, SESSION).setSmallIcon(R.drawable.ic_stat).setContentTitle("In session")
+                .setContentText(title).setWhen(start).setUsesChronometer(true).setOngoing(true).setSilent(true)
+                .setContentIntent(pi).setPriority(NotificationCompat.PRIORITY_LOW).build()
+            (ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(SESSION_ID, n)
+        } catch (e: Exception) { }
+    }
+
+    fun sessionEnded(ctx: Context) {
+        try { (ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(SESSION_ID) } catch (e: Exception) { }
     }
 
     fun allowed(ctx: Context): Boolean =

@@ -380,6 +380,7 @@ fun SessionScreen(nav: NavController) {
         val secs = (Engine.sessionElapsed(nowMs) / 1000).coerceAtLeast(0)
         val work = works.firstOrNull { it.id == st.sessionArtwork }
         fun finish(save: Boolean) {
+            Notifier.sessionEnded(ctx)
             val end = start + Engine.sessionElapsed(now()); val kind = st.sessionKind; val artId = st.sessionArtwork
             st.sessionStart = 0L; st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
             Notifier.dnd(ctx, false)
@@ -394,6 +395,7 @@ fun SessionScreen(nav: NavController) {
         }
         var stopping by rememberSaveable { mutableStateOf(false) }
         val goal = st.sessionGoalMin
+        LaunchedEffect(start, work?.title) { Notifier.session(ctx, start, work?.title?.ifBlank { "Untitled" } ?: "Light session") }
         Screen("In session", nav, bare = true) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(if (paused) "Paused" else "In session", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
