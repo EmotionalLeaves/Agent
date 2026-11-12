@@ -389,4 +389,8 @@ fun Timeline(done: Boolean, current: Boolean, last: Boolean, onClick: (() -> Uni
 fun Gap(h: Int = 8) = Spacer(Modifier.height(h.dp))
 
 @Composable
-fun Status(text: String) { if (text.isNotBlank()) Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary) }
+fun Status(text: String) {
+    // What just happened, in a small tinted strip that is easy to spot and easy to ignore.
+    if (text.isNotBlank()) Text(text, Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.secondaryContainer).padding(horizontal = 14.dp, vertical = 10.dp),
+        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+}

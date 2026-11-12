@@ -131,4 +131,22 @@ class ScreensTest {
         shot("36_dark_piece", "work/${ids["wip"]}", "Small steps")
         shot("37_dark_settings", "settings", "Your rules")
     }
+
+    /** Phone text size turned up, to catch anything that clips or collides. */
+    @Test fun bigText() {
+        org.robolectric.RuntimeEnvironment.setFontScale(1.3f)
+        val ids = seed()
+        shot("40_big_home", "home", "Start now")
+        shot("41_big_calls", "calls", "Winter Open")
+        shot("42_big_session", "startnow", "Now: Block in the big shapes")
+        shot("43_big_studio", "works", "Blue Hour")
+        shot("44_big_call", "call/${ids["opp"]}", "Edit the details")
+    }
+
+    @Test fun moreScreens() {
+        val ids = seed()
+        shot("27_ideas", "ideas", "Fridge light")
+        shot("28_receipts", "receipts", "Staff Show")
+        shot("29_admin", "admin", "Approve statement")
+    }
 }

@@ -1,5 +1,9 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -266,6 +270,8 @@ fun DocScreen(nav: NavController, id: Long) {
         Panel {
             Text("Ready when these are all true", fontWeight = FontWeight.SemiBold)
             Check(lengthOk, "Length: $words words (target $target or fewer)")
+                if (target > 0) LinearProgressIndicator(progress = { (words.toFloat() / target).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().padding(start = 30.dp).height(4.dp),
+                    color = if (lengthOk) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary, trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
             Check(d.text.isNotBlank() && jargon.isEmpty(), if (jargon.isEmpty()) "No stock art jargon" else "Jargon to cut: " + jargon.joinToString(", "))
             Check(true, "Written only from your interview and CV facts")
         }

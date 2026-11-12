@@ -242,17 +242,11 @@ fun Home(nav: NavController) {
 
         if (st.onboarded) {
             Section("Elsewhere")
-            if (pendingCount > 0) Panel(onClick = { nav.navigate("admin") }) { Text("$pendingCount waiting for your yes", style = MaterialTheme.typography.titleSmall); Small("One tap each") }
+            if (pendingCount > 0) IconRow(Icons.Default.Done, "$pendingCount waiting for your yes", "One tap each") { nav.navigate("admin") }
             val todo = guide.filter { !it.done }
             val must = todo.firstOrNull { !it.optional } ?: todo.firstOrNull()
-            if (!st.guideHidden && must != null) Panel(onClick = { nav.navigate("guide") }) {
-                Text("Guide: ${must.title}", style = MaterialTheme.typography.titleSmall)
-                Small("${guide.count { it.done }} of ${guide.size} set-up steps done")
-            }
-            if (!st.simpleMode) Panel(onClick = { nav.navigate("path") }) {
-                Text("Level $level: ${Levels.names[level]}", style = MaterialTheme.typography.titleSmall)
-                Small(if (level < 4) "Next: ${gate.text}" else gate.text)
-            }
+            if (!st.guideHidden && must != null) IconRow(Icons.Default.CheckCircle, "Guide: ${must.title}", "${guide.count { it.done }} of ${guide.size} set-up steps done") { nav.navigate("guide") }
+            if (!st.simpleMode) IconRow(Icons.Default.Star, "Level $level: ${Levels.names[level]}", if (level < 4) "Next: ${gate.text}" else gate.text) { nav.navigate("path") }
             if (!st.simpleMode && (st.feeBudget > 0 || G.ai.ready)) Small("Fees this month ${money(Engine.feesThisMonth(ledger))} of ${money(st.feeBudget)}. AI this month about ${money(G.ai.spentThisMonth())} of ${money(st.aiCapUsd)}.")
 
             Space(4)

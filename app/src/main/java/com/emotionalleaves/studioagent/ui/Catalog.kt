@@ -458,23 +458,34 @@ fun Ideas(nav: NavController) {
     val ideas by dao.ideas().collectAsState(emptyList())
     val text = remember { mutableStateOf("") }
     Screen("Ideas", nav) {
-        Note("Park it here and go back to the piece in front of you. Nothing parked here is lost.")
+        Intro("ideas", "Park it here and go back to the piece in front of you. Nothing parked here is lost.")
         Field("New idea", text, lines = 2, mic = true)
         Button(enabled = text.value.isNotBlank(), onClick = { val t = text.value.trim(); text.value = ""; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
-        ideas.filter { !it.done }.forEach { i ->
-            Panel {
-                if (i.photoPath.isNotBlank()) PathImage(i.photoPath, Modifier.fillMaxWidth().height(140.dp))
-                Text(i.text.ifBlank { "(picture)" })
-                Row {
-                    TextButton(onClick = {
-                        scope.io {
-                            val id = dao.put(newWork().copy(notes = i.text, nextStep = "Start: " + i.text.take(60)))
-                            dao.put(i.copy(done = true))
-                            withContext(Dispatchers.Main) { nav.navigate("work/$id") }
+        val open = ideas.filter { !it.done }
+        if (open.isEmpty()) Empty("Nothing parked. When an idea keeps circling while you work, put it here and let it go.")
+        // A pinboard: each idea a small sheet with a pin, two across.
+        open.chunked(2).forEach { pair ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                pair.forEach { i ->
+                    Box(Modifier.weight(1f)) {
+                        Column(Modifier.fillMaxWidth().padding(top = 6.dp).clip(RoundedCornerShape(3.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(start = 14.dp, end = 14.dp, top = 18.dp, bottom = 6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            if (i.photoPath.isNotBlank()) PathImage(i.photoPath, Modifier.fillMaxWidth().height(110.dp), 400, ContentScale.Crop)
+                            Text(i.text.ifBlank { "(picture)" }, maxLines = 6)
+                            Small(fmtDate(i.createdAt))
+                            TextButton(onClick = {
+                                scope.io {
+                                    val id = dao.put(newWork().copy(notes = i.text, nextStep = "Start: " + i.text.take(60)))
+                                    dao.put(i.copy(done = true))
+                                    withContext(Dispatchers.Main) { nav.navigate("work/$id") }
+                                }
+                            }, modifier = Modifier.offset(x = (-12).dp)) { Text("Start as a piece") }
                         }
-                    }) { Text("Start as a piece") }
-                    TextButton(onClick = { scope.remove("the idea", { dao.del(i) }, { dao.put(i) }) }) { Text("Remove") }
+                        Box(Modifier.align(Alignment.TopCenter).size(12.dp).clip(androidx.compose.foundation.shape.CircleShape).background(MaterialTheme.colorScheme.secondary))
+                        Box(Modifier.align(Alignment.TopEnd).padding(top = 6.dp)) { RemoveButton("idea") { scope.remove("the idea", { dao.del(i) }, { dao.put(i) }) } }
+                    }
                 }
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
             }
         }
     }
