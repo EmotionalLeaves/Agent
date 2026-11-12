@@ -24,8 +24,11 @@ jobs:
           path: app/build/screens
           if-no-files-found: ignore
       - run: ./gradlew assembleRelease -PversionCode=${{ github.run_number }} --stacktrace
+      - run: cd app/build && zip -qr ../../screens.zip screens || true
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: Studio Agent build ${{ github.run_number }}
-          files: app/build/outputs/apk/release/*.apk
+          files: |
+            app/build/outputs/apk/release/*.apk
+            screens.zip
