@@ -85,6 +85,23 @@ class PartsTest {
         assertTrue(html.contains("Jade Leaves") && html.contains("Line &lt;two&gt;") && !html.contains("<two>"))
     }
 
+    @Test fun existingFilesComeInAsFinishedPieces() = runBlocking {
+        ctx
+        val f = picture("blue_hour-final.jpg", 3000, 2400)
+        val id = Engine.importFile(ctx, Uri.fromFile(f), "blue_hour-final.jpg")
+        val w = G.dao.artworksNow().single { it.id == id }
+        assertEquals("Blue hour final", w.title); assertEquals("documented", w.status)
+        assertEquals(3000, w.pixelW); assertEquals(10.0, w.widthIn, 0.0); assertEquals(8.0, w.heightIn, 0.0)
+        assertEquals(10, w.editionSize); assertTrue(w.price > 0)
+        assertTrue(File(w.imagePath).exists() && File(w.originalPath).exists())
+        val bad = File(ctx.cacheDir, "notes.txt").apply { writeText("not a picture") }
+        val failed = try { Engine.importFile(ctx, Uri.fromFile(bad), "notes.txt"); false } catch (e: Exception) { true }
+        assertTrue(failed); assertEquals(1, G.dao.artworksNow().size)
+        val callId = Engine.ingestPlain("Staff Art Show\nDeadline: " + java.time.LocalDate.now().plusDays(20) + ". No entry fee. Open to campus staff.", "Pasted")
+        val call = G.dao.oppsNow().single { it.id == callId }
+        assertEquals("Staff Art Show", call.title); assertEquals("campus", call.scope); assertTrue(call.deadline > System.currentTimeMillis())
+    }
+
     @Test fun aBackupBringsEverythingBack() = runBlocking {
         ctx
         G.settings.firstName = "Jade"; G.settings.aiKey = "secret-key"

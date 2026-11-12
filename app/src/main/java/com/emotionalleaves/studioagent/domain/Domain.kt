@@ -424,3 +424,117 @@ object Texts {
     fun cvText(name: String, contact: String, facts: List<Fact>): String =
         cv(name, contact, facts).joinToString("\n\n") { (h, l) -> (listOf(h.uppercase()) + l).joinToString("\n") }
 }
+
+
+// ---------------------------------------------------------------- reading a call without AI
+
+/** Pulls the obvious facts out of a call's text with plain pattern matching, for when there is no AI key. */
+object CallReader {
+    private val months = listOf("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december")
+    private val monthPattern = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"
+    private val datePatterns = listOf(
+        Regex("(\\d{4})-(\\d{1,2})-(\\d{1,2})"),
+        Regex("$monthPattern\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})", RegexOption.IGNORE_CASE),
+        Regex("(\\d{1,2})(?:st|nd|rd|th)?\\s+$monthPattern\\.?,?\\s+(\\d{4})", RegexOption.IGNORE_CASE),
+        Regex("(\\d{1,2})/(\\d{1,2})/(\\d{2,4})")
+    )
+
+    private fun month(word: String): Int = months.indexOfFirst { it.startsWith(word.lowercase().take(3)) } + 1
+
+    /** Every date found, with where it sits in the text. US month/day order for slashed dates. */
+    fun dates(text: String): List<Pair<Int, LocalDate>> {
+        val out = mutableListOf<Pair<Int, LocalDate>>()
+        datePatterns.forEachIndexed { i, p ->
+            p.findAll(text).forEach { m ->
+                val g = m.groupValues
+                val d = try {
+                    when (i) {
+                        0 -> LocalDate.of(g[1].toInt(), g[2].toInt(), g[3].toInt())
+                        1 -> LocalDate.of(g[3].toInt(), month(g[1]), g[2].toInt())
+                        2 -> LocalDate.of(g[3].toInt(), month(g[2]), g[1].toInt())
+                        else -> LocalDate.of(g[3].toInt().let { if (it < 100) 2000 + it else it }, g[1].toInt(), g[2].toInt())
+                    }
+                } catch (e: Exception) { null }
+                if (d != null) out += m.range.first to d
+            }
+        }
+        return out.sortedBy { it.first }
+    }
+
+    /** The deadline: the first date after a word like "deadline", otherwise the first date still ahead. */
+    fun deadline(text: String, today: LocalDate): LocalDate? {
+        val all = dates(text)
+        val key = Regex("deadline|due|closes|submit by|entries by|apply by", RegexOption.IGNORE_CASE).find(text)?.range?.first
+        if (key != null) all.firstOrNull { it.first >= key && it.first - key < 160 }?.let { return it.second }
+        return all.map { it.second }.firstOrNull { !it.isBefore(today) }
+    }
+
+    fun fee(text: String): Double {
+        val l = text.lowercase()
+        if (Regex("no (entry |application |submission )?fee|free to (enter|apply|submit)|free entry").containsMatchIn(l)) return 0.0
+        val near = Regex("(?:fee|entry|entries|application)[^$]{0,60}\\$\\s?(\\d+(?:\\.\\d{1,2})?)").find(l) ?: Regex("\\$\\s?(\\d+(?:\\.\\d{1,2})?)[^.]{0,40}(?:fee|entry|per entry|to enter)").find(l)
+        return near?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
+    }
+
+    fun read(text: String, today: LocalDate, zone: java.time.ZoneId, sourceName: String, now: Long): Opp {
+        val l = text.lowercase()
+        val url = Regex("https?://[^\\s)>\\]]+").find(text)?.value.orEmpty()
+        val email = Regex("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}").find(text)?.value.orEmpty()
+        val title = text.lines().map { it.trim() }.firstOrNull { it.isNotBlank() && !it.startsWith("http") && !it.startsWith("Link:") }.orEmpty().take(90).ifBlank { "Shared call" }
+        val d = deadline(text, today)
+        val deadlineMs = d?.atTime(23, 59)?.atZone(zone)?.toInstant()?.toEpochMilli() ?: 0L
+        val kind = when {
+            l.contains("residency") -> "residency"; l.contains("grant") || l.contains("fellowship") -> "grant"
+            l.contains("art fair") || l.contains("festival") -> "fair"; l.contains("magazine") || l.contains("publication") || l.contains("journal") -> "publication"
+            l.contains("commission") && l.contains("public art") -> "commission"; else -> "exhibition"
+        }
+        val scope = when {
+            l.contains("international") || l.contains("worldwide") -> "international"; l.contains("national") || l.contains("open to all u.s.") -> "national"
+            l.contains("regional") -> "regional"; l.contains("online exhibition") || l.contains("virtual exhibition") || l.contains("online only") -> "online"
+            l.contains("staff") || l.contains("campus") || l.contains("students") -> "campus"; else -> ""
+        }
+        val limit = Regex("(\\d{2,4})\\s*words?").find(l)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+        val works = Regex("up to (\\d{1,2}) (?:works|pieces|images|entries)").find(l)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+        return Opp(
+            title = title, url = url, email = email, deadline = deadlineMs, fee = fee(text), kind = kind, scope = scope,
+            online = scope == "online", statementLimit = if (l.contains("statement")) limit else 0, maxWorks = works,
+            jurors = Regex("(?:juror|juried by|judge)s?:?\\s+([A-Z][^\\n.,;]{2,60})").find(text)?.groupValues?.get(1)?.trim().orEmpty(),
+            rawText = text.take(6000), sourceName = sourceName, createdAt = now, dedupeKey = Texts.dedupeKey("", deadlineMs, title)
+        )
+    }
+}
+
+
+// ---------------------------------------------------------------- drafts without AI
+
+/** Builds a first draft from the artist's own interview answers and CV facts. No AI, nothing invented. */
+object Drafts {
+    fun sentence(s: String): String {
+        val t = s.trim().replace(Regex("\\s+"), " ")
+        if (t.isBlank()) return ""
+        val cap = t.replaceFirstChar { it.uppercase() }
+        return if (cap.last() in ".!?") cap else "$cap."
+    }
+
+    /** The answers in a readable order, cut to the word target at a sentence end. */
+    fun statement(answers: Map<String, String>, target: Int): String {
+        val order = listOf("words", "what", "why", "how", "viewer", "looking")
+        val seen = mutableSetOf<String>()
+        val parts = (order + answers.keys.filter { it.startsWith("own:") }).mapNotNull { k ->
+            sentence(answers[k].orEmpty()).takeIf { it.isNotBlank() && seen.add(it.lowercase()) }
+        }
+        return Texts.trimToWords(parts.joinToString(" "), target)
+    }
+
+    fun bio(first: String, last: String, city: String, mediums: String, facts: List<Fact>, firstPerson: Boolean, target: Int): String {
+        val name = "$first $last".trim().ifBlank { "The artist" }
+        val who = if (firstPerson) "I am" else "$name is"
+        val whose = if (firstPerson) "My" else (first.ifBlank { "Their" } + (if (first.isBlank()) "" else "'s"))
+        val parts = mutableListOf("$who an artist" + (if (city.isNotBlank()) " based in $city" else "") + (if (mediums.isNotBlank()) ", working in $mediums" else "") + ".")
+        facts.filter { it.category == "education" }.maxByOrNull { it.year }?.let { parts += (if (firstPerson) "I studied: " else "Education: ") + sentence(it.text) }
+        val shows = facts.filter { it.category in setOf("solo", "group", "invited") }.sortedByDescending { it.year }.take(3)
+        if (shows.isNotEmpty()) parts += "$whose work has been shown in " + shows.joinToString("; ") { it.text + (if (it.year > 0) " (${it.year})" else "") } + "."
+        facts.filter { it.category in setOf("award", "grant", "residency") }.maxByOrNull { it.year }?.let { parts += sentence(it.text + (if (it.year > 0) " (${it.year})" else "")) }
+        return Texts.trimToWords(parts.joinToString(" "), target)
+    }
+}

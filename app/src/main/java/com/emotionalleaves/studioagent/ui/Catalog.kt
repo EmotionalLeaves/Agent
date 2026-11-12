@@ -88,11 +88,32 @@ fun Works(nav: NavController) {
     val tick by st.changed.collectAsState()
     val search = remember { mutableStateOf("") }
     var show by remember { mutableStateOf("all") }
+    val ctx = LocalContext.current
+    var importStatus by remember { mutableStateOf("") }
+    val many = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+        if (uris.isNotEmpty()) {
+            importStatus = "Bringing in ${uris.size} files..."
+            scope.io({ importStatus = it }) {
+                var ok = 0; val problems = mutableListOf<String>()
+                uris.forEachIndexed { i, uri ->
+                    val name = try {
+                        ctx.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+                    } catch (e: Exception) { null } ?: "Untitled ${i + 1}"
+                    try { Engine.importFile(ctx, uri, name); ok++ } catch (e: Exception) { problems += e.message.orEmpty() }
+                    importStatus = "Brought in $ok of ${uris.size}..."
+                }
+                importStatus = "Done ✓. $ok pieces added, each with a title from its file name and a size, edition and price filled in from safe defaults. Open any piece to change them." +
+                    (if (problems.isNotEmpty()) " Skipped: " + problems.joinToString("; ") else "")
+            }
+        }
+    }
     Screen("Studio", nav, back = false) {
         Intro("studio", "Every piece you make lives here, with its image and details. Works are single pieces; Series are groups that belong together.")
         Choice("", listOf("works", "series"), tab) { tab = it }
         if (tab == "works") {
             Button(onClick = { scope.io { val id = dao.put(newWork()); withContext(Dispatchers.Main) { nav.navigate("work/$id") } } }, modifier = Modifier.fillMaxWidth()) { Text("Add a piece") }
+            OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text("Bring in work I have already made (pick several files)") }
+            Status(importStatus)
             if (works.isEmpty()) Note("Nothing here yet. Add a piece, then photograph it or import the file.")
             if (works.size > 5) {
                 Field("Search title, tag, medium or series", search)
@@ -295,6 +316,9 @@ fun WorkDetail(nav: NavController, id: Long) {
             OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.certificate(ctx, st, w, (w.editionUsed + 1).coerceAtLeast(1)); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Certificate") }
             OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, listOf(w))) }) { Text("Print order") }
         }
+        TextButton(onClick = {
+            scope.io { val copy = dao.put(w.copy(id = 0, title = (w.title + " (copy)").trim(), imagePath = "", originalPath = "", detailPath = "", extraImages = "", pixelW = 0, pixelH = 0, status = "in_progress", steps = "", nextStep = "", createdAt = now())); withContext(Dispatchers.Main) { nav.navigate("work/$copy") } }
+        }) { Text("Make another like this (same details, new image)") }
         TextButton(onClick = { scope.remove(w.title.ifBlank { "the piece" }, { dao.del(w) }, { dao.put(w) }); nav.popBackStack() }) { Text("Delete this piece") }
         }
     }

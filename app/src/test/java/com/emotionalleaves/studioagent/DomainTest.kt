@@ -1,7 +1,9 @@
 package com.emotionalleaves.studioagent
 
 import com.emotionalleaves.studioagent.data.Opp
+import com.emotionalleaves.studioagent.domain.CallReader
 import com.emotionalleaves.studioagent.domain.CareerStats
+import com.emotionalleaves.studioagent.domain.Drafts
 import com.emotionalleaves.studioagent.domain.Levels
 import com.emotionalleaves.studioagent.domain.Planner
 import com.emotionalleaves.studioagent.domain.Profile
@@ -165,6 +167,36 @@ class DomainTest {
         assertEquals(null, Planner.weeksToFinish(2, 10, 5.0, 0.0))
         assertEquals(10, Planner.weeksToFinish(2, 10, 5.0, 4.0))
         assertEquals(1, Planner.weeksToFinish(9, 10, 1.0, 8.0))
+    }
+
+    @Test fun aCallIsReadWithoutAi() {
+        val today = LocalDate.of(2026, 11, 11); val zone = java.time.ZoneId.of("America/Chicago")
+        val text = "Winter Open: Small Works\nRiverside Arts invites entries from regional artists. Juried by Ana Reyes.\n" +
+            "Opens October 1, 2026. Deadline: January 15, 2027. Entry fee: $25 for up to 3 works. Statement of 100 words.\n" +
+            "Apply at https://riverside.example.org/call or email entries@riverside.example.org"
+        val o = CallReader.read(text, today, zone, "Pasted", 1L)
+        assertEquals("Winter Open: Small Works", o.title)
+        assertEquals(LocalDate.of(2027, 1, 15), CallReader.deadline(text, today))
+        assertEquals(25.0, o.fee, 0.0); assertEquals(3, o.maxWorks); assertEquals(100, o.statementLimit)
+        assertEquals("https://riverside.example.org/call", o.url); assertEquals("entries@riverside.example.org", o.email)
+        assertEquals("regional", o.scope); assertEquals("exhibition", o.kind); assertEquals("Ana Reyes", o.jurors)
+        assertEquals(LocalDate.of(2027, 3, 1), CallReader.deadline("Residency applications due 3/1/27", today))
+        assertEquals(LocalDate.of(2026, 12, 5), CallReader.deadline("Show runs 5 December 2026 at the library", today))
+        assertEquals(null, CallReader.deadline("No dates here", today))
+        assertEquals(0.0, CallReader.fee("There is no entry fee. Prize of $500."), 0.0)
+        assertEquals("residency", CallReader.read("Artist residency, international", today, zone, "x", 1L).kind)
+    }
+
+    @Test fun draftsAreBuiltOnlyFromWhatTheArtistSaid() {
+        val answers = mapOf("what" to "drawings of the kitchen at 5am", "why" to "It is the only quiet hour I get", "how" to "", "words" to "I draw where I work.")
+        assertEquals("I draw where I work. Drawings of the kitchen at 5am. It is the only quiet hour I get.", Drafts.statement(answers, 150))
+        assertTrue(Texts.words(Drafts.statement(answers, 8)) <= 8)
+        assertEquals("", Drafts.statement(emptyMap(), 150))
+        val facts = listOf(com.emotionalleaves.studioagent.data.Fact(category = "education", year = 2020, text = "BFA, State University"),
+            com.emotionalleaves.studioagent.data.Fact(category = "group", year = 2026, text = "Winter Open, Riverside"))
+        assertEquals("Jade Leaves is an artist based in Austin, working in digital prints. Education: BFA, State University. Jade's work has been shown in Winter Open, Riverside (2026).",
+            Drafts.bio("Jade", "Leaves", "Austin", "digital prints", facts, false, 150))
+        assertEquals("I am an artist.", Drafts.bio("Jade", "", "", "", emptyList(), true, 40))
     }
 
     @Test fun smallStepsRoundTrip() {

@@ -404,7 +404,9 @@ fun ShareScreen(nav: NavController) {
                     if (ImageTools.copyUri(ctx, image, f)) bytes = ImageTools.jpegBytes(f.absolutePath)
                 }
                 if (!G.ai.ready) {
-                    val id = dao.put(Opp(title = if (isUrl) "Call from link" else t.lines().firstOrNull().orEmpty().take(60).ifBlank { "Shared call" }, url = if (isUrl) t else "", rawText = t, sourceName = "Shared", createdAt = now()))
+                    // No AI key: read the page or text with plain pattern matching, then show it for a quick look.
+                    val body = if (isUrl) (try { "Link: $t\n" + Fetch.pageText(t) } catch (e: Exception) { "Call from link\n$t" }) else t
+                    val id = Engine.ingestPlain(if (isUrl) body.removePrefix("Link: $t\n").ifBlank { "Call from link" } + "\n" + t else body, "Shared")
                     withContext(Dispatchers.Main) { nav.navigate("call/$id") { popUpTo("home") } }
                 } else {
                     val body = if (isUrl) "Link: $t\n" + Fetch.pageText(t) else t

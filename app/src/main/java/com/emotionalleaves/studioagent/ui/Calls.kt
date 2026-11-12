@@ -146,8 +146,9 @@ fun Calls(nav: NavController) {
                         scope.io({ status = it }) {
                             val isUrl = t.startsWith("http") && !t.contains(" ")
                             if (!G.ai.ready) {
-                                val id = dao.put(Engine.scored(Opp(title = if (isUrl) "Call from link" else t.lines().first().take(60), url = if (isUrl) t else "", rawText = t, sourceName = "Pasted", createdAt = now()), p))
-                                status = "Saved. Without an AI key the details are yours to fill in."
+                                val body = if (isUrl) (try { Fetch.pageText(t) } catch (e: Exception) { "Call from link" }) + "\n" + t else t
+                                val id = Engine.ingestPlain(body, "Pasted")
+                                status = "Saved. The app picked out what it could (deadline, fee, link). Check those and fill in the rest."
                                 withContext(Dispatchers.Main) { paste.value = ""; nav.navigate("call/$id") }
                             } else {
                                 val n = Engine.ingest(if (isUrl) "Link: $t\n" + Fetch.pageText(t) else t, "Pasted")

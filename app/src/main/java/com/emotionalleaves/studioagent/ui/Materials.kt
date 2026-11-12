@@ -26,6 +26,7 @@ import androidx.navigation.NavController
 import com.emotionalleaves.studioagent.G
 import com.emotionalleaves.studioagent.data.Doc
 import com.emotionalleaves.studioagent.data.Fact
+import com.emotionalleaves.studioagent.domain.Drafts
 import com.emotionalleaves.studioagent.domain.Texts
 import com.emotionalleaves.studioagent.sys.Share
 import com.emotionalleaves.studioagent.work.DAY
@@ -291,8 +292,21 @@ fun DocScreen(nav: NavController, id: Long) {
             }
         }
         if (d.text.isBlank()) {
-            Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = { generate() }) { Text("Write it for me") }
-            if (!G.ai.ready) Note("Add an AI key in Settings to have this written for you, or type it yourself above.")
+            if (G.ai.ready) Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = { generate() }) { Text("Write it for me") }
+            if (d.type == "statement" || d.type == "bio") {
+                OutlinedButton(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
+                    scope.io({ status = it }) {
+                        val all = dao.docsNow(); val facts = dao.factsNow()
+                        val answers = all.filter { it.type == "interview" && it.text.isNotBlank() }.associate { it.variant to it.text } +
+                            (series.firstOrNull { it.id == d.seriesId }?.notes?.takeIf { it.isNotBlank() }?.let { mapOf("words" to it) } ?: emptyMap())
+                        val text = if (d.type == "statement") Drafts.statement(answers, target) else Drafts.bio(st.firstName, st.lastName, st.city, st.mediums, facts, d.variant == "first", target)
+                        if (text.isBlank()) throw Exception("There is nothing to build from yet. Answer a few interview questions first.")
+                        val x = d.copy(text = text, approved = false, updatedAt = now()); d = x; dao.put(x)
+                        status = "Built from your own answers, word for word. Tidy it into your voice, then approve."
+                    }
+                }) { Text(if (G.ai.ready) "Or build it from my own answers, no AI" else "Build it from my interview answers") }
+            }
+            if (!G.ai.ready) Note("No AI key is needed for this. With one, the app writes a smoother draft.")
         }
         if (d.type == "custom") TextButton(onClick = { scope.remove(d.title.ifBlank { "the document" }, { dao.del(d) }, { dao.put(d) }); nav.popBackStack() }) { Text("Delete this document") }
     }

@@ -168,6 +168,12 @@ object Engine {
         return addCalls(withFit)
     }
 
+    /** Reads a call with no AI: plain pattern matching for the deadline, fee, link and so on. The rest is left for you to fill. */
+    suspend fun ingestPlain(text: String, sourceName: String): Long {
+        val o = com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, System.currentTimeMillis())
+        return dao.put(scored(o, profile()))
+    }
+
     /** This week's short list: eligible calls at your level, best first, plus at most one stretch call a month. */
     fun shortlist(opps: List<Opp>, p: Profile, now: Long, stretchOk: Boolean, size: Int = 7): List<Opp> {
         val ok = opps.filter { it.status == "new" && Scoring.ineligible(it, p, now).isEmpty() }
@@ -262,6 +268,25 @@ object Engine {
             if (p > 0) { w = w.copy(price = p); filled += "a price of ${st.currency}${"%.0f".format(p)} from your rule" }
         }
         return w to filled
+    }
+
+    /** Turns a file name into a working title: "blue_hour-final.png" becomes "Blue hour final". */
+    fun titleFromFileName(name: String): String =
+        name.substringBeforeLast('.').replace(Regex("[_\\-]+"), " ").replace(Regex("\\s+"), " ").trim().replaceFirstChar { it.uppercase() }.take(80)
+
+    /** Brings one existing image file in as a finished, documented piece with safe defaults filled in. */
+    suspend fun importFile(ctx: Context, uri: android.net.Uri, fileName: String, seriesId: Long = 0): Long = withContext(Dispatchers.IO) {
+        val id = dao.put(Artwork(status = "documented", format = if (st.routes.firstOrNull() == "screen") "screen" else "print", year = LocalDate.now().year, createdAt = System.currentTimeMillis(), seriesId = seriesId))
+        val dir = ImageTools.mediaDir(ctx)
+        val orig = File(dir, "work_${id}_orig.jpg"); val main = File(dir, "work_${id}_main.jpg")
+        if (!ImageTools.copyUri(ctx, uri, orig)) { dao.artworksNow().firstOrNull { it.id == id }?.let { dao.del(it) }; throw Exception("Could not read $fileName") }
+        val (pw, ph) = ImageTools.size(orig.absolutePath)
+        val bmp = ImageTools.decode(orig.absolutePath, 2400)
+        if (bmp == null) { orig.delete(); dao.artworksNow().firstOrNull { it.id == id }?.let { dao.del(it) }; throw Exception("$fileName is not an image the app can open") }
+        ImageTools.saveJpeg(bmp, main)
+        val base = dao.artworksNow().first { it.id == id }.copy(title = titleFromFileName(fileName), originalPath = orig.absolutePath, imagePath = main.absolutePath, pixelW = pw, pixelH = ph)
+        dao.put(fillBlanks(base).first)
+        id
     }
 
     /** The piece to work on: this week's chosen one if it is still in progress, otherwise the most recent in progress. */
