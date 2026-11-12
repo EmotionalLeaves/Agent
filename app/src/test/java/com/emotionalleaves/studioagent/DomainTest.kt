@@ -140,7 +140,7 @@ class DomainTest {
 
     @Test fun whatMattersMostChangesTheRanking() {
         val cheapPoorFit = Opp(title = "A", scope = "local", fee = 0.0, themeFit = 20)
-        val paidGreatFit = Opp(title = "B", scope = "local", fee = 25.0, themeFit = 95)
+        val paidGreatFit = Opp(title = "B", scope = "local", fee = 40.0, themeFit = 95)
         val moneyFirst = Profile(level = 1, rules = Rules(weights = listOf(1, 2, 3, 2, 2, 2)))
         val themeFirst = Profile(level = 1, rules = Rules(weights = listOf(3, 2, 1, 2, 2, 2)))
         assertTrue(Scoring.score(cheapPoorFit, moneyFirst).first > Scoring.score(paidGreatFit, moneyFirst).first)

@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.printToString
 import androidx.room.Room
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -80,7 +82,8 @@ class AppTest {
             try {
                 compose.waitUntil(15_000) { compose.onAllNodesWithText(expect, substring = true).fetchSemanticsNodes().isNotEmpty() }
             } catch (e: Throwable) {
-                throw AssertionError("Screen '$route' never showed \"$expect\"", e)
+                val seen = try { compose.onAllNodes(isRoot()).printToString(maxDepth = 40).replace("\n", " | ").take(1500) } catch (x: Throwable) { "nothing (${x.message?.take(200)})" }
+                throw AssertionError("Screen '$route' never showed \"$expect\". On screen: $seen")
             }
         }
     }
