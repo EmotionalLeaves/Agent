@@ -2,10 +2,10 @@
     android:id="@+id/widget_button"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#2F5D50"
+    android:background="@drawable/widget_bg"
     android:gravity="center"
-    android:padding="8dp"
+    android:padding="10dp"
     android:text="@string/start_session"
     android:textColor="#FFFFFF"
-    android:textSize="16sp"
+    android:textSize="17sp"
     android:textStyle="bold" />

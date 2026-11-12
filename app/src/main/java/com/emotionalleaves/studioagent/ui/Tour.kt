@@ -75,6 +75,7 @@ fun Tour(nav: NavController) {
         st.setupDone = true; st.tourSeen = true
         if (Build.VERSION.SDK_INT >= 33) notify.launch(Manifest.permission.POST_NOTIFICATIONS) else finishTour(nav)
     }
+    val buzz = rememberBuzz()
     val last = pager.currentPage == pages.lastIndex
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).imePadding().padding(horizontal = 24.dp, vertical = 16.dp)) {
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -101,7 +102,7 @@ fun Tour(nav: NavController) {
             }
         }
         if (last) {
-            Button(onClick = { start() }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start using it") }
+            Button(onClick = { buzz(); start() }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start using it") }
             TextButton(onClick = { st.setupDone = true; st.tourSeen = true; if (name.value.isNotBlank()) st.firstName = name.value.trim(); nav.navigate("onboarding") { popUpTo("home") } }, modifier = Modifier.fillMaxWidth()) { Text("Set my week and hours first") }
         } else Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             if (pager.currentPage > 0) TextButton(onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } }) { Text("Back") }

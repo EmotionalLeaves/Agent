@@ -1,3 +1,8 @@
 <resources>
-    <style name="Theme.StudioAgent" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- The window behind the app matches the gallery-wall white, so there is no white flash on opening. -->
+    <style name="Theme.StudioAgent" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/wall</item>
+        <item name="android:colorBackground">@color/wall</item>
+    </style>
+    <color name="wall">#F2F2EF</color>
 </resources>

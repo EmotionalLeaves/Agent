@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.StudioAgent" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/wall</item>
+        <item name="android:colorBackground">@color/wall</item>
+    </style>
+    <color name="wall">#1B1C1E</color>
+</resources>

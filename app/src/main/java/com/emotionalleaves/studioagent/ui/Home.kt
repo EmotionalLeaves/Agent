@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -199,6 +200,7 @@ fun Home(nav: NavController) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text("This week", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
                     Text("%.1f of %d hours".format(hours, st.weeklyHours), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Open your week", Modifier.padding(start = 4.dp).size(20.dp), tint = cs.outline)
                 }
                 val monday = today.with(java.time.DayOfWeek.MONDAY)
                 Row(Modifier.fillMaxWidth()) {
@@ -649,10 +651,10 @@ fun Review(nav: NavController) {
     val mine = sessions.filter { it.start >= weekStart && it.end > it.start }
     val active = works.filter { it.status == "in_progress" }
     Screen("Next week", nav) {
-        H("1. What you did")
+        StageHead(1, "What you did", true)
         Text(if (mine.isEmpty()) "No sessions logged this week. That is information, not a verdict. If the plan did not fit your week, the plan is what should change."
         else "${mine.size} session" + (if (mine.size > 1) "s" else "") + ", ${mine.sumOf { (it.end - it.start) / 60000 }} minutes. That happened, and it counts.")
-        H("2. One piece for next week")
+        StageHead(2, "One piece for next week", st.focusWork > 0)
         if (active.isEmpty()) Empty("Nothing in progress. Start a new piece from Studio when you are ready.", "Open Studio") { nav.navigate("works") }
         else {
             Choice("", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, active.firstOrNull { tick >= 0 && it.id == st.focusWork }?.let { it.title.ifBlank { "Untitled #${it.id}" } }.orEmpty()) { t ->
@@ -660,7 +662,7 @@ fun Review(nav: NavController) {
             }
             Small("Start now will open straight onto it. Other ideas can wait in Ideas.")
         }
-        H("3. Your studio times")
+        StageHead(3, "Your studio times", false)
         val coming = events.filter { it.type == "studio" && it.date > now() }.take(5)
         if (st.pausedUntil > now()) Small("Planning is paused until ${fmtDate(st.pausedUntil)}.")
         else if (coming.isEmpty()) Small("None planned yet. They are added with the next daily check.")

@@ -143,7 +143,7 @@ fun Outreach(nav: NavController) {
         people.forEach { c ->
             Panel(onClick = { nav.navigate("contact/${c.id}") }) {
                 Text(c.venue.ifBlank { c.name.ifBlank { "New contact" } }, fontWeight = FontWeight.SemiBold)
-                Note(c.kind.replace('_', ' ') + ", " + statusWords(c))
+                Small(c.kind.replace('_', ' ').replaceFirstChar { it.uppercase() } + ", " + statusWords(c).replaceFirstChar { it.lowercase() })
                 if (!Levels.outreachAllowed(level, c.kind, Engine.rules())) Note("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}.")
             }
         }
@@ -188,7 +188,7 @@ fun ContactScreen(nav: NavController, id: Long) {
     val limit = st.revisionLimit
 
     Screen(c.venue.ifBlank { c.name.ifBlank { "Contact" } }, nav) {
-        Note(statusWords(c))
+        Row { Tag(statusWords(c), strong = c.status in setOf("research", "drafted")) }
         Field("Venue", c.venue, { save(c.copy(venue = it)) })
         Field("Person", c.name, { save(c.copy(name = it)) })
         Field("Email", c.email, { save(c.copy(email = it.trim())) })
