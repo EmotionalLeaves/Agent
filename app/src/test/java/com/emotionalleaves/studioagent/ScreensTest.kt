@@ -67,7 +67,7 @@ class ScreensTest {
         ctx
         shot("01_home_fresh", "home", "two-minute tour")
         shot("07_tour", "tour", "From the studio to a wall")
-        shot("03_guide_fresh", "guide", "Tell the app who you are")
+        shot("03_guide_fresh", "guide", "Take the tour")
         shot("04_more", "more", "Plain answers")
         shot("05_settings", "settings", "Your rules")
         shot("06_basics", "basics", "What is an open call?")
@@ -166,7 +166,7 @@ class ScreensTest {
         shot("60_rules", "settings/rules", "What matters most when ranking")
         shot("61_writing", "settings/writing", "Standing notes")
         shot("62_ai", "settings/ai", "Test the key")
-        shot("63_email", "settings/email", "Send me a test email")
+        shot("63_email", "settings/email", "App password")
         shot("64_backup", "settings/backup", "Choose a backup folder")
         shot("65_permissions", "settings/permissions", "Allow Do Not Disturb")
         shot("66_hours", "settings/hours", "Your studio times themselves")

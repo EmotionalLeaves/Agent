@@ -662,7 +662,8 @@ fun Sources(nav: NavController) {
         Choice("Kind", listOf("email", "url"), kind) { kind = it }
         Field("Name", name)
         Field(if (kind == "email") "Sender address or domain" else "Page address", value)
-        Button(enabled = name.value.isNotBlank() && value.value.isNotBlank(), onClick = {
+        // Appears once there is something to add, like Park it.
+        if (name.value.isNotBlank() && value.value.isNotBlank()) Button(onClick = {
             val s = Source(name = name.value.trim(), kind = kind, url = value.value.trim()); name.value = ""; value.value = ""
             scope.io { dao.put(s) }
         }) { Text("Add source") }

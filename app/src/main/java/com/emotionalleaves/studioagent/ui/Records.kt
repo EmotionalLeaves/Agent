@@ -450,7 +450,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                     SText("Outgoing server", st.smtpHost) { st.smtpHost = it }
                     SText("Incoming server", st.imapHost) { st.imapHost = it }
                 }
-                Button(enabled = !busy, onClick = {
+                if (st.mailUser.isNotBlank() && st.mailPass.isNotBlank()) Button(enabled = !busy, onClick = {
                     busy = true; status = "Sending a test..."
                     scope.io({ status = "That did not work: $it"; busy = false }) {
                         Mail.send(st.smtpHost, st.mailUser, st.mailPass, st.mailUser, "Studio Agent test", "If you can read this, Studio Agent can send email for you.")

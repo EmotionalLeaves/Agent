@@ -115,7 +115,7 @@ fun Outreach(nav: NavController) {
         Field("Their website", url)
         Status(status)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (!G.ai.ready) Button(enabled = !busy && url.value.isNotBlank(), onClick = {
+            if (!G.ai.ready && url.value.isNotBlank()) Button(enabled = !busy, onClick = {
                 busy = true; status = "Reading their site..."
                 scope.io({ status = it; busy = false }) {
                     val u = url.value.trim().let { if (it.startsWith("http")) it else "https://$it" }
@@ -124,7 +124,7 @@ fun Outreach(nav: NavController) {
                     withContext(Dispatchers.Main) { url.value = ""; nav.navigate("contact/$id") }
                 }
             }) { Text("Look it up") }
-            if (G.ai.ready) Button(enabled = !busy && url.value.isNotBlank(), onClick = {
+            if (G.ai.ready && url.value.isNotBlank()) Button(enabled = !busy, onClick = {
                 busy = true; status = "Reading their site..."
                 scope.io({ status = it; busy = false }) {
                     val u = url.value.trim().let { if (it.startsWith("http")) it else "https://$it" }

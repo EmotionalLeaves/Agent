@@ -41,7 +41,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
     fun m(id: String) = id in manual
     val a = "Start here"; val b = "Let the app write for you"; val c = "Sending and saving"; val d = "Finding shows"; val e = "Shortcuts"
     return listOf(
-        GuideStep("setup", a, "Tell the app who you are",
+        GuideStep("setup", a, "Take the tour",
             "A two-minute look at how the app works. Your name, hours and week are optional and can be set any time.",
             listOf("Take the tour. Nothing to fill in.", "If you like, set your work hours so the app stays quiet while you are at work."),
             "tour", "Take the tour", st.onboarded),
