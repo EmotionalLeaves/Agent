@@ -127,6 +127,7 @@ fun Guide(nav: NavController) {
     Screen("Guide", nav) {
         val done = steps.count { it.done }
         Text("One step at a time. Only the open step needs you; ignore the rest until you get there.")
+        Panel(onClick = { nav.navigate("basics") }) { Text("New to exhibiting?", fontWeight = FontWeight.SemiBold); Small("Plain answers to the things nobody explains. You do not need to know any of it to start.") }
         if (steps.isNotEmpty()) {
             LinearProgressIndicator(progress = { done.toFloat() / steps.size }, modifier = Modifier.fillMaxWidth())
             Note("$done of ${steps.size} done. Steps marked optional can be skipped for good: the app works without them.")
@@ -152,5 +153,32 @@ fun Guide(nav: NavController) {
         H("Layout")
         Toggle("Simple layout: fewer tabs, progress folded away", simple) { simple = it; st.simpleMode = it }
         Toggle("Hide the Guide card on Home", hidden) { hidden = it; st.guideHidden = it }
+    }
+}
+
+
+val basics = listOf(
+    "Do I need to know how the art world works?" to "No. The app is built so you can start knowing nothing. Wherever it asks something you cannot answer, there is a \"not sure\" or \"decide for me\" choice, and it picks a safe default.",
+    "What is an open call?" to "An invitation from a gallery, art centre, library, magazine or fair for artists to send in work for a show. You apply by a deadline and they choose what goes in. It is the normal way to get a first exhibition.",
+    "What does \"juried\" mean?" to "One or more named people, the jurors, pick the work. That is the good, normal kind. If paying a fee guarantees you a place, nobody is choosing, and it does little for you. The app holds those back.",
+    "Do I have to pay to apply?" to "Sometimes. Many calls charge an entry fee and many are free. The app only shows you free ones at the start, and never pays anything for you.",
+    "How does digital art end up on a wall?" to "It is printed with pigment inks on archival paper, often called an archival pigment print or giclee, and framed. Shows accept these all the time. A print lab does the printing; the app prepares the order.",
+    "What is a series?" to "A group of pieces that clearly belong together: the same subject, idea or look. Shows usually want several works that hang well side by side, which is why the app aims you at about ten.",
+    "What is an edition?" to "The number of prints you promise to ever make of one image, for example 10. Each is numbered, like 3/10. You cannot raise the number later, so pick one and keep it. If unsure, 10 is a common, safe choice.",
+    "What size should I print?" to "As large as your file stays sharp, or smaller. The app works this out from the file and can fill it in for you. Standard frame sizes such as 8 x 10, 11 x 14 and 16 x 20 inches keep framing cheap.",
+    "How much should I charge?" to "Nobody knows at first. A simple, consistent rule is enough, such as a price per square inch plus the cost of the frame. The app can fill this in from a rule, and you can mark work not for sale.",
+    "What is an artist statement?" to "A short text, in your own words, about what you make and why. Almost every call asks for one. The app drafts it from your interview answers and you approve it once.",
+    "What is the difference between a bio and a statement?" to "The statement is about the work. The bio is about you: where you are based, any training, any shows. Both are short.",
+    "What is an artist CV?" to "A plain list of your education, exhibitions, awards and similar. A short one is completely normal when you start. The app adds a line each time you get into something.",
+    "What happens if I get in?" to "You deliver or ship the framed work by a date, it hangs for a few weeks, and you collect whatever does not sell. Venues usually keep a share of any sale, called commission. The app turns the acceptance into a checklist.",
+    "What if I am not chosen?" to "That is the usual result for everyone, including artists who show a lot. It is not a verdict on the work. The app frees the pieces for the next call and does not make you go over it.",
+    "What are the levels in this app?" to "A way to keep the next step small. Level 0 is making your first series. Each level opens slightly bigger opportunities. You can ignore them, or set your level yourself in Settings, Your rules."
+)
+
+@Composable
+fun Basics(nav: NavController) {
+    Screen("Plain answers", nav) {
+        Text("Tap any question. None of this is a test, and you can use the whole app without reading it.")
+        basics.forEach { (q, a) -> Expand(q) { Text(a) } }
     }
 }

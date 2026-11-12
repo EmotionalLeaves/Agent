@@ -217,16 +217,24 @@ fun WorkDetail(nav: NavController, id: Long) {
         Whole("Year", w.year) { save(w.copy(year = it)) }
         Field("Medium (blank uses the default for its format)", w.medium, { save(w.copy(medium = it)) })
         Choice("Format", listOf("print", "physical", "screen", "digital"), w.format) { save(w.copy(format = it)) }
+        Explain("Not sure which format?", "Print: a digital file that will be printed and framed. Physical: made by hand. Screen: shown on a monitor. Digital: a file with no plan yet. If unsure, leave it on print.")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(Modifier.weight(1f)) { Dim("Width", w.widthIn) { save(w.copy(widthIn = it)) } }
             Column(Modifier.weight(1f)) { Dim("Height", w.heightIn) { save(w.copy(heightIn = it)) } }
             Column(Modifier.weight(1f)) { Dim("Depth", w.depthIn) { save(w.copy(depthIn = it)) } }
         }
-        if (w.format == "print" || w.format == "digital") Panel { Text("Print check", fontWeight = FontWeight.SemiBold); Text(Texts.printVerdict(w.pixelW, w.pixelH, w.widthIn, w.heightIn)) }
+        if (w.format == "print" || w.format == "digital") {
+            Panel { Text("Print check", fontWeight = FontWeight.SemiBold); Text(Texts.printVerdict(w.pixelW, w.pixelH, w.widthIn, w.heightIn)) }
+            val size = Texts.suggestedPrintSize(w.pixelW, w.pixelH)
+            if (size != null && (w.widthIn <= 0 || w.heightIn <= 0)) OutlinedButton(onClick = { save(w.copy(widthIn = size.first, heightIn = size.second)); status = "Size filled in. Reopen this piece to see it in the boxes." }) {
+                Text("I do not know the size: use ${Texts.dim(size.second)} x ${Texts.dim(size.first)} in, the largest sharp print")
+            }
+        }
         Toggle("Framed", w.framed) { save(w.copy(framed = it)) }
         if (series.isNotEmpty()) Choice("Series", series.map { it.name }, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()) { n -> series.firstOrNull { it.name == n }?.let { save(w.copy(seriesId = it.id)) } }
         else Note("No series yet. Add one under Studio, Series.")
         Choice("Status", workStatuses, w.status) { save(w.copy(status = it)) }
+        Explain("What do these mean?", "In progress: still making it. Finished: done, not photographed yet. Documented or available: has its image and can be sent to calls. Pending: sent to a call, waiting. Shown and sold: the app sets these for you.")
         Field("Next step (shown when you start a session)", w.nextStep, { save(w.copy(nextStep = it)) })
         Field("Tags (your own labels, comma separated)", w.tags, { save(w.copy(tags = it)) })
 
@@ -250,6 +258,8 @@ fun WorkDetail(nav: NavController, id: Long) {
             Column(Modifier.weight(1f)) { Whole("Edition size", w.editionSize) { save(w.copy(editionSize = it)) } }
             Column(Modifier.weight(1f)) { Whole("Prints made", w.editionUsed) { save(w.copy(editionUsed = it)) } }
         }
+        Explain("What is an edition, and what number should I pick?", "The number of prints you promise to ever make of this image. Each is numbered, like 3/10. You cannot raise it later. If unsure, 10 is a common, safe choice. Leave it empty for one-off physical work.")
+        Explain("I have no idea what to charge", "Nobody does at first. Tap \"Use my price rule\" above and the app sets a consistent price from the size. You can also switch on Not for sale and decide later; shows accept that.")
         Field("Where it is now", w.location, { save(w.copy(location = it)) })
         Field("Notes", w.notes, { save(w.copy(notes = it)) }, lines = 2)
         }

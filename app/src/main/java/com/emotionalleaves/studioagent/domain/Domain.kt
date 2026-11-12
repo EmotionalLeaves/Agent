@@ -362,6 +362,13 @@ object Texts {
         return min(pixelW / wIn, pixelH / hIn).toInt()
     }
 
+    /** The largest size a file prints sharply (300 ppi), rounded down to the half inch. Null when there is no file. */
+    fun suggestedPrintSize(pixelW: Int, pixelH: Int): Pair<Double, Double>? {
+        if (pixelW <= 0 || pixelH <= 0) return null
+        val w = Math.floor(pixelW / 300.0 * 2) / 2; val h = Math.floor(pixelH / 300.0 * 2) / 2
+        return if (w < 1 || h < 1) null else w to h
+    }
+
     fun printVerdict(pixelW: Int, pixelH: Int, wIn: Double, hIn: Double): String {
         if (pixelW <= 0 || pixelH <= 0) return "No file yet"
         val maxW = pixelW / 300.0; val maxH = pixelH / 300.0

@@ -218,31 +218,34 @@ fun Onboarding(nav: NavController) {
     val last = remember { mutableStateOf(st.lastName) }
     val email = remember { mutableStateOf(st.email) }
     val city = remember { mutableStateOf(st.city) }
-    var route by remember { mutableStateOf(st.route) }
-    var hours by remember { mutableStateOf(st.weeklyHours.toString()) }
+    var shown by remember { mutableStateOf("not sure yet") }
+    var hours by remember { mutableStateOf("decide for me") }
     val perms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { nav.navigate("home") { popUpTo("home") { inclusive = true } } }
     Screen("Set up", nav) {
-        Note("Four answers. Everything else has a sensible default you can change later in Settings.")
+        Text("Only your first name is needed. You are not expected to know any of the rest yet: leave it on \"not sure\" and the app starts you with a safe choice that you can change later.")
         Field("First name", first)
-        Field("Last name", last)
-        Field("Email (shown on your CV and portfolio)", email)
-        Field("City", city)
-        Choice("How will your work be shown first?", listOf("print", "physical", "screen"), route) { route = it }
-        Note(when (route) {
-            "print" -> "Archival prints of your digital work. The fastest way onto a wall."
-            "physical" -> "Painting, drawing, printmaking or another hands-on medium."
-            else -> "Video, animation or interactive work shown on screens."
+        Field("Last name (optional)", last)
+        Field("Email for your CV (optional)", email)
+        Field("City (optional)", city)
+        Choice("How will your work be shown?", listOf("not sure yet", "prints of my digital work", "physical work", "on screens"), shown) { shown = it }
+        Small(when (shown) {
+            "not sure yet" -> "That is fine. The app will assume prints of your digital work, because it is the quickest way to get something you already make onto a wall. Nothing is locked in."
+            "prints of my digital work" -> "Your files, printed on archival paper and framed. Shows accept these all the time."
+            "physical work" -> "Painting, drawing, printmaking or anything made by hand."
+            else -> "Video, animation or interactive work shown on a monitor or projector. Fewer shows take it, but some do."
         })
-        Choice("Hours of making a week", listOf("3", "4", "5", "6", "8"), hours) { hours = it }
-        Note("Your week is set to Monday to Friday, 7:00 to 3:30. The app stays silent in those hours.")
+        Choice("Hours of making a week", listOf("decide for me", "3", "4", "5", "6", "8"), hours) { hours = it }
+        Small(if (hours == "decide for me") "The app starts at 4 hours: two short evenings and one longer weekend session. You can lower or raise it any time, or pause." else "About $hours hours, spread around your job.")
         Button(onClick = {
             st.firstName = first.value.trim(); st.lastName = last.value.trim(); st.email = email.value.trim(); st.city = city.value.trim()
-            st.route = route; st.weeklyHours = hours.toIntOrNull() ?: 4
+            st.route = when (shown) { "physical work" -> "physical"; "on screens" -> "screen"; else -> "print" }
+            st.weeklyHours = hours.toIntOrNull() ?: 4
             val wanted = mutableListOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
             if (Build.VERSION.SDK_INT >= 33) wanted += Manifest.permission.POST_NOTIFICATIONS
             perms.launch(wanted.toTypedArray())
         }, enabled = first.value.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Done") }
-        Note("Next it asks to use your calendar (to book studio time around your day) and to send at most ${st.notifCap} quiet notifications a day. Both are optional.")
+        Small("Next, your phone asks two things: calendar (so studio time can be booked around your day) and notifications (at most ${st.notifCap} quiet ones a day). Say no to either and the app still works.")
+        TextButton(onClick = { nav.navigate("basics") }) { Text("New to exhibiting? Plain answers to the basics") }
     }
 }
 
@@ -416,6 +419,7 @@ fun More(nav: NavController) {
     Screen("More", nav, back = false) {
         listOf(
             Triple("Guide", "Every setup step, one at a time", "guide"),
+            Triple("Plain answers", "What a call, a series, an edition and the rest actually mean", "basics"),
             Triple("Calls", "Open calls, ranked for you", "calls"),
             Triple("People", "Venues, curators, your email list", "outreach"),
             Triple("Your week", "Studio times, pause, session history", "week"),

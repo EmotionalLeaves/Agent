@@ -201,6 +201,16 @@ fun PathImage(path: String, modifier: Modifier = Modifier, maxSide: Int = 700) {
     else Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant))
 }
 
+/** A plain-words answer behind a tap, for any term the app uses that nobody should be expected to know already. */
+@Composable
+fun Explain(question: String, answer: String) {
+    var open by remember { mutableStateOf(false) }
+    Column {
+        Text(question, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.clickable { open = !open }.padding(vertical = 6.dp))
+        if (open) Panel { Text(answer) }
+    }
+}
+
 /** A section that stays folded until asked for, so long screens start short. */
 @Composable
 fun Expand(title: String, startOpen: Boolean = false, content: @Composable ColumnScope.() -> Unit) {

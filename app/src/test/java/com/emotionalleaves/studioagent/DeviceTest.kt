@@ -91,7 +91,7 @@ class AppTest {
     @Test fun everyScreenOpensOnAFreshInstall() {
         ctx
         listOf(
-            "home" to "Set up in 2 minutes", "onboarding" to "Four answers", "session" to "Two-minute start", "admin" to "Nothing to approve",
+            "home" to "Set up in 2 minutes", "onboarding" to "Only your first name is needed", "basics" to "What is an open call?", "session" to "Two-minute start", "admin" to "Nothing to approve",
             "works" to "Add a piece", "ideas" to "Park it", "materials" to "Your own documents", "interview" to "Save answers", "facts" to "Add line",
             "calls" to "Add a call", "sources" to "Run the daily check now", "outreach" to "Your email list", "records" to "Quarterly report",
             "settings" to "Your rules", "settings/you" to "Sizes in", "settings/hours" to "Change my studio times", "settings/rules" to "What matters most when ranking",

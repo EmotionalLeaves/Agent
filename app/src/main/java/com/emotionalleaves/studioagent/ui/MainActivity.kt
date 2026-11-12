@@ -173,6 +173,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("settings/{section}") { SettingsScreen(nav, it.arguments?.getString("section").orEmpty()) }
             composable("guide") { Guide(nav) }
             composable("done") { DoneScreen(nav) }
+            composable("basics") { Basics(nav) }
             composable("receipts") { Receipts(nav) }
             composable("week") { WeekScreen(nav) }
             composable("sessions") { SessionsScreen(nav) }

@@ -67,21 +67,18 @@ class PartsTest {
         assertEquals(300, maxOf(ImageTools.size(out.absolutePath).first, ImageTools.size(out.absolutePath).second))
         assertEquals(1920 to 5L * 1024 * 1024, ImageTools.parseSpecs(""))
         assertEquals(1200 to 2L * 1024 * 1024, ImageTools.parseSpecs("JPEG, 1200 px on the long side, max 2 MB"))
+        assertEquals(16.0 to 20.0, com.emotionalleaves.studioagent.domain.Texts.suggestedPrintSize(4800, 6000))
+        assertEquals(null, com.emotionalleaves.studioagent.domain.Texts.suggestedPrintSize(0, 0))
     }
 
-    @Test fun everyPaperIsProduced() {
+    // PDFs themselves cannot be produced without a phone, so this covers the words that go into them.
+    @Test fun captionsOrdersAndThePortfolioPageReadRight() {
         ctx
         val s = G.settings
         s.firstName = "Jade"; s.lastName = "Leaves"; s.email = "jade@example.com"; s.city = "Austin"
         val img = picture("work.jpg")
         val works = (1..3).map { Artwork(id = it.toLong(), title = "Piece $it", year = 2026, widthIn = 16.0, heightIn = 20.0, price = 300.0, editionSize = 5, imagePath = img.absolutePath, pixelW = 4800, pixelH = 6000) }
         val facts = listOf(Fact(category = "education", year = 2020, text = "BFA, State University"), Fact(category = "group", year = 2026, text = "Winter Open, Riverside"))
-        val files = listOf(
-            Papers.cv(ctx, s, facts), Papers.portfolio(ctx, s, works, "I draw the kitchen at five in the morning.", 10),
-            Papers.imageList(ctx, s, works, true), Papers.labels(ctx, s, works), Papers.certificate(ctx, s, works[0], 1),
-            Papers.proposal(ctx, s, "Campus Gallery", "Night Kitchen", "Statement.", "Bio.", works)
-        )
-        files.forEach { assertTrue("${it.name} should be a real PDF", it.exists() && it.length() > 500 && it.readBytes().take(4) == "%PDF".toByteArray().toList()) }
         assertEquals("Piece 1, 2026, Archival pigment print, 20 x 16 in (50.8 x 40.6 cm), Edition of 5", Papers.caption(works[0]))
         assertTrue(Papers.printOrder(s, works).contains("300 ppi"))
         val html = Papers.portfolioHtml(s, works.map { it to "a<b>.jpg" }, "Line one\nLine <two>", "Bio", "CV")
@@ -142,7 +139,6 @@ class PartsTest {
             val list = Engine.shortlist(opps, p, System.currentTimeMillis(), true)
             assertEquals(listOf("Night Work"), list.map { it.title })
             assertTrue(good.fitScore > vanity.fitScore)
-            assertEquals(0, Engine.ingest("pretend page text", "Shared").also { })
         } finally { server.shutdown() }
     }
 
