@@ -59,7 +59,7 @@ fun WeekScreen(nav: NavController) {
         H("Studio times")
         if (!custom) {
             Note("You are on the suggested week: short sessions on two work-day evenings after a rest, and the remaining hours at the weekend.")
-            suggested().forEach { s -> Text("${dayNames[s.day - 1]}  ${s.time}  ·  ${s.minutes} min") }
+            suggested().forEach { s -> Text("${dayNames[s.day - 1]}  ${s.time}, ${s.minutes} min") }
             Button(onClick = {
                 slots.clear(); suggested().forEachIndexed { i, s -> slots.add(EditSlot(i, s.day, s.time.toString(), s.minutes.toString())) }
                 custom = true
@@ -108,7 +108,7 @@ fun WeekScreen(nav: NavController) {
             H("Coming up")
             coming.forEach { e ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(fmtDate(e.date) + "  " + java.time.Instant.ofEpochMilli(e.date).atZone(java.time.ZoneId.systemDefault()).toLocalTime().toString().take(5) + "  ·  ${(e.endDate - e.date) / 60000} min", Modifier.weight(1f))
+                    Text(fmtDate(e.date) + "  " + java.time.Instant.ofEpochMilli(e.date).atZone(java.time.ZoneId.systemDefault()).toLocalTime().toString().take(5) + ", ${(e.endDate - e.date) / 60000} min", Modifier.weight(1f))
                     TextButton(onClick = { scope.io { Cal.remove(ctx, e.calendarId); dao.del(e) } }) { Text("Skip") }
                 }
             }
@@ -147,7 +147,7 @@ fun SessionsScreen(nav: NavController) {
         if (sessions.isEmpty()) Empty("No sessions yet. Each one you finish is listed here.")
         sessions.take(60).forEach { s ->
             Panel {
-                Text(fmtDate(s.start) + "  ·  ${((s.end - s.start) / 60000).coerceAtLeast(0)} min  ·  ${s.kind}" + name(s.artworkId).let { if (it.isNotBlank()) "  ·  $it" else "" }, fontWeight = FontWeight.SemiBold)
+                Text(fmtDate(s.start) + ", ${((s.end - s.start) / 60000).coerceAtLeast(0)} min, ${s.kind}" + name(s.artworkId).let { if (it.isNotBlank()) ", $it" else "" }, fontWeight = FontWeight.SemiBold)
                 if (s.nextStep.isNotBlank()) Note("Next time: ${s.nextStep}")
                 if (s.note.isNotBlank()) Note(s.note)
                 if (s.photoPath.isNotBlank()) PathImage(s.photoPath, Modifier.fillMaxWidth(), 500)

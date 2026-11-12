@@ -111,7 +111,7 @@ fun Works(nav: NavController) {
                     try { Engine.importFile(ctx, uri, name); ok++ } catch (e: Exception) { problems += e.message.orEmpty() }
                     importStatus = "Brought in $ok of ${uris.size}..."
                 }
-                importStatus = "Done ✓. $ok pieces added, each with a title from its file name and a size, edition and price filled in from safe defaults. Open any piece to change them." +
+                importStatus = "Done. $ok pieces added, each with a title from its file name and a size, edition and price filled in from safe defaults. Open any piece to change them." +
                     (if (problems.isNotEmpty()) " Skipped: " + problems.joinToString("; ") else "")
             }
         }
@@ -226,20 +226,33 @@ fun WorkDetail(nav: NavController, id: Long) {
     }
 
     Screen(w.title.ifBlank { "Untitled" }, nav) {
-        if (w.imagePath.isNotBlank()) PathImage(w.imagePath, Modifier.fillMaxWidth().height(260.dp), 1000)
-        Field("Title", w.title, { save(w.copy(title = it)) })
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Photograph") }
-            OutlinedButton(onClick = { pick.launch("image/*") }) { Text("Import file") }
-            if (w.imagePath.isNotBlank()) OutlinedButton(onClick = { nav.navigate("crop/$id") }) { Text("Straighten and crop") }
+        // The picture comes first, on a white sheet, the way it will be seen.
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(3.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(if (w.imagePath.isNotBlank()) 12.dp else 22.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (w.imagePath.isNotBlank()) PathImage(w.imagePath, Modifier.fillMaxWidth().height(300.dp), 1000)
+            else {
+                Text("No picture yet", style = MaterialTheme.typography.titleLarge)
+                Small("Photograph the work, or bring in the file. Everything else can come later.")
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (w.imagePath.isBlank()) {
+                    Button(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Photograph") }
+                    OutlinedButton(onClick = { pick.launch("image/*") }) { Text("Import file") }
+                } else {
+                    TextButton(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Retake") }
+                    TextButton(onClick = { pick.launch("image/*") }) { Text("Replace file") }
+                    TextButton(onClick = { nav.navigate("crop/$id") }) { Text("Straighten and crop") }
+                }
+            }
         }
+        Field("Title", w.title, { save(w.copy(title = it)) })
         Explain("How do I photograph work well?", "Daylight from the side, no flash. Put the work flat against a wall and hold the phone parallel to it, level with its centre. A sheet of plain grey card in one corner helps the app correct the colour. Then tap Straighten and crop.")
         Status(status)
         if (w.imagePath.isNotBlank() && (w.status == "in_progress" || w.status == "finished"))
             Button(onClick = {
                 val (filledWork, filled) = Engine.fillBlanks(w.copy(status = "documented"))
                 save(filledWork)
-                status = if (filled.isEmpty()) "Documented ✓. It can now go to calls." else "Documented ✓. Filled in for you: " + filled.joinToString(", ") + ". Change any of it whenever you like; reopen the piece to see it in the boxes."
+                status = if (filled.isEmpty()) "Documented. It can now go to calls." else "Documented. Filled in for you: " + filled.joinToString(", ") + ". Change any of it whenever you like; reopen the piece to see it in the boxes."
             }, modifier = Modifier.fillMaxWidth()) { Text("Finished and documented") }
         SavedLine()
 
@@ -250,7 +263,7 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
         if (w.status == "in_progress" || w.status == "idea") {
             H("Small steps")
-            Note("Break the piece into steps small enough to start without thinking. The session screen shows only the next one.")
+            Small("Small enough to start without thinking. A session shows only the next one.")
             val steps = Texts.steps(w.steps)
             steps.forEachIndexed { i, (done, text) ->
                 Row(verticalAlignment = Alignment.CenterVertically) {

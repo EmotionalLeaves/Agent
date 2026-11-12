@@ -78,7 +78,7 @@ fun Flags(o: Opp) {
     Scoring.trustFlags(o).forEach { Text("Worth knowing: $it", color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall) }
 }
 
-fun whereLine(o: Opp): String = listOf(o.organiser, if (o.online) "online" else o.city).filter { it.isNotBlank() }.joinToString("  ·  ")
+fun whereLine(o: Opp): String = listOf(o.organiser, if (o.online) "online" else o.city).filter { it.isNotBlank() }.joinToString(", ")
 
 @Composable
 fun Calls(nav: NavController) {
@@ -142,7 +142,6 @@ fun Calls(nav: NavController) {
                                 OutlinedButton(onClick = { saidNo = o.id }) { Text("No") }
                                 TextButton(onClick = { scope.io { dao.put(o.copy(status = "later")) } }) { Text("Not this year") }
                             }
-                            Small("Tap the title for the full details.")
                         }
                     }
                 }
@@ -174,7 +173,7 @@ fun Calls(nav: NavController) {
                     val why = Scoring.ineligible(o, p, now())
                     Panel(onClick = { nav.navigate("call/${o.id}") }) {
                         Text(o.title, fontWeight = FontWeight.SemiBold)
-                        Note(o.kind + "  ·  " + whereLine(o) + "  ·  " + fmtDate(o.deadline) + "  ·  " + (if (o.fee > 0) money(o.fee) else "free"))
+                        Note(o.kind + ", " + whereLine(o) + ", " + fmtDate(o.deadline) + ", " + (if (o.fee > 0) money(o.fee) else "free"))
                         Note(when { o.status != "new" -> "You said: ${o.status}"; why.isEmpty() -> "Eligible. " + fitLabel(o.fitScore); else -> "Held back: " + why.joinToString("; ") })
                         Flags(o)
                     }
@@ -221,7 +220,7 @@ fun CallDetail(nav: NavController, id: Long) {
     Screen(o.title.ifBlank { "Call" }, nav) {
         Panel(strong = true) {
             Text(fitLabel(o.fitScore), fontWeight = FontWeight.SemiBold)
-            o.fitReasons.lines().filter { it.isNotBlank() }.forEach { Text("· $it") }
+            o.fitReasons.lines().filter { it.isNotBlank() }.forEach { Text(it) }
             if (why.isNotEmpty()) Text("Held back by your rules: " + why.joinToString("; "))
             Flags(o)
         }
@@ -303,7 +302,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                 if (loaded.status == "declined") Note("The works are free again and will be offered to the next call that fits.")
             }
             if (loaded.proofPath.isNotBlank()) PathImage(loaded.proofPath, Modifier.fillMaxWidth())
-            chosen.forEach { Note("· " + Papers.caption(it)) }
+            chosen.forEach { Note(Papers.caption(it)) }
             Status(status)
             if (loaded.status == "submitted") {
                 H("Result")
@@ -411,7 +410,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             scope.io({ status = it; busy = false }) { val dir = Engine.buildPack(ctx, a, o); a = a.copy(packDir = dir.absolutePath); status = "Pack built."; busy = false }
         }) { Text("Build the pack") }
         else {
-            files.forEach { Note("· ${it.name}  (${it.length() / 1024} KB)") }
+            files.forEach { Note("${it.name}  (${it.length() / 1024} KB)") }
             OutlinedButton(onClick = { Share.files(ctx, files) }) { Text("Share or save the files") }
         }
 

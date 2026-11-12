@@ -133,11 +133,11 @@ fun Guide(nav: NavController) {
     }
     Screen("Guide", nav, back = !st.simpleMode) {
         val done = steps.count { it.done }
-        Text("One step at a time. Only the open step needs you; ignore the rest until you get there.")
+        Intro("guide", "One step at a time. Only the open step needs you; ignore the rest until you get there. Steps marked optional can be skipped for good: the app works without them.")
         Panel(onClick = { nav.navigate("basics") }) { Text("New to exhibiting?", fontWeight = FontWeight.SemiBold); Small("Plain answers to the things nobody explains. You do not need to know any of it to start.") }
         if (steps.isNotEmpty()) {
             LinearProgressIndicator(progress = { done.toFloat() / steps.size }, modifier = Modifier.fillMaxWidth())
-            Note("$done of ${steps.size} done. Steps marked optional can be skipped for good: the app works without them.")
+            Small("$done of ${steps.size} done")
         }
         steps.groupBy { it.group }.forEach { (group, list) ->
             H(group)
@@ -186,7 +186,7 @@ val basics = listOf(
 @Composable
 fun Basics(nav: NavController) {
     Screen("Plain answers", nav) {
-        Text("Tap any question. None of this is a test, and you can use the whole app without reading it.")
+        Intro("basics", "Tap any question. None of this is a test, and you can use the whole app without reading it.")
         basics.forEach { (q, a) -> Expand(q) { Text(a) } }
     }
 }
@@ -209,7 +209,7 @@ fun PathScreen(nav: NavController) {
         Triple("Established", "Gallery representation, museum group shows, major grants.", "")
     )
     Screen("Where this is going", nav) {
-        Text("Five levels, one small step at a time. You only ever need to think about the one you are on.")
+        Intro("path", "Five levels, one small step at a time. You only ever need to think about the one you are on.")
         steps.forEachIndexed { i, (name, what, opens) ->
             Panel(strong = i == level) {
                 Check(i < level, "Level $i: $name", current = i == level, bold = true)

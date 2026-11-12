@@ -5,6 +5,24 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.offset
@@ -266,6 +284,7 @@ fun DoneScreen(nav: NavController) {
     }
 }
 
+/** Setup as five small pages, one question each, so nothing on screen needs reading twice. */
 @Composable
 fun Onboarding(nav: NavController) {
     val first = remember { mutableStateOf(st.firstName) }
@@ -274,32 +293,69 @@ fun Onboarding(nav: NavController) {
     val city = remember { mutableStateOf(st.city) }
     var shown by remember { mutableStateOf("not sure yet") }
     var hours by remember { mutableStateOf("decide for me") }
+    var page by remember { mutableStateOf(0) }
+    val pages = 5
     val perms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { nav.navigate("home") { popUpTo("home") { inclusive = true } } }
-    Screen("Set up", nav) {
-        Text("Only your first name is needed. You are not expected to know any of the rest yet: leave it on \"not sure\" and the app starts you with a safe choice that you can change later.")
-        Field("First name", first)
-        Field("Last name (optional)", last)
-        Field("Email for your CV (optional)", email)
-        Field("City (optional)", city)
-        Choice("How will your work be shown?", listOf("not sure yet", "prints of my digital work", "physical work", "on screens"), shown) { shown = it }
-        Small(when (shown) {
-            "not sure yet" -> "That is fine. The app will assume prints of your digital work, because it is the quickest way to get something you already make onto a wall. Nothing is locked in."
-            "prints of my digital work" -> "Your files, printed on archival paper and framed. Shows accept these all the time."
-            "physical work" -> "Painting, drawing, printmaking or anything made by hand."
-            else -> "Video, animation or interactive work shown on a monitor or projector. Fewer shows take it, but some do."
-        })
-        Choice("Hours of making a week", listOf("decide for me", "3", "4", "5", "6", "8"), hours) { hours = it }
-        Small(if (hours == "decide for me") "The app starts at 4 hours: two short evenings and one longer weekend session. You can lower or raise it any time, or pause." else "About $hours hours, spread around your job.")
-        Button(onClick = {
-            st.firstName = first.value.trim(); st.lastName = last.value.trim(); st.email = email.value.trim(); st.city = city.value.trim()
-            st.route = when (shown) { "physical work" -> "physical"; "on screens" -> "screen"; else -> "print" }
-            st.weeklyHours = hours.toIntOrNull() ?: 4
-            val wanted = mutableListOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
-            if (Build.VERSION.SDK_INT >= 33) wanted += Manifest.permission.POST_NOTIFICATIONS
-            perms.launch(wanted.toTypedArray())
-        }, enabled = first.value.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Done") }
-        Small("Next, your phone asks two things: calendar (so studio time can be booked around your day) and notifications (at most ${st.notifCap} quiet ones a day). Say no to either and the app still works.")
-        TextButton(onClick = { nav.navigate("basics") }) { Text("New to exhibiting? Plain answers to the basics") }
+    fun finish() {
+        st.firstName = first.value.trim(); st.lastName = last.value.trim(); st.email = email.value.trim(); st.city = city.value.trim()
+        st.route = when (shown) { "physical work" -> "physical"; "on screens" -> "screen"; else -> "print" }
+        st.weeklyHours = hours.toIntOrNull() ?: 4
+        val wanted = mutableListOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
+        if (Build.VERSION.SDK_INT >= 33) wanted += Manifest.permission.POST_NOTIFICATIONS
+        perms.launch(wanted.toTypedArray())
+    }
+    Screen("Set up", nav, bare = true) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            (0 until pages).forEach { i -> Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(if (i <= page) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)) }
+        }
+        Small("${page + 1} of $pages")
+        Space(8)
+        when (page) {
+            0 -> {
+                Text("What should the app call you?", style = MaterialTheme.typography.headlineMedium)
+                Text("Only your first name is needed. Everything after this has a \"not sure\" answer that works.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Field("First name", first)
+            }
+            1 -> {
+                Text("For your CV, if you like", style = MaterialTheme.typography.headlineMedium)
+                Text("All optional. Leave them empty and add them whenever.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Field("Last name", last)
+                Field("Email", email)
+                Field("City", city)
+            }
+            2 -> {
+                Text("How will your work be shown?", style = MaterialTheme.typography.headlineMedium)
+                Choice("", listOf("not sure yet", "prints of my digital work", "physical work", "on screens"), shown) { shown = it }
+                Panel(strong = shown == "not sure yet") {
+                    Text(when (shown) {
+                        "not sure yet" -> "That is fine. The app starts you on prints of your digital work: it is the quickest way to get something you already make onto a wall. Nothing is locked in."
+                        "prints of my digital work" -> "Your files, printed on archival paper and framed. Shows accept these all the time."
+                        "physical work" -> "Painting, drawing, printmaking or anything made by hand."
+                        else -> "Video, animation or interactive work on a monitor or projector. Fewer shows take it, but some do."
+                    })
+                }
+            }
+            3 -> {
+                Text("Hours of making a week", style = MaterialTheme.typography.headlineMedium)
+                Choice("", listOf("decide for me", "3", "4", "5", "6", "8"), hours) { hours = it }
+                Panel(strong = hours == "decide for me") {
+                    Text(if (hours == "decide for me") "Four hours: two short evenings after work and one longer weekend session. Lower it, raise it or pause any time." else "About $hours hours, fitted around your job.")
+                }
+            }
+            else -> {
+                Text("Two questions from your phone", style = MaterialTheme.typography.headlineMedium)
+                Check(false, "Calendar, so studio time can be booked around your day")
+                Check(false, "Notifications, at most ${st.notifCap} quiet ones a day")
+                Text("Say no to either and the app still works.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Space(12)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (page > 0) TextButton(onClick = { page-- }) { Text("Back") } else TextButton(onClick = { nav.navigate("basics") }) { Text("New to exhibiting?") }
+            Spacer(Modifier.weight(1f))
+            if (page < pages - 1) Button(enabled = page != 0 || first.value.isNotBlank(), onClick = { page++ }) { Text(if (page == 1 && last.value.isBlank() && email.value.isBlank() && city.value.isBlank()) "Skip" else "Next") }
+            else Button(onClick = { finish() }) { Text("Finish") }
+        }
     }
 }
 
@@ -382,32 +438,35 @@ fun SessionScreen(nav: NavController) {
         }
         var stopping by remember { mutableStateOf(false) }
         val goal = st.sessionGoalMin
-        Screen("In session", nav) {
+        Screen("In session", nav, bare = true) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(if (paused) "Paused" else "In session", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                IconButton(onClick = { nav.navigate("home") { popUpTo("home") { inclusive = true } } }) { Icon(Icons.Default.Close, "Leave this screen; the timer keeps going", tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+            }
             val track = MaterialTheme.colorScheme.surfaceContainerHigh
             val fill = MaterialTheme.colorScheme.primary
             val part = if (goal > 0) (secs / (goal * 60f)).coerceIn(0f, 1f) else 0f
             // A ring that fills as time passes: the whole session visible at a glance.
             Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
-                Canvas(Modifier.size(210.dp)) {
-                    val w = 14.dp.toPx()
+                Canvas(Modifier.size(250.dp)) {
+                    val w = 10.dp.toPx()
                     drawArc(track, -90f, 360f, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
                     if (part > 0f) drawArc(fill, -90f, 360f * part, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text((if (secs >= 3600) "%d:%02d:%02d".format(secs / 3600, (secs / 60) % 60, secs % 60) else "%d:%02d".format(secs / 60, secs % 60)), style = MaterialTheme.typography.displayMedium)
                     if (goal > 0) Small(if (secs >= goal * 60L) "$goal minutes done" else "${Math.ceil((goal * 60L - secs) / 60.0).toInt()} min to go")
-                    if (paused) Small("paused")
                 }
             }
             if (goal > 0 && secs >= goal * 60L) Panel(strong = true) { Text("That is your $goal minutes. Stopping now is a complete session. Keep going only if you want to.") }
-            Text(work?.title?.ifBlank { "Untitled" } ?: (if (st.sessionKind == "skill") "Practice" else "Light session"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            Text(work?.title?.ifBlank { "Untitled" } ?: (if (st.sessionKind == "skill") "Practice" else "Light session"), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             if (work != null) {
                 val steps = Texts.steps(work.steps)
                 val open = steps.indexOfFirst { !it.first }
-                if (open >= 0) Panel {
-                    Text("Now: ${steps[open].second}", fontWeight = FontWeight.SemiBold)
+                if (open >= 0) WallLabel(onClick = null) {
+                    Text("Now: ${steps[open].second}", style = MaterialTheme.typography.titleLarge)
                     Small("${steps.count { it.first }} of ${steps.size} small steps done")
-                    OutlinedButton(onClick = { scope.io { dao.put(work.copy(steps = Texts.stepsText(steps.mapIndexed { i, p -> if (i == open) true to p.second else p }))) } }) { Text("Done, show the next one") }
+                    TextButton(onClick = { scope.io { dao.put(work.copy(steps = Texts.stepsText(steps.mapIndexed { i, p -> if (i == open) true to p.second else p }))) } }, modifier = Modifier.offset(x = (-12).dp)) { Text("Done, show the next one") }
                 } else if (work.nextStep.isNotBlank()) Small("Where you left off: ${work.nextStep}")
                 if (work.doneWhen.isNotBlank()) Small("Finished when: ${work.doneWhen}")
             }
@@ -415,13 +474,16 @@ fun SessionScreen(nav: NavController) {
                 Text("Wind-down time. A good place to stop: write your next step so nothing is lost.")
             }
             if (!stopping) {
-                Note("Your phone is quiet. Put it down and work; the timer keeps going.")
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(modifier = Modifier.weight(1f).height(52.dp), onClick = {
+                Space(8)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedButton(modifier = Modifier.weight(1f).height(56.dp), onClick = {
                         if (paused) { st.sessionPausedTotal = st.sessionPausedTotal + (now() - st.sessionPausedAt); st.sessionPausedAt = 0L }
                         else st.sessionPausedAt = now()
                     }) { Text(if (paused) "Resume" else "Pause") }
-                    Button(modifier = Modifier.weight(1f).height(52.dp), onClick = { stopping = true }) { Text("I am stopping") }
+                    Button(modifier = Modifier.weight(1f).height(56.dp), onClick = { stopping = true }) { Text("I am stopping") }
+                }
+                Text("Put the phone down. The timer keeps going.", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row {
                 }
             } else {
                 H("Before you go")
@@ -448,7 +510,7 @@ fun Admin(nav: NavController) {
     val contacts by dao.contacts().collectAsState(emptyList())
     LaunchedEffect(docs, appls, contacts) { withContext(Dispatchers.IO) { items = try { Engine.pending() } catch (e: Exception) { emptyList() }; loaded = true } }
     Screen("Admin pass", nav) {
-        Note("Everything that needs a yes from you, in one place. One tap each. When this list is empty you are done.")
+        Intro("admin", "Everything that needs a yes from you, in one place. One tap each. When this list is empty you are done.")
         if (loaded && items.isEmpty()) Empty("Nothing to approve. You are done here.", "Back to Home") { nav.popBackStack() }
         items.forEach { p -> Panel(onClick = { nav.navigate(p.route) }) { Text(p.title, fontWeight = FontWeight.SemiBold); Note(p.detail) } }
     }
@@ -505,29 +567,48 @@ fun More(nav: NavController) {
     Screen("More", nav, back = false) {
         listOf(
             "Help" to listOf(
-                Triple("Guide", "Every setup step, one at a time", "guide"),
-                Triple("Plain answers", "What a call, a series, an edition and the rest mean", "basics"),
-                Triple("Where this is going", "The five levels and what opens each one", "path")
+                Tile("Guide", "Setup, one step at a time", "guide", Icons.Default.CheckCircle),
+                Tile("Plain answers", "What the words mean", "basics", Icons.Default.Info),
+                Tile("Where this is going", "The five levels", "path", Icons.Default.Star)
             ),
             "Do" to listOf(
-                Triple("Calls", "Open calls, ranked for you", "calls"),
-                Triple("People", "Openings, venues, your email list", "outreach"),
-                Triple("Materials", "Interview, statement, bio, CV, portfolio", "materials"),
-                Triple("Ready-made emails", "What to say to a print lab, a gallery, a library", "letters"),
-                Triple("Your week", "Studio times, pause, session history", "week"),
-                Triple("Ideas", "Parked for later", "ideas"),
-                Triple("Admin pass", "Everything waiting for your yes", "admin")
+                Tile("Calls", "Open calls, ranked", "calls", Icons.Default.Search),
+                Tile("People", "Openings and venues", "outreach", Icons.Default.Person),
+                Tile("Materials", "Statement, bio, CV", "materials", Icons.Default.Edit),
+                Tile("Ready-made emails", "Print lab, gallery, library", "letters", Icons.Default.Email),
+                Tile("Your week", "Studio times, pause", "week", Icons.Default.DateRange),
+                Tile("Ideas", "Parked for later", "ideas", Icons.Default.Favorite),
+                Tile("Admin pass", "Waiting for your yes", "admin", Icons.Default.Done)
             ),
             "Look up" to listOf(
-                Triple("Receipts", "Everything sent, and what the app did on its own", "receipts"),
-                Triple("Records and logistics", "To-dos, fees, sales, reports", "records"),
-                Triple("Call sources", "Pages and senders the app reads", "sources"),
-                Triple("Settings", "You, your rules, AI, email, backup", "settings")
+                Tile("Receipts", "Everything sent", "receipts", Icons.AutoMirrored.Filled.List),
+                Tile("Records", "To-dos, money, reports", "records", Icons.Default.AccountBox),
+                Tile("Call sources", "What the app reads", "sources", Icons.Default.Notifications),
+                Tile("Settings", "You, rules, backup", "settings", Icons.Default.Settings)
             )
         ).forEach { (group, items) ->
-            H(group)
-            items.forEach { (title, sub, route) -> Panel(onClick = { nav.navigate(route) }) { Text(title, fontWeight = FontWeight.SemiBold); Small(sub) } }
+            Section(group)
+            items.chunked(2).forEach { pair ->
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    pair.forEach { t -> Box(Modifier.weight(1f)) { TileCard(t) { nav.navigate(t.route) } } }
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
+                }
+            }
         }
+    }
+}
+
+data class Tile(val title: String, val sub: String, val route: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+
+@Composable
+fun TileCard(t: Tile, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxWidth().heightIn(min = 118.dp).clip(RoundedCornerShape(14.dp)).background(cs.surfaceContainerLowest).clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Icon(t.icon, null, tint = cs.primary)
+        Space(6)
+        Text(t.title, style = MaterialTheme.typography.titleSmall)
+        Text(t.sub, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
     }
 }
 

@@ -128,7 +128,7 @@ fun Outreach(nav: NavController) {
         people.forEach { c ->
             Panel(onClick = { nav.navigate("contact/${c.id}") }) {
                 Text(c.venue.ifBlank { c.name.ifBlank { "New contact" } }, fontWeight = FontWeight.SemiBold)
-                Note(c.kind.replace('_', ' ') + "  ·  " + statusWords(c))
+                Note(c.kind.replace('_', ' ') + ", " + statusWords(c))
                 if (!Levels.outreachAllowed(level, c.kind, Engine.rules())) Note("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}.")
             }
         }

@@ -75,7 +75,7 @@ fun Records(nav: NavController) {
         tasks.forEach { e ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = e.done, onCheckedChange = { c -> scope.io { dao.put(e.copy(done = c)) } })
-                Column { Text(e.title); Note((opps.firstOrNull { it.id == e.oppId }?.title.orEmpty() + (if (e.date > 0) "  ·  " + fmtDate(e.date) else "")).trim()) }
+                Column { Text(e.title); Note((opps.firstOrNull { it.id == e.oppId }?.title.orEmpty() + (if (e.date > 0) ", " + fmtDate(e.date) else "")).trim()) }
             }
         }
 
@@ -264,7 +264,7 @@ fun SettingsScreen(nav: NavController, section: String) {
         Status(status)
         when (section) {
             "" -> {
-                Note("Nothing here has to be touched for the app to work. Open a section only when you want to change something. The Guide walks through the ones worth setting up.")
+                Intro("settings", "Nothing here has to be touched for the app to work. Open a section only when you want to change something. The Guide walks through the ones worth setting up.")
                 sectionNames.forEach { (id, title, sub) ->
                     val state = when (id) {
                         "ai" -> if (G.ai.ready) "Set up" else "Not set up (optional)"
@@ -272,7 +272,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                         "github" -> if (st.ghReady) "Set up" else "Not set up (optional)"
                         else -> ""
                     }
-                    Panel(onClick = { nav.navigate("settings/$id") }) { Text(title, fontWeight = FontWeight.SemiBold); Note(sub + (if (tick >= 0 && state.isNotBlank()) "  ·  $state" else "")) }
+                    Panel(onClick = { nav.navigate("settings/$id") }) { Text(title, fontWeight = FontWeight.SemiBold); Note(sub + (if (tick >= 0 && state.isNotBlank()) ", $state" else "")) }
                 }
                 Panel(onClick = { nav.navigate("week") }) { Text("Your week", fontWeight = FontWeight.SemiBold); Note("Studio times, pausing, session history") }
                 Panel(onClick = { nav.navigate("guide") }) { Text("Guide and layout", fontWeight = FontWeight.SemiBold); Note("Setup steps, simple layout on or off") }

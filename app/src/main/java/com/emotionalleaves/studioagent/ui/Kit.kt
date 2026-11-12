@@ -173,6 +173,7 @@ fun Intro(@Suppress("UNUSED_PARAMETER") key: String, text: String) {
 @Composable
 fun Screen(
     title: String, nav: NavController, back: Boolean = true,
+    bare: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -187,7 +188,7 @@ fun Screen(
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = { UndoBar() },
             topBar = {
-                if (back) TopAppBar(
+                if (back && !bare) TopAppBar(
                     title = { Text(title, maxLines = 1, style = MaterialTheme.typography.titleLarge) },
                     navigationIcon = { IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                     actions = { actions(); helpButton() },
@@ -196,10 +197,10 @@ fun Screen(
             }
         ) { pad ->
             Column(
-                Modifier.padding(pad).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, top = if (back) 4.dp else 0.dp, bottom = 28.dp),
+                Modifier.padding(pad).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, top = if (bare) 24.dp else if (back) 4.dp else 0.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                if (!back) Row(Modifier.fillMaxWidth().padding(top = 28.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (!back && !bare) Row(Modifier.fillMaxWidth().padding(top = 28.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.displaySmall)
                     actions(); helpButton()
                 }
