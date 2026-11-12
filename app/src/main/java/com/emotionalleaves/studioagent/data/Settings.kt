@@ -142,6 +142,8 @@ class Settings(ctx: Context) {
     var ghPagesRepo by S("ghPagesRepo")
     var ghUploaded by S("ghUploaded")
     var focusWork by L("focusWork", 0)
+    var keepAwake by B("keepAwake", true)
+    var lastReviewWeek by S("lastReviewWeek")
     var backupFolder by S("backupFolder")
     var lastAutoBackup by L("lastAutoBackup", 0)
 

@@ -15,6 +15,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -314,6 +315,12 @@ fun SessionScreen(nav: NavController) {
         val photoFile = remember(start) { File(ImageTools.mediaDir(ctx), "progress_$start.jpg") }
         val take = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok -> if (ok) photo = photoFile.absolutePath }
         val paused = st.sessionPausedAt > 0
+        // Keep the screen on so the time bar is there at a glance. Switchable in Settings, Focus and calm.
+        DisposableEffect(Unit) {
+            val window = (ctx as? android.app.Activity)?.window
+            if (st.keepAwake) window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            onDispose { window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+        }
         val secs = (Engine.sessionElapsed(nowMs) / 1000).coerceAtLeast(0)
         val work = works.firstOrNull { it.id == st.sessionArtwork }
         fun finish(save: Boolean) {
@@ -446,5 +453,43 @@ fun More(nav: NavController) {
             Triple("Call sources", "Pages and senders the app reads", "sources"),
             Triple("Settings", "You, your rules, AI, email, backup", "settings")
         ).forEach { (title, sub, route) -> Panel(onClick = { nav.navigate(route) }) { Text(title, fontWeight = FontWeight.SemiBold); Note(sub) } }
+    }
+}
+
+
+/** A three-minute look at the week ahead, offered once at the weekend. One decision: which piece. */
+@Composable
+fun Review(nav: NavController) {
+    val works by dao.artworks().collectAsState(emptyList())
+    val sessions by dao.sessions().collectAsState(emptyList())
+    val events by dao.events().collectAsState(emptyList())
+    val tick by st.changed.collectAsState()
+    var pending by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) { pending = withContext(Dispatchers.IO) { try { Engine.pending().size } catch (e: Exception) { 0 } } }
+    val weekStart = Engine.millis(LocalDate.now().with(java.time.DayOfWeek.MONDAY).atStartOfDay())
+    val mine = sessions.filter { it.start >= weekStart && it.end > it.start }
+    val active = works.filter { it.status == "in_progress" }
+    Screen("Next week", nav) {
+        H("1. What you did")
+        Text(if (mine.isEmpty()) "No sessions logged this week. That is information, not a verdict. If the plan did not fit your week, the plan is what should change."
+        else "${mine.size} session" + (if (mine.size > 1) "s" else "") + ", ${mine.sumOf { (it.end - it.start) / 60000 }} minutes. That happened, and it counts.")
+        H("2. One piece for next week")
+        if (active.isEmpty()) Small("Nothing in progress. Start a new piece from Studio when you are ready.")
+        else {
+            Choice("", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, active.firstOrNull { tick >= 0 && it.id == st.focusWork }?.let { it.title.ifBlank { "Untitled #${it.id}" } }.orEmpty()) { t ->
+                active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == t }?.let { st.focusWork = it.id }
+            }
+            Small("Start now will open straight onto it. Other ideas can wait in Ideas.")
+        }
+        H("3. Your studio times")
+        val coming = events.filter { it.type == "studio" && it.date > now() }.take(5)
+        if (st.pausedUntil > now()) Small("Planning is paused until ${fmtDate(st.pausedUntil)}.")
+        else if (coming.isEmpty()) Small("None planned yet. They are added with the next daily check.")
+        else coming.forEach { Small("○ " + fmtDate(it.date) + ", ${(it.endDate - it.date) / 60000} min") }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { nav.navigate("week") }) { Text("Change them") }
+            if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("$pending to approve") }
+        }
+        Button(onClick = { st.lastReviewWeek = Engine.weekId(); nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Done for the week") }
     }
 }

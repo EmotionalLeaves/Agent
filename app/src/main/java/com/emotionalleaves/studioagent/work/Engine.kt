@@ -337,6 +337,14 @@ object Engine {
         (0 until arr.length()).mapNotNull { i -> arr.optJSONObject(i)?.let { it.optString("q") to it.optString("a") } }
     } catch (e: Exception) { emptyList() }
 
+    /** An answer you already wrote to the same or a very similar question in another application, if there is one. */
+    fun priorAnswer(question: String, appls: List<Appl>, exceptId: Long): String =
+        appls.filter { it.id != exceptId }.flatMap { answers(it) }.filter { it.second.isNotBlank() }
+            .map { it to Texts.similarity(question, it.first) }.filter { it.second >= 0.5 }.maxByOrNull { it.second }?.first?.second.orEmpty()
+
+    /** Names the week (by its Monday) so the weekly look-ahead is offered once a week. */
+    fun weekId(): String = LocalDate.now().with(DayOfWeek.MONDAY).toString()
+
     fun answersJson(list: List<Pair<String, String>>): String {
         val arr = org.json.JSONArray()
         list.forEach { (q, a) -> arr.put(org.json.JSONObject().put("q", q).put("a", a)) }
@@ -654,6 +662,8 @@ object Engine {
                 return NextStep(e.title, Planner.weekendsLeft(today, date(e.date + 3 * DAY)) + " to the deadline. The pack is waiting for one look.", "appl/${it.id}")
             }
         }
+        if ((today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY) && works.isNotEmpty() && st.lastReviewWeek != weekId())
+            return NextStep("Look at next week (3 minutes)", "Pick one piece and glance at your studio times. That is all of it.", "review")
         val pend = pending()
         if (today.dayOfWeek == DayOfWeek.SUNDAY && pend.isNotEmpty())
             return NextStep("Admin pass: ${pend.size} to approve", "About 10 minutes, all in one go.", "admin")

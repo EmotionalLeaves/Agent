@@ -235,6 +235,7 @@ fun SettingsScreen(nav: NavController, section: String) {
     var levelPick by remember { mutableStateOf(if (st.levelOverride in 0..4) st.levelOverride.toString() else "automatic") }
     var units by remember { mutableStateOf(st.units) }
     var shortText by remember { mutableStateOf(st.shortText) }
+    var keepAwake by remember { mutableStateOf(st.keepAwake) }
     var fitWords by remember { mutableStateOf(st.fitWords) }
     var lockApproved by remember { mutableStateOf(st.lockApproved) }
     var weights by remember { mutableStateOf(st.weights.split(",").map { it.trim().toIntOrNull() ?: 2 }.let { l -> List(6) { l.getOrElse(it) { 2 } } }) }
@@ -338,6 +339,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 H("Starting")
                 Whole("Usual session length, minutes (the bar fills to this)", st.defaultSessionMin) { if (it > 0) st.defaultSessionMin = it }
                 Small("Start now uses this. Just 5 minutes is always there for days when starting is the hard part.")
+                Toggle("Keep the screen on during a session", keepAwake) { keepAwake = it; st.keepAwake = it }
                 H("Less on screen")
                 Toggle("Hide the small grey explanations", shortText) { shortText = it; st.shortText = it }
                 Toggle("Show fit as words (Strong, Good, Fair), not a score", fitWords) { fitWords = it; st.fitWords = it }

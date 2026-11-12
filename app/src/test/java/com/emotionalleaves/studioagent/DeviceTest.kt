@@ -91,7 +91,7 @@ class AppTest {
     @Test fun everyScreenOpensOnAFreshInstall() {
         ctx
         listOf(
-            "home" to "Set up in 2 minutes", "onboarding" to "Only your first name is needed", "basics" to "What is an open call?", "letters" to "Ask a print lab for a quote", "path" to "you are here", "outreach" to "Give me a starter list", "session" to "Two-minute start", "admin" to "Nothing to approve",
+            "home" to "Set up in 2 minutes", "onboarding" to "Only your first name is needed", "basics" to "What is an open call?", "letters" to "Ask a print lab for a quote", "path" to "you are here", "review" to "Done for the week", "outreach" to "Give me a starter list", "session" to "Two-minute start", "admin" to "Nothing to approve",
             "works" to "Add a piece", "ideas" to "Park it", "materials" to "Your own documents", "interview" to "Save answers", "facts" to "Add line",
             "calls" to "Add a call", "sources" to "Run the daily check now", "outreach" to "Your email list", "records" to "Quarterly report",
             "settings" to "Your rules", "settings/you" to "Sizes in", "settings/hours" to "Change my studio times", "settings/rules" to "What matters most when ranking",
@@ -207,6 +207,7 @@ class AppTest {
         dao.put(Doc(type = "interview", variant = "what", text = "Kitchen drawings."))
         dao.put(Series(name = "Night Kitchen"))
         val id = dao.put(Artwork(title = "Night Shift", status = "in_progress", nextStep = "old note", steps = "[x] Open the file\n[ ] Block in the big shapes\n[ ] Add the light"))
+        s.lastReviewWeek = Engine.weekId()
         assertEquals("Block in the big shapes", Engine.nextStep().title)
         Engine.quickStart(5)
         assertEquals(id, s.sessionArtwork); assertEquals("make", s.sessionKind); assertEquals(5, s.sessionGoalMin)
@@ -222,6 +223,10 @@ class AppTest {
         s.focusWork = id
         assertEquals(id, Engine.currentPiece(dao.artworksNow())?.id)
         assertTrue(Engine.forecast(1, 10, dao.artworksNow(), dao.sessionsNow()).startsWith("Once one piece is finished"))
+        val earlier = dao.put(Appl(oppId = 1, answers = Engine.answersJson(listOf("Why do you want to exhibit in this show?" to "Because the kitchen drawings belong on a wall."))))
+        assertEquals("Because the kitchen drawings belong on a wall.", Engine.priorAnswer("Why do you want to exhibit with us in this show?", dao.applsNow(), 0))
+        assertEquals("", Engine.priorAnswer("Why do you want to exhibit with us in this show?", dao.applsNow(), earlier))
+        assertEquals("", Engine.priorAnswer("Describe your printing process", dao.applsNow(), 0))
         Engine.starterContacts(1000).forEach { dao.put(it) }
         assertEquals(4, dao.contactsNow().size)
         assertEquals("Your university's art gallery", dao.contactsNow().first().venue)

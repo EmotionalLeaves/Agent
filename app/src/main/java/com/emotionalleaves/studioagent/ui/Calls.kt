@@ -378,7 +378,15 @@ fun ApplScreen(nav: NavController, id: Long) {
                 }
             }
             Field("Add a question", newQuestion)
-            OutlinedButton(enabled = newQuestion.value.isNotBlank(), onClick = { save(a.copy(answers = Engine.answersJson(qa + (newQuestion.value.trim() to "")), packDir = "")); newQuestion.value = "" }) { Text("Add") }
+            OutlinedButton(enabled = newQuestion.value.isNotBlank(), onClick = {
+                val q = newQuestion.value.trim(); newQuestion.value = ""
+                scope.io({ status = it }) {
+                    // If you have answered this before, start from that answer instead of a blank box.
+                    val prior = Engine.priorAnswer(q, dao.applsNow(), a.id)
+                    val x = a.copy(answers = Engine.answersJson(qa + (q to prior)), packDir = ""); a = x; dao.put(x); markSaved()
+                    if (prior.isNotBlank()) status = "You answered a question like this before, so that answer is filled in. Check it still fits this call."
+                }
+            }) { Text("Add") }
         }
 
         Panel(strong = allGreen) {

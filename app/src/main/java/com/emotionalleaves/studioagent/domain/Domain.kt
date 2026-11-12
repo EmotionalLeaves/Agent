@@ -327,6 +327,14 @@ object Texts {
 
     fun firstOpenStep(s: String): String = steps(s).firstOrNull { !it.first }?.second.orEmpty()
 
+    /** How alike two questions are, 0 to 1, by the longer words they share. */
+    fun similarity(a: String, b: String): Double {
+        fun words(s: String) = s.lowercase().split(Regex("[^a-z0-9]+")).filter { it.length > 3 }.toSet()
+        val x = words(a); val y = words(b)
+        if (x.isEmpty() || y.isEmpty()) return 0.0
+        return x.intersect(y).size.toDouble() / x.union(y).size
+    }
+
     fun fitWord(score: Int): String = when { score >= 75 -> "Strong fit"; score >= 60 -> "Good fit"; score >= 45 -> "Fair fit"; else -> "Weak fit" }
 
     fun words(s: String): Int = s.trim().split(Regex("\\s+")).count { it.isNotBlank() }
