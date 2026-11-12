@@ -175,33 +175,44 @@ data class MailMsg(val from: String, val subject: String, val text: String, val 
 
 /** Email with an app password over SMTP and IMAP. */
 object Mail {
-    fun send(host: String, user: String, pass: String, to: String, subject: String, body: String, files: List<File> = emptyList()) {
+    /** Tests point mail at a local server: (smtp port, imap port), plain connections. Never set in the app. */
+    internal var testPorts: Pair<Int, Int>? = null
+
+    /** Sends from your own account. Your name shows as the sender, and replies come back to you. */
+    fun send(host: String, user: String, pass: String, to: String, subject: String, body: String, files: List<File> = emptyList(), fromName: String = "") {
+        val test = testPorts
         val props = Properties().apply {
-            put("mail.smtp.auth", "true"); put("mail.smtp.starttls.enable", "true")
-            put("mail.smtp.host", host); put("mail.smtp.port", "587")
+            put("mail.smtp.auth", "true"); put("mail.smtp.starttls.enable", if (test == null) "true" else "false")
+            if (test == null) put("mail.smtp.starttls.required", "true")
+            put("mail.smtp.host", host); put("mail.smtp.port", (test?.first ?: 587).toString())
             put("mail.smtp.connectiontimeout", "30000"); put("mail.smtp.timeout", "120000")
         }
         val session = Session.getInstance(props, object : Authenticator() {
             override fun getPasswordAuthentication() = PasswordAuthentication(user, pass)
         })
         val msg = MimeMessage(session)
-        msg.setFrom(InternetAddress(user))
+        val me = if (fromName.isNotBlank()) InternetAddress(user, fromName, "UTF-8") else InternetAddress(user)
+        msg.setFrom(me)
+        msg.replyTo = arrayOf(me)
         msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
         msg.setSubject(subject, "UTF-8")
+        msg.sentDate = java.util.Date()
         val mp = MimeMultipart()
         mp.addBodyPart(MimeBodyPart().apply { setText(body, "UTF-8") })
-        for (f in files) if (f.exists()) mp.addBodyPart(MimeBodyPart().apply { attachFile(f) })
+        for (f in files) if (f.exists()) mp.addBodyPart(MimeBodyPart().apply { attachFile(f); fileName = f.name })
         msg.setContent(mp)
         Transport.send(msg)
     }
 
     /** Newest messages in the inbox received after [since]. Read-only. */
     fun recent(host: String, user: String, pass: String, since: Long, max: Int = 40): List<MailMsg> {
+        val test = testPorts
+        val proto = if (test == null) "imaps" else "imap"
         val props = Properties().apply {
-            put("mail.store.protocol", "imaps"); put("mail.imaps.connectiontimeout", "30000"); put("mail.imaps.timeout", "60000")
+            put("mail.store.protocol", proto); put("mail.$proto.connectiontimeout", "30000"); put("mail.$proto.timeout", "60000")
         }
-        val store = Session.getInstance(props).getStore("imaps")
-        store.connect(host, user, pass)
+        val store = Session.getInstance(props).getStore(proto)
+        if (test == null) store.connect(host, user, pass) else store.connect(host, test.second, user, pass)
         try {
             val inbox = store.getFolder("INBOX")
             inbox.open(Folder.READ_ONLY)

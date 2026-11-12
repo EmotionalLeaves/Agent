@@ -142,20 +142,24 @@ class Ai(private val settings: Settings) {
     }
 
     /** The free services: short waits between tries, and a plain message if none of them answers. */
+    private val freeHttp by lazy { http.newBuilder().readTimeout(50, TimeUnit.SECONDS).callTimeout(60, TimeUnit.SECONDS).build() }
+
     private fun freeComplete(system: String, user: String, maxTokens: Int, image: ByteArray?): String {
         if (image != null) throw AiException("Reading a photo needs a key of your own. Paste the call's words instead, or add a free key in You, Settings, Writing help.")
         var last = ""
-        for ((url, model, _) in FREE) {
+        for ((url, model, _) in freeOverride ?: FREE) {
             val body = JSONObject().put("model", model).put("max_tokens", maxTokens.coerceAtMost(1500)).put("messages", JSONArray()
                 .put(JSONObject().put("role", "system").put("content", system))
-                .put(JSONObject().put("role", "user").put("content", user.take(24_000))))
+                .put(JSONObject().put("role", "user").put("content", user.take(14_000))))
             val req = Request.Builder().url(url).header("User-Agent", "StudioAgent/1.0").post(body.toString().toRequestBody(json)).build()
             try {
-                http.newCall(req).execute().use { r ->
+                freeHttp.newCall(req).execute().use { r ->
                     val text = r.body?.string().orEmpty()
                     if (r.isSuccessful) {
                         val answer = try { JSONObject(text).optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message")?.optString("content").orEmpty() } catch (e: Exception) { text }
-                        if (answer.isNotBlank()) return answer.trim()
+                        // Some free models think out loud first; only the answer is kept.
+                        val clean = answer.replace(Regex("(?s)<think>.*?</think>"), "").trim()
+                        if (clean.isNotBlank()) return clean
                     }
                     last = "${r.code}"
                 }
@@ -287,6 +291,9 @@ class Ai(private val settings: Settings) {
                 else -> Kind("custom", "OpenAI", "https://api.openai.com/v1", "gpt-5-mini", "gpt-5-nano")
             }
         }
+
+        /** Tests point the free helper at a local server. Never set in the app. */
+        internal var freeOverride: List<Triple<String, String, String>>? = null
 
         /** Free services that answer with no key and no account, tried in order. */
         val FREE = listOf(

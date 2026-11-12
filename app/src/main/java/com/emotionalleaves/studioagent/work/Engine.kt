@@ -162,7 +162,20 @@ object Engine {
 
     /** Text (or a flyer photo) in, call records out. Needs an AI key. */
     suspend fun ingest(text: String, sourceName: String, image: ByteArray? = null): Int {
-        val found = ai.extractCalls(text, sourceName, image)
+        val raw = ai.extractCalls(text, sourceName, image)
+        // A free model can miss or misread a date. When the page holds one call, the plain reader checks its work and fills gaps.
+        val found = if (raw.size == 1 && text.length > 40) {
+            val plain = com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, System.currentTimeMillis())
+            val o = raw[0]
+            val now = System.currentTimeMillis()
+            listOf(local(o.copy(
+                deadline = if (plain.deadline > now && (o.deadline < now)) plain.deadline else o.deadline,
+                fee = if (o.fee <= 0 && plain.fee > 0) plain.fee else o.fee,
+                url = o.url.ifBlank { plain.url }, email = o.email.ifBlank { plain.email },
+                statementLimit = if (o.statementLimit <= 0) plain.statementLimit else o.statementLimit,
+                maxWorks = if (o.maxWorks <= 0) plain.maxWorks else o.maxWorks
+            ), text))
+        } else raw.map { local(it, text) }
         val practice = practice()
         val withFit = found.map { o ->
             if (practice.isBlank() || o.theme.isBlank()) o
@@ -171,7 +184,6 @@ object Engine {
         return addCalls(withFit)
     }
 
-    /** Reads a call with no AI: plain pattern matching for the deadline, fee, link and so on. The rest is left for you to fill. */
     /** A call that names your own city or state is local, whatever else it says. */
     fun local(o: Opp, text: String): Opp {
         if (o.scope.isNotBlank() && o.scope != "regional") return o
@@ -180,6 +192,7 @@ object Engine {
         return if (near) o.copy(scope = if (o.scope == "regional") "regional" else "local", city = o.city.ifBlank { st.city }) else o
     }
 
+    /** Reads a call with no AI: plain pattern matching for the deadline, fee, link and so on. The rest is left for you to fill. */
     suspend fun ingestPlain(text: String, sourceName: String): Long {
         val o = local(com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, System.currentTimeMillis()), text)
         return dao.put(scored(o, profile()))
@@ -495,7 +508,7 @@ object Engine {
         val a = dao.applsNow().firstOrNull { it.id == id } ?: return false
         if (a.status != "sending") return false
         return try {
-            withContext(Dispatchers.IO) { Mail.send(st.smtpHost, st.mailUser, st.mailPass, a.emailTo, a.emailSubject, a.emailBody, packFiles(a)) }
+            withContext(Dispatchers.IO) { Mail.send(st.smtpHost, st.mailUser, st.mailPass, a.emailTo, a.emailSubject, a.emailBody, packFiles(a), st.fullName) }
             markSubmitted(a, "Sent by email to ${a.emailTo} on ${com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis())} with ${packFiles(a).size} attachments.")
             true
         } catch (e: Exception) {
@@ -574,7 +587,7 @@ object Engine {
             if (sentThisWeek(contacts, now) >= st.outreachWeeklyCap) break
             if (!Levels.outreachAllowed(level, c.kind, rules()) || !c.acceptsSubmissions) continue
             try {
-                Mail.send(st.smtpHost, st.mailUser, st.mailPass, c.email, c.draftSubject, c.draftBody)
+                Mail.send(st.smtpHost, st.mailUser, st.mailPass, c.email, c.draftSubject, c.draftBody, fromName = st.fullName)
                 dao.put(c.copy(status = "sent", sentAt = now, followUpAt = now + 24 * DAY))
                 st.log("Email sent to ${c.venue.ifBlank { c.email }}.")
                 contacts = dao.contactsNow()
@@ -582,7 +595,7 @@ object Engine {
         }
         for (c in contacts.filter { it.status == "sent" && it.followUpAt in 1..now && it.followUpBody.isNotBlank() }) {
             try {
-                Mail.send(st.smtpHost, st.mailUser, st.mailPass, c.email, "Re: " + c.draftSubject, c.followUpBody)
+                Mail.send(st.smtpHost, st.mailUser, st.mailPass, c.email, "Re: " + c.draftSubject, c.followUpBody, fromName = st.fullName)
                 dao.put(c.copy(status = "followed_up", revisitAt = now + 180 * DAY))
                 st.log("Follow-up sent to ${c.venue.ifBlank { c.email }}. Nothing more will be sent to them.")
             } catch (e: Exception) { }
@@ -591,7 +604,7 @@ object Engine {
 
     // ------------------------------------------------------------ email in
 
-    private suspend fun checkMail(ctx: Context) {
+    internal suspend fun checkMail(ctx: Context) {
         if (!st.mailReady) return
         val now = System.currentTimeMillis()
         val since = if (st.lastMailCheck == 0L) now - 3 * DAY else st.lastMailCheck
@@ -617,7 +630,10 @@ object Engine {
             }
             val src = sources.firstOrNull { m.from.contains(it.url.trim(), ignoreCase = true) }
             // With AI the email is read properly; without it the plain reader still picks out title, deadline, fee and link.
-            if (src != null) try { if (ai.ready) ingest(m.subject + "\n" + m.text, src.name) else ingestPlain(m.subject + "\n" + m.text, src.name) } catch (e: Exception) { }
+            if (src != null) {
+                val n = if (ai.ready) try { ingest(m.subject + "\n" + m.text, src.name) } catch (e: Exception) { 0 } else 0
+                if (n == 0) try { ingestPlain(m.subject + "\n" + m.text, src.name) } catch (e: Exception) { }
+            }
         }
         st.lastMailCheck = msgs.maxOf { it.date }
         st.log("Checked your inbox: ${msgs.size} new messages looked at.")
