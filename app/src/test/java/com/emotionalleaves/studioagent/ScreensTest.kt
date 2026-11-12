@@ -161,4 +161,18 @@ class ScreensTest {
         shot("57_sessions", "sessions", "Glaze")
         shot("58_review", "review", "Done for")
     }
+
+    @Test fun settingsAndTools() {
+        val ids = seed()
+        shot("60_rules", "settings/rules", "What matters most when ranking")
+        shot("61_writing", "settings/writing", "These apply to everything")
+        shot("62_ai", "settings/ai", "Test the key")
+        shot("63_email", "settings/email", "Send me a test email")
+        shot("64_backup", "settings/backup", "Choose a backup folder")
+        shot("65_permissions", "settings/permissions", "Allow Do Not Disturb")
+        shot("66_hours", "settings/hours", "Change my studio times")
+        shot("67_crop", "crop/${ids["work"]}", "Drag each dot")
+        shot("68_web", "web/${ids["draft"]}", "Fill")
+        shot("69_basics", "basics", "What is an open call?")
+    }
 }
