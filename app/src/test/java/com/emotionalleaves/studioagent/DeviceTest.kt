@@ -104,7 +104,7 @@ class AppTest {
     @Test fun everyScreenOpensWithRealData() {
         ctx
         val s = G.settings
-        s.firstName = "Jade"; s.lastName = "Leaves"; s.simpleMode = false
+        s.firstName = "Jade"; s.lastName = "Leaves"
         val ids = runBlocking {
             val dao = G.dao
             val series = dao.put(Series(name = "Night Kitchen", createdAt = 1))
