@@ -201,7 +201,7 @@ fun Home(nav: NavController) {
             val cs = MaterialTheme.colorScheme
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cs.surfaceContainerLowest).clickable { nav.navigate("week") }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text("This week", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+                    Text("Your week", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
                     Text("%.1f of %d hours".format(hours, st.weeklyHours), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Open your week", Modifier.padding(start = 4.dp).size(20.dp), tint = cs.outline)
                 }
@@ -297,7 +297,7 @@ fun DoneScreen(nav: NavController) {
         }
         Small("It is all stored. You can close the app.")
         Space(8)
-        Button(onClick = { nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("OK") }
+        Button(onClick = { nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Back to Today") }
     }
 }
 
@@ -459,7 +459,7 @@ fun Admin(nav: NavController) {
     val appls by dao.appls().collectAsState(emptyList())
     val contacts by dao.contacts().collectAsState(emptyList())
     LaunchedEffect(docs, appls, contacts) { withContext(Dispatchers.IO) { items = try { Engine.pending() } catch (e: Exception) { emptyList() }; loaded = true } }
-    Screen("Admin pass", nav) {
+    Screen("Waiting for your yes", nav) {
         Intro("admin", "Everything that needs a yes from you, in one place. One tap each. When this list is empty you are done.")
         if (loaded && items.isEmpty()) Empty("Nothing to approve. You are done here.", "Back to Home") { nav.popBackStack() }
         items.forEach { p -> IconRow(if (p.route.startsWith("doc")) Icons.Default.Edit else if (p.route.startsWith("appl")) Icons.AutoMirrored.Filled.Send else Icons.Default.Done, p.title, p.detail) { nav.navigate(p.route) } }

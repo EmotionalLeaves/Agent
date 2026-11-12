@@ -85,7 +85,7 @@ fun Records(nav: NavController) {
     val todo = remember { mutableStateOf("") }
     val todoDate = remember { mutableStateOf("") }
 
-    Screen("Records and logistics", nav) {
+    Screen("To-dos and money", nav) {
         Intro("records", "The paperwork drawer: what is left to do for shows you got into, your own to-dos, money in and out, and a report once a quarter. Nothing here needs checking daily.")
         val tasks = events.filter { (it.type == "task" || it.type == "todo") && !it.done }
         H("To do")

@@ -97,7 +97,7 @@ fun Materials(nav: NavController) {
         }
     }
 
-    Screen("Materials", nav) {
+    Screen("Statement, bio and CV", nav) {
         Intro("materials", "The written things every call asks for. You answer the interview once; the app drafts each document; you approve it once and it is reused everywhere.")
         Panel(onClick = { nav.navigate("interview") }, strong = answered == 0) {
             Text("Interview", fontWeight = FontWeight.SemiBold)

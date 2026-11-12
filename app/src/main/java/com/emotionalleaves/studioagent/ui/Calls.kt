@@ -474,7 +474,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             else OutlinedButton(onClick = {
                 scope.io { dao.put(Ledger(kind = "fee", amount = -o.fee, date = now(), note = o.title, oppId = o.id)) }
                 save(a.copy(feePaid = o.fee))
-            }) { Text("I paid the ${money(o.fee)} fee: log it") }
+            }) { Text("I paid the ${money(o.fee)} fee") }
             Note("The app never pays for you. You pay on the organiser's page; it keeps the record.")
         }
         if (a.method == "email") {
@@ -489,12 +489,12 @@ fun ApplScreen(nav: NavController, id: Long) {
             }) { Text("Approve and send") }
             else {
                 Button(enabled = allGreen && files.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = { Share.email(ctx, a.emailTo, a.emailSubject, a.emailBody, files) }) { Text("Open in my mail app, filled in") }
-                OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Sent from your mail app to ${a.emailTo} on ${fmtDate(now())}.") } }) { Text("I sent it: lock as done") }
+                OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Sent from your mail app to ${a.emailTo} on ${fmtDate(now())}.") } }) { Text("I sent it") }
                 Note("Add your email and an app password in Settings and the app sends it for you instead.")
             }
         } else {
-            Button(enabled = o.url.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = { nav.navigate("web/${a.id}") }) { Text("Open the entry form and fill it") }
-            OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Submitted on the organiser's site on ${fmtDate(now())}.") } }) { Text("I submitted it: lock as done") }
+            Button(enabled = o.url.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = { nav.navigate("web/${a.id}") }) { Text("Fill in the entry form") }
+            OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Submitted on the organiser's site on ${fmtDate(now())}.") } }) { Text("I submitted it") }
         }
         if (!allGreen) Note("Sending unlocks when every check above passes.")
     }
@@ -642,7 +642,7 @@ fun Sources(nav: NavController) {
     var kind by remember { mutableStateOf("email") }
     var status by remember { mutableStateOf(if (st.lastDaily > 0) "Last daily check ${fmtDate(st.lastDaily)}: ${st.lastDailyStatus}" else "") }
     var busy by remember { mutableStateOf(false) }
-    Screen("Call sources", nav) {
+    Screen("Where calls come from", nav) {
         Intro("sources", "The safest sources need no page-reading: sharing a link or flyer into the app, and email alerts from listing sites you have signed up to.")
         if (sources.isEmpty()) Empty("No sources yet. Calls you share or paste still arrive without one.")
         Explain("What can I add here?", "Email source: the sender's address or domain (for example callforentry.org). Needs email set up in Settings. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
