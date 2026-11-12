@@ -248,9 +248,9 @@ private fun Multi(label: String, options: List<String>, initial: List<String>, o
     }
 }
 
-private val sectionNames = listOf(
-    Triple("you", "You", "Name, contact details, what you make, goals"),
-    Triple("hours", "Work hours and quiet time", "When the app must stay silent"),
+val sectionNames = listOf(
+    Triple("you", "About you", "Name, contact details, what you make, goals"),
+    Triple("hours", "Work hours and quiet time", "When the app stays silent, and your studio times"),
     Triple("rules", "Your rules", "Level, gates, fee caps, what calls you see, what matters most"),
     Triple("calm", "Focus and calm", "Fewer words, session length, locks against re-checking"),
     Triple("writing", "Writing", "Standing notes for anything the app writes"),
@@ -357,7 +357,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Count("Notifications a day, at most", st.notifCap, 0, 10) { st.notifCap = it }
                 Toggle("Book studio time in my calendar", useCal) { useCal = it; st.useCalendar = it }
                 Toggle("Silence my phone during sessions", dnd) { dnd = it; st.dndInSession = it }
-                OutlinedButton(onClick = { nav.navigate("week") }) { Text("Change my studio times") }
+                Small("Your studio times themselves are on Today: tap This week.")
             }
             "rules" -> {
                 Note("The defaults follow the plan: start free and local, climb when a gate is met. Every one of them is yours to change.")
@@ -513,3 +513,8 @@ fun SettingsScreen(nav: NavController, section: String) {
         }
     }
 }
+
+
+val sectionIcons = mapOf("you" to Icons.Default.Person, "hours" to Icons.Default.Notifications, "rules" to Icons.Default.Build, "calm" to Icons.Default.Favorite,
+    "writing" to Icons.Default.Edit, "ai" to Icons.Default.Star, "email" to Icons.Default.Email, "github" to Icons.Default.Share,
+    "backup" to Icons.Default.Refresh, "permissions" to Icons.Default.Lock)

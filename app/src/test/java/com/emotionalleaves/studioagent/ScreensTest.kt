@@ -67,9 +67,8 @@ class ScreensTest {
         ctx
         shot("01_home_fresh", "home", "two-minute tour")
         shot("07_tour", "tour", "From the studio to a wall")
-        shot("02_onboarding", "onboarding", "Only your first name")
         shot("03_guide_fresh", "guide", "Tell the app who you are")
-        shot("04_more", "more", "Look up")
+        shot("04_more", "more", "Plain answers")
         shot("05_settings", "settings", "Your rules")
         shot("06_basics", "basics", "What is an open call?")
     }
@@ -170,7 +169,7 @@ class ScreensTest {
         shot("63_email", "settings/email", "Send me a test email")
         shot("64_backup", "settings/backup", "Choose a backup folder")
         shot("65_permissions", "settings/permissions", "Allow Do Not Disturb")
-        shot("66_hours", "settings/hours", "Change my studio times")
+        shot("66_hours", "settings/hours", "Your studio times themselves")
         shot("67_crop", "crop/${ids["work"]}", "Drag each dot")
         shot("68_web", "web/${ids["draft"]}", "Fill")
         shot("69_basics", "basics", "What is an open call?")

@@ -103,7 +103,7 @@ fun Tour(nav: NavController) {
         }
         if (last) {
             Button(onClick = { buzz(); start() }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start using it") }
-            TextButton(onClick = { st.setupDone = true; st.tourSeen = true; if (name.value.isNotBlank()) st.firstName = name.value.trim(); nav.navigate("onboarding") { popUpTo("home") } }, modifier = Modifier.fillMaxWidth()) { Text("Set my week and hours first") }
+            TextButton(onClick = { st.setupDone = true; st.tourSeen = true; if (name.value.isNotBlank()) st.firstName = name.value.trim(); nav.navigate("settings/hours") { popUpTo("home") } }, modifier = Modifier.fillMaxWidth()) { Text("Set my week and hours first") }
         } else Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             if (pager.currentPage > 0) TextButton(onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } }) { Text("Back") }
             Spacer(Modifier.weight(1f))

@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Column
@@ -66,7 +68,7 @@ fun Outreach(nav: NavController) {
     val subEmail = remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
-    Screen("People", nav, back = st.simpleMode) {
+    Screen("People", nav, back = false) {
         Intro("people", "Venues and people worth knowing, and what has passed between you. The app drafts short, personal emails and remembers to follow up once. Nothing is sent without your yes.")
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Small("At level $level")
@@ -147,6 +149,9 @@ fun Outreach(nav: NavController) {
                 if (!Levels.outreachAllowed(level, c.kind, Engine.rules())) Note("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}.")
             }
         }
+
+        H("Ready-made emails")
+        IconRow(Icons.Default.Email, "Print lab, gallery, library", "Short emails you can send as they are") { nav.navigate("letters") }
 
         H("Your email list")
         val subs = contacts.filter { it.kind == "subscriber" }

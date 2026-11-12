@@ -127,14 +127,12 @@ fun Guide(nav: NavController) {
     val tick by st.changed.collectAsState()
     var steps by remember { mutableStateOf<List<GuideStep>>(emptyList()) }
     var openId by remember { mutableStateOf("") }
-    var simple by remember { mutableStateOf(st.simpleMode) }
-    var hidden by remember { mutableStateOf(st.guideHidden) }
     LaunchedEffect(tick) {
         val loaded = withContext(Dispatchers.IO) { try { guideSteps(ctx) } catch (e: Exception) { emptyList() } }
         steps = loaded
         if (openId.isBlank() || loaded.firstOrNull { it.id == openId }?.done == true) openId = (loaded.firstOrNull { !it.done && !it.optional } ?: loaded.firstOrNull { !it.done })?.id.orEmpty()
     }
-    Screen("Guide", nav, back = !st.simpleMode) {
+    Screen("Guide", nav) {
         val done = steps.count { it.done }
         Intro("guide", "One step at a time. Only the open step needs you; ignore the rest until you get there. Steps marked optional can be skipped for good: the app works without them.")
         if (steps.isNotEmpty()) {
@@ -163,10 +161,6 @@ fun Guide(nav: NavController) {
                 }
             }
         }
-        Panel(onClick = { nav.navigate("basics") }) { Text("New to exhibiting?", style = MaterialTheme.typography.titleSmall); Small("Plain answers to the things nobody explains.") }
-        H("Layout")
-        Toggle("Simple layout: fewer tabs, progress folded away", simple) { simple = it; st.simpleMode = it }
-        Toggle("Hide the Guide card on Home", hidden) { hidden = it; st.guideHidden = it }
     }
 }
 

@@ -213,10 +213,6 @@ fun Screen(
             Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 36.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(title, style = MaterialTheme.typography.headlineSmall)
                 Text(help.value, style = MaterialTheme.typography.bodyLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(onClick = { showHelp = false; nav.navigate("tour") }) { Text("Take the tour") }
-                    TextButton(onClick = { showHelp = false; nav.navigate("basics") }) { Text("Plain answers") }
-                }
             }
         }
     }

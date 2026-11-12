@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -111,7 +112,7 @@ fun Calls(nav: NavController) {
     val kindsPresent = opps.map { it.kind }.distinct().filter { it.isNotBlank() }
     fun kindOk(o: Opp) = kindFilter == "every kind" || o.kind == kindFilter
 
-    Screen("Calls", nav, back = st.simpleMode) {
+    Screen("Calls", nav, back = false) {
         Intro("calls", "Open calls you could apply to. The app checks each one against your level, budget and work, and shows the few worth a look. You only answer Yes, No or Not this year.")
         Choice("", listOf("this week", "all", "applied"), tab) { tab = it }
         if (kindsPresent.size > 1 && tab != "applied") Choice("", listOf("every kind") + kindsPresent, kindFilter) { kindFilter = it }
@@ -182,6 +183,7 @@ fun Calls(nav: NavController) {
             }
             "all" -> {
                 Small("Everything found, including calls your rules hold back, and why.")
+                IconRow(Icons.Default.Notifications, "Where calls come from", "Email alerts and pages the app checks each day") { nav.navigate("sources") }
                 opps.filter { it.status in setOf("new", "later", "no", "expired") && kindOk(it) }.forEach { o ->
                     val why = Scoring.ineligible(o, p, now())
                     Panel(onClick = { nav.navigate("call/${o.id}") }) {

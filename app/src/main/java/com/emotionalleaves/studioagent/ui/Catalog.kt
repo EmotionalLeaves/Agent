@@ -121,8 +121,9 @@ fun Works(nav: NavController) {
     }
     Screen("Studio", nav, back = false) {
         Intro("studio", "Every piece you make lives here, with its image and details. Works are single pieces; Series are groups that belong together. Already have finished files? Bring in files picks several at once and each becomes a piece.")
-        Choice("", listOf("works", "series"), tab) { tab = it }
-        if (tab == "works") {
+        Choice("", listOf("works", "series", "ideas"), tab) { tab = it }
+        if (tab == "ideas") IdeasBody(nav)
+        else if (tab == "works") {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Button(onClick = { scope.io { val id = dao.put(newWork()); withContext(Dispatchers.Main) { nav.navigate("work/$id") } } }, modifier = Modifier.weight(1f)) { Text("Add a piece") }
                 OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Bring in files") }
@@ -471,11 +472,16 @@ fun CropScreen(nav: NavController, id: Long) {
 
 @Composable
 fun Ideas(nav: NavController) {
+    Screen("Ideas", nav) { IdeasBody(nav) }
+}
+
+/** The pinboard of parked ideas. Lives in Studio, under Ideas. */
+@Composable
+fun IdeasBody(nav: NavController) {
     val scope = rememberCoroutineScope()
     val ideas by dao.ideas().collectAsState(emptyList())
     val text = remember { mutableStateOf("") }
-    Screen("Ideas", nav) {
-        Intro("ideas", "Park it here and go back to the piece in front of you. Nothing parked here is lost.")
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Field("New idea", text, lines = 2, mic = true)
         if (text.value.isNotBlank()) Button(onClick = { val t = text.value.trim(); text.value = ""; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
         val open = ideas.filter { !it.done }

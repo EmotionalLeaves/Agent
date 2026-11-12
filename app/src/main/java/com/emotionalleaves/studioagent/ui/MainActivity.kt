@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
@@ -108,11 +109,10 @@ class MainActivity : ComponentActivity() {
 fun tabFor(route: String, tabs: List<String>): String {
     val head = route.substringBefore('/')
     val home = when (head) {
-        "home", "onboarding", "session", "done", "admin", "week", "sessions", "review", "share" -> "home"
+        "home", "session", "done", "admin", "week", "sessions", "review", "share" -> "home"
         "works", "work", "crop", "ideas" -> "works"
         "calls", "call", "appl", "web", "sources" -> "calls"
         "outreach", "contact", "letters" -> "outreach"
-        "guide", "basics", "path" -> "guide"
         else -> "more"
     }
     return if (home in tabs) home else "more"
@@ -142,20 +142,17 @@ fun Root(incoming: MutableState<Incoming?>) {
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route.orEmpty()
     val tick by st.changed.collectAsState()
-    // Simple layout keeps the bar to four things. Calls and People are still one tap away under More.
-    val tabs = if (tick >= 0 && st.simpleMode) listOf(
-        Triple("home", "Home", Icons.Default.Home), Triple("works", "Studio", Icons.Default.Create),
-        Triple("guide", "Guide", Icons.Default.CheckCircle), Triple("more", "More", Icons.Default.Menu)
-    ) else listOf(
-        Triple("home", "Home", Icons.Default.Home), Triple("works", "Studio", Icons.Default.Create), Triple("calls", "Calls", Icons.Default.Search),
-        Triple("outreach", "People", Icons.Default.Person), Triple("more", "More", Icons.Default.Menu)
+    // Five places, always the same, each named for what is in it.
+    val tabs = listOf(
+        Triple("home", "Today", Icons.Default.Home), Triple("works", "Studio", Icons.Default.Create), Triple("calls", "Calls", Icons.Default.Search),
+        Triple("outreach", "People", Icons.Default.Person), Triple("more", "You", Icons.Default.Face)
     )
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             // Sessions, setup and the saved screen get the whole phone: nothing else to tap.
-            if (route.substringBefore('/') !in setOf("session", "onboarding", "done", "crop", "share", "tour")) Column {
+            if (route.substringBefore('/') !in setOf("session", "done", "crop", "share", "tour")) Column {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 NavigationBar(containerColor = MaterialTheme.colorScheme.background, tonalElevation = 0.dp) {
                     tabs.forEach { (r, label, icon) ->
@@ -184,7 +181,6 @@ fun Root(incoming: MutableState<Incoming?>) {
             popExitTransition = { fadeOut(tween(160)) + slideOutHorizontally(tween(220)) { it / 14 } }
         ) {
             composable("home") { Home(nav) }
-            composable("onboarding") { Onboarding(nav) }
             composable("tour") { Tour(nav) }
             composable("session") { SessionScreen(nav) }
             composable("admin") { Admin(nav) }

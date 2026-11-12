@@ -250,19 +250,13 @@ fun Home(nav: NavController) {
         }
 
         if (st.onboarded) {
-            val todo0 = guide.filter { !it.done }
-            if (pendingCount > 0 || (!st.guideHidden && todo0.isNotEmpty()) || !st.simpleMode) Section("Elsewhere")
+            if (pendingCount > 0) Section("Waiting for you")
             if (pendingCount > 0) IconRow(Icons.Default.Done, "$pendingCount waiting for your yes", "One tap each") { nav.navigate("admin") }
-            val todo = guide.filter { !it.done }
-            val must = todo.firstOrNull { !it.optional } ?: todo.firstOrNull()
-            if (!st.guideHidden && must != null) IconRow(Icons.Default.CheckCircle, "Guide: ${must.title}", "${guide.count { it.done }} of ${guide.size} set-up steps done") { nav.navigate("guide") }
-            if (!st.simpleMode) IconRow(Icons.Default.Star, "Level $level: ${Levels.names[level]}", if (level < 4) "Next: ${gate.text}" else gate.text) { nav.navigate("path") }
-            if (!st.simpleMode && (st.feeBudget > 0 || G.ai.ready)) Small("Fees this month ${money(Engine.feesThisMonth(ledger))} of ${money(st.feeBudget)}. AI this month about ${money(G.ai.spentThisMonth())} of ${money(st.aiCapUsd)}.")
 
             Space(4)
             Field("Park an idea so it stops circling", idea, mic = true)
             if (idea.value.isNotBlank()) Button(onClick = { buzz(); val t = idea.value.trim(); idea.value = ""; parked = true; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
-            if (parked) Check(true, "Parked in Ideas. You can let it go for now.", small = true)
+            if (parked) Check(true, "Parked. It waits in Studio, under Ideas.", small = true)
         } else {
             val todo = guide.filter { !it.done }
             Section("How it goes")
@@ -276,7 +270,6 @@ fun Home(nav: NavController) {
                     }
                 }
             }
-            if (todo.isNotEmpty()) Panel(onClick = { nav.navigate("basics") }) { Text("New to exhibiting?", style = MaterialTheme.typography.titleSmall); Small("Plain answers. None of it is needed to start.") }
         }
     }
 }
@@ -306,82 +299,6 @@ fun DoneScreen(nav: NavController) {
         Small("It is all stored. You can close the app.")
         Space(8)
         Button(onClick = { nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("OK") }
-    }
-}
-
-@Composable
-fun Onboarding(nav: NavController) {
-    val first = remember { mutableStateOf(st.firstName) }
-    val last = remember { mutableStateOf(st.lastName) }
-    val email = remember { mutableStateOf(st.email) }
-    val city = remember { mutableStateOf(st.city) }
-    var shown by remember { mutableStateOf("not sure yet") }
-    var hours by remember { mutableStateOf("decide for me") }
-    var page by remember { mutableStateOf(0) }
-    val pages = 5
-    val perms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { nav.navigate("home") { popUpTo("home") { inclusive = true } } }
-    fun finish() {
-        st.firstName = first.value.trim(); st.lastName = last.value.trim(); st.email = email.value.trim(); st.city = city.value.trim()
-        st.route = when (shown) { "physical work" -> "physical"; "on screens" -> "screen"; else -> "print" }
-        st.weeklyHours = hours.toIntOrNull() ?: 4
-        val wanted = mutableListOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
-        if (Build.VERSION.SDK_INT >= 33) wanted += Manifest.permission.POST_NOTIFICATIONS
-        perms.launch(wanted.toTypedArray())
-    }
-    // The phone's back gesture steps back a page instead of leaving setup.
-    BackHandler(enabled = page > 0) { page-- }
-    Screen("Set up", nav, bare = true) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            (0 until pages).forEach { i -> Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(if (i <= page) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)) }
-        }
-        Small("${page + 1} of $pages")
-        Space(8)
-        when (page) {
-            0 -> {
-                Text("What should the app call you?", style = MaterialTheme.typography.headlineMedium)
-                Text("Only your first name is needed. Everything after this has a \"not sure\" answer that works.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Field("First name", first)
-            }
-            1 -> {
-                Text("For your CV, if you like", style = MaterialTheme.typography.headlineMedium)
-                Text("All optional. Leave them empty and add them whenever.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Field("Last name", last)
-                Field("Email", email)
-                Field("City", city)
-            }
-            2 -> {
-                Text("How will your work be shown?", style = MaterialTheme.typography.headlineMedium)
-                Choice("", listOf("not sure yet", "prints of my digital work", "physical work", "on screens"), shown) { shown = it }
-                Panel(strong = shown == "not sure yet") {
-                    Text(when (shown) {
-                        "not sure yet" -> "That is fine. The app starts you on prints of your digital work: it is the quickest way to get something you already make onto a wall. Nothing is locked in."
-                        "prints of my digital work" -> "Your files, printed on archival paper and framed. Shows accept these all the time."
-                        "physical work" -> "Painting, drawing, printmaking or anything made by hand."
-                        else -> "Video, animation or interactive work on a monitor or projector. Fewer shows take it, but some do."
-                    })
-                }
-            }
-            3 -> {
-                Text("Hours of making a week", style = MaterialTheme.typography.headlineMedium)
-                Choice("", listOf("decide for me", "3", "4", "5", "6", "8"), hours) { hours = it }
-                Panel(strong = hours == "decide for me") {
-                    Text(if (hours == "decide for me") "Four hours: two short evenings after work and one longer weekend session. Lower it, raise it or pause any time." else "About $hours hours, fitted around your job.")
-                }
-            }
-            else -> {
-                Text("Two questions from your phone", style = MaterialTheme.typography.headlineMedium)
-                Check(false, "Calendar, so studio time can be booked around your day")
-                Check(false, "Notifications, at most ${st.notifCap} quiet ones a day")
-                Text("Say no to either and the app still works.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        Space(12)
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            if (page > 0) TextButton(onClick = { page-- }) { Text("Back") } else TextButton(onClick = { nav.navigate("basics") }) { Text("New to exhibiting?") }
-            Spacer(Modifier.weight(1f))
-            if (page < pages - 1) Button(enabled = page != 0 || first.value.isNotBlank(), onClick = { page++ }) { Text(if (page == 1 && last.value.isBlank() && email.value.isBlank() && city.value.isBlank()) "Skip" else "Next") }
-            else Button(onClick = { finish() }) { Text("Finish") }
-        }
     }
 }
 
@@ -596,40 +513,26 @@ fun ShareScreen(nav: NavController) {
     }
 }
 
+/**
+ * You: everything about you and the app, on one page. Each thing has exactly one row here,
+ * and nothing on this page is reachable from another menu.
+ */
 @Composable
 fun More(nav: NavController) {
-    Screen("More", nav, back = false) {
-        listOf(
-            "Help" to listOf(
-                Tile("The tour", "How it all fits, in two minutes", "tour", Icons.Default.PlayArrow),
-                Tile("Guide", "Setup, one step at a time", "guide", Icons.Default.CheckCircle),
-                Tile("Plain answers", "What the words mean", "basics", Icons.Default.Info),
-                Tile("Where this is going", "The five levels", "path", Icons.Default.Star)
-            ),
-            "Do" to listOf(
-                Tile("Calls", "Open calls, ranked", "calls", Icons.Default.Search),
-                Tile("People", "Openings and venues", "outreach", Icons.Default.Person),
-                Tile("Materials", "Statement, bio, CV", "materials", Icons.Default.Edit),
-                Tile("Ready-made emails", "Print lab, gallery, library", "letters", Icons.Default.Email),
-                Tile("Your week", "Studio times, pause", "week", Icons.Default.DateRange),
-                Tile("Ideas", "Parked for later", "ideas", Icons.Default.Favorite),
-                Tile("Admin pass", "Waiting for your yes", "admin", Icons.Default.Done)
-            ),
-            "Look up" to listOf(
-                Tile("Receipts", "Everything sent", "receipts", Icons.AutoMirrored.Filled.List),
-                Tile("Records", "To-dos, money, reports", "records", Icons.Default.AccountBox),
-                Tile("Call sources", "What the app reads", "sources", Icons.Default.Notifications),
-                Tile("Settings", "You, rules, backup", "settings", Icons.Default.Settings)
-            )
-        ).forEach { (group, items) ->
-            Section(group)
-            items.chunked(2).forEach { pair ->
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    pair.forEach { t -> Box(Modifier.weight(1f)) { TileCard(t) { nav.navigate(t.route) } } }
-                    if (pair.size == 1) Spacer(Modifier.weight(1f))
-                }
-            }
-        }
+    Screen("You", nav, back = false) {
+        Section("Your words")
+        IconRow(Icons.Default.Edit, "Statement, bio and CV", "Written from your own answers; nothing made up") { nav.navigate("materials") }
+        Section("Progress")
+        IconRow(Icons.Default.CheckCircle, "Guide", "Set-up steps, one at a time") { nav.navigate("guide") }
+        IconRow(Icons.Default.Star, "Where this is going", "The five levels and the next small step") { nav.navigate("path") }
+        Section("Records")
+        IconRow(Icons.Default.AccountBox, "To-dos and money", "Delivery steps, costs, sales, reports") { nav.navigate("records") }
+        IconRow(Icons.AutoMirrored.Filled.List, "Receipts", "Everything sent, with proof") { nav.navigate("receipts") }
+        Section("Settings")
+        sectionNames.forEach { (id, title, sub) -> IconRow(sectionIcons.getValue(id), title, sub) { nav.navigate("settings/$id") } }
+        Section("Help")
+        IconRow(Icons.Default.PlayArrow, "The tour", "How it all fits, in two minutes") { nav.navigate("tour") }
+        IconRow(Icons.Default.Info, "Plain answers", "What the art-world words mean") { nav.navigate("basics") }
     }
 }
 
