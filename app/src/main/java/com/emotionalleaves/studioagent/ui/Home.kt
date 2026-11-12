@@ -4,7 +4,18 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -336,39 +347,61 @@ fun SessionScreen(nav: NavController) {
                 withContext(Dispatchers.Main) { nav.navigate(if (save) "done" else "home") { popUpTo("home") { inclusive = !save } } }
             }
         }
+        var stopping by remember { mutableStateOf(false) }
+        val goal = st.sessionGoalMin
         Screen("In session", nav) {
-            Text("%d:%02d:%02d".format(secs / 3600, (secs / 60) % 60, secs % 60), style = MaterialTheme.typography.displayMedium)
-            val goal = st.sessionGoalMin
-            if (goal > 0) {
-                LinearProgressIndicator(progress = { (secs / (goal * 60f)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().height(10.dp))
-                if (secs >= goal * 60L) Panel(strong = true) { Text("That is your $goal minutes. Stopping now is a complete session. Keep going only if you want to.") }
-                else Small("${((goal * 60L - secs) / 60) + 1} minutes to go of $goal")
+            val track = MaterialTheme.colorScheme.surfaceContainerHigh
+            val fill = MaterialTheme.colorScheme.primary
+            val part = if (goal > 0) (secs / (goal * 60f)).coerceIn(0f, 1f) else 0f
+            // A ring that fills as time passes: the whole session visible at a glance.
+            Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
+                Canvas(Modifier.size(210.dp)) {
+                    val w = 14.dp.toPx()
+                    drawArc(track, -90f, 360f, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
+                    if (part > 0f) drawArc(fill, -90f, 360f * part, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text((if (secs >= 3600) "%d:%02d:%02d".format(secs / 3600, (secs / 60) % 60, secs % 60) else "%d:%02d".format(secs / 60, secs % 60)), style = MaterialTheme.typography.displayMedium)
+                    if (goal > 0) Small(if (secs >= goal * 60L) "$goal minutes done" else "${Math.ceil((goal * 60L - secs) / 60.0).toInt()} min to go")
+                    if (paused) Small("paused")
+                }
             }
-            Note((work?.title?.ifBlank { "Untitled" } ?: st.sessionKind) + ". Your phone is quiet. Close this screen and work; the timer keeps going.")
+            if (goal > 0 && secs >= goal * 60L) Panel(strong = true) { Text("That is your $goal minutes. Stopping now is a complete session. Keep going only if you want to.") }
+            Text(work?.title?.ifBlank { "Untitled" } ?: (if (st.sessionKind == "skill") "Practice" else "Light session"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             if (work != null) {
                 val steps = Texts.steps(work.steps)
-                if (work.doneWhen.isNotBlank()) Small("Finished when: ${work.doneWhen}")
                 val open = steps.indexOfFirst { !it.first }
                 if (open >= 0) Panel {
                     Text("Now: ${steps[open].second}", fontWeight = FontWeight.SemiBold)
                     Small("${steps.count { it.first }} of ${steps.size} small steps done")
                     OutlinedButton(onClick = { scope.io { dao.put(work.copy(steps = Texts.stepsText(steps.mapIndexed { i, p -> if (i == open) true to p.second else p }))) } }) { Text("Done, show the next one") }
                 } else if (work.nextStep.isNotBlank()) Small("Where you left off: ${work.nextStep}")
+                if (work.doneWhen.isNotBlank()) Small("Finished when: ${work.doneWhen}")
             }
             if (Planner.isWindDown(LocalDateTime.now(), Planner.time(st.bedtime, LocalTime.of(22, 30)))) Panel(strong = true) {
-                Text("Wind-down time. A good place to stop: write your next step below so nothing is lost.")
+                Text("Wind-down time. A good place to stop: write your next step so nothing is lost.")
             }
-            OutlinedButton(onClick = {
-                if (paused) { st.sessionPausedTotal = st.sessionPausedTotal + (now() - st.sessionPausedAt); st.sessionPausedAt = 0L }
-                else st.sessionPausedAt = now()
-            }) { Text(if (paused) "Resume" else "Pause (a break does not count against you)") }
-            H("When you stop")
-            Field("Next time, start with...", nextStep, mic = true)
-            Field("Anything to note (optional)", note, lines = 2)
-            if (photo.isNotBlank()) PathImage(photo, Modifier.fillMaxWidth().height(160.dp))
-            OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, photoFile)) } catch (e: Exception) { } }) { Text(if (photo.isBlank()) "Progress photo" else "Retake photo") }
-            Button(onClick = { finish(true) }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("End and save") }
-            TextButton(onClick = { finish(false) }) { Text("Discard this session") }
+            if (!stopping) {
+                Note("Your phone is quiet. Put it down and work; the timer keeps going.")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(modifier = Modifier.weight(1f).height(52.dp), onClick = {
+                        if (paused) { st.sessionPausedTotal = st.sessionPausedTotal + (now() - st.sessionPausedAt); st.sessionPausedAt = 0L }
+                        else st.sessionPausedAt = now()
+                    }) { Text(if (paused) "Resume" else "Pause") }
+                    Button(modifier = Modifier.weight(1f).height(52.dp), onClick = { stopping = true }) { Text("I am stopping") }
+                }
+            } else {
+                H("Before you go")
+                Field("Next time, start with...", nextStep, mic = true)
+                Field("Anything to note (optional)", note, lines = 2)
+                if (photo.isNotBlank()) PathImage(photo, Modifier.fillMaxWidth().height(160.dp))
+                OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, photoFile)) } catch (e: Exception) { } }) { Text(if (photo.isBlank()) "Progress photo (optional)" else "Retake photo") }
+                Button(onClick = { finish(true) }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("End and save") }
+                Row {
+                    TextButton(onClick = { stopping = false }) { Text("Keep going") }
+                    TextButton(onClick = { finish(false) }) { Text("Discard this session") }
+                }
+            }
         }
     }
 }

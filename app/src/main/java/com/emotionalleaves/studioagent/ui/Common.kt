@@ -25,6 +25,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -289,6 +293,33 @@ fun Intro(key: String, text: String) {
 fun Dim(label: String, valueIn: Double, onIn: (Double) -> Unit) {
     val cm = st.units == "cm"
     Num("$label, " + (if (cm) "cm" else "in"), if (cm) Math.round(valueIn * 25.4) / 10.0 else valueIn) { onIn(if (cm) it / 2.54 else it) }
+}
+
+/** A small label for one fact about a thing: a status, a date, a price. */
+@Composable
+fun Tag(text: String, strong: Boolean = false) {
+    Text(text.replace('_', ' '), style = MaterialTheme.typography.bodySmall,
+        color = if (strong) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.background(if (strong) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 3.dp))
+}
+
+/** A piece's picture in a list, or its initial on a quiet tile when there is no picture yet. */
+@Composable
+fun Thumb(path: String, title: String, size: Int = 64) {
+    val shape = RoundedCornerShape(10.dp)
+    if (path.isNotBlank() && File(path).exists()) PathImage(path, Modifier.size(size.dp).clip(shape), 220)
+    else Box(Modifier.size(size.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, shape), contentAlignment = Alignment.Center) {
+        Text(title.trim().take(1).uppercase().ifBlank { "·" }, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.outline)
+    }
+}
+
+/** What a list shows when it is empty: one line of what goes here and, at most, one thing to tap. */
+@Composable
+fun Empty(text: String, action: String = "", onAction: () -> Unit = {}) {
+    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainerLow, RoundedCornerShape(16.dp)).padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(text, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (action.isNotBlank()) OutlinedButton(onClick = onAction) { Text(action) }
+    }
 }
 
 @Composable

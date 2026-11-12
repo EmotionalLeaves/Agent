@@ -120,14 +120,19 @@ fun Calls(nav: NavController) {
                     2 -> "Regional juried shows."
                     else -> "Competitive calls, judged case by case."
                 } + " These limits are yours to change in Settings, Your rules.")
-                if (list.isEmpty()) Panel { Text("No calls waiting for you."); Note("Share a link or a flyer photo into Studio Agent from any app, paste one below, or add sources under More.") }
+                if (list.isEmpty()) Empty("No calls waiting. When you see one anywhere, tap Share and choose Studio Agent, or paste it below.")
                 list.forEach { o ->
                     key(o.id) {
                         Panel {
-                            Text(o.title, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth())
-                            Note(whereLine(o))
-                            Text(fitLabel(o.fitScore) + (if (o.deadline > 0) "  ·  " + Planner.weekendsLeft(today, Engine.date(o.deadline)) else ""))
-                            o.fitReasons.lines().filter { it.isNotBlank() }.take(4).forEach { Note("· $it") }
+                            Text(o.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth().clickable { nav.navigate("call/${o.id}") })
+                            if (whereLine(o).isNotBlank()) Small(whereLine(o))
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Tag(fitLabel(o.fitScore), strong = true)
+                                if (o.deadline > 0) Tag(Planner.weekendsLeft(today, Engine.date(o.deadline)))
+                                Tag(if (o.fee > 0) money(o.fee) else "free")
+                                if (o.kind != "exhibition" && o.kind.isNotBlank()) Tag(o.kind)
+                            }
+                            o.fitReasons.lines().filter { it.isNotBlank() && !it.startsWith("Free to enter") && !it.startsWith("Fee ") }.take(2).forEach { Small(it) }
                             Flags(o)
                             if (saidNo == o.id) {
                                 Choice("Why not? (optional, it teaches the ranking)", listOf("too far", "fee", "wrong vibe", "no reason"), "") { r ->
@@ -135,12 +140,12 @@ fun Calls(nav: NavController) {
                                     if (r != "no reason") st.addNoReason(r)
                                     scope.io { dao.put(o.copy(status = "no", noReason = r)); Engine.rescore() }
                                 }
-                            } else Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            } else FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Button(onClick = { scope.io({ status = it }) { val id = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$id") } } }) { Text("Yes") }
                                 OutlinedButton(onClick = { saidNo = o.id }) { Text("No") }
                                 TextButton(onClick = { scope.io { dao.put(o.copy(status = "later")) } }) { Text("Not this year") }
-                                TextButton(onClick = { nav.navigate("call/${o.id}") }) { Text("Details") }
                             }
+                            Small("Tap the title for the full details.")
                         }
                     }
                 }
@@ -179,7 +184,7 @@ fun Calls(nav: NavController) {
                 }
             }
             else -> {
-                if (appls.isEmpty()) Note("Nothing applied to yet.")
+                if (appls.isEmpty()) Empty("Nothing applied to yet. Say Yes to a call and the app builds the application.")
                 appls.forEach { a ->
                     val o = opps.firstOrNull { it.id == a.oppId }
                     Panel(onClick = { nav.navigate("appl/${a.id}") }) {

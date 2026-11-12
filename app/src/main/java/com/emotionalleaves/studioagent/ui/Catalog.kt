@@ -115,34 +115,40 @@ fun Works(nav: NavController) {
         Choice("", listOf("works", "series"), tab) { tab = it }
         if (tab == "works") {
             Button(onClick = { scope.io { val id = dao.put(newWork()); withContext(Dispatchers.Main) { nav.navigate("work/$id") } } }, modifier = Modifier.fillMaxWidth()) { Text("Add a piece") }
-            OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text("Bring in work I have already made (pick several files)") }
+            OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text("Bring in existing work") }
+            Small("Already have finished files? Pick several at once and each becomes a piece.")
             Status(importStatus)
-            if (works.isEmpty()) Note("Nothing here yet. Add a piece, then photograph it or import the file.")
+            if (works.isEmpty()) Empty("No pieces yet. Start one, or bring in work you have already made.")
             if (works.size > 5) {
                 Field("Search title, tag, medium or series", search)
                 Choice("", listOf("all") + workStatuses.filter { x -> works.any { it.status == x } }, show) { show = it }
             }
-            if (works.isNotEmpty()) TextButton(onClick = {
-                scope.io({ importStatus = it }) {
-                    val f = File(ImageTools.exportDir(ctx), "StudioAgent_inventory.csv")
-                    f.writeText(Papers.inventoryCsv(works, series.associate { it.id to it.name }))
-                    withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "text/csv") }
-                }
-            }) { Text("Export my inventory as a spreadsheet file") }
             val q = search.value.trim().lowercase()
             works.filter { w ->
                 (show == "all" || w.status == show) && (q.isBlank() || listOf(w.title, w.tags, w.medium, w.status, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).any { it.lowercase().contains(q) })
             }.forEach { w ->
                 Panel(onClick = { nav.navigate("work/${w.id}") }) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        PathImage(w.imagePath, Modifier.size(64.dp), 200)
-                        Column {
-                            Text(w.title.ifBlank { "Untitled #${w.id}" } + (if (tick >= 0 && st.focusWork == w.id && w.status == "in_progress") "  ·  this week's piece" else ""), fontWeight = FontWeight.SemiBold)
-                            Note(listOf(w.status.replace('_', ' '), series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).filter { it.isNotBlank() }.joinToString("  ·  "))
+                        Thumb(w.imagePath, w.title, 56)
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(w.title.ifBlank { "Untitled #${w.id}" }, fontWeight = FontWeight.SemiBold)
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Tag(w.status, strong = w.status == "in_progress")
+                                if (tick >= 0 && st.focusWork == w.id && w.status == "in_progress") Tag("this week's piece", strong = true)
+                                series.firstOrNull { it.id == w.seriesId }?.let { Tag(it.name) }
+                            }
                         }
                     }
                 }
             }
+            if (works.size > 1) TextButton(onClick = {
+                scope.io({ importStatus = it }) {
+                    val f = File(ImageTools.exportDir(ctx), "StudioAgent_inventory.csv")
+                    f.writeText(Papers.inventoryCsv(works, series.associate { it.id to it.name }))
+                    withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "text/csv") }
+                }
+            }) { Text("Export my inventory as a spreadsheet file") }
+
         } else {
             Note("A series is a group of works that belong together. Most calls and every solo show want one. Ten documented works in one series opens Level 1.")
             series.forEach { s -> key(s.id) {
@@ -222,12 +228,13 @@ fun WorkDetail(nav: NavController, id: Long) {
 
     Screen(w.title.ifBlank { "Untitled" }, nav) {
         if (w.imagePath.isNotBlank()) PathImage(w.imagePath, Modifier.fillMaxWidth().height(260.dp), 1000)
+        Field("Title", w.title, { save(w.copy(title = it)) })
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Photograph") }
             OutlinedButton(onClick = { pick.launch("image/*") }) { Text("Import file") }
             if (w.imagePath.isNotBlank()) OutlinedButton(onClick = { nav.navigate("crop/$id") }) { Text("Straighten and crop") }
         }
-        Note("Photographing: daylight from the side, no flash, the work flat against a wall, phone parallel to it. A grey card in one corner helps the colour.")
+        Explain("How do I photograph work well?", "Daylight from the side, no flash. Put the work flat against a wall and hold the phone parallel to it, level with its centre. A sheet of plain grey card in one corner helps the app correct the colour. Then tap Straighten and crop.")
         Status(status)
         if (w.imagePath.isNotBlank() && (w.status == "in_progress" || w.status == "finished"))
             Button(onClick = {
@@ -263,7 +270,6 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
 
         H("Details")
-        Field("Title", w.title, { save(w.copy(title = it)) })
         Whole("Year", w.year) { save(w.copy(year = it)) }
         Field("Medium (blank uses the default for its format)", w.medium, { save(w.copy(medium = it)) })
         Choice("Format", listOf("print", "physical", "screen", "digital"), w.format) { save(w.copy(format = it)) }
