@@ -10,7 +10,8 @@ import kotlin.reflect.KProperty
 /** Plain settings in normal preferences; keys, tokens and passwords in encrypted preferences. */
 class Settings(ctx: Context) {
     val plain: SharedPreferences = ctx.getSharedPreferences("settings", Context.MODE_PRIVATE)
-    private val secret: SharedPreferences = try {
+    // Keys and passwords are only unlocked when first needed, so opening the app does not wait on the phone's key store.
+    private val secret: SharedPreferences by lazy { try {
         EncryptedSharedPreferences.create(
             "secrets",
             MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
@@ -20,7 +21,7 @@ class Settings(ctx: Context) {
         )
     } catch (e: Exception) {
         ctx.getSharedPreferences("secrets_fallback", Context.MODE_PRIVATE)
-    }
+    } }
 
     /** Bumped on every write so screens can recompute. */
     val changed = MutableStateFlow(0)

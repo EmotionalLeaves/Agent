@@ -137,7 +137,7 @@ fun Guide(nav: NavController) {
         Intro("guide", "One step at a time. Only the open step needs you; ignore the rest until you get there. Steps marked optional can be skipped for good: the app works without them.")
         if (steps.isNotEmpty()) {
             LinearProgressIndicator(progress = { done.toFloat() / steps.size }, modifier = Modifier.fillMaxWidth().height(6.dp), trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
-            Small("$done of ${steps.size} done")
+            Small("${steps.count { it.done && !it.optional }} of ${steps.count { !it.optional }} needed steps done" + (if (steps.any { it.optional }) ". ${steps.count { it.optional }} more are optional." else ""))
         }
         steps.groupBy { it.group }.forEach { (group, list) ->
             H(group)
