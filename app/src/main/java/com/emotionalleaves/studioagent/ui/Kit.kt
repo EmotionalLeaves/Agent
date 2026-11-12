@@ -59,6 +59,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -331,7 +332,7 @@ private fun StepButton(sign: String, spoken: String, enabled: Boolean, onClick: 
     val cs = MaterialTheme.colorScheme
     Box(Modifier.size(44.dp).clip(RoundedCornerShape(22.dp)).background(if (enabled) cs.surfaceContainerLowest else cs.surfaceContainer)
         .clickable(enabled = enabled, role = Role.Button, onClickLabel = spoken) { onClick() }
-        .semantics { androidx.compose.ui.semantics.contentDescription = spoken }, contentAlignment = Alignment.Center) {
+        .semantics { contentDescription = spoken }, contentAlignment = Alignment.Center) {
         Text(sign, style = MaterialTheme.typography.titleLarge, color = if (enabled) cs.primary else cs.outline)
     }
 }
@@ -368,7 +369,7 @@ fun DaysField(label: String, value: String, onValue: (String) -> Unit) {
                 val picked = d in on
                 Box(Modifier.size(42.dp).clip(RoundedCornerShape(21.dp)).background(if (picked) cs.primary else cs.surfaceContainerLowest)
                     .toggleable(value = picked, role = Role.Checkbox) { c -> on = if (c) on + d else on - d; onValue(on.sorted().joinToString(",")) }
-                    .semantics { androidx.compose.ui.semantics.contentDescription = names[d - 1] }, contentAlignment = Alignment.Center) {
+                    .semantics { contentDescription = names[d - 1] }, contentAlignment = Alignment.Center) {
                     Text("MTWTFSS"[d - 1].toString(), style = MaterialTheme.typography.labelLarge, color = if (picked) cs.onPrimary else cs.onSurface)
                 }
             }
