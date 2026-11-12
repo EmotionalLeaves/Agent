@@ -1,5 +1,8 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Column
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -134,30 +137,33 @@ fun Guide(nav: NavController) {
     Screen("Guide", nav, back = !st.simpleMode) {
         val done = steps.count { it.done }
         Intro("guide", "One step at a time. Only the open step needs you; ignore the rest until you get there. Steps marked optional can be skipped for good: the app works without them.")
-        Panel(onClick = { nav.navigate("basics") }) { Text("New to exhibiting?", fontWeight = FontWeight.SemiBold); Small("Plain answers to the things nobody explains. You do not need to know any of it to start.") }
         if (steps.isNotEmpty()) {
-            LinearProgressIndicator(progress = { done.toFloat() / steps.size }, modifier = Modifier.fillMaxWidth())
+            LinearProgressIndicator(progress = { done.toFloat() / steps.size }, modifier = Modifier.fillMaxWidth().height(6.dp), trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
             Small("$done of ${steps.size} done")
         }
         steps.groupBy { it.group }.forEach { (group, list) ->
             H(group)
-            list.forEach { s ->
-                val open = s.id == openId
-                Panel(strong = open, onClick = if (open) null else ({ openId = s.id })) {
-                    Check(s.done, s.title, current = open && !s.done, bold = open)
-                    if (s.optional && !s.done) Row { Tag("optional") }
-                    if (open) {
-                        Text(s.why)
-                        s.how.forEachIndexed { i, line -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Text("${i + 1}", fontWeight = FontWeight.SemiBold, modifier = Modifier.width(18.dp)); Text(line, Modifier.weight(1f)) } }
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { nav.navigate(s.route) }) { Text(s.button) }
-                            if (s.link.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, s.link) }) { Text("Open the website") }
+            Column {
+                list.forEachIndexed { idx, s ->
+                    val open = s.id == openId
+                    Timeline(s.done, current = open && !s.done, last = idx == list.lastIndex, onClick = if (open) null else ({ openId = s.id })) {
+                        Text(s.title, style = if (open) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+                            color = if (s.done && !open) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
+                        if (s.optional && !s.done) Row { Tag("optional") }
+                        if (open) Panel {
+                            Text(s.why)
+                            s.how.forEachIndexed { i, line -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Text("${i + 1}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.width(18.dp)); Text(line, Modifier.weight(1f)) } }
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Button(onClick = { nav.navigate(s.route) }) { Text(s.button) }
+                                if (s.link.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, s.link) }) { Text("Open the website") }
+                            }
+                            if (!s.done && (s.optional || s.manual)) TextButton(onClick = { st.guideManual = st.guideManual + "," + s.id }) { Text(if (s.manual) "I have done this" else "Skip this for good") }
                         }
-                        if (!s.done && (s.optional || s.manual)) TextButton(onClick = { st.guideManual = st.guideManual + "," + s.id }) { Text(if (s.manual) "I have done this" else "Skip this for good") }
                     }
                 }
             }
         }
+        Panel(onClick = { nav.navigate("basics") }) { Text("New to exhibiting?", style = MaterialTheme.typography.titleSmall); Small("Plain answers to the things nobody explains.") }
         H("Layout")
         Toggle("Simple layout: fewer tabs, progress folded away", simple) { simple = it; st.simpleMode = it }
         Toggle("Hide the Guide card on Home", hidden) { hidden = it; st.guideHidden = it }
@@ -210,13 +216,19 @@ fun PathScreen(nav: NavController) {
     )
     Screen("Where this is going", nav) {
         Intro("path", "Five levels, one small step at a time. You only ever need to think about the one you are on.")
-        steps.forEachIndexed { i, (name, what, opens) ->
-            Panel(strong = i == level) {
-                Check(i < level, "Level $i: $name", current = i == level, bold = true)
-                if (i == level) Row { Tag("you are here", strong = false) }
-                Text(what)
-                if (i == level && level < 4) { LinearProgressIndicator(progress = { gate.progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth()); Text("So far: ${gate.text}") }
-                if (opens.isNotBlank() && i >= level) Small(opens)
+        Column {
+            steps.forEachIndexed { i, (name, what, opens) ->
+                Timeline(i < level, current = i == level, last = i == steps.lastIndex) {
+                    Text("Level $i: $name", style = if (i == level) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium,
+                        color = if (i > level) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
+                    if (i == level) Row { Tag("you are here", strong = true) }
+                    Text(what, color = if (i == level) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (i == level && level < 4) Panel {
+                        LinearProgressIndicator(progress = { gate.progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().height(6.dp), trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
+                        Text("So far: ${gate.text}")
+                        if (opens.isNotBlank()) Small(opens)
+                    } else if (opens.isNotBlank() && i > level) Small(opens)
+                }
             }
         }
         Small("Rough timing for someone with a full-time job: months for the first two levels, years for the rest. The gates decide, not the calendar. You can change the gates or set your level yourself in Settings, Your rules.")

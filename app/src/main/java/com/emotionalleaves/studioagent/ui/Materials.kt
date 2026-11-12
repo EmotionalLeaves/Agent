@@ -90,11 +90,11 @@ fun Materials(nav: NavController) {
         Intro("materials", "The written things every call asks for. You answer the interview once; the app drafts each document; you approve it once and it is reused everywhere.")
         Panel(onClick = { nav.navigate("interview") }, strong = answered == 0) {
             Text("Interview", fontWeight = FontWeight.SemiBold)
-            Note("$answered of ${interviewQuestions.size} answered. Everything below is written from these answers and your records, nothing else.")
+            Small("$answered of ${interviewQuestions.size} answered. Everything below is written from these.")
         }
         Panel(onClick = { nav.navigate("facts") }) {
             Text("CV facts", fontWeight = FontWeight.SemiBold)
-            Note("${facts.size} line" + (if (facts.size == 1) "" else "s") + ". Education, shows, awards. The CV only ever contains what is listed here.")
+            Small("${facts.size} line" + (if (facts.size == 1) "" else "s") + ". Your CV holds only these.")
         }
 
         H("Statements and bios")

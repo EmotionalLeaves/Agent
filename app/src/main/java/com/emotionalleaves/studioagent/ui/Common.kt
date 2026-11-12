@@ -1,5 +1,9 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import android.content.Intent
 import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -161,7 +165,10 @@ private val clockFmt = DateTimeFormatter.ofPattern("h:mm:ss a")
 fun SavedLine() {
     val opened = remember { System.currentTimeMillis() }
     val at = lastSaved.value
-    Small(if (at >= opened) "Saved at " + Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault()).format(clockFmt) + ". Nothing else to do." else "Everything here saves by itself as you type.")
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Default.Check, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+        Small(if (at >= opened) "Saved at " + Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault()).format(clockFmt) + ". Nothing else to do." else "Saves as you type. Nothing else to do.")
+    }
 }
 
 fun fitLabel(score: Int): String = if (st.fitWords) Texts.fitWord(score) else "Fit $score of 100"
@@ -171,6 +178,10 @@ fun Field(label: String, value: String, onValue: (String) -> Unit, lines: Int = 
     val speak = if (mic) rememberMic { said -> onValue((value + " " + said).trim()) } else null
     OutlinedTextField(
         value = value, onValueChange = onValue, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest, focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
         singleLine = lines == 1, minLines = lines,
         trailingIcon = if (speak != null) ({ IconButton(onClick = speak) { MicIcon() } }) else null,
         keyboardOptions = KeyboardOptions(
@@ -334,9 +345,43 @@ fun Thumb(path: String, title: String, size: Int = 64) {
 /** What a list shows when it is empty: one line of what goes here and, at most, one thing to tap. */
 @Composable
 fun Empty(text: String, action: String = "", onAction: () -> Unit = {}) {
-    Column(Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)).padding(horizontal = 20.dp, vertical = 24.dp), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (action.isNotBlank()) OutlinedButton(onClick = onAction) { Text(action) }
+    Row(Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)).padding(20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        EmptyFrame()
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (action.isNotBlank()) OutlinedButton(onClick = onAction) { Text(action) }
+        }
+    }
+}
+
+/** A bare frame hanging from a nail: the app's picture for "nothing here yet". */
+@Composable
+fun EmptyFrame() {
+    val line = MaterialTheme.colorScheme.outline
+    val wall = MaterialTheme.colorScheme.outlineVariant
+    Canvas(Modifier.size(width = 44.dp, height = 56.dp)) {
+        val w = size.width; val h = size.height; val s = 2.dp.toPx()
+        drawCircle(line, radius = 2.5f.dp.toPx(), center = Offset(w / 2, 3.dp.toPx()))
+        drawLine(line, Offset(w / 2, 3.dp.toPx()), Offset(w * 0.18f, h * 0.30f), s * 0.6f)
+        drawLine(line, Offset(w / 2, 3.dp.toPx()), Offset(w * 0.82f, h * 0.30f), s * 0.6f)
+        drawRect(line, topLeft = Offset(w * 0.06f, h * 0.30f), size = Size(w * 0.88f, h * 0.68f), style = Stroke(s))
+        drawRect(wall, topLeft = Offset(w * 0.22f, h * 0.42f), size = Size(w * 0.56f, h * 0.44f), style = Stroke(s * 0.6f))
+    }
+}
+
+/**
+ * One stop on a line of steps: a mark on the left, joined to the next by a thin line,
+ * filled in up to where you are. Put a run of these in a column with no spacing.
+ */
+@Composable
+fun Timeline(done: Boolean, current: Boolean, last: Boolean, onClick: (() -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).let { if (onClick != null) it.clickable(role = Role.Button) { onClick() } else it }) {
+        Box(Modifier.width(28.dp).fillMaxHeight()) {
+            if (!last) Box(Modifier.align(Alignment.TopCenter).padding(top = 24.dp).width(2.dp).fillMaxHeight().background(if (done) cs.primary else cs.outlineVariant))
+            Box(Modifier.align(Alignment.TopCenter).padding(top = 2.dp)) { Mark(done, current) }
+        }
+        Column(Modifier.weight(1f).padding(start = 10.dp, bottom = 20.dp).heightIn(min = 40.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
     }
 }
 
