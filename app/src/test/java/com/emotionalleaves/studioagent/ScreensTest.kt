@@ -149,5 +149,14 @@ class ScreensTest {
         shot("27_ideas", "ideas", "Fridge light")
         shot("28_receipts", "receipts", "Staff Show")
         shot("29_admin", "admin", "Approve statement")
+        shot("50_interview", "interview", "Save answers")
+        shot("51_contact", "contact/${ids["contact"]}", "How realistic")
+        shot("52_letters", "letters", "print lab")
+        shot("53_sources", "sources", "daily check")
+        shot("54_facts", "facts", "Add line")
+        shot("55_settings_you", "settings/you", "Sizes in")
+        shot("56_settings_calm", "settings/calm", "Finished means finished")
+        shot("57_sessions", "sessions", "Glaze")
+        shot("58_review", "review", "Done for")
     }
 }

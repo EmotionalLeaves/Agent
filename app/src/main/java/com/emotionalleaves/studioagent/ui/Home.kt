@@ -161,6 +161,7 @@ fun Home(nav: NavController) {
             }
             if (n != null && n.detail.isNotBlank()) Text(n.detail, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        if (!st.onboarded) TextButton(onClick = { st.setupDone = true; st.tourSeen = true; nav.navigate("home") { popUpTo("home") { inclusive = true } } }) { Text("Skip the tour and start") }
         if (pinning) {
             Field("What do you want to see here instead?", pinText)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
