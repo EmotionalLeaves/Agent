@@ -280,6 +280,16 @@ object Planner {
         return if (w.isBefore(bedtime)) !t.isBefore(w) && t.isBefore(bedtime) else !t.isBefore(w) || t.isBefore(bedtime)
     }
 
+    /**
+     * Weeks until a series reaches its target at the artist's real pace, or null when there is nothing to go on yet.
+     * [hoursPerPiece] comes from pieces already finished; [hoursPerWeek] from the last few weeks actually worked.
+     */
+    fun weeksToFinish(done: Int, target: Int, hoursPerPiece: Double, hoursPerWeek: Double): Int? {
+        if (done >= target) return 0
+        if (hoursPerPiece <= 0 || hoursPerWeek <= 0) return null
+        return Math.ceil((target - done) * hoursPerPiece / hoursPerWeek).toInt().coerceAtLeast(1)
+    }
+
     /** "3 weekends left" instead of a date to calculate. */
     fun weekendsLeft(today: LocalDate, deadline: LocalDate): String {
         if (deadline.isBefore(today)) return "passed"

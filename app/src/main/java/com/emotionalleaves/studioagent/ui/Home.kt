@@ -151,6 +151,17 @@ fun Home(nav: NavController) {
             Panel(onClick = { nav.navigate("week") }) {
                 Text("This week: ${"%.1f".format(hours)} of ${st.weeklyHours} hours")
                 LinearProgressIndicator(progress = { (hours / st.weeklyHours.coerceAtLeast(1)).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+                // The week at a glance: a filled dot is a day you worked, a ring is a planned block still ahead.
+                val monday = today.with(java.time.DayOfWeek.MONDAY)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    (0..6).forEach { i ->
+                        val day = monday.plusDays(i.toLong())
+                        val worked = sessions.any { it.end > it.start && Engine.date(it.start) == day }
+                        val planned = events.any { it.type == "studio" && it.date > now() && Engine.date(it.date) == day }
+                        Text("MTWTFSS"[i].toString() + "\n" + (if (worked) "●" else if (planned) "○" else "·"),
+                            fontWeight = if (day == today) FontWeight.Bold else FontWeight.Normal, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    }
+                }
                 if (st.pausedUntil > now()) Note("Planning is paused until ${fmtDate(st.pausedUntil)}.")
                 else events.firstOrNull { it.type == "studio" && it.date > now() }?.let { Note("Next studio block: ${fmtDate(it.date)}. Tap to change your week.") }
             }
@@ -181,7 +192,7 @@ fun Home(nav: NavController) {
         }
 
         if (st.onboarded) {
-            Field("Park an idea so it stops circling", idea)
+            Field("Park an idea so it stops circling", idea, mic = true)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(enabled = idea.value.isNotBlank(), onClick = { val t = idea.value.trim(); idea.value = ""; parked = true; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
                 if (pendingCount > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("Admin pass ($pendingCount)") }
@@ -261,7 +272,7 @@ fun SessionScreen(nav: NavController) {
 
     if (start == 0L) {
         var kind by remember { mutableStateOf(if (st.energyDay == LocalDate.now().toString() && st.energy == "wiped") "light" else "make") }
-        var workId by remember(works.size) { mutableStateOf(active.firstOrNull()?.id ?: 0L) }
+        var workId by remember(works.size) { mutableStateOf((Engine.currentPiece(works) ?: active.firstOrNull())?.id ?: 0L) }
         val work = works.firstOrNull { it.id == workId }
         Screen("Start a session", nav) {
             Choice("What kind?", listOf("make", "skill", "light"), kind) { kind = it }

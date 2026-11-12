@@ -84,6 +84,8 @@ fun Works(nav: NavController) {
     val series by dao.series().collectAsState(emptyList())
     var tab by remember { mutableStateOf("works") }
     val newSeries = remember { mutableStateOf("") }
+    val sessions by dao.sessions().collectAsState(emptyList())
+    val tick by st.changed.collectAsState()
     val search = remember { mutableStateOf("") }
     var show by remember { mutableStateOf("all") }
     Screen("Studio", nav, back = false) {
@@ -104,7 +106,7 @@ fun Works(nav: NavController) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         PathImage(w.imagePath, Modifier.size(64.dp), 200)
                         Column {
-                            Text(w.title.ifBlank { "Untitled #${w.id}" }, fontWeight = FontWeight.SemiBold)
+                            Text(w.title.ifBlank { "Untitled #${w.id}" } + (if (tick >= 0 && st.focusWork == w.id && w.status == "in_progress") "  ·  this week's piece" else ""), fontWeight = FontWeight.SemiBold)
                             Note(listOf(w.status.replace('_', ' '), series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).filter { it.isNotBlank() }.joinToString("  ·  "))
                         }
                     }
@@ -120,6 +122,7 @@ fun Works(nav: NavController) {
                     Field("Series name", name, { name = it; if (it.isNotBlank()) scope.io { dao.put(s.copy(name = it.trim(), notes = notes)) } })
                     LinearProgressIndicator(progress = { (done.toFloat() / s.targetCount.coerceAtLeast(1)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                     Note("$done of ${s.targetCount} documented, ${works.count { it.seriesId == s.id }} started")
+                    Small(Engine.forecast(s.id, s.targetCount, works, sessions))
                     Field("What ties these works together? (used for the series statement)", notes, { notes = it; scope.io { dao.put(s.copy(notes = it, name = name.trim().ifBlank { s.name })) } }, lines = 2, mic = true)
                     Whole("How many works you are aiming for", s.targetCount) { n -> if (n > 0) scope.io { dao.put(s.copy(targetCount = n, notes = notes, name = name.trim().ifBlank { s.name })) } }
                     TextButton(onClick = { scope.io { works.filter { it.seriesId == s.id }.forEach { dao.put(it.copy(seriesId = 0)) }; dao.del(s) } }) { Text("Delete this series (its works are kept)") }
@@ -192,6 +195,11 @@ fun WorkDetail(nav: NavController, id: Long) {
             Button(onClick = { save(w.copy(status = "documented")) }, modifier = Modifier.fillMaxWidth()) { Text("Finished and documented") }
         SavedLine()
 
+        if (w.status == "in_progress") {
+            var focus by remember { mutableStateOf(st.focusWork == id) }
+            if (focus) Small("This is your one piece this week. Start now opens straight onto it.")
+            OutlinedButton(onClick = { focus = !focus; st.focusWork = if (focus) id else 0L }) { Text(if (focus) "Stop focusing on this piece" else "Make this my one piece this week") }
+        }
         if (w.status == "in_progress" || w.status == "idea") {
             H("Small steps")
             Note("Break the piece into steps small enough to start without thinking. The session screen shows only the next one.")

@@ -159,6 +159,14 @@ class DomainTest {
         assertEquals(240, suggested.sumOf { it.minutes })
     }
 
+    @Test fun theSeriesForecastUsesRealPace() {
+        assertEquals(0, Planner.weeksToFinish(10, 10, 5.0, 4.0))
+        assertEquals(null, Planner.weeksToFinish(2, 10, 0.0, 4.0))
+        assertEquals(null, Planner.weeksToFinish(2, 10, 5.0, 0.0))
+        assertEquals(10, Planner.weeksToFinish(2, 10, 5.0, 4.0))
+        assertEquals(1, Planner.weeksToFinish(9, 10, 1.0, 8.0))
+    }
+
     @Test fun smallStepsRoundTrip() {
         val steps = Texts.steps("[x] Open the file\n[ ] Block in shapes\nAdd the light\n\n")
         assertEquals(3, steps.size)

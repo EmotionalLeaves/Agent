@@ -212,6 +212,12 @@ class AppTest {
         assertEquals(id, s.sessionArtwork); assertEquals("make", s.sessionKind); assertEquals(5, s.sessionGoalMin)
         assertTrue(s.sessionStart > 0)
         assertEquals("session", Engine.nextStep().route)
+        val other = dao.put(Artwork(title = "Second Piece", status = "in_progress", createdAt = 99))
+        s.sessionStart = 0
+        assertEquals(other, Engine.currentPiece(dao.artworksNow())?.id)
+        s.focusWork = id
+        assertEquals(id, Engine.currentPiece(dao.artworksNow())?.id)
+        assertTrue(Engine.forecast(1, 10, dao.artworksNow(), dao.sessionsNow()).startsWith("Once one piece is finished"))
         s.log("first"); s.log("second")
         assertEquals("second", s.activityLines().first().second)
     }

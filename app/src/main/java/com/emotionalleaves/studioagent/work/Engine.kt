@@ -245,6 +245,24 @@ object Engine {
         planWeek(ctx)
     }
 
+    /** The piece to work on: this week's chosen one if it is still in progress, otherwise the most recent in progress. */
+    fun currentPiece(works: List<Artwork>): Artwork? =
+        works.firstOrNull { it.id == st.focusWork && it.status == "in_progress" } ?: works.firstOrNull { it.status == "in_progress" }
+
+    /** Plain-words forecast for a series from real session history. */
+    fun forecast(seriesId: Long, target: Int, works: List<Artwork>, sessions: List<com.emotionalleaves.studioagent.data.Sess>): String {
+        val inSeries = works.filter { it.seriesId == seriesId }
+        val done = inSeries.count { documented(it) || it.status == "finished" }
+        if (done >= target) return "Target reached."
+        val finishedIds = inSeries.filter { documented(it) || it.status == "finished" }.map { it.id }.toSet()
+        val perPiece = finishedIds.map { id -> sessions.filter { it.artworkId == id && it.end > it.start }.sumOf { (it.end - it.start) / 3_600_000.0 } }.filter { it > 0 }
+        val since = System.currentTimeMillis() - 28 * DAY
+        val recent = sessions.filter { it.start >= since && it.end > it.start }.sumOf { (it.end - it.start) / 3_600_000.0 } / 4.0
+        val weeks = Planner.weeksToFinish(done, target, if (perPiece.isEmpty()) 0.0 else perPiece.average(), recent)
+            ?: return "Once one piece is finished with its sessions logged, the app can tell you roughly when the series will be done."
+        return "At your real pace (about ${"%.1f".format(recent)} hours a week, ${"%.1f".format(perPiece.average())} a piece): about $weeks weekend" + (if (weeks == 1) "" else "s") + " to reach $target. A forecast, not a deadline."
+    }
+
     /** What to do first on a piece: its next open small step, or the line left at the end of the last session. */
     fun firstStep(a: Artwork): String = Texts.firstOpenStep(a.steps).ifBlank { a.nextStep }
 
@@ -252,7 +270,7 @@ object Engine {
     suspend fun quickStart(goalMin: Int): Long {
         val works = dao.artworksNow()
         val wiped = st.energyDay == LocalDate.now().toString() && st.energy == "wiped"
-        val piece = works.firstOrNull { it.status == "in_progress" } ?: works.firstOrNull { it.status == "idea" }
+        val piece = currentPiece(works) ?: works.firstOrNull { it.status == "idea" }
         st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
         st.sessionArtwork = piece?.id ?: 0L
         st.sessionKind = if (wiped || piece == null) "light" else "make"
@@ -588,7 +606,7 @@ object Engine {
         if (docs.none { it.type == "interview" && it.text.isNotBlank() })
             return NextStep("Do the 10-minute interview", "Answer by voice or text once. Every statement, bio and email is written from it.", "interview")
         if (series.isEmpty()) return NextStep("Name your first series", "A working title is enough. Aim for 10 works that belong together.", "works")
-        val current = works.firstOrNull { it.status == "in_progress" }
+        val current = currentPiece(works)
         val finished = works.firstOrNull { it.status == "finished" }
         if (finished != null) return NextStep("Document \"${finished.title.ifBlank { "Untitled" }}\"", "One photo or file import, then it counts toward your series.", "work/${finished.id}")
         if (current != null) return NextStep(

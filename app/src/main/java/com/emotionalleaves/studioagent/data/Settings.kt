@@ -141,6 +141,7 @@ class Settings(ctx: Context) {
     var ghBackupRepo by S("ghBackupRepo")
     var ghPagesRepo by S("ghPagesRepo")
     var ghUploaded by S("ghUploaded")
+    var focusWork by L("focusWork", 0)
     var backupFolder by S("backupFolder")
     var lastAutoBackup by L("lastAutoBackup", 0)
 
