@@ -196,8 +196,8 @@ class ScreensTest {
                     val c = n.config
                     val text = c.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.Text) { emptyList() }.joinToString(" ")
                     val desc = c.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription) { emptyList() }.joinToString(" ")
-                    val edit = c.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.EditableText)?.text.orEmpty()
-                    val label = c.getOrNull(androidx.compose.ui.semantics.SemanticsActions.OnClick)?.label.orEmpty()
+                    val edit = if (c.contains(androidx.compose.ui.semantics.SemanticsProperties.EditableText)) c[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text else ""
+                    val label = if (c.contains(androidx.compose.ui.semantics.SemanticsActions.OnClick)) c[androidx.compose.ui.semantics.SemanticsActions.OnClick].label.orEmpty() else ""
                     if (text.isBlank() && desc.isBlank() && edit.isBlank() && label.isBlank() && !c.contains(androidx.compose.ui.semantics.SemanticsProperties.EditableText)) {
                         bad++
                         out.append("$r: unlabelled tap target at ${n.boundsInRoot}\n")
