@@ -3,6 +3,8 @@ package com.emotionalleaves.studioagent.ui
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
@@ -145,11 +147,12 @@ fun Guide(nav: NavController) {
             list.forEach { s ->
                 val open = s.id == openId
                 Panel(strong = open, onClick = if (open) null else ({ openId = s.id })) {
-                    Text((if (s.done) "✓ " else "○ ") + s.title + (if (s.optional && !s.done) "  (optional)" else ""), fontWeight = if (open) FontWeight.SemiBold else FontWeight.Normal)
+                    Check(s.done, s.title, current = open && !s.done, bold = open)
+                    if (s.optional && !s.done) Row { Tag("optional") }
                     if (open) {
                         Text(s.why)
-                        s.how.forEachIndexed { i, line -> Text("${i + 1}. $line") }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        s.how.forEachIndexed { i, line -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { Text("${i + 1}", fontWeight = FontWeight.SemiBold, modifier = Modifier.width(18.dp)); Text(line, Modifier.weight(1f)) } }
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = { nav.navigate(s.route) }) { Text(s.button) }
                             if (s.link.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, s.link) }) { Text("Open the website") }
                         }
@@ -212,7 +215,8 @@ fun PathScreen(nav: NavController) {
         Text("Five levels, one small step at a time. You only ever need to think about the one you are on.")
         steps.forEachIndexed { i, (name, what, opens) ->
             Panel(strong = i == level) {
-                Text("Level $i: $name" + (if (i == level) "  ·  you are here" else if (i < level) "  ✓" else ""), fontWeight = FontWeight.SemiBold)
+                Check(i < level, "Level $i: $name", current = i == level, bold = true)
+                if (i == level) Row { Tag("you are here", strong = false) }
                 Text(what)
                 if (i == level && level < 4) { LinearProgressIndicator(progress = { gate.progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth()); Text("So far: ${gate.text}") }
                 if (opens.isNotBlank() && i >= level) Small(opens)

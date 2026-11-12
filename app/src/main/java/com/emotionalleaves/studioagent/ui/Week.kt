@@ -3,6 +3,7 @@ package com.emotionalleaves.studioagent.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
@@ -98,7 +99,7 @@ fun WeekScreen(nav: NavController) {
             Button(onClick = { st.pausedUntil = 0L; replan("Welcome back. The week is planned again.") }) { Text("Resume now") }
         } else {
             Note("Busy week, low week, away: pause and the app stops planning and reminding. You can still start a session whenever you like.")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(7 to "1 week", 14 to "2 weeks", 30 to "A month").forEach { (days, label) ->
                     OutlinedButton(onClick = { st.pausedUntil = now() + days * DAY; replan("Paused.") }) { Text(label) }
                 }
@@ -146,7 +147,7 @@ fun SessionsScreen(nav: NavController) {
                 scope.io { dao.put(s) }
             }) { Text("Add it") }
         }
-        if (sessions.isEmpty()) Note("No sessions yet.")
+        if (sessions.isEmpty()) Empty("No sessions yet. Each one you finish is listed here.")
         sessions.take(60).forEach { s ->
             Panel {
                 Text(fmtDate(s.start) + "  ·  ${((s.end - s.start) / 60000).coerceAtLeast(0)} min  ·  ${s.kind}" + name(s.artworkId).let { if (it.isNotBlank()) "  ·  $it" else "" }, fontWeight = FontWeight.SemiBold)

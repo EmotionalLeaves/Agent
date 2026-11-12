@@ -136,6 +136,20 @@ fun StudioTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = if (isSystemInDarkTheme()) DarkColors else LightColors, typography = AppType, content = content)
 }
 
+/** Which bottom tab a screen belongs to, so the bar always shows where you are, even a few taps deep. */
+fun tabFor(route: String, tabs: List<String>): String {
+    val head = route.substringBefore('/')
+    val home = when (head) {
+        "home", "onboarding", "session", "done", "admin", "week", "sessions", "review", "share" -> "home"
+        "works", "work", "crop", "ideas" -> "works"
+        "calls", "call", "appl", "web", "sources" -> "calls"
+        "outreach", "contact", "letters" -> "outreach"
+        "guide", "basics", "path" -> "guide"
+        else -> "more"
+    }
+    return if (home in tabs) home else "more"
+}
+
 private fun NavBackStackEntry.id(): Long = arguments?.getString("id")?.toLongOrNull() ?: 0L
 
 @Composable
@@ -174,7 +188,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             NavigationBar {
                 tabs.forEach { (r, label, icon) ->
                     NavigationBarItem(
-                        selected = route == r,
+                        selected = tabFor(route, tabs.map { it.first }) == r,
                         onClick = { nav.navigate(r) { popUpTo("home"); launchSingleTop = true } },
                         icon = { Icon(icon, label) }, label = { Text(label) }
                     )

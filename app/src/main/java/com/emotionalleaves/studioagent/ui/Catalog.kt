@@ -164,7 +164,7 @@ fun Works(nav: NavController) {
                         val ready = works.filter { it.seriesId == s.id && Engine.documented(it) }
                         val hasStatement = docs.any { it.type == "statement" && it.seriesId == s.id && it.approved && it.text.isNotBlank() }
                         val checks = Readiness.series(ready, s.targetCount, hasStatement)
-                        checks.forEach { (label, ok) -> Text((if (ok) "✓ " else "○ ") + label) }
+                        checks.forEach { (label, ok) -> Check(ok, label) }
                         Small(if (checks.all { it.second }) "Every check passes. It is ready; there is nothing left to perfect." else "When every line is ticked, it is ready. Nothing else is needed.")
                     }
                     Field("What ties these works together? (used for the series statement)", notes, { notes = it; scope.io { dao.put(s.copy(notes = it, name = name.trim().ifBlank { s.name })) } }, lines = 2, mic = true)
@@ -257,7 +257,7 @@ fun WorkDetail(nav: NavController, id: Long) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = done, onCheckedChange = { c -> save(w.copy(steps = Texts.stepsText(steps.mapIndexed { j, p -> if (j == i) c to p.second else p }))) })
                     Text(text, Modifier.weight(1f))
-                    TextButton(onClick = { save(w.copy(steps = Texts.stepsText(steps.filterIndexed { j, _ -> j != i }))) }) { Text("×") }
+                    RemoveButton("step: $text") { save(w.copy(steps = Texts.stepsText(steps.filterIndexed { j, _ -> j != i }))) }
                 }
             }
             Field("Add a small step (for example: block in the big shapes)", newStep)
@@ -297,12 +297,11 @@ fun WorkDetail(nav: NavController, id: Long) {
         if (w.format == "print") Expand("Getting it printed (step ${w.printStage.coerceIn(0, 5)} of 5 done)") {
             Small("You do not need to know how any of this works. Do the highlighted step; ignore the rest.")
             Readiness.printSteps.forEachIndexed { i, (name, how) ->
-                val state = when { i < w.printStage -> "✓ "; i == w.printStage -> "→ "; else -> "○ " }
-                Text(state + name, fontWeight = if (i == w.printStage) FontWeight.SemiBold else FontWeight.Normal)
+                Check(i < w.printStage, name, current = i == w.printStage, bold = i == w.printStage)
                 if (i == w.printStage) Text(how)
             }
             if (w.printStage < 5) Button(onClick = { save(w.copy(printStage = w.printStage + 1)) }) { Text("Done: " + Readiness.printSteps[w.printStage.coerceIn(0, 4)].first.lowercase()) }
-            else Small("Printed and framed ✓. This piece can hang.")
+            else Small("Printed and framed. This piece can hang.")
             if (w.printStage > 0) TextButton(onClick = { save(w.copy(printStage = w.printStage - 1)) }) { Text("Go back a step") }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(Modifier.weight(1f)) { Num("Print cost, " + st.currency, w.printCost) { save(w.copy(printCost = it)) } }

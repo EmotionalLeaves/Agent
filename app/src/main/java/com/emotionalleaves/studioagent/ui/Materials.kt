@@ -97,7 +97,7 @@ fun Materials(nav: NavController) {
         }
         Panel(onClick = { nav.navigate("facts") }) {
             Text("CV facts", fontWeight = FontWeight.SemiBold)
-            Note("${facts.size} lines. Education, shows, awards. The CV only ever contains what is listed here.")
+            Note("${facts.size} line" + (if (facts.size == 1) "" else "s") + ". Education, shows, awards. The CV only ever contains what is listed here.")
         }
 
         H("Statements and bios")
@@ -209,6 +209,7 @@ fun Interview(nav: NavController) {
 
 @Composable
 fun DocScreen(nav: NavController, id: Long) {
+    val buzz = rememberBuzz()
     val scope = rememberCoroutineScope()
     val docs by dao.docs().collectAsState(emptyList())
     val series by dao.series().collectAsState(emptyList())
@@ -267,9 +268,9 @@ fun DocScreen(nav: NavController, id: Long) {
         }
         Panel {
             Text("Ready when these are all true", fontWeight = FontWeight.SemiBold)
-            Text((if (lengthOk) "✓ " else "○ ") + "Length: $words words (target $target or fewer)")
-            Text((if (d.text.isNotBlank() && jargon.isEmpty()) "✓ " else "○ ") + (if (jargon.isEmpty()) "No stock art jargon" else "Jargon to cut: " + jargon.joinToString(", ")))
-            Text("✓ Written only from your interview and CV facts")
+            Check(lengthOk, "Length: $words words (target $target or fewer)")
+            Check(d.text.isNotBlank() && jargon.isEmpty(), if (jargon.isEmpty()) "No stock art jargon" else "Jargon to cut: " + jargon.joinToString(", "))
+            Check(true, "Written only from your interview and CV facts")
         }
         Status(status)
         if (d.approved) { if (!locked) Panel(strong = true) { Text("Approved. Editing it un-approves it.") } }
@@ -279,6 +280,7 @@ fun DocScreen(nav: NavController, id: Long) {
                 Note("More passes rarely make it better. Approve it, or park it for a week and look with fresh eyes.")
             }
             Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
+                buzz()
                 val x = d.copy(approved = true, updatedAt = now()); save(x)
                 if (editedHere) scope.io {
                     val voice = dao.docsNow().firstOrNull { it.type == "voice" }

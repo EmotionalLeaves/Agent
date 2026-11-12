@@ -72,12 +72,12 @@ class ScreensTest {
         shot("06_basics", "basics", "What is an open call?")
     }
 
-    @Test fun inUse() {
+    private fun seed(): Map<String, Long> {
         ctx
         val s = G.settings
         s.firstName = "Jade"; s.lastName = "Leaves"; s.lastReviewWeek = Engine.weekId()
         val future = System.currentTimeMillis() + 40 * DAY
-        val ids = runBlocking {
+        return runBlocking {
             val dao = G.dao
             val series = dao.put(Series(name = "Night Kitchen", createdAt = 1))
             val work = dao.put(Artwork(title = "Blue Hour", year = 2026, widthIn = 16.0, heightIn = 20.0, seriesId = series, status = "available", imagePath = "/none.jpg", pixelW = 4800, pixelH = 6000, price = 480.0, editionSize = 10, createdAt = 1))
@@ -95,6 +95,10 @@ class ScreensTest {
             dao.put(Sess(artworkId = wip, start = System.currentTimeMillis() - 3_600_000, end = System.currentTimeMillis() - 1_200_000, nextStep = "Block in the big shapes"))
             mapOf("work" to work, "wip" to wip, "doc" to doc, "opp" to opp, "draft" to draft, "contact" to contact)
         }
+    }
+
+    @Test fun inUse() {
+        val ids = seed()
         shot("10_home", "home", "Start now")
         shot("11_studio", "works", "Blue Hour")
         shot("12_piece", "work/${ids["wip"]}", "Small steps")
@@ -112,5 +116,18 @@ class ScreensTest {
         shot("24_records", "records", "To do")
         shot("25_session_running", "startnow", "Now: Block in the big shapes")
         shot("26_done", "done", "Session saved")
+    }
+
+    /** The same screens after dark, to check nothing turns unreadable. */
+    @Test @Config(sdk = [34], qualifiers = "w360dp-h740dp-night-xhdpi") fun dark() {
+        val ids = seed()
+        shot("30_dark_home", "home", "Start now")
+        shot("31_dark_studio", "works", "Blue Hour")
+        shot("32_dark_calls", "calls", "Winter Open")
+        shot("33_dark_document", "doc/${ids["doc"]}", "Ready when")
+        shot("34_dark_guide", "guide", "done")
+        shot("35_dark_session", "startnow", "Now: Block in the big shapes")
+        shot("36_dark_piece", "work/${ids["wip"]}", "Small steps")
+        shot("37_dark_settings", "settings", "Your rules")
     }
 }

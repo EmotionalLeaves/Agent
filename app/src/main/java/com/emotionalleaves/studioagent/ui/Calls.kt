@@ -280,6 +280,7 @@ fun CallDetail(nav: NavController, id: Long) {
 @Composable
 fun ApplScreen(nav: NavController, id: Long) {
     val ctx = LocalContext.current
+    val buzz = rememberBuzz()
     val scope = rememberCoroutineScope()
     val appls by dao.appls().collectAsState(emptyList())
     val opps by dao.opps().collectAsState(emptyList())
@@ -359,7 +360,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             }
         }
         H("Statement")
-        Field("Statement" + (if (o.statementLimit > 0) " (limit ${o.statementLimit} words)" else ""), a.statement, { save(a.copy(statement = it, packDir = "")) }, lines = 5)
+        Field((if (o.statementLimit > 0) "Limit ${o.statementLimit} words. " else "") + "Edit only if this call needs it", a.statement, { save(a.copy(statement = it, packDir = "")) }, lines = 5)
         Note("${Texts.words(a.statement)} words")
         Field("How these works fit this call (2 to 3 sentences)", a.themeText, { save(a.copy(themeText = it, packDir = "")) }, lines = 3)
         if (G.ai.ready && a.revisions < st.revisionLimit + 1) TextButton(enabled = !busy, onClick = {
@@ -402,7 +403,7 @@ fun ApplScreen(nav: NavController, id: Long) {
 
         Panel(strong = allGreen) {
             Text(if (allGreen) "Every check passes. This is ready." else "Ready when these are all true", fontWeight = FontWeight.SemiBold)
-            checks.forEach { (label, ok) -> Text((if (ok) "✓ " else "○ ") + label) }
+            checks.forEach { (label, ok) -> Check(ok, label) }
         }
         Status(status)
         SavedLine()
@@ -439,12 +440,12 @@ fun ApplScreen(nav: NavController, id: Long) {
             }) { Text("Approve and send") }
             else {
                 Button(enabled = allGreen && files.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = { Share.email(ctx, a.emailTo, a.emailSubject, a.emailBody, files) }) { Text("Open in my mail app, filled in") }
-                OutlinedButton(onClick = { scope.io { Engine.markSubmitted(a, "Sent from your mail app to ${a.emailTo} on ${LocalDate.now()}.") } }) { Text("I sent it: lock as done") }
+                OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Sent from your mail app to ${a.emailTo} on ${LocalDate.now()}.") } }) { Text("I sent it: lock as done") }
                 Note("Add your email and an app password in Settings and the app sends it for you instead.")
             }
         } else {
             Button(enabled = o.url.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = { nav.navigate("web/${a.id}") }) { Text("Open the entry form and fill it") }
-            OutlinedButton(onClick = { scope.io { Engine.markSubmitted(a, "Submitted on the organiser's site on ${LocalDate.now()}.") } }) { Text("I submitted it: lock as done") }
+            OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Submitted on the organiser's site on ${LocalDate.now()}.") } }) { Text("I submitted it: lock as done") }
         }
         if (!allGreen) Note("Sending unlocks when every check above passes.")
     }

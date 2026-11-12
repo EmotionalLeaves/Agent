@@ -95,7 +95,7 @@ fun Outreach(nav: NavController) {
                     }
                 }) { Text("Log it") }
             }
-            events.filter { it.type == "opening" }.sortedByDescending { it.date }.take(3).forEach { Small("✓ " + fmtDate(it.date) + ": " + it.title) }
+            events.filter { it.type == "opening" }.sortedByDescending { it.date }.take(3).forEach { Check(true, fmtDate(it.date) + ": " + it.title, small = true) }
         }
         if (contacts.none { it.kind != "subscriber" }) {
             Panel {

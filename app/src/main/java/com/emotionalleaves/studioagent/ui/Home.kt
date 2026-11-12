@@ -5,6 +5,11 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,6 +70,7 @@ import java.time.LocalTime
 @Composable
 fun Home(nav: NavController) {
     val ctx = LocalContext.current
+    val buzz = rememberBuzz()
     val works by dao.artworks().collectAsState(emptyList())
     val docs by dao.docs().collectAsState(emptyList())
     val facts by dao.facts().collectAsState(emptyList())
@@ -138,9 +144,9 @@ fun Home(nav: NavController) {
             if (st.sessionStart > 0) Button(onClick = { nav.navigate("session") }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Back to session") }
             else {
                 // One tap: the app picks the piece and starts the clock. Nothing to decide first.
-                Button(onClick = { scope.io { Engine.quickStart(st.defaultSessionMin); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Start now") }
+                Button(onClick = { buzz(); scope.io { Engine.quickStart(st.defaultSessionMin); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Start now") }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { scope.io { Engine.quickStart(5); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }) { Text("Just 5 minutes") }
+                    OutlinedButton(onClick = { buzz(); scope.io { Engine.quickStart(5); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }) { Text("Just 5 minutes") }
                     TextButton(onClick = { nav.navigate("session") }) { Text("Let me choose first") }
                 }
             }
@@ -153,7 +159,7 @@ fun Home(nav: NavController) {
             Note("Next: ${must.title}. Tap for the exact steps.")
         }
 
-        Expand("Progress and deadlines", startOpen = !st.simpleMode) {
+        if (st.onboarded) Expand("Progress and deadlines", startOpen = !st.simpleMode) {
             Panel(onClick = { nav.navigate("path") }) {
                 Text("Level $level: ${Levels.names[level]}", fontWeight = FontWeight.SemiBold)
                 LinearProgressIndicator(progress = { gate.progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
@@ -165,13 +171,18 @@ fun Home(nav: NavController) {
                 LinearProgressIndicator(progress = { (hours / st.weeklyHours.coerceAtLeast(1)).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                 // The week at a glance: a filled dot is a day you worked, a ring is a planned block still ahead.
                 val monday = today.with(java.time.DayOfWeek.MONDAY)
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.fillMaxWidth()) {
                     (0..6).forEach { i ->
                         val day = monday.plusDays(i.toLong())
                         val worked = sessions.any { it.end > it.start && Engine.date(it.start) == day }
                         val planned = events.any { it.type == "studio" && it.date > now() && Engine.date(it.date) == day }
-                        Text("MTWTFSS"[i].toString() + "\n" + (if (worked) "●" else if (planned) "○" else "·"),
-                            fontWeight = if (day == today) FontWeight.Bold else FontWeight.Normal, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                        val cs = MaterialTheme.colorScheme
+                        Column(Modifier.weight(1f).semantics(mergeDescendants = true) { contentDescription = day.dayOfWeek.toString().lowercase() + (if (worked) ", worked" else if (planned) ", planned" else "") },
+                            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("MTWTFSS"[i].toString(), style = MaterialTheme.typography.bodySmall, fontWeight = if (day == today) FontWeight.Bold else FontWeight.Normal,
+                                color = if (day == today) cs.primary else cs.onSurfaceVariant)
+                            Box(Modifier.size(14.dp).let { if (worked) it.background(cs.primary, CircleShape) else if (planned) it.border(2.dp, cs.primary, CircleShape) else it.padding(5.dp).background(cs.outlineVariant, CircleShape) })
+                        }
                     }
                 }
                 if (st.pausedUntil > now()) Note("Planning is paused until ${fmtDate(st.pausedUntil)}.")
@@ -200,7 +211,7 @@ fun Home(nav: NavController) {
         appls.count { it.submittedAt >= weekStart }.let { if (it > 0) wins += "$it application" + (if (it > 1) "s" else "") + " sent" }
         if (wins.isNotEmpty()) Panel {
             Text("Done this week", fontWeight = FontWeight.SemiBold)
-            wins.forEach { Text("✓ $it") }
+            wins.forEach { Check(true, it) }
         }
 
         if (st.onboarded) {
@@ -209,7 +220,7 @@ fun Home(nav: NavController) {
                 Button(enabled = idea.value.isNotBlank(), onClick = { val t = idea.value.trim(); idea.value = ""; parked = true; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
                 if (pendingCount > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("Admin pass ($pendingCount)") }
             }
-            if (parked) Small("Parked ✓. It is safe in Ideas; you can let it go for now.")
+            if (parked) Check(true, "Parked. It is safe in Ideas; you can let it go for now.", small = true)
         }
     }
 }
@@ -222,7 +233,7 @@ fun DoneScreen(nav: NavController) {
     val s = sessions.firstOrNull()
     Screen("Session saved", nav, back = false) {
         Panel(strong = true) {
-            Text("Saved ✓", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+            Text("Saved", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
             if (s != null) {
                 val mins = ((s.end - s.start) / 60000).coerceAtLeast(0)
                 Text("$mins minutes" + (works.firstOrNull { it.id == s.artworkId }?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".")
@@ -275,6 +286,7 @@ fun Onboarding(nav: NavController) {
 @Composable
 fun SessionScreen(nav: NavController) {
     val ctx = LocalContext.current
+    val buzz = rememberBuzz()
     val scope = rememberCoroutineScope()
     val works by dao.artworks().collectAsState(emptyList())
     val sessions by dao.sessions().collectAsState(emptyList())
@@ -310,6 +322,7 @@ fun SessionScreen(nav: NavController) {
                 })
             }
             Button(onClick = {
+                buzz()
                 st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
                 st.sessionGoalMin = if (kind == "light") 15 else st.defaultSessionMin
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
@@ -396,7 +409,7 @@ fun SessionScreen(nav: NavController) {
                 Field("Anything to note (optional)", note, lines = 2)
                 if (photo.isNotBlank()) PathImage(photo, Modifier.fillMaxWidth().height(160.dp))
                 OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, photoFile)) } catch (e: Exception) { } }) { Text(if (photo.isBlank()) "Progress photo (optional)" else "Retake photo") }
-                Button(onClick = { finish(true) }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("End and save") }
+                Button(onClick = { buzz(); finish(true) }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("End and save") }
                 Row {
                     TextButton(onClick = { stopping = false }) { Text("Keep going") }
                     TextButton(onClick = { finish(false) }) { Text("Discard this session") }
@@ -416,7 +429,7 @@ fun Admin(nav: NavController) {
     LaunchedEffect(docs, appls, contacts) { withContext(Dispatchers.IO) { items = try { Engine.pending() } catch (e: Exception) { emptyList() }; loaded = true } }
     Screen("Admin pass", nav) {
         Note("Everything that needs a yes from you, in one place. One tap each. When this list is empty you are done.")
-        if (loaded && items.isEmpty()) Panel(strong = true) { Text("Nothing to approve. Done.") }
+        if (loaded && items.isEmpty()) Empty("Nothing to approve. You are done here.", "Back to Home") { nav.popBackStack() }
         items.forEach { p -> Panel(onClick = { nav.navigate(p.route) }) { Text(p.title, fontWeight = FontWeight.SemiBold); Note(p.detail) } }
     }
 }
@@ -515,7 +528,7 @@ fun Review(nav: NavController) {
         Text(if (mine.isEmpty()) "No sessions logged this week. That is information, not a verdict. If the plan did not fit your week, the plan is what should change."
         else "${mine.size} session" + (if (mine.size > 1) "s" else "") + ", ${mine.sumOf { (it.end - it.start) / 60000 }} minutes. That happened, and it counts.")
         H("2. One piece for next week")
-        if (active.isEmpty()) Small("Nothing in progress. Start a new piece from Studio when you are ready.")
+        if (active.isEmpty()) Empty("Nothing in progress. Start a new piece from Studio when you are ready.", "Open Studio") { nav.navigate("works") }
         else {
             Choice("", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, active.firstOrNull { tick >= 0 && it.id == st.focusWork }?.let { it.title.ifBlank { "Untitled #${it.id}" } }.orEmpty()) { t ->
                 active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == t }?.let { st.focusWork = it.id }
@@ -526,7 +539,7 @@ fun Review(nav: NavController) {
         val coming = events.filter { it.type == "studio" && it.date > now() }.take(5)
         if (st.pausedUntil > now()) Small("Planning is paused until ${fmtDate(st.pausedUntil)}.")
         else if (coming.isEmpty()) Small("None planned yet. They are added with the next daily check.")
-        else coming.forEach { Small("○ " + fmtDate(it.date) + ", ${(it.endDate - it.date) / 60000} min") }
+        else coming.forEach { Check(false, fmtDate(it.date) + ", ${(it.endDate - it.date) / 60000} min", small = true) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { nav.navigate("week") }) { Text("Change them") }
             if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("$pending to approve") }

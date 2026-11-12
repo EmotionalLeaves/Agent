@@ -74,13 +74,7 @@ fun Records(nav: NavController) {
         Intro("records", "The paperwork drawer: what is left to do for shows you got into, your own to-dos, money in and out, and a report once a quarter. Nothing here needs checking daily.")
         val tasks = events.filter { (it.type == "task" || it.type == "todo") && !it.done }
         H("To do")
-        Field("Add your own to-do", todo)
-        Field("Date, if it has one (YYYY-MM-DD)", todoDate)
-        Button(enabled = todo.value.isNotBlank(), onClick = {
-            val e = Evt(type = "todo", title = todo.value.trim(), date = Ai.parseDate(todoDate.value)); todo.value = ""; todoDate.value = ""
-            scope.io { dao.put(e) }
-        }) { Text("Add") }
-        if (tasks.isEmpty()) Note("Nothing open.")
+        if (tasks.isEmpty()) Empty("Nothing open. When you get into a show, its delivery and pick-up steps appear here by themselves.")
         tasks.forEach { e ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = e.done, onCheckedChange = { c -> scope.io { dao.put(e.copy(done = c)) } })
@@ -88,11 +82,20 @@ fun Records(nav: NavController) {
             }
         }
 
+        Expand("Add your own to-do") {
+            Field("What needs doing", todo)
+            Field("Date, if it has one (YYYY-MM-DD)", todoDate)
+            Button(enabled = todo.value.isNotBlank(), onClick = {
+                val e = Evt(type = "todo", title = todo.value.trim(), date = Ai.parseDate(todoDate.value)); todo.value = ""; todoDate.value = ""
+                scope.io { dao.put(e) }
+            }) { Text("Add") }
+        }
+
         H("Money")
         val year = LocalDate.now().year
         val thisYear = ledger.filter { Engine.date(it.date).year == year }
         Panel {
-            Text("Fees this month: ${money(Engine.feesThisMonth(ledger))} of ${money(st.feeBudget)} budget")
+            Text("Fees this month: ${money(Engine.feesThisMonth(ledger))}" + (if (st.feeBudget > 0) " of ${money(st.feeBudget)} budget" else ""))
             Text("$year so far: out ${money(-thisYear.filter { it.amount < 0 }.sumOf { it.amount })}, in ${money(thisYear.filter { it.amount > 0 }.sumOf { it.amount })}")
         }
         Choice("Add an entry", listOf("fee", "shipping", "print", "framing", "other"), kind) { kind = it }
@@ -102,7 +105,7 @@ fun Records(nav: NavController) {
 
         H("Record a sale")
         val sellable = works.filter { it.status != "sold" && it.status != "idea" && it.status != "in_progress" }
-        if (sellable.isEmpty()) Note("No finished works to sell yet.")
+        if (sellable.isEmpty()) Small("No finished works to sell yet.")
         else {
             Choice("Which work", sellable.map { it.title.ifBlank { "Untitled #${it.id}" } }, sellable.firstOrNull { it.id == saleWork }?.title?.ifBlank { "Untitled #$saleWork" }.orEmpty()) { t ->
                 sellable.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == t }?.let { saleWork = it.id; if (salePrice == 0.0) salePrice = it.price }
@@ -127,7 +130,7 @@ fun Records(nav: NavController) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("${fmtDate(l.date)}  ${l.kind}  ${l.note}", Modifier.weight(1f))
                 Text(money(l.amount))
-                TextButton(onClick = { scope.io { dao.del(l) } }) { Text("×") }
+                RemoveButton("entry") { scope.remove("the ${l.kind} entry", { dao.del(l) }, { dao.put(l) }) }
             }
         }
         OutlinedButton(onClick = {
@@ -174,13 +177,13 @@ fun Receipts(nav: NavController) {
         H("Sent")
         val sent = appls.filter { it.submittedAt > 0 }.map { Triple(it.submittedAt, "Application: " + (opps.firstOrNull { o -> o.id == it.oppId }?.title ?: "call"), it.proofText) } +
             contacts.filter { it.sentAt > 0 }.map { Triple(it.sentAt, "Email to " + it.venue.ifBlank { it.email }, if (it.status == "followed_up") "Follow-up sent too. Nothing more will go to them." else "") }
-        if (sent.isEmpty()) Small("Nothing sent yet.")
+        if (sent.isEmpty()) Empty("Nothing sent yet. Each application and email you send is listed here with proof, so you never need to check twice.")
         sent.sortedByDescending { it.first }.forEach { (at, what, proof) ->
-            Panel { Text("✓ $what", fontWeight = FontWeight.SemiBold); Small(fmtDate(at) + ", " + clock(at)); if (proof.isNotBlank()) Small(proof) }
+            Panel { Check(true, what, bold = true); Small(fmtDate(at) + ", " + clock(at)); if (proof.isNotBlank()) Small(proof) }
         }
         H("What the app did on its own")
         val lines = if (tick >= 0) st.activityLines() else emptyList()
-        if (lines.isEmpty()) Small("Nothing yet. The daily check runs once a day when the phone is online.")
+        if (lines.isEmpty()) Empty("Nothing yet. The daily check runs once a day when the phone is online.")
         lines.take(40).forEach { (at, text) -> Small(fmtDate(at) + ", " + clock(at) + ": " + text) }
     }
 }

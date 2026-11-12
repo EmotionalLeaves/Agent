@@ -5,6 +5,28 @@ import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.semantics.heading
@@ -34,6 +56,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -164,7 +187,7 @@ private val clockFmt = DateTimeFormatter.ofPattern("h:mm:ss a")
 fun SavedLine() {
     val opened = remember { System.currentTimeMillis() }
     val at = lastSaved.value
-    Small(if (at >= opened) "Saved ✓ at " + Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault()).format(clockFmt) + ". Nothing else to do." else "Everything here saves by itself as you type.")
+    Small(if (at >= opened) "Saved at " + Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault()).format(clockFmt) + ". Nothing else to do." else "Everything here saves by itself as you type.")
 }
 
 fun fitLabel(score: Int): String = if (st.fitWords) Texts.fitWord(score) else "Fit $score of 100"
@@ -177,29 +200,28 @@ fun fitLabel(score: Int): String = if (st.fitWords) Texts.fitWord(score) else "F
 fun Panel(onClick: (() -> Unit)? = null, strong: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     val colors = CardDefaults.cardColors(containerColor = if (strong) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest,
         contentColor = if (strong) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface)
-    val m = Modifier.fillMaxWidth().let { if (onClick != null) it.clickable { onClick() } else it }
+    val m = Modifier.fillMaxWidth().let { if (onClick != null) it.clip(MaterialTheme.shapes.medium).clickable(role = Role.Button) { onClick() } else it }
     Card(modifier = m, colors = colors, border = if (strong) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-        Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.heightIn(min = if (onClick != null) 48.dp else 0.dp).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp), content = content)
-            if (onClick != null) Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(start = 8.dp))
+            if (onClick != null) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, Modifier.padding(start = 6.dp), tint = MaterialTheme.colorScheme.outline)
         }
     }
 }
 
 @Composable
 fun Field(label: String, value: String, onValue: (String) -> Unit, lines: Int = 1, number: Boolean = false, secret: Boolean = false, mic: Boolean = false) {
-    Column {
-        OutlinedTextField(
-            value = value, onValueChange = onValue, label = { Text(label) }, modifier = Modifier.fillMaxWidth(),
-            singleLine = lines == 1, minLines = lines,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = if (number) KeyboardType.Decimal else if (secret) KeyboardType.Password else KeyboardType.Text,
-                capitalization = if (number || secret) KeyboardCapitalization.None else KeyboardCapitalization.Sentences
-            ),
-            visualTransformation = if (secret) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None
-        )
-        if (mic) MicButton { said -> onValue((value + " " + said).trim()) }
-    }
+    val speak = if (mic) rememberMic { said -> onValue((value + " " + said).trim()) } else null
+    OutlinedTextField(
+        value = value, onValueChange = onValue, label = { Text(label) }, modifier = Modifier.fillMaxWidth(),
+        singleLine = lines == 1, minLines = lines,
+        trailingIcon = if (speak != null) ({ IconButton(onClick = speak) { MicIcon() } }) else null,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = if (number) KeyboardType.Decimal else if (secret) KeyboardType.Password else KeyboardType.Text,
+            capitalization = if (number || secret) KeyboardCapitalization.None else KeyboardCapitalization.Sentences
+        ),
+        visualTransformation = if (secret) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None
+    )
 }
 
 /** A text field bound to a remembered string. */
@@ -219,22 +241,71 @@ fun Choice(label: String, options: List<String>, selected: String, onSelect: (St
 
 @Composable
 fun Toggle(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChange)
+    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = checked, role = Role.Switch, onValueChange = onChange), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, Modifier.weight(1f).padding(end = 12.dp))
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 
+/** Opens the phone's speech-to-text and hands back what was said. */
 @Composable
-fun MicButton(onText: (String) -> Unit) {
+fun rememberMic(onText: (String) -> Unit): () -> Unit {
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
         r.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.let(onText)
     }
-    TextButton(onClick = {
+    return {
         try {
             launcher.launch(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM))
         } catch (e: Exception) { }
-    }) { Text("Speak instead") }
+    }
+}
+
+/** A small drawn microphone, so the app needs no extra icon pack. */
+@Composable
+fun MicIcon() {
+    val c = MaterialTheme.colorScheme.primary
+    Canvas(Modifier.size(22.dp).semantics { contentDescription = "Speak instead of typing" }) {
+        val w = size.width; val h = size.height; val sw = w * 0.09f
+        drawRoundRect(c, topLeft = Offset(w * 0.36f, h * 0.08f), size = Size(w * 0.28f, h * 0.50f), cornerRadius = CornerRadius(w * 0.14f, w * 0.14f))
+        drawArc(c, startAngle = 0f, sweepAngle = 180f, useCenter = false, topLeft = Offset(w * 0.22f, h * 0.20f), size = Size(w * 0.56f, h * 0.52f), style = Stroke(sw, cap = StrokeCap.Round))
+        drawLine(c, Offset(w * 0.5f, h * 0.72f), Offset(w * 0.5f, h * 0.90f), sw, StrokeCap.Round)
+        drawLine(c, Offset(w * 0.34f, h * 0.90f), Offset(w * 0.66f, h * 0.90f), sw, StrokeCap.Round)
+    }
+}
+
+/** A tick in a filled circle when done, a ring when not, and a ring with a dot for the one to do now. */
+@Composable
+fun Mark(done: Boolean, current: Boolean = false) {
+    val cs = MaterialTheme.colorScheme
+    val m = Modifier.size(20.dp)
+    if (done) Box(m.background(cs.primary, CircleShape), contentAlignment = Alignment.Center) { Icon(Icons.Default.Check, null, Modifier.size(14.dp), tint = cs.onPrimary) }
+    else Box(m.border(2.dp, if (current) cs.primary else cs.outline, CircleShape), contentAlignment = Alignment.Center) {
+        if (current) Box(Modifier.size(8.dp).background(cs.primary, CircleShape))
+    }
+}
+
+/** One line of a checklist. Screen readers hear "done" or "not done yet" instead of a symbol. */
+@Composable
+fun Check(done: Boolean, text: String, current: Boolean = false, bold: Boolean = false, small: Boolean = false) {
+    Row(Modifier.semantics(mergeDescendants = true) { stateDescription = if (done) "done" else if (current) "do this now" else "not done yet" },
+        horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
+        Box(Modifier.padding(top = 1.dp)) { Mark(done, current) }
+        Text(text, Modifier.weight(1f), fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal,
+            style = if (small) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyLarge)
+    }
+}
+
+/** A small remove button with a full-size touch area and a spoken name. */
+@Composable
+fun RemoveButton(what: String, onClick: () -> Unit) {
+    IconButton(onClick = onClick) { Icon(Icons.Default.Close, "Remove $what", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+}
+
+/** A short buzz for the few moments that matter: starting, stopping, approving, sending. */
+@Composable
+fun rememberBuzz(): () -> Unit {
+    val h = LocalHapticFeedback.current
+    return { try { h.performHapticFeedback(HapticFeedbackType.LongPress) } catch (e: Exception) { } }
 }
 
 /** Recently shown pictures, so lists do not flicker or re-read files while scrolling. */
@@ -258,8 +329,9 @@ fun PathImage(path: String, modifier: Modifier = Modifier, maxSide: Int = 700) {
 fun Explain(question: String, answer: String) {
     var open by remember { mutableStateOf(false) }
     Column {
-        Text(question, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.clickable { open = !open }.padding(vertical = 6.dp))
-        if (open) Panel { Text(answer) }
+        Text(question, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.clickable(role = Role.Button) { open = !open }.semantics { stateDescription = if (open) "open" else "closed" }.heightIn(min = 40.dp).padding(vertical = 10.dp))
+        AnimatedVisibility(open) { Panel { Text(answer) } }
     }
 }
 
@@ -267,12 +339,13 @@ fun Explain(question: String, answer: String) {
 @Composable
 fun Expand(title: String, startOpen: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     var open by remember { mutableStateOf(startOpen) }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(Modifier.fillMaxWidth().clickable { open = !open }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text(if (open) "Hide" else "Show", color = MaterialTheme.colorScheme.primary)
+    val turn by animateFloatAsState(if (open) 180f else 0f, label = "turn")
+    Column {
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { open = !open }.semantics { stateDescription = if (open) "open" else "closed" }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Icon(Icons.Default.KeyboardArrowDown, null, Modifier.rotate(turn), tint = MaterialTheme.colorScheme.primary)
         }
-        if (open) content()
+        AnimatedVisibility(open) { Column(Modifier.padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content) }
     }
 }
 
