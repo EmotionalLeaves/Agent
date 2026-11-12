@@ -130,7 +130,7 @@ class AppTest {
         listOf(
             "home" to "Start now", "startnow" to "Now: Block in the big shapes", "receipts" to "Application: Staff Show", "admin" to "Approve statement", "works" to "Blue Hour", "work/${ids["work"]}" to "More pictures of this piece",
             "crop/${ids["work"]}" to "Drag each dot", "ideas" to "Fridge light series", "materials" to "Cover letter", "doc/${ids["doc"]}" to "Ready when these are all true",
-            "facts" to "BFA, State University", "calls" to "Winter Open", "call/${ids["opp"]}" to "The basics", "appl/${ids["draft"]}" to "Questions this call asks (1)",
+            "facts" to "BFA, State University", "calls" to "Winter Open", "call/${ids["opp"]}" to "Edit the details", "appl/${ids["draft"]}" to "Questions this call asks (1)",
             "appl/${ids["sent"]}" to "Submitted. Done.", "sources" to "CaFE alerts", "outreach" to "Campus Gallery", "contact/${ids["contact"]}" to "How realistic right now",
             "records" to "Buy frames", "guide" to "of 17 done", "week" to "Coming up", "sessions" to "Glaze the sky"
         ).forEach { (route, expect) -> opens(route, expect) }

@@ -1,5 +1,14 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -172,13 +181,13 @@ fun Calls(nav: NavController) {
                 }
             }
             "all" -> {
-                Note("Everything found, including calls the rules are holding back and why.")
+                Small("Everything found, including calls your rules hold back, and why.")
                 opps.filter { it.status in setOf("new", "later", "no", "expired") && kindOk(it) }.forEach { o ->
                     val why = Scoring.ineligible(o, p, now())
                     Panel(onClick = { nav.navigate("call/${o.id}") }) {
-                        Text(o.title, fontWeight = FontWeight.SemiBold)
-                        Note(o.kind + ", " + whereLine(o) + ", " + fmtDate(o.deadline) + ", " + (if (o.fee > 0) money(o.fee) else "free"))
-                        Note(when { o.status != "new" -> "You said: ${o.status}"; why.isEmpty() -> "Eligible. " + fitLabel(o.fitScore); else -> "Held back: " + why.joinToString("; ") })
+                        Text(o.title, style = MaterialTheme.typography.titleSmall)
+                        Small(listOf(o.kind.replaceFirstChar { it.uppercase() }, whereLine(o), if (o.deadline > 0) fmtDate(o.deadline) else "", if (o.fee > 0) money(o.fee) else "free").filter { it.isNotBlank() }.joinToString(", "))
+                        Small(when { o.status == "later" -> "You said not this year"; o.status == "no" -> "You said no"; o.status == "expired" -> "Deadline passed"; why.isEmpty() -> "Eligible, " + fitLabel(o.fitScore).lowercase(); else -> "Held back: " + why.joinToString("; ") })
                         Flags(o)
                     }
                 }
@@ -188,8 +197,8 @@ fun Calls(nav: NavController) {
                 appls.forEach { a ->
                     val o = opps.firstOrNull { it.id == a.oppId }
                     Panel(onClick = { nav.navigate("appl/${a.id}") }) {
-                        Text(o?.title ?: "Application", fontWeight = FontWeight.SemiBold)
-                        Note(when (a.status) {
+                        Text(o?.title ?: "Application", style = MaterialTheme.typography.titleSmall)
+                        Small(when (a.status) {
                             "submitted" -> "Submitted ${fmtDate(a.submittedAt)}. Done. The result will come to you."
                             "accepted" -> "Accepted"
                             "declined" -> "Not this time"
@@ -222,10 +231,25 @@ fun CallDetail(nav: NavController, id: Long) {
     val why = Scoring.ineligible(o, p, now())
 
     Screen(o.title.ifBlank { "Call" }, nav) {
-        Panel(strong = true) {
-            Text(fitLabel(o.fitScore), fontWeight = FontWeight.SemiBold)
+        // The facts that decide it, at a glance: when, what it costs, how well it fits.
+        Panel {
+            if (whereLine(o).isNotBlank()) Small(whereLine(o))
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Small("Deadline")
+                    Text(if (o.deadline > 0) fmtDate(o.deadline) else "Not set", style = MaterialTheme.typography.titleLarge)
+                    if (o.deadline > 0) Text(Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline)), style = MaterialTheme.typography.bodySmall,
+                        color = if (Engine.date(o.deadline).isBefore(LocalDate.now().plusDays(15))) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Small("Entry fee")
+                    Text(if (o.fee <= 0) "Free" else money(o.fee), style = MaterialTheme.typography.titleLarge)
+                }
+            }
+            Hair()
+            Row { Tag(fitLabel(o.fitScore), strong = o.fitScore >= 60) }
             o.fitReasons.lines().filter { it.isNotBlank() }.forEach { Text(it) }
-            if (why.isNotEmpty()) Text("Held back by your rules: " + why.joinToString("; "))
+            if (why.isNotEmpty()) Text("Held back by your rules: " + why.joinToString("; "), color = MaterialTheme.colorScheme.secondary)
             Flags(o)
         }
         Status(status)
@@ -241,7 +265,7 @@ fun CallDetail(nav: NavController, id: Long) {
                 }
             }) { Text("Read the page for me") }
         }
-        H("The basics")
+        Expand("Edit the details", startOpen = o.title.isBlank() || o.title == "New call" || o.deadline <= 0) {
         Field("Title", o.title, { save(o.copy(title = it)) })
         Choice("Kind of call", Ai.callKinds, o.kind) { save(o.copy(kind = it)) }
         Field("Deadline (YYYY-MM-DD)", deadlineText, { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0 || it.isBlank()) save(o.copy(deadline = ms)) })
@@ -249,7 +273,8 @@ fun CallDetail(nav: NavController, id: Long) {
         Choice("Reach", listOf("campus", "local", "online", "regional", "national", "international"), o.scope) { save(o.copy(scope = it)) }
         Field("Link", o.url, { save(o.copy(url = it.trim())) })
         SavedLine()
-        Expand("All the details", startOpen = o.organiser.isBlank() && o.rawText.isBlank()) {
+        }
+        Expand("Everything else", startOpen = false) {
         Field("Organiser", o.organiser, { save(o.copy(organiser = it)) })
         Field("Venue", o.venue, { save(o.copy(venue = it)) })
         Field("City", o.city, { save(o.copy(city = it)) })
@@ -350,7 +375,7 @@ fun ApplScreen(nav: NavController, id: Long) {
 
     Screen(o.title, nav) {
         Note((if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.")
-        H("Works")
+        StageHead(1, "Choose the works", chosenIds.isNotEmpty())
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             works.filter { Engine.available(it) || it.id in chosenIds }.forEach { w ->
                 FilterChip(selected = w.id in chosenIds, onClick = {
@@ -359,7 +384,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                 }, label = { Text(w.title.ifBlank { "Untitled #${w.id}" }) })
             }
         }
-        H("Statement")
+        StageHead(2, "Statement and fit", a.statement.isNotBlank() && a.themeText.isNotBlank())
         Field((if (o.statementLimit > 0) "Limit ${o.statementLimit} words. " else "") + "Edit only if this call needs it", a.statement, { save(a.copy(statement = it, packDir = "")) }, lines = 5)
         Note("${Texts.words(a.statement)} words")
         Field("How these works fit this call (2 to 3 sentences)", a.themeText, { save(a.copy(themeText = it, packDir = "")) }, lines = 3)
@@ -401,6 +426,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             }) { Text("Add") }
         }
 
+        StageHead(3, "Check", allGreen)
         Panel(strong = allGreen) {
             Text(if (allGreen) "Every check passes. This is ready." else "Ready when these are all true", fontWeight = FontWeight.SemiBold)
             checks.forEach { (label, ok) -> Check(ok, label) }
@@ -408,7 +434,7 @@ fun ApplScreen(nav: NavController, id: Long) {
         Status(status)
         SavedLine()
 
-        H("Pack")
+        StageHead(4, "Build the pack", files.isNotEmpty())
         if (files.isEmpty()) Button(enabled = !busy && chosenIds.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = {
             busy = true; status = "Building the pack..."
             scope.io({ status = it; busy = false }) { val dir = Engine.buildPack(ctx, a, o); a = a.copy(packDir = dir.absolutePath); status = "Pack built."; busy = false }
@@ -418,7 +444,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             OutlinedButton(onClick = { Share.files(ctx, files) }) { Text("Share or save the files") }
         }
 
-        H("Send")
+        StageHead(5, "Send it", a.submittedAt > 0)
         Choice("This call takes entries by", listOf("email", "web"), a.method) { save(a.copy(method = it)) }
         if (o.fee > 0) {
             if (a.feePaid > 0) Note("Fee of ${money(a.feePaid)} logged.")
@@ -618,5 +644,20 @@ fun Sources(nav: NavController) {
             scope.io({ status = it; busy = false }) { status = Engine.runDaily(ctx); busy = false }
         }) { Text("Run the daily check now") }
         if (!G.ai.ready) Note("Reading calls out of pages and emails needs an AI key (Settings).")
+    }
+}
+
+
+/** A numbered stage header for work that really is done in order. The number becomes a tick once the stage is done. */
+@Composable
+fun StageHead(n: Int, title: String, done: Boolean) {
+    val cs = MaterialTheme.colorScheme
+    Row(Modifier.padding(top = 16.dp).semantics(mergeDescendants = true) { heading(); stateDescription = if (done) "done" else "to do" },
+        horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(26.dp).clip(CircleShape).background(if (done) cs.primary else cs.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+            if (done) Icon(Icons.Default.Check, null, Modifier.size(16.dp), tint = cs.onPrimary)
+            else Text("$n", style = MaterialTheme.typography.labelLarge, color = cs.onSurface)
+        }
+        Text(title, style = MaterialTheme.typography.titleMedium)
     }
 }
