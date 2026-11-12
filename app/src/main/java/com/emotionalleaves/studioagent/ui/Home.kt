@@ -5,6 +5,9 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.RadioButton
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Spacer
@@ -258,6 +261,17 @@ fun Home(nav: NavController) {
             if (parked) Check(true, "Parked in Ideas. You can let it go for now.", small = true)
         } else {
             val todo = guide.filter { !it.done }
+            Section("How it goes")
+            Column {
+                listOf("Set up" to "Your name and your week. Two minutes, every question has a not-sure answer.",
+                    "Make" to "Tap Start and the timer runs. The app keeps track of each piece and the next small step.",
+                    "Show" to "Once a few pieces are done, it finds open calls that fit and builds each application for your yes.").forEachIndexed { i, (t, d) ->
+                    Timeline(done = false, current = i == 0, last = i == 2) {
+                        Text(t, style = MaterialTheme.typography.titleMedium)
+                        Small(d)
+                    }
+                }
+            }
             if (todo.isNotEmpty()) Panel(onClick = { nav.navigate("basics") }) { Text("New to exhibiting?", style = MaterialTheme.typography.titleSmall); Small("Plain answers. None of it is needed to start.") }
         }
     }
@@ -377,12 +391,20 @@ fun SessionScreen(nav: NavController) {
         var workId by remember(works.size) { mutableStateOf((Engine.currentPiece(works) ?: active.firstOrNull())?.id ?: 0L) }
         val work = works.firstOrNull { it.id == workId }
         Screen("Start a session", nav) {
-            Choice("What kind?", listOf("make", "skill", "light"), kind) { kind = it }
-            Note(when (kind) {
-                "make" -> "Work on a piece."
-                "skill" -> "Practice in a new medium. Logged as learning, and it counts toward your week."
-                else -> "Low effort: sort reference images, a 15-minute sketch, tidy the workspace."
-            })
+            Section("What kind?")
+            // Three kinds as rows with a line each, so the choice explains itself.
+            Column {
+                listOf("make" to ("Make" to "Work on a piece."), "skill" to ("Practise" to "A new medium or technique. Counts toward your week."),
+                    "light" to ("Light" to "Low effort: sort references, a 15-minute sketch, tidy up.")).forEach { (k, tl) ->
+                    val on = kind == k
+                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (on) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
+                        .clickable(role = androidx.compose.ui.semantics.Role.RadioButton) { kind = k }.semantics { selected = on }.padding(horizontal = 12.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = on, onClick = null)
+                        Column(Modifier.weight(1f)) { Text(tl.first, style = MaterialTheme.typography.titleSmall); Small(tl.second) }
+                    }
+                }
+            }
             if (kind == "make") {
                 if (active.isNotEmpty()) Choice("Which piece?", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, work?.title?.ifBlank { "Untitled #${work.id}" }.orEmpty()) { picked ->
                     active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == picked }?.let { workId = it.id }

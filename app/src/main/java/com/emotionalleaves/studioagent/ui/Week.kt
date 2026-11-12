@@ -1,5 +1,8 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -58,9 +61,18 @@ fun WeekScreen(nav: NavController) {
         Status(status)
         H("Studio times")
         if (!custom) {
-            Note("You are on the suggested week: short sessions on two work-day evenings after a rest, and the remaining hours at the weekend.")
-            suggested().forEach { s -> Text("${dayNames[s.day - 1]}  ${s.time}, ${s.minutes} min") }
-            Button(onClick = {
+            Small("The suggested week: two short evenings after work, the rest at the weekend.")
+            Panel {
+                suggested().forEachIndexed { i, s ->
+                    if (i > 0) Hair()
+                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(dayNames[s.day - 1], Modifier.width(56.dp), style = MaterialTheme.typography.titleMedium)
+                        Text(s.time.toString(), Modifier.weight(1f))
+                        Text("${s.minutes} min", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            OutlinedButton(onClick = {
                 slots.clear(); suggested().forEachIndexed { i, s -> slots.add(EditSlot(i, s.day, s.time.toString(), s.minutes.toString())) }
                 custom = true
             }) { Text("Change these") }

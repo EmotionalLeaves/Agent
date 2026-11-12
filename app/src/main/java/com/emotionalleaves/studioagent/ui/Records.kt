@@ -196,8 +196,15 @@ fun Receipts(nav: NavController) {
         val sent = appls.filter { it.submittedAt > 0 }.map { Triple(it.submittedAt, "Application: " + (opps.firstOrNull { o -> o.id == it.oppId }?.title ?: "call"), it.proofText) } +
             contacts.filter { it.sentAt > 0 }.map { Triple(it.sentAt, "Email to " + it.venue.ifBlank { it.email }, if (it.status == "followed_up") "Follow-up sent too. Nothing more will go to them." else "") }
         if (sent.isEmpty()) Empty("Nothing sent yet. Each application and email you send is listed here with proof, so you never need to check twice.")
-        sent.sortedByDescending { it.first }.forEach { (at, what, proof) ->
-            Panel { Check(true, what, bold = true); Small(fmtDate(at) + ", " + clock(at)); if (proof.isNotBlank()) Small(proof) }
+        // Grouped by month, newest first, so "did that go?" is one glance.
+        sent.sortedByDescending { it.first }.groupBy { Engine.date(it.first).withDayOfMonth(1) }.forEach { (month, items) ->
+            Small(month.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) + " " + month.year)
+            Panel {
+                items.forEachIndexed { i, (at, what, proof) ->
+                    if (i > 0) Hair()
+                    Check(true, what, bold = true); Small(fmtDate(at) + ", " + clock(at)); if (proof.isNotBlank()) Small(proof)
+                }
+            }
         }
         H("What the app did on its own")
         val lines = if (tick >= 0) st.activityLines() else emptyList()
