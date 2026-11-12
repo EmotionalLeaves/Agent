@@ -1,5 +1,8 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
@@ -86,10 +89,19 @@ fun Records(nav: NavController) {
         val tasks = events.filter { (it.type == "task" || it.type == "todo") && !it.done }
         H("To do")
         if (tasks.isEmpty()) Empty("Nothing open. When you get into a show, its delivery and pick-up steps appear here by themselves.")
-        tasks.forEach { e ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = e.done, onCheckedChange = { c -> scope.io { dao.put(e.copy(done = c)) } })
-                Column { Text(e.title); Note((opps.firstOrNull { it.id == e.oppId }?.title.orEmpty() + (if (e.date > 0) ", " + fmtDate(e.date) else "")).trim()) }
+        if (tasks.isNotEmpty()) Panel {
+            tasks.sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.forEachIndexed { i, e ->
+                if (i > 0) Hair()
+                // Tap the whole line to tick it off.
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = e.done, role = androidx.compose.ui.semantics.Role.Checkbox) { c -> scope.io { dao.put(e.copy(done = c)) } }.padding(vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Mark(e.done)
+                    Column(Modifier.weight(1f)) {
+                        Text(e.title)
+                        val sub = (opps.firstOrNull { it.id == e.oppId }?.title.orEmpty() + (if (e.date > 0) ", " + fmtDate(e.date) else "")).trim().trim(',').trim()
+                        if (sub.isNotBlank()) Small(sub)
+                    }
+                }
             }
         }
 

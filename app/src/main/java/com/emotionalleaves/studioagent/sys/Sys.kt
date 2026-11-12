@@ -62,7 +62,7 @@ object Notifier {
         if (s.notifCount >= s.notifCap) return false
         val intent = Intent(ctx, MainActivity::class.java).putExtra("route", route).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pi = PendingIntent.getActivity(ctx, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val b = NotificationCompat.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_launcher).setContentTitle(title).setContentText(text)
+        val b = NotificationCompat.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_stat).setContentTitle(title).setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text)).setContentIntent(pi).setAutoCancel(true)
         if (choices) {
             // Three honest answers to a reminder, none of them a failure.

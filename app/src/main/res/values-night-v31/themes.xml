@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.StudioAgent" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/wall</item>
+        <item name="android:colorBackground">@color/wall</item>
+        <item name="android:windowSplashScreenBackground">@color/wall</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher</item>
+    </style>
+</resources>
