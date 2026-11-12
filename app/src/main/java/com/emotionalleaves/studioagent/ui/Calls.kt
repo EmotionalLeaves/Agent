@@ -44,6 +44,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -129,7 +130,18 @@ fun Calls(nav: NavController) {
                     2 -> "Regional juried shows."
                     else -> "Competitive calls, judged case by case."
                 })
-                if (list.isEmpty()) Empty("No calls waiting. When you see one anywhere, tap Share and choose Studio Agent, or paste it below.")
+                if (list.isEmpty()) {
+                    Empty("No calls waiting. The app looks once a day on its own. When you see one anywhere, tap Share and choose Studio Agent, or paste it below.")
+                    var looking by remember { mutableStateOf(false) }
+                    OutlinedButton(enabled = !looking, onClick = {
+                        looking = true; status = "Looking at the listing sites. This takes a minute or two..."
+                        scope.io({ status = it; looking = false }) {
+                            val n = Engine.scanSources(now()); Engine.rescore()
+                            status = if (n == 0) "Looked. Nothing new right now; the app checks again tomorrow." else "Found $n new " + (if (n == 1) "call" else "calls") + ". Ones that fit your level are above; the rest are under All."
+                            looking = false
+                        }
+                    }) { Text(if (looking) "Looking..." else "Look for calls now") }
+                }
                 list.forEach { o ->
                     key(o.id) {
                         Panel {
@@ -647,7 +659,8 @@ fun Sources(nav: NavController) {
     var status by remember { mutableStateOf(if (st.lastDaily > 0) "Last daily check ${fmtDate(st.lastDaily)}: ${st.lastDailyStatus}" else "") }
     var busy by remember { mutableStateOf(false) }
     Screen("Where calls come from", nav) {
-        Intro("sources", "The safest sources need no page-reading: sharing a link or flyer into the app, and email alerts from listing sites you have signed up to.")
+        Intro("sources", "Four big listing sites are already here and are read once a day. You can add more: a listing page, or the sender of email alerts you get.")
+        LaunchedEffect(Unit) { Engine.seedSources() }
         if (sources.isEmpty()) Empty("No sources yet. Calls you share or paste still arrive without one.")
         Explain("What can I add here?", "Email source: the sender's address or domain (for example callforentry.org). Needs email set up in You, Settings, Email. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
         sources.forEach { s ->

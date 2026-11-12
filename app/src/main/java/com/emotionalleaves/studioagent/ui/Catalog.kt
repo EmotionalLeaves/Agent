@@ -4,6 +4,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.clip
@@ -258,9 +260,16 @@ fun WorkDetail(nav: NavController, id: Long) {
                     Button(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Take a photo") }
                     OutlinedButton(onClick = { pick.launch("image/*") }) { Text("Bring in a file") }
                 } else {
-                    TextButton(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Take it again") }
-                    TextButton(onClick = { pick.launch("image/*") }) { Text("Use another file") }
+                    // Fixing the picture is the common need; replacing it is rarer, so it sits behind one button.
                     TextButton(onClick = { nav.navigate("crop/$id") }) { Text("Straighten and crop") }
+                    var replace by remember { mutableStateOf(false) }
+                    Box {
+                        TextButton(onClick = { replace = true }) { Text("Replace the picture") }
+                        DropdownMenu(expanded = replace, onDismissRequest = { replace = false }) {
+                            DropdownMenuItem(text = { Text("Take a new photo") }, onClick = { replace = false; try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } })
+                            DropdownMenuItem(text = { Text("Choose a file") }, onClick = { replace = false; pick.launch("image/*") })
+                        }
+                    }
                 }
             }
         }
@@ -359,17 +368,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             }) { Text("Add these costs to my records") }
         }
 
-        Expand("More pictures of this piece") {
-            Note("A detail, the back, the piece on a wall. Kept with the piece and backed up.")
-            val extras = w.extraImages.split("|").filter { it.isNotBlank() }
-            extras.forEach { path ->
-                PathImage(path, Modifier.fillMaxWidth().height(160.dp), 700)
-                TextButton(onClick = { save(w.copy(extraImages = extras.filter { it != path }.joinToString("|"))) }) { Text("Remove this picture") }
-            }
-            OutlinedButton(onClick = { pickExtra.launch("image/*") }) { Text("Add a picture") }
-        }
-
-        Expand("Price and edition") {
+        Expand("Price, edition and where it is") {
         Num("Price, " + st.currency, w.price) { save(w.copy(price = it)) }
         if (w.widthIn > 0 && w.heightIn > 0) TextButton(onClick = { save(w.copy(price = Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))); status = "Price set from your rule. Reopen this piece to see it in the box." }) {
             Text("Use my price rule: ${money(Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))}")
@@ -385,7 +384,16 @@ fun WorkDetail(nav: NavController, id: Long) {
         Field("Notes", w.notes, { save(w.copy(notes = it)) }, lines = 2)
         }
 
-        Expand("Files and papers") {
+        Expand("Pictures and papers") {
+        Note("More pictures of this piece: a detail, the back, the piece on a wall. Kept with it and backed up.")
+        w.extraImages.split("|").filter { it.isNotBlank() }.let { extras ->
+            extras.forEach { path ->
+                PathImage(path, Modifier.fillMaxWidth().height(160.dp), 700)
+                TextButton(onClick = { save(w.copy(extraImages = extras.filter { it != path }.joinToString("|"))) }) { Text("Remove this picture") }
+            }
+        }
+        OutlinedButton(onClick = { pickExtra.launch("image/*") }) { Text("Add a picture") }
+        Section("Files to send")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(enabled = w.imagePath.isNotBlank(), onClick = {
                 status = "Exporting..."

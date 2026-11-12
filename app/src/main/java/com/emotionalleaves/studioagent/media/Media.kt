@@ -155,6 +155,14 @@ class Pdf(ctx: Context? = null, private val owner: String = "", private val docT
           private val w: Int = 612, private val h: Int = 792, private val margin: Int = 60) {
     enum class Face { DISPLAY, BODY, BOLD, ITALIC }
 
+    companion object {
+        /** When set (by tests), pages are drawn as pictures into this folder instead of a PDF, so the layout can be looked at. */
+        var previewDir: File? = null
+    }
+    private val preview = previewDir
+    private val shots = mutableListOf<Bitmap>()
+    private var shot: Canvas? = null
+
     private val doc = PdfDocument()
     private var page: PdfDocument.Page? = null
     private var y = 0f
@@ -190,26 +198,34 @@ class Pdf(ctx: Context? = null, private val owner: String = "", private val docT
     fun newPage() {
         finishPage()
         n++
-        page = doc.startPage(PdfDocument.PageInfo.Builder(w, h, n).create())
+        if (preview != null) {
+            val b = Bitmap.createBitmap(w * 2, h * 2, Bitmap.Config.ARGB_8888)
+            shots += b
+            shot = Canvas(b).apply { drawColor(Color.WHITE); scale(2f, 2f) }
+        } else page = doc.startPage(PdfDocument.PageInfo.Builder(w, h, n).create())
         y = margin.toFloat()
     }
 
+    private val open: Boolean get() = page != null || shot != null
+    private fun cv(): Canvas = shot ?: cv()
+
     private fun finishPage() {
-        val p = page ?: return
+        if (!open) return
+        val c = cv()
         if (owner.isNotBlank() || docTitle.isNotBlank()) {
             val tp = paint(8f, Face.BODY, true)
             val base = h - margin / 2f
-            p.canvas.drawText(listOf(owner, docTitle).filter { it.isNotBlank() }.joinToString(", "), margin.toFloat(), base, tp)
+            c.drawText(listOf(owner, docTitle).filter { it.isNotBlank() }.joinToString(", "), margin.toFloat(), base, tp)
             val num = "Page $n"
-            p.canvas.drawText(num, w - margin - tp.measureText(num), base, tp)
+            c.drawText(num, w - margin - tp.measureText(num), base, tp)
         }
-        doc.finishPage(p)
-        page = null
+        page?.let { doc.finishPage(it) }
+        page = null; shot = null
     }
 
-    fun canvas(): Canvas { if (page == null) newPage(); return page!!.canvas }
+    fun canvas(): Canvas { if (!open) newPage(); return cv() }
 
-    private fun room(space: Float) { if (page == null || y + space > h - margin) newPage() }
+    private fun room(space: Float) { if (!open || y + space > h - margin) newPage() }
 
     /** Starts a new page first if [need] points will not fit, so a heading never sits alone at the foot of a page. */
     fun keep(need: Float) = room(need)
@@ -224,7 +240,7 @@ class Pdf(ctx: Context? = null, private val owner: String = "", private val docT
             val part: CharSequence = if (end > start) s.subSequence(start, end) else " "
             val l = layout(part, (width - indent).toInt(), size, f, grey, center)
             room(l.height.toFloat())
-            val c = page!!.canvas
+            val c = cv()
             c.save(); c.translate(margin + indent, y); l.draw(c); c.restore()
             y += l.height + gap
             start = end + 1
@@ -239,7 +255,7 @@ class Pdf(ctx: Context? = null, private val owner: String = "", private val docT
         val ll = layout(label, (labelWidth - 10).toInt(), size, Face.BODY, grey = true)
         val tall = max(lv.height, ll.height).toFloat()
         room(tall)
-        val c = page!!.canvas
+        val c = cv()
         c.save(); c.translate(margin.toFloat(), y); ll.draw(c); c.restore()
         c.save(); c.translate(margin + labelWidth, y); lv.draw(c); c.restore()
         if (right.isNotBlank()) c.drawText(right, w - margin - tp.measureText(right), y + lv.getLineBaseline(0), tp)
@@ -255,7 +271,7 @@ class Pdf(ctx: Context? = null, private val owner: String = "", private val docT
         val vw = tp.measureText(value)
         val l = layout(label, (width - vw - 24).toInt(), size, face)
         room(l.height.toFloat())
-        val c = page!!.canvas
+        val c = cv()
         c.save(); c.translate(margin.toFloat(), y); l.draw(c); c.restore()
         c.drawText(value, w - margin - vw, y + l.getLineBaseline(0), tp)
         y += l.height + gap
@@ -270,24 +286,28 @@ class Pdf(ctx: Context? = null, private val owner: String = "", private val docT
         val dw = b.width * k; val dh = b.height * k
         room(dh + 10)
         val left = margin + (availW - dw) / 2
-        page!!.canvas.drawBitmap(b, null, RectF(left, y, left + dw, y + dh), Paint(Paint.FILTER_BITMAP_FLAG))
+        cv().drawBitmap(b, null, RectF(left, y, left + dw, y + dh), Paint(Paint.FILTER_BITMAP_FLAG))
         y += dh + 10
         return true
     }
 
     fun rule(dark: Boolean = false) {
         room(12f)
-        page!!.canvas.drawLine(margin.toFloat(), y, (w - margin).toFloat(), y,
+        cv().drawLine(margin.toFloat(), y, (w - margin).toFloat(), y,
             Paint().apply { color = if (dark) ink else 0xFFD5D6D2.toInt(); strokeWidth = if (dark) 0.8f else 0.6f })
         y += 12
     }
 
     fun save(file: File): File {
-        if (page == null && n == 0) newPage()
+        if (!open && n == 0) newPage()
         finishPage()
         file.parentFile?.mkdirs()
-        file.outputStream().use { doc.writeTo(it) }
-        doc.close()
+        if (preview != null) {
+            preview.mkdirs()
+            shots.forEachIndexed { i, b -> File(preview, "${file.nameWithoutExtension}_p${i + 1}.png").outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) } }
+            file.writeText("%PDF- preview of ${shots.size} pages")
+        } else file.outputStream().use { doc.writeTo(it) }
+        try { doc.close() } catch (e: Exception) { }
         return file
     }
 }

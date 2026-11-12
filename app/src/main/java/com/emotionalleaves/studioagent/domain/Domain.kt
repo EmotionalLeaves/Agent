@@ -559,8 +559,8 @@ object Drafts {
 
 object Readiness {
     val printSteps = listOf(
-        "File ready" to "Tap Export images (under Files and papers) and keep the file ending in _original. That is the one a lab prints from.",
-        "Proof ordered" to "Order one small test print, called a proof, from a fine-art print lab. Ask for matte cotton rag paper. Print order (under Files and papers) writes the request for you.",
+        "File ready" to "Tap Export images (under Pictures and papers) and keep the file ending in _original. That is the one a lab prints from.",
+        "Proof ordered" to "Order one small test print, called a proof, from a fine-art print lab. Ask for matte cotton rag paper. Print order (under Pictures and papers) writes the request for you.",
         "Proof checked" to "Look at the proof in daylight. If the colours and darks are close to your screen, it passes. If it is too dark, brighten the file a little and proof once more. Close is good enough; a print never matches a lit screen exactly.",
         "Final print made" to "Order the final at full size. When it arrives, sign and number it in pencil in the bottom margin, like 1/10.",
         "Framed and ready to hang" to "A plain frame, white mat and hanging wire is what shows expect. Many accept only wired work."

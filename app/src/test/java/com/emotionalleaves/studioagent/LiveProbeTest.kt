@@ -64,44 +64,40 @@ class LiveProbeTest {
             log("$name: $code in ${System.currentTimeMillis() - t0} ms: ${body.replace("\n", " ").take(400)}")
         }
 
-        log("\n== Call listings, read without AI")
-        val today = LocalDate.now()
-        listOf(
-            "https://artcall.org/calls",
-            "https://artist.callforentry.org/festivals.php",
-            "https://www.artworkarchive.com/call-for-entry",
-            "https://www.artshow.com/juriedshows/index.html",
-            "https://www.transartists.org/en/call",
-            "https://www.artrabbit.com/artist-opportunities",
-            "https://zapplication.org/participating-events.php",
-            "https://www.nyfa.org/opportunities/",
-            "https://www.artjobs.com/open-calls",
-            "https://www.smarterentry.com/",
-            "https://www.entrythingy.com/",
-            "https://callforartists.com/",
-            "https://www.re-title.com/opportunities/",
-            "https://www.artdeadline.com/",
-            "https://www.creative-capital.org/category/opportunities/",
-            "https://www.artistcommunities.org/directory/residencies",
-            "https://www.chicagoartistscoalition.org/opportunities",
-            "https://hyperallergic.com/tag/opportunities/",
-        ).forEach { url ->
-            log("\n-- $url")
+        log("\n== The app's own free writing help (Ai class, no key)")
+        try {
+            val t0 = System.currentTimeMillis()
+            val a = kotlinx.coroutines.runBlocking { G.ai.complete("Reply in one short sentence.", "Name one famous painter.", fast = true, maxTokens = 200) }
+            log("answered in ${System.currentTimeMillis() - t0} ms: ${a.take(200)}")
+            val calls = kotlinx.coroutines.runBlocking { G.ai.extractCalls("Riverside Arts Center Winter Open. Juried exhibition for artists in Illinois. Deadline: January 15, 2027. Entry fee \$25 for up to 3 works. Submit at https://example.org/winter", "probe") }
+            log("extractCalls: " + calls.joinToString { "${it.title} / ${it.deadline} / ${it.fee} / ${it.scope}" })
+        } catch (e: Exception) { log("failed: $e") }
+
+        log("\n== Starter listing sites, exactly as the daily check reads them")
+        val now = System.currentTimeMillis()
+        (com.emotionalleaves.studioagent.work.Engine.starterSources + listOf("ArtJobs" to "https://www.artjobs.com/open-calls", "Artshow" to "https://www.artshow.com/juriedshows/index.html")).forEach { (name, url) ->
+            log("\n-- $name $url")
             try {
                 log("robots allows: ${Robots.allowed(url)}")
-                val doc = Fetch.html(url, automatic = false)
-                val text = Fetch.text(doc)
+                val doc = Fetch.html(url)
                 val links = Listing.links(doc)
-                log("text ${text.length} chars, ${links.size} call-like links")
-                links.take(4).forEach { log("  link [${it.score}] ${it.text.take(70)} -> ${it.url}") }
-                links.take(2).forEach { l ->
+                log("${links.size} call-like links")
+                var kept = 0
+                links.take(6).forEach { l ->
                     try {
-                        val page = "Link: ${l.url}\n" + Fetch.text(Fetch.html(l.url, automatic = false))
-                        val o = CallReader.read(page, today, ZoneId.of("America/Chicago"), "probe", System.currentTimeMillis())
-                        val d = if (o.deadline > 0) java.time.Instant.ofEpochMilli(o.deadline).atZone(ZoneId.of("America/Chicago")).toLocalDate().toString() else "none"
-                        log("  read: title='${o.title.take(70)}' deadline=$d fee=${o.fee} kind=${o.kind} scope=${o.scope} words=${o.statementLimit} email=${o.email}")
-                    } catch (e: Exception) { log("  read failed: $e") }
+                        val page = "Link: ${l.url}\n" + Fetch.text(Fetch.html(l.url))
+                        val o = com.emotionalleaves.studioagent.work.Engine.plainCall(page, name, l.text, l.url, now, doc.title())
+                        if (o == null) {
+                            val at = Regex("deadline|due|closes", RegexOption.IGNORE_CASE).find(page)?.range?.first ?: -1
+                            log("  skipped: ${l.text.take(60)}" + (if (at >= 0) " | near deadline: '" + page.substring(at, minOf(page.length, at + 80)).replace("\n", " ") + "'" else " | no deadline word"))
+                        } else {
+                            kept++
+                            val d = if (o.deadline > 0) java.time.Instant.ofEpochMilli(o.deadline).atZone(ZoneId.systemDefault()).toLocalDate().toString() else "none"
+                            log("  CALL: '${o.title}' deadline=$d fee=${o.fee} kind=${o.kind} scope=${o.scope}")
+                        }
+                    } catch (e: Exception) { log("  read failed: ${l.url} $e") }
                 }
+                log("kept $kept of ${minOf(6, links.size)}")
             } catch (e: Exception) { log("failed: $e") }
         }
         File("build/screens").apply { mkdirs() }.resolve("live.txt").writeText(out.toString())

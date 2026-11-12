@@ -98,6 +98,8 @@ object Robots {
 object Listing {
     private val callWords = Regex("call for|open call|deadline|juried|exhibition|residency|grant|competition|submission|entries|entry|apply|fellowship|prize|award|commission|festival|art fair|show", RegexOption.IGNORE_CASE)
     private val skipWords = Regex("^(log ?in|sign ?(up|in)|register|about|contact|privacy|terms|faq|help|blog|home|cart|donate|shop|search|menu|next|previous|more|read more|learn more|view all|subscribe|newsletter|advertise|pricing|careers|jobs)$", RegexOption.IGNORE_CASE)
+    // Links to lists, categories and the site's own pages, not to one call.
+    private val listWords = Regex("see all|view all|browse|upcoming|ongoing|all calls|more calls|categor|publish your|post (a|your)|advertise|author|news editor|newsletter|blog|learn more about", RegexOption.IGNORE_CASE)
     private val skipHref = Regex("facebook\\.com|instagram\\.com|twitter\\.com|x\\.com/|linkedin\\.com|youtube\\.com|tiktok\\.com|pinterest\\.com|mailto:|tel:|javascript:|#$|/login|/signin|/register|/account|/cart|/privacy|/terms|\\.(pdf|jpg|png|zip)$", RegexOption.IGNORE_CASE)
 
     data class Link(val url: String, val text: String, val context: String, val score: Int)
@@ -110,7 +112,9 @@ object Listing {
             val href = a.absUrl("href").substringBefore('#')
             val text = a.text().trim()
             if (href.isBlank() || !href.startsWith("http") || href in seen) continue
-            if (text.length !in 6..160 || skipWords.matches(text) || skipHref.containsMatchIn(href)) continue
+            if (text.length !in 6..160 || skipWords.matches(text) || listWords.containsMatchIn(text) || skipHref.containsMatchIn(href)) continue
+            // One or two words ("Deadline", "Competitions") name a category, not a call.
+            if (text.split(Regex("\\s+")).size < 3) continue
             if (a.parents().any { it.tagName() in setOf("nav", "footer", "header") }) continue
             // The smallest block around the link that still reads like one listing.
             var box: org.jsoup.nodes.Element = a

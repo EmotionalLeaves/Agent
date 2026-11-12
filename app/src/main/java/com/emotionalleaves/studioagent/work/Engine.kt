@@ -172,8 +172,16 @@ object Engine {
     }
 
     /** Reads a call with no AI: plain pattern matching for the deadline, fee, link and so on. The rest is left for you to fill. */
+    /** A call that names your own city or state is local, whatever else it says. */
+    fun local(o: Opp, text: String): Opp {
+        if (o.scope.isNotBlank() && o.scope != "regional") return o
+        val head = text.take(4000)
+        val near = listOf(st.city, st.region).filter { it.length > 2 }.any { Regex("\\b" + Regex.escape(it) + "\\b", RegexOption.IGNORE_CASE).containsMatchIn(head) }
+        return if (near) o.copy(scope = if (o.scope == "regional") "regional" else "local", city = o.city.ifBlank { st.city }) else o
+    }
+
     suspend fun ingestPlain(text: String, sourceName: String): Long {
-        val o = com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, System.currentTimeMillis())
+        val o = local(com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, System.currentTimeMillis()), text)
         return dao.put(scored(o, profile()))
     }
 
@@ -720,11 +728,28 @@ object Engine {
 
     // ------------------------------------------------------------ finding calls
 
+    /** Listing sites checked on the build server: they allow reading, show their calls without a browser, and list US calls. */
+    val starterSources = listOf(
+        "ArtCall" to "https://artcall.org/calls",
+        "Artwork Archive" to "https://www.artworkarchive.com/call-for-entry",
+        "CaFE (Creative West)" to "https://opportunities.wearecreativewest.org/upcoming-deadlines?sort=deadline_asc&status=OPEN",
+        "Smarter Entry" to "https://www.smarterentry.com/CallsForEntry",
+    )
+
+    /** On a new install the listing sites are already there, so calls arrive with nothing to set up. */
+    suspend fun seedSources() {
+        if (st.sourcesSeeded) return
+        val have = dao.sourcesNow().map { it.url }.toSet()
+        starterSources.filter { it.second !in have }.forEach { (name, url) -> dao.put(com.emotionalleaves.studioagent.data.Source(name = name, kind = "url", url = url)) }
+        st.sourcesSeeded = true
+    }
+
     /**
      * Reads each listing page once: finds the links that look like single calls, opens up to [perSource] new ones,
      * and reads each for title, deadline, fee and the rest. Works without AI; with AI the reading is fuller.
      */
     suspend fun scanSources(now: Long, perSource: Int = 6): Int = withContext(Dispatchers.IO) {
+        seedSources()
         var total = 0
         val known = dao.oppsNow().map { it.url }.filter { it.isNotBlank() }.toMutableSet()
         for (s in dao.sourcesNow().filter { it.kind == "url" && it.enabled && it.url.isNotBlank() }) {
@@ -735,7 +760,7 @@ object Engine {
                 for (l in links.take(perSource)) {
                     known += l.url
                     val text = try { "Link: ${l.url}\n" + Fetch.text(Fetch.html(l.url)) } catch (e: Exception) { continue }
-                    added += readCall(text, s.name, l.text, l.url, now)
+                    added += readCall(text, s.name, l.text, l.url, now, doc.title())
                 }
                 if (links.isEmpty() && Fetch.text(doc).length < 400) "The page shows almost nothing without a browser, so it cannot be read"
                 else if (added == 0) "Looked; nothing new" else "Added $added " + (if (added == 1) "call" else "calls")
@@ -747,15 +772,23 @@ object Engine {
     }
 
     /** One call's page text into the list. AI reads it when it can; the plain reader always works. Skips calls already closed. */
-    private suspend fun readCall(text: String, sourceName: String, linkText: String, url: String, now: Long): Int {
-        if (ai.ready) try { return ingest(text, sourceName) } catch (e: Exception) { }
-        val o = com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, now)
-        if (o.deadline in 1 until now) return 0
+    private suspend fun readCall(text: String, sourceName: String, linkText: String, url: String, now: Long, siteTitle: String = ""): Int {
+        if (ai.ready) try { val n = ingest(text, sourceName); if (n > 0) return n } catch (e: Exception) { }
+        val o = plainCall(text, sourceName, linkText, url, now, siteTitle) ?: return 0
+        return addCalls(listOf(o))
+    }
+
+    /** The plain reading of one call page, or null when it is closed or does not read like a call. */
+    fun plainCall(text: String, sourceName: String, linkText: String, url: String, now: Long, siteTitle: String = ""): Opp? {
+        val o = local(com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, now), text)
+        // A date of today is usually the page printing today's date, and a call closing today is too late to start.
+        if (o.deadline in 1 until now + DAY) return null
         val looksLikeCall = o.deadline > 0 || Regex("open call|call for|submission|apply", RegexOption.IGNORE_CASE).containsMatchIn(text.take(3000))
-        if (!looksLikeCall) return 0
+        if (!looksLikeCall) return null
         // The page heading is usually the best title; the link's own words stand in when the heading is missing or generic.
-        val title = if (o.title == "Shared call" || o.title.length >= 90 || o.title.startsWith("Link:") || linkText.length in 12..90 && o.title.length < 8) linkText else o.title
-        return addCalls(listOf(o.copy(title = title.take(90), url = url, dedupeKey = Texts.dedupeKey("", o.deadline, title))))
+        val generic = o.title == "Shared call" || o.title.length >= 90 || o.title.startsWith("Link:") || o.title.length < 12 || o.title.equals(siteTitle, true)
+        val title = (if (generic && linkText.length >= 12 && !linkText.startsWith("Apply", true)) linkText else o.title).take(90)
+        return o.copy(title = title, url = url, dedupeKey = Texts.dedupeKey("", o.deadline, title))
     }
 
     // ------------------------------------------------------------ the daily run

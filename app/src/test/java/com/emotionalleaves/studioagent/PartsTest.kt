@@ -101,19 +101,18 @@ class PartsTest {
         val img = picture("doc.jpg")
         val works = (1..9).map { Artwork(id = it.toLong(), title = "Piece $it", year = 2026, widthIn = 16.0, heightIn = 20.0, price = 1300.0, editionSize = 5, imagePath = img.absolutePath, pixelW = 4800, pixelH = 6000) }
         val facts = (1..30).map { Fact(category = if (it % 2 == 0) "group" else "education", year = 2000 + it % 26, text = "Entry number $it, a long enough line to wrap across the column on a letter page") }
+        // Off a phone the pages are drawn as pictures, kept with the screenshots so the layout can be looked at.
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
         val files = try {
-            listOf(Papers.cv(ctx, s, facts), Papers.portfolio(ctx, s, works, "A statement.", 5), Papers.imageList(ctx, s, works, true),
+            listOf(Papers.cv(ctx, s, facts), Papers.portfolio(ctx, s, works, "A statement about the work, long enough to wrap onto a second line so the measure can be judged properly.", 5), Papers.imageList(ctx, s, works, true),
                 Papers.labels(ctx, s, works), Papers.certificate(ctx, s, works[0], 2), Papers.billOfSale(ctx, s, works[0], "Sam Buyer", 1300.0, 1),
                 Papers.proposal(ctx, s, "Riverside Gallery", "Night", "A statement.", "A bio.", works))
-        } catch (e: Throwable) {
-            File("build/screens").apply { mkdirs() }.resolve("pdf_skipped.txt").writeText(e.toString() + "\n" + e.stackTrace.take(8).joinToString("\n"))
-            org.junit.Assume.assumeTrue("PDF drawing is not available off a phone: $e", false); return
-        }
-        // Kept with the screenshots so the pages can be looked at.
-        val docs = File("build/screens/docs").apply { mkdirs() }
-        files.forEach { it.copyTo(File(docs, it.name), overwrite = true) }
+        } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
         assertEquals(listOf("Leaves_CV.pdf", "Leaves_Portfolio.pdf", "Leaves_Price_list.pdf", "Leaves_Wall_labels.pdf", "Leaves_Certificate_Piece1_2.pdf", "Leaves_Bill_of_sale_Piece1.pdf", "Leaves_Proposal_RiversideGallery.pdf"), files.map { it.name })
-        files.forEach { f -> assertTrue(f.name, f.length() > 300 && String(f.readBytes().copyOf(5)) == "%PDF-") }
+        files.forEach { f -> assertTrue(f.name, File(docs, f.nameWithoutExtension + "_p1.png").length() > 1000) }
+        assertTrue("30 CV lines need a second page", File(docs, "Leaves_CV_p2.png").exists())
+        assertTrue("9 labels need a second page", File(docs, "Leaves_Wall_labels_p2.png").exists())
     }
 
     @Test fun existingFilesComeInAsFinishedPieces() = runBlocking {
