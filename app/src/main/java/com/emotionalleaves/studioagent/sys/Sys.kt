@@ -180,7 +180,9 @@ object Share {
         val i = if (existing.size == 1) Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uri(ctx, existing[0]))
         else Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(existing.map { uri(ctx, it) }))
         i.type = mime; i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        start(ctx, Intent.createChooser(i, "Send"))
+        val uris = existing.map { uri(ctx, it) }
+        if (uris.isNotEmpty()) i.clipData = android.content.ClipData.newRawUri("", uris.first()).apply { uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) } }
+        start(ctx, Intent.createChooser(i, "Send").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
     }
 
     fun text(ctx: Context, text: String) =
@@ -201,7 +203,12 @@ object Share {
         else Intent(Intent.ACTION_SEND_MULTIPLE).setType("message/rfc822").putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(existing.map { uri(ctx, it) }))
         i.putExtra(Intent.EXTRA_EMAIL, arrayOf(to)).putExtra(Intent.EXTRA_SUBJECT, subject).putExtra(Intent.EXTRA_TEXT, body)
         i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        start(ctx, Intent.createChooser(i, "Send email"))
+        // Some mail apps only receive read access to attachments when it is carried as clip data on both intents.
+        if (existing.isNotEmpty()) {
+            val uris = existing.map { uri(ctx, it) }
+            i.clipData = android.content.ClipData.newRawUri("", uris.first()).apply { uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) } }
+        }
+        start(ctx, Intent.createChooser(i, "Send email").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
     }
 
     private fun start(ctx: Context, i: Intent) {
