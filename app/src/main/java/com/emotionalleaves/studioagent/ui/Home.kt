@@ -79,6 +79,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emotionalleaves.studioagent.G
@@ -360,7 +361,7 @@ fun SessionScreen(nav: NavController) {
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
                 if (st.dndInSession) Notifier.dnd(ctx, true)
             }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start") }
-            if (st.dndInSession && !Notifier.dndGranted(ctx)) Small("Want the phone silenced during sessions? Allow it in You, Settings, Permissions.")
+            if (st.dndInSession && !Notifier.dndGranted(ctx)) Small("Want the phone silenced during sessions? Allow it in You, Settings, Hours and calm.")
         }
     } else {
         var nowMs by remember { mutableStateOf(now()) }
@@ -529,11 +530,26 @@ fun ShareScreen(nav: NavController) {
  */
 @Composable
 fun More(nav: NavController) {
+    val ctx = LocalContext.current
+    val tick by st.changed.collectAsState()
+    var steps by remember { mutableStateOf<List<GuideStep>?>(null) }
+    LaunchedEffect(tick) { steps = withContext(Dispatchers.IO) { try { guideSteps(ctx) } catch (e: Exception) { emptyList() } } }
+    val next = steps?.firstOrNull { !it.done && !it.optional }
     Screen("You", nav, back = false) {
+        // The one set-up step that matters next, with its own button; the full Guide is one tap behind it.
+        if (next != null) Panel(strong = true) {
+            Small("Next set-up step, ${steps!!.count { it.done && !it.optional } + 1} of ${steps!!.count { !it.optional }}")
+            Text(next.title, style = MaterialTheme.typography.titleMedium)
+            Text(next.why, style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Button(onClick = { nav.navigate(next.route) }) { Text(next.button) }
+                TextButton(onClick = { nav.navigate("guide") }) { Text("All steps") }
+            }
+        }
         IconRow(Icons.Default.Edit, "Statement, bio and CV", "Written from your own answers; nothing made up") { nav.navigate("materials") }
         IconRow(Icons.Default.Person, "People and venues", "Places to show, and emails to them") { nav.navigate("outreach") }
-        IconRow(Icons.Default.CheckCircle, "Guide", "Set-up steps one at a time, and the five levels") { nav.navigate("guide") }
         IconRow(Icons.Default.AccountBox, "Records", "To-dos, money, sales, and proof of what was sent") { nav.navigate("records") }
+        if (steps != null && next == null) IconRow(Icons.Default.CheckCircle, "Guide", "Set-up is done. The five levels, and where you are") { nav.navigate("guide") }
         IconRow(Icons.Default.Settings, "Settings", "Your details, hours, rules, writing help, email, backup") { nav.navigate("settings") }
         IconRow(Icons.Default.Info, "Help", "The tour, plain answers, about this app") { nav.navigate("basics") }
     }

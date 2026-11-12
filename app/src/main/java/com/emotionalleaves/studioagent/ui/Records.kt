@@ -270,16 +270,25 @@ private fun Multi(label: String, options: List<String>, initial: List<String>, o
 
 val sectionNames = listOf(
     Triple("you", "About you", "Name, contact details, what you make, goals"),
-    Triple("hours", "Work hours and quiet time", "When the app stays silent, and your studio times"),
+    Triple("hours", "Hours and calm", "Work hours, quiet times, studio times, focus, phone permissions"),
     Triple("rules", "Your rules", "Level, gates, fee caps, what calls you see, what matters most"),
-    Triple("calm", "Focus and calm", "Fewer words, session length, locks against re-checking"),
-    Triple("writing", "Writing", "Standing notes for anything the app writes"),
-    Triple("ai", "Writing help", "Free AI that drafts and reads calls; on already"),
+    Triple("ai", "Writing help", "Free AI that drafts and reads calls, and your standing notes"),
     Triple("email", "Email", "Let the app send and read email itself"),
-    Triple("github", "GitHub", "Backup and your portfolio page"),
-    Triple("backup", "Backup file", "Save or restore everything as one file"),
-    Triple("permissions", "Permissions", "Calendar, notifications, Do Not Disturb")
+    Triple("backup", "Backup and web page", "One backup file, or GitHub for backup and a portfolio page"),
+    // Older addresses still open the page they now live on.
+    Triple("calm", "Hours and calm", ""), Triple("permissions", "Hours and calm", ""),
+    Triple("writing", "Writing help", ""), Triple("github", "Backup and web page", "")
 )
+
+/** Settings pages that were merged: each old section now shows inside its new page. */
+private fun settingsParts(section: String): List<String> = when (section) {
+    "hours", "calm", "permissions" -> listOf("hours", "calm", "permissions")
+    "ai", "writing" -> listOf("ai", "writing")
+    "backup", "github" -> listOf("backup", "github")
+    else -> listOf(section)
+}
+
+private val partHeads = mapOf("calm" to "Focus and calm", "permissions" to "Phone permissions", "writing" to "Standing notes", "github" to "GitHub: off-phone backup and a portfolio page")
 
 @Composable
 fun SettingsScreen(nav: NavController, section: String) {
@@ -325,13 +334,15 @@ fun SettingsScreen(nav: NavController, section: String) {
 
     Screen(sectionNames.firstOrNull { it.first == section }?.second ?: "Settings", nav) {
         Status(status)
-        when (section) {
+        for (part in settingsParts(section)) {
+        partHeads[part]?.let { Section(it) }
+        when (part) {
             "" -> {
                 Intro("settings", "Nothing here has to be touched for the app to work. Open a section only when you want to change something. The Guide walks through the ones worth setting up.")
                 val icons = mapOf("you" to Icons.Default.Person, "hours" to Icons.Default.Notifications, "rules" to Icons.Default.Build, "calm" to Icons.Default.Favorite,
                     "writing" to Icons.Default.Edit, "ai" to Icons.Default.Star, "email" to Icons.Default.Email, "github" to Icons.Default.Share,
                     "backup" to Icons.Default.Refresh, "permissions" to Icons.Default.Lock)
-                listOf("Everyday" to listOf("you", "hours", "calm", "permissions"), "How the app decides" to listOf("rules", "writing"), "Extras, all optional" to listOf("ai", "email", "github", "backup")).forEach { (group, ids) ->
+                listOf("Everyday" to listOf("you", "hours", "rules"), "Extras, all optional" to listOf("ai", "email", "backup")).forEach { (group, ids) ->
                     Section(group)
                     Column {
                         ids.forEach { id ->
@@ -339,7 +350,6 @@ fun SettingsScreen(nav: NavController, section: String) {
                             val state = when (id) {
                                 "ai" -> if (G.ai.ready) "On" else "Off"
                                 "email" -> if (st.mailReady) "On" else "Off"
-                                "github" -> if (st.ghReady) "On" else "Off"
                                 else -> ""
                             }
                             IconRow(icons.getValue(id), title, sub + (if (tick >= 0 && state.isNotBlank()) ". $state" else "")) { nav.navigate("settings/$id") }
@@ -550,6 +560,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 OutlinedButton(onClick = { Share.text(ctx, G.problemReport()) }) { Text("Share a problem report") }
             }
             else -> Note("That settings page does not exist.")
+        }
         }
     }
 }
