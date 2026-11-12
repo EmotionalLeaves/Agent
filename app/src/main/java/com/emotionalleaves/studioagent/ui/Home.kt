@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.RadioButton
@@ -176,10 +177,10 @@ fun Home(nav: NavController) {
         }
 
         if (st.onboarded) {
-            if (st.sessionStart > 0) Button(onClick = { nav.navigate("session") }, modifier = Modifier.fillMaxWidth().height(58.dp)) { Text("Back to your session") }
+            if (st.sessionStart > 0) Button(onClick = { nav.navigate("session") }, modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)) { Text("Back to your session") }
             else {
                 // One tap: the app picks the piece and starts the clock. Nothing to decide first.
-                Button(onClick = { buzz(); scope.io { Engine.quickStart(st.defaultSessionMin); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }, modifier = Modifier.fillMaxWidth().height(58.dp)) { Text("Start now") }
+                Button(onClick = { buzz(); scope.io { Engine.quickStart(st.defaultSessionMin); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)) { Text("Start now") }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     TextButton(onClick = { buzz(); scope.io { Engine.quickStart(5); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } } }) { Text("Just 5 minutes") }
                     TextButton(onClick = { nav.navigate("session") }) { Text("Let me choose first") }
@@ -291,7 +292,7 @@ fun DoneScreen(nav: NavController) {
         }
         Small("It is all stored. You can close the app.")
         Space(8)
-        Button(onClick = { nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("OK") }
+        Button(onClick = { nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("OK") }
     }
 }
 
@@ -421,7 +422,7 @@ fun SessionScreen(nav: NavController) {
                 st.sessionGoalMin = if (kind == "light") 15 else st.defaultSessionMin
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
                 if (st.dndInSession) Notifier.dnd(ctx, true)
-            }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Start") }
+            }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start") }
             if (st.dndInSession && !Notifier.dndGranted(ctx)) Small("Want the phone silenced during sessions? Allow it in Settings, Permissions.")
         }
     } else {
@@ -493,13 +494,12 @@ fun SessionScreen(nav: NavController) {
             }
             if (!stopping) {
                 Space(8)
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(modifier = Modifier.weight(1f).height(56.dp), onClick = {
-                        if (paused) { st.sessionPausedTotal = st.sessionPausedTotal + (now() - st.sessionPausedAt); st.sessionPausedAt = 0L }
-                        else st.sessionPausedAt = now()
-                    }) { Text(if (paused) "Resume" else "Pause") }
-                    Button(modifier = Modifier.weight(1f).height(56.dp), onClick = { stopping = true }) { Text("I am stopping") }
-                }
+                // One big way out, one quiet way to pause. Stacked, so long words never get squeezed.
+                Button(modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp), onClick = { stopping = true }) { Text("I am stopping") }
+                OutlinedButton(modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), onClick = {
+                    if (paused) { st.sessionPausedTotal = st.sessionPausedTotal + (now() - st.sessionPausedAt); st.sessionPausedAt = 0L }
+                    else st.sessionPausedAt = now()
+                }) { Text(if (paused) "Resume" else "Pause") }
                 Text("Put the phone down. The timer keeps going.", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row {
                 }
@@ -509,7 +509,7 @@ fun SessionScreen(nav: NavController) {
                 Field("Anything to note (optional)", note, lines = 2)
                 if (photo.isNotBlank()) PathImage(photo, Modifier.fillMaxWidth().height(160.dp))
                 OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, photoFile)) } catch (e: Exception) { } }) { Text(if (photo.isBlank()) "Progress photo (optional)" else "Retake photo") }
-                Button(onClick = { buzz(); finish(true) }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("End and save") }
+                Button(onClick = { buzz(); finish(true) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("End and save") }
                 Row {
                     TextButton(onClick = { stopping = false }) { Text("Keep going") }
                     TextButton(onClick = { finish(false) }) { Text("Discard this session") }
@@ -530,7 +530,7 @@ fun Admin(nav: NavController) {
     Screen("Admin pass", nav) {
         Intro("admin", "Everything that needs a yes from you, in one place. One tap each. When this list is empty you are done.")
         if (loaded && items.isEmpty()) Empty("Nothing to approve. You are done here.", "Back to Home") { nav.popBackStack() }
-        items.forEach { p -> Panel(onClick = { nav.navigate(p.route) }) { Text(p.title, fontWeight = FontWeight.SemiBold); Note(p.detail) } }
+        items.forEach { p -> IconRow(if (p.route.startsWith("doc")) Icons.Default.Edit else if (p.route.startsWith("appl")) Icons.Default.Send else Icons.Default.Done, p.title, p.detail) { nav.navigate(p.route) } }
     }
 }
 
@@ -663,6 +663,6 @@ fun Review(nav: NavController) {
             OutlinedButton(onClick = { nav.navigate("week") }) { Text("Change them") }
             if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("$pending to approve") }
         }
-        Button(onClick = { st.lastReviewWeek = Engine.weekId(); nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Done for the week") }
+        Button(onClick = { st.lastReviewWeek = Engine.weekId(); nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Done for the week") }
     }
 }

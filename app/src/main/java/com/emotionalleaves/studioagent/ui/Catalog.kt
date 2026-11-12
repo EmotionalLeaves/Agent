@@ -460,7 +460,7 @@ fun Ideas(nav: NavController) {
     Screen("Ideas", nav) {
         Intro("ideas", "Park it here and go back to the piece in front of you. Nothing parked here is lost.")
         Field("New idea", text, lines = 2, mic = true)
-        Button(enabled = text.value.isNotBlank(), onClick = { val t = text.value.trim(); text.value = ""; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
+        if (text.value.isNotBlank()) Button(onClick = { val t = text.value.trim(); text.value = ""; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
         val open = ideas.filter { !it.done }
         if (open.isEmpty()) Empty("Nothing parked. When an idea keeps circling while you work, put it here and let it go.")
         // A pinboard: each idea a small sheet with a pin, two across.
