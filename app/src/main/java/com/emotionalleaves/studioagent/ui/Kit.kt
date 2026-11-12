@@ -277,3 +277,23 @@ fun Hair() = HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
 @Composable
 fun Space(h: Int) = Spacer(Modifier.height(h.dp))
+
+/** A list row with an icon on the left: for menus of places to go, like Settings. */
+@Composable
+fun IconRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, sub: String = "", onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Column {
+        Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { onClick() }.heightIn(min = 60.dp).padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(cs.secondaryContainer), contentAlignment = Alignment.Center) {
+                Icon(icon, null, Modifier.size(20.dp), tint = cs.onSecondaryContainer)
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.titleSmall)
+                if (sub.isNotBlank()) Text(sub, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+            }
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = cs.outline)
+        }
+        HorizontalDivider(color = cs.outlineVariant)
+    }
+}

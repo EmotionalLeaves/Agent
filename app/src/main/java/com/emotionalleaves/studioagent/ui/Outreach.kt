@@ -1,5 +1,9 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -64,20 +68,23 @@ fun Outreach(nav: NavController) {
     var busy by remember { mutableStateOf(false) }
     Screen("People", nav, back = st.simpleMode) {
         Intro("people", "Venues and people worth knowing, and what has passed between you. The app drafts short, personal emails and remembers to follow up once. Nothing is sent without your yes.")
-        Panel(strong = true) {
-            Text("Level $level", fontWeight = FontWeight.SemiBold)
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Small("At level $level")
             Text(when (level) {
-                0 -> "No emails yet. One thing only: go to one opening a month, on campus or nearby, and look at the work. That is the whole job at this level."
+                0 -> "No emails yet. Just go to one opening a month and look at the work."
                 1 -> "Campus galleries, the art department, libraries, cafés and community art centres. No cold emails to commercial galleries."
                 2 -> "Artist-run spaces, plus jurors and organisers of shows that accepted you."
                 else -> "Curators, university and nonprofit galleries, then commercial galleries whose programme fits your work."
-            })
+            }, style = MaterialTheme.typography.titleMedium)
         }
         val monthStart = Engine.millis(java.time.LocalDate.now().withDayOfMonth(1).atStartOfDay())
         val went = events.filter { it.type == "opening" && it.date >= monthStart }
         Panel {
-            Text("Openings this month: ${went.size} of 1", fontWeight = FontWeight.SemiBold)
-            Small("An opening is the free first evening of a show. Going to one a month, and just looking, is how people in the art world slowly come to know your face.")
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("${went.size}", style = MaterialTheme.typography.displayMedium, color = if (went.isNotEmpty()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                Text("of 1 opening this month", Modifier.padding(bottom = 10.dp), style = MaterialTheme.typography.titleMedium)
+            }
+            Small("An opening is the free first evening of a show. Going and just looking is how people slowly come to know your face.")
             Explain("How do I find one, and what do I do there?", "Look at your university art gallery's page or events calendar, your library's site, or any local gallery's mailing list. Openings are free and usually on a weekday evening. Walk round, look at the work, and leave when you like; ten minutes counts. Nobody expects you to talk to anyone. If you do talk to someone, note their name here afterwards.")
             Expand("I went to one") {
                 Field("Where", openingPlace)
@@ -105,7 +112,7 @@ fun Outreach(nav: NavController) {
         Field("Their website", url)
         Status(status)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(enabled = !busy && url.value.isNotBlank() && G.ai.ready, onClick = {
+            if (G.ai.ready) Button(enabled = !busy && url.value.isNotBlank(), onClick = {
                 busy = true; status = "Reading their site..."
                 scope.io({ status = it; busy = false }) {
                     val u = url.value.trim().let { if (it.startsWith("http")) it else "https://$it" }

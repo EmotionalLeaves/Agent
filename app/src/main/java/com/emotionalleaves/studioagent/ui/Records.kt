@@ -1,5 +1,19 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.MaterialTheme
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
@@ -92,15 +106,20 @@ fun Records(nav: NavController) {
         val year = LocalDate.now().year
         val thisYear = ledger.filter { Engine.date(it.date).year == year }
         Panel {
-            Text("Fees this month: ${money(Engine.feesThisMonth(ledger))}" + (if (st.feeBudget > 0) " of ${money(st.feeBudget)} budget" else ""))
-            Text("$year so far: out ${money(-thisYear.filter { it.amount < 0 }.sumOf { it.amount })}, in ${money(thisYear.filter { it.amount > 0 }.sumOf { it.amount })}")
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.weight(1f)) { Small("Spent in $year"); Text(money(-thisYear.filter { it.amount < 0 }.sumOf { it.amount }), style = MaterialTheme.typography.headlineSmall) }
+                Column(Modifier.weight(1f)) { Small("Earned in $year"); Text(money(thisYear.filter { it.amount > 0 }.sumOf { it.amount }), style = MaterialTheme.typography.headlineSmall) }
+            }
+            Small("Fees this month ${money(Engine.feesThisMonth(ledger))}" + (if (st.feeBudget > 0) " of ${money(st.feeBudget)}" else ""))
         }
-        Choice("Add an entry", listOf("fee", "shipping", "print", "framing", "other"), kind) { kind = it }
-        Num("Amount, " + st.currency, amount) { amount = it }
-        Field("What for", note)
-        Button(enabled = amount > 0, onClick = { val l = Ledger(kind = kind, amount = -amount, date = now(), note = note.value.trim()); note.value = ""; scope.io { dao.put(l) } }) { Text("Add cost") }
+        Expand("Add a cost") {
+            Choice("What kind", listOf("fee", "shipping", "print", "framing", "other"), kind) { kind = it }
+            Num("Amount, " + st.currency, amount) { amount = it }
+            Field("What for", note)
+            Button(enabled = amount > 0, onClick = { val l = Ledger(kind = kind, amount = -amount, date = now(), note = note.value.trim()); note.value = ""; amount = 0.0; scope.io { dao.put(l) } }) { Text("Add cost") }
+        }
 
-        H("Record a sale")
+        Expand("Record a sale") {
         val sellable = works.filter { it.status != "sold" && it.status != "idea" && it.status != "in_progress" }
         if (sellable.isEmpty()) Small("No finished works to sell yet.")
         else {
@@ -121,6 +140,8 @@ fun Records(nav: NavController) {
             }) { Text("Record sale") }
         }
         Status(status)
+
+        }
 
         H("Entries")
         ledger.take(40).forEach { l ->
@@ -265,17 +286,27 @@ fun SettingsScreen(nav: NavController, section: String) {
         when (section) {
             "" -> {
                 Intro("settings", "Nothing here has to be touched for the app to work. Open a section only when you want to change something. The Guide walks through the ones worth setting up.")
-                sectionNames.forEach { (id, title, sub) ->
-                    val state = when (id) {
-                        "ai" -> if (G.ai.ready) "Set up" else "Not set up (optional)"
-                        "email" -> if (st.mailReady) "Set up" else "Not set up (optional)"
-                        "github" -> if (st.ghReady) "Set up" else "Not set up (optional)"
-                        else -> ""
+                val icons = mapOf("you" to Icons.Default.Person, "hours" to Icons.Default.Notifications, "rules" to Icons.Default.Build, "calm" to Icons.Default.Favorite,
+                    "writing" to Icons.Default.Edit, "ai" to Icons.Default.Star, "email" to Icons.Default.Email, "github" to Icons.Default.Share,
+                    "backup" to Icons.Default.Refresh, "permissions" to Icons.Default.Lock)
+                listOf("Everyday" to listOf("you", "hours", "calm", "permissions"), "How the app decides" to listOf("rules", "writing"), "Extras, all optional" to listOf("ai", "email", "github", "backup")).forEach { (group, ids) ->
+                    Section(group)
+                    Column {
+                        ids.forEach { id ->
+                            val (_, title, sub) = sectionNames.first { it.first == id }
+                            val state = when (id) {
+                                "ai" -> if (G.ai.ready) "On" else "Off"
+                                "email" -> if (st.mailReady) "On" else "Off"
+                                "github" -> if (st.ghReady) "On" else "Off"
+                                else -> ""
+                            }
+                            IconRow(icons.getValue(id), title, sub + (if (tick >= 0 && state.isNotBlank()) ". $state" else "")) { nav.navigate("settings/$id") }
+                        }
+                        if (group == "Everyday") IconRow(Icons.Default.DateRange, "Your week", "Studio times, pausing, session history") { nav.navigate("week") }
                     }
-                    Panel(onClick = { nav.navigate("settings/$id") }) { Text(title, fontWeight = FontWeight.SemiBold); Note(sub + (if (tick >= 0 && state.isNotBlank()) ", $state" else "")) }
                 }
-                Panel(onClick = { nav.navigate("week") }) { Text("Your week", fontWeight = FontWeight.SemiBold); Note("Studio times, pausing, session history") }
-                Panel(onClick = { nav.navigate("guide") }) { Text("Guide and layout", fontWeight = FontWeight.SemiBold); Note("Setup steps, simple layout on or off") }
+                Section("Help")
+                IconRow(Icons.Default.CheckCircle, "Guide and layout", "Setup steps, simple layout on or off") { nav.navigate("guide") }
             }
             "you" -> {
                 SText("First name", st.firstName) { st.firstName = it }
