@@ -174,4 +174,38 @@ class ScreensTest {
         shot("68_web", "web/${ids["draft"]}", "Fill")
         shot("69_basics", "basics", "What is an open call?")
     }
+
+    /**
+     * Accessibility sweep: on every main screen, every tappable thing must have something a screen reader can say.
+     * Findings go to a11y.txt beside the screenshots.
+     */
+    @Test fun spokenLabels() {
+        val ids = seed()
+        val routes = listOf("home", "works", "calls", "outreach", "more", "guide", "path", "basics", "week", "sessions", "records", "receipts",
+            "materials", "interview", "facts", "letters", "sources", "admin", "review", "tour", "startnow",
+            "work/${ids["wip"]}", "call/${ids["opp"]}", "appl/${ids["draft"]}", "doc/${ids["doc"]}", "contact/${ids["contact"]}",
+            "settings/you", "settings/hours", "settings/rules", "settings/calm", "settings/writing", "settings/ai", "settings/email", "settings/backup", "settings/permissions")
+        val out = StringBuilder()
+        routes.forEach { r ->
+            ActivityScenario.launch<MainActivity>(Intent(ctx, MainActivity::class.java).putExtra("route", r)).use {
+                try { compose.waitUntil(8_000) { compose.onAllNodes(androidx.compose.ui.test.hasClickAction()).fetchSemanticsNodes().size > 3 } } catch (e: Throwable) { }
+                try { compose.waitForIdle() } catch (e: Throwable) { }
+                val nodes = compose.onAllNodes(androidx.compose.ui.test.hasClickAction()).fetchSemanticsNodes()
+                var bad = 0
+                nodes.forEach { n ->
+                    val c = n.config
+                    val text = c.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.Text) { emptyList() }.joinToString(" ")
+                    val desc = c.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription) { emptyList() }.joinToString(" ")
+                    val edit = c.getOrElse(androidx.compose.ui.semantics.SemanticsProperties.EditableText) { null }?.text.orEmpty()
+                    val label = c.getOrElse(androidx.compose.ui.semantics.SemanticsActions.OnClick) { null }?.label.orEmpty()
+                    if (text.isBlank() && desc.isBlank() && edit.isBlank() && label.isBlank() && !c.contains(androidx.compose.ui.semantics.SemanticsProperties.EditableText)) {
+                        bad++
+                        out.append("$r: unlabelled tap target at ${n.boundsInRoot}\n")
+                    }
+                }
+                out.append("$r: ${nodes.size} tap targets, $bad without a spoken label\n")
+            }
+        }
+        File(dir, "a11y.txt").writeText(out.toString())
+    }
 }
