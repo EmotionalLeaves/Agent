@@ -93,3 +93,28 @@ Fifteen passes on how the app looks and feels. No new features.
 13. Motion and touch: folds open smoothly with a turning arrow; a short buzz on start, stop, approve and send.
 14. Accessibility: 48dp touch targets, whole-row switches, spoken states for check marks and week dots, named remove buttons, undo on deleted money entries.
 15. Dark theme checked on eight screens; small fixes (plural wording, hidden budget when none is set, quieter Home on a fresh install).
+
+## Redesign (builds 24 to 29)
+
+Twenty passes that replace the look rather than adjust it.
+
+1. Palette: gallery-wall white, graphite, pencil grey, one cobalt for actions, masking-tape yellow only for "do this now". Dark version of each.
+2. Type: Bricolage Grotesque for titles, Atkinson Hyperlegible (made for easy reading) for everything else. Both bundled, both open-licence (see docs/FONT-LICENSE-*).
+3. Buttons: squared-off, 50dp tall, one filled button per screen.
+4. Headers: main tabs get a large title and no back arrow; deeper screens get a slim bar.
+5. Help: first-visit explanations no longer sit on the page; they wait behind an info button in the header.
+6. Lists: tappable items are plain rows with hairlines instead of boxed cards.
+7. Bottom bar: flat, hairline on top, the right tab stays lit; hidden during sessions, setup and the saved screen.
+8. Movement: a short slide between screens.
+9. Home: the next step is a label taped to the wall; "Not today" and "Pin my own" moved into its menu.
+10. Home: the week as seven marks with hours; deadlines and the rest as quiet rows underneath.
+11. Studio: a gallery wall of pieces, two across, each with a wall label (title, year and size, status).
+12. Piece: the picture first, on a white sheet; with no picture yet, the two ways to add one are right there.
+13. Session: full screen, nothing else to tap, the current small step taped up under the timer.
+14. Saved screen: one large "Saved." and the next step taped up.
+15. Setup: five small pages, one question each, with a progress bar.
+16. More: a grid of tiles with icons.
+17. Calls: title as the way in, no dot separators, shorter level note.
+18. Choice chips: capitalised, regular weight unless chosen.
+19. Dark mode contrast fixes.
+20. Final audit from screenshots of every main screen, light and dark.
