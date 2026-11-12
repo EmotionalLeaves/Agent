@@ -188,7 +188,10 @@ fun Calls(nav: NavController) {
             "all" -> {
                 Small("Everything found, including calls your rules hold back, and why.")
                 IconRow(Icons.Default.Notifications, "Where calls come from", "Email alerts and pages the app checks each day") { nav.navigate("sources") }
-                opps.filter { it.status in setOf("new", "later", "no", "expired") && kindOk(it) }.forEach { o ->
+                var allLimit by rememberSaveable { mutableStateOf(50) }
+                val everything = opps.filter { it.status in setOf("new", "later", "no", "expired") && kindOk(it) }
+                if (everything.size > allLimit) Small("Showing the first $allLimit of ${everything.size}.")
+                everything.take(allLimit).forEach { o ->
                     val why = Scoring.ineligible(o, p, now())
                     Panel(onClick = { nav.navigate("call/${o.id}") }) {
                         Text(o.title, style = MaterialTheme.typography.titleSmall)
@@ -197,6 +200,7 @@ fun Calls(nav: NavController) {
                         Flags(o)
                     }
                 }
+                if (everything.size > allLimit) OutlinedButton(onClick = { allLimit += 50 }, modifier = Modifier.fillMaxWidth()) { Text("Show more") }
             }
             else -> {
                 if (appls.isEmpty()) Empty("Nothing applied to yet. Say Yes to a call and the app builds the application.")

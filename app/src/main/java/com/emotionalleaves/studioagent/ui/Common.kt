@@ -1,5 +1,8 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.width
@@ -313,8 +316,11 @@ fun PathImage(path: String, modifier: Modifier = Modifier, maxSide: Int = 700, s
         if (value == null) value = withContext(Dispatchers.IO) { ImageTools.decode(path, maxSide)?.asImageBitmap()?.also { thumbs.put(key, it) } }
     }
     val b = bmp
-    if (b != null) Image(b, description, modifier, contentScale = scale)
-    else Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant))
+    // A picture that had to be read from storage fades in instead of popping.
+    val seen = remember(key) { bmp != null }
+    val alpha by animateFloatAsState(if (b != null) 1f else 0f, if (seen) snap() else tween(220), label = "picture")
+    if (b != null) Image(b, description, modifier.graphicsLayer { this.alpha = alpha }, contentScale = scale)
+    else Box(modifier.background(MaterialTheme.colorScheme.surfaceContainer))
 }
 
 /** A plain-words answer behind a tap, for any term the app uses that nobody should be expected to know already. */
@@ -358,15 +364,6 @@ fun Tag(text: String, strong: Boolean = false) {
         modifier = Modifier.background(if (strong) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(4.dp)).padding(horizontal = 7.dp, vertical = 2.dp))
 }
 
-/** A piece's picture in a list, or its initial on a quiet tile when there is no picture yet. */
-@Composable
-fun Thumb(path: String, title: String, size: Int = 64) {
-    val shape = RoundedCornerShape(10.dp)
-    if (path.isNotBlank() && File(path).exists()) PathImage(path, Modifier.size(size.dp).clip(shape), 220)
-    else Box(Modifier.size(size.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, shape), contentAlignment = Alignment.Center) {
-        Text(title.trim().take(1).uppercase().ifBlank { "·" }, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.outline)
-    }
-}
 
 /** What a list shows when it is empty: one line of what goes here and, at most, one thing to tap. */
 @Composable
@@ -411,15 +408,6 @@ fun Timeline(done: Boolean, current: Boolean, last: Boolean, onClick: (() -> Uni
     }
 }
 
-@Composable
-fun Gap(h: Int = 8) = Spacer(Modifier.height(h.dp))
-
-@Composable
-fun Status(text: String) {
-    // What just happened, in a small tinted strip that is easy to spot and easy to ignore.
-    if (text.isNotBlank()) Text(text, Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.secondaryContainer).padding(horizontal = 14.dp, vertical = 10.dp),
-        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
-}
 
 
 /** A joined bar of two or three options; the chosen one is filled. */

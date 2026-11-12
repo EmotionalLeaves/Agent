@@ -109,8 +109,6 @@ class Settings(ctx: Context) {
     var defaultSessionMin by I("defaultSessionMin", 40)
     var sessionGoalMin by I("sessionGoalMin", 0)
     var activity by S("activity")
-    var simpleMode by B("simpleMode", true)
-    var guideHidden by B("guideHidden", false)
     var seenIntros by S("seenIntros")
     var guideManual by S("guideManual")
     var sessionPausedAt by L("sessionPausedAt", 0)

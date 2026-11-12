@@ -136,15 +136,19 @@ fun Works(nav: NavController) {
                 Choice("", listOf("all") + workStatuses.filter { x -> works.any { it.status == x } }, show, names = { if (it == "all") "All" else statusWords(it) }) { show = it }
             }
             val q = search.value.trim().lowercase()
-            works.filter { w ->
+            // Long walls are drawn 40 at a time, so Studio opens quickly however much work there is.
+            var limit by rememberSaveable { mutableStateOf(40) }
+            val shownWorks = works.filter { w ->
                 (show == "all" || w.status == show) && (q.isBlank() || listOf(w.title, w.tags, w.medium, w.status, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).any { it.lowercase().contains(q) })
-            }.chunked(2).forEach { pair ->
+            }
+            shownWorks.take(limit).chunked(2).forEach { pair ->
                 // Hung like a wall: picture, then a small label underneath with title, year and size.
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     pair.forEach { w -> Box(Modifier.weight(1f)) { WorkTile(w, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty(), tick >= 0 && st.focusWork == w.id) { nav.navigate("work/${w.id}") } } }
                     if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
             }
+            if (shownWorks.size > limit) OutlinedButton(onClick = { limit += 40 }, modifier = Modifier.fillMaxWidth()) { Text("Show ${minOf(40, shownWorks.size - limit)} more") }
             if (works.size > 1) TextButton(onClick = {
                 scope.io({ importStatus = it }) {
                     val f = File(ImageTools.exportDir(ctx), "StudioAgent_inventory.csv")

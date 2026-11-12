@@ -549,20 +549,6 @@ fun More(nav: NavController) {
     }
 }
 
-data class Tile(val title: String, val sub: String, val route: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
-
-@Composable
-fun TileCard(t: Tile, onClick: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxWidth().heightIn(min = 118.dp).clip(RoundedCornerShape(14.dp)).background(cs.surfaceContainerLowest).clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Icon(t.icon, null, tint = cs.primary)
-        Space(6)
-        Text(t.title, style = MaterialTheme.typography.titleSmall)
-        Text(t.sub, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-    }
-}
-
 /** A three-minute look at the week ahead, offered once at the weekend. One decision: which piece. */
 @Composable
 fun Review(nav: NavController) {
