@@ -217,7 +217,7 @@ fun Home(nav: NavController) {
         if (st.onboarded) {
             Field("Park an idea so it stops circling", idea, mic = true)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(enabled = idea.value.isNotBlank(), onClick = { val t = idea.value.trim(); idea.value = ""; parked = true; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
+                if (idea.value.isNotBlank()) Button(onClick = { buzz(); val t = idea.value.trim(); idea.value = ""; parked = true; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
                 if (pendingCount > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("Admin pass ($pendingCount)") }
             }
             if (parked) Check(true, "Parked. It is safe in Ideas; you can let it go for now.", small = true)

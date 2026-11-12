@@ -73,3 +73,23 @@ Still not possible to test without a phone: PDFs, the camera, the calendar, real
 | 13 | A Copy list in the entry-form browser for boxes that Fill misses |
 | 14 | Inventory export as a spreadsheet file; pictures in lists are cached so scrolling is smooth |
 | 15 | Re-audit: the More menu is grouped into Help, Do and Look up; the Guide gained a printing step |
+
+## UI and UX cycles (builds 18 to 23)
+
+Fifteen passes on how the app looks and feels. No new features.
+
+1. Screen pictures: every build photographs the main screens (light and dark) and attaches `screens.zip` to the release.
+2. One palette: warm paper, deep green, a little terracotta, in light and dark.
+3. Type: smaller, tighter scale with clear steps between heading, body and note.
+4. Cards: white panels with a hairline edge; tappable ones show an arrow; first-visit hints are compact.
+5. Calls: each call is a card with fit, time left and fee as small tags.
+6. Session: a ring timer and a two-step "I am stopping" flow.
+7. Studio: thumbnails and status tags in the list.
+8. Piece screen: title first, photographing tips behind a tap.
+9. Guide: drawn tick, ring and "do this now" marks instead of text symbols; numbered steps line up.
+10. Forms: the microphone sits inside the field; duplicate headings removed; rarely used forms are folded.
+11. Empty states: every empty list says what will appear there and offers at most one button.
+12. Navigation: the bottom tab stays lit on sub-screens, so it always shows where you are.
+13. Motion and touch: folds open smoothly with a turning arrow; a short buzz on start, stop, approve and send.
+14. Accessibility: 48dp touch targets, whole-row switches, spoken states for check marks and week dots, named remove buttons, undo on deleted money entries.
+15. Dark theme checked on eight screens; small fixes (plural wording, hidden budget when none is set, quieter Home on a fresh install).
