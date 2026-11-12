@@ -92,7 +92,7 @@ object Papers {
         pdf.space(20f)
         pdf.text("I certify that this is an original work made by me.", 11f)
         pdf.space(30f)
-        pdf.text("Signed: ______________________________      Date: ${LocalDate.now()}", 11f)
+        pdf.text("Signed: ______________________________      Date: ${com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis())}", 11f)
         return pdf.save(out(ctx, "COA_" + Texts.clean(a.title).ifBlank { "Untitled" } + "_$number.pdf"))
     }
 

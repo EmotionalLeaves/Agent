@@ -452,7 +452,7 @@ object Engine {
 
     /** Unlocks a submitted application, for the rare case it really has to change. */
     suspend fun reopen(a: Appl) {
-        dao.put(a.copy(status = "ready", proofText = "Reopened on ${LocalDate.now()}. Earlier note: ${a.proofText}".take(600)))
+        dao.put(a.copy(status = "ready", proofText = "Reopened on ${com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis())}. Earlier note: ${a.proofText}".take(600)))
         dao.oppsNow().firstOrNull { it.id == a.oppId }?.let { dao.put(it.copy(status = "yes")) }
         dao.artworksNow().filter { it.id in workIds(a) && it.status == "pending" }.forEach { dao.put(it.copy(status = "available")) }
         dao.eventsNow().filter { it.applId == a.id && it.type in setOf("pack", "submit", "deadline") }.forEach { dao.put(it.copy(done = false)) }
@@ -463,10 +463,13 @@ object Engine {
         if (a.status != "sending") return false
         return try {
             withContext(Dispatchers.IO) { Mail.send(st.smtpHost, st.mailUser, st.mailPass, a.emailTo, a.emailSubject, a.emailBody, packFiles(a)) }
-            markSubmitted(a, "Sent by email to ${a.emailTo} on ${LocalDate.now()} with ${packFiles(a).size} attachments.")
+            markSubmitted(a, "Sent by email to ${a.emailTo} on ${com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis())} with ${packFiles(a).size} attachments.")
             true
         } catch (e: Exception) {
-            dao.put(a.copy(status = "ready", proofText = "Email did not send: ${e.message}"))
+            // Never fail quietly: say so, in plain words, and open the application when tapped.
+            val why = com.emotionalleaves.studioagent.ui.plainError(e)
+            dao.put(a.copy(status = "ready", proofText = "Email did not send: $why"))
+            try { Notifier.post(ctx, st, 400 + a.id.toInt(), "An email did not send", why + " Nothing was lost; tap to try again.", "appl/${a.id}") } catch (x: Exception) { }
             false
         }
     }
@@ -696,7 +699,7 @@ object Engine {
         val log = mutableListOf<String>()
         val now = System.currentTimeMillis()
         suspend fun step(name: String, block: suspend () -> Unit) {
-            try { block() } catch (e: Exception) { log += "$name: ${e.message}" }
+            try { block() } catch (e: Exception) { log += "$name: ${com.emotionalleaves.studioagent.ui.plainError(e)}" }
         }
         step("expire") { dao.oppsNow().filter { it.status in setOf("new", "later") && it.deadline in 1..now }.forEach { dao.put(it.copy(status = "expired")) } }
         step("plan week") { planWeek(ctx) }
@@ -705,7 +708,7 @@ object Engine {
                 val status = try {
                     val text = withContext(Dispatchers.IO) { Fetch.pageText(s.url) }
                     if (text.length < 400) "Page had almost no readable text (it may load its content with scripts)" else "Added ${ingest(text, s.name)} calls"
-                } catch (e: Exception) { "Could not read: ${e.message}" }
+                } catch (e: Exception) { "Could not read: ${com.emotionalleaves.studioagent.ui.plainError(e)}" }
                 dao.put(s.copy(lastFetched = now, lastStatus = status))
             }
         }
