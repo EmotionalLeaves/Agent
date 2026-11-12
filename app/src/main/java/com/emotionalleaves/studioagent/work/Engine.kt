@@ -496,6 +496,18 @@ object Engine {
 
     // ------------------------------------------------------------ outreach
 
+    /** Four places almost every town and campus has, as blanks to fill in. Somewhere to start when you know nobody. */
+    fun starterContacts(now: Long): List<Contact> = listOf(
+        Contact(venue = "Your university's art gallery", kind = "campus", tier = "now", createdAt = now,
+            notes = "Find out: who runs it (look for a gallery director or coordinator on its web page), whether there is a staff or community show each year, and when the next opening is. Going to one opening is the whole first step."),
+        Contact(venue = "Your university library or student union", kind = "campus", tier = "now", createdAt = now - 1,
+            notes = "Many have a display wall or cases and a simple request form. Ask at the front desk who books it. Staff are usually welcome."),
+        Contact(venue = "Your nearest public library", kind = "community", tier = "now", createdAt = now - 2,
+            notes = "Public libraries often show local artists for a month at a time. Look for 'exhibits' or 'art display' on their site, or ask at the desk."),
+        Contact(venue = "A cafe or community art centre near you", kind = "community", tier = "now", createdAt = now - 3,
+            notes = "Look at the walls: if there is local art with small labels, they show work. Ask who to speak to. Replace this name with the real place.")
+    )
+
     fun sentThisWeek(contacts: List<Contact>, now: Long) = contacts.count { it.sentAt > now - 7 * DAY }
 
     suspend fun classify(text: String): String =

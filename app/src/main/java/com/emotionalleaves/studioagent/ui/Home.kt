@@ -142,7 +142,7 @@ fun Home(nav: NavController) {
         }
 
         Expand("Progress and deadlines", startOpen = !st.simpleMode) {
-            Panel {
+            Panel(onClick = { nav.navigate("path") }) {
                 Text("Level $level: ${Levels.names[level]}", fontWeight = FontWeight.SemiBold)
                 LinearProgressIndicator(progress = { gate.progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                 Note(if (level < 4) "To reach Level ${level + 1}: ${gate.text}" else gate.text)
@@ -432,6 +432,7 @@ fun More(nav: NavController) {
     Screen("More", nav, back = false) {
         listOf(
             Triple("Guide", "Every setup step, one at a time", "guide"),
+            Triple("Where this is going", "The five levels and what opens each one", "path"),
             Triple("Plain answers", "What a call, a series, an edition and the rest actually mean", "basics"),
             Triple("Calls", "Open calls, ranked for you", "calls"),
             Triple("People", "Venues, curators, your email list", "outreach"),

@@ -91,7 +91,7 @@ class AppTest {
     @Test fun everyScreenOpensOnAFreshInstall() {
         ctx
         listOf(
-            "home" to "Set up in 2 minutes", "onboarding" to "Only your first name is needed", "basics" to "What is an open call?", "letters" to "Ask a print lab for a quote", "session" to "Two-minute start", "admin" to "Nothing to approve",
+            "home" to "Set up in 2 minutes", "onboarding" to "Only your first name is needed", "basics" to "What is an open call?", "letters" to "Ask a print lab for a quote", "path" to "you are here", "outreach" to "Give me a starter list", "session" to "Two-minute start", "admin" to "Nothing to approve",
             "works" to "Add a piece", "ideas" to "Park it", "materials" to "Your own documents", "interview" to "Save answers", "facts" to "Add line",
             "calls" to "Add a call", "sources" to "Run the daily check now", "outreach" to "Your email list", "records" to "Quarterly report",
             "settings" to "Your rules", "settings/you" to "Sizes in", "settings/hours" to "Change my studio times", "settings/rules" to "What matters most when ranking",
@@ -222,6 +222,9 @@ class AppTest {
         s.focusWork = id
         assertEquals(id, Engine.currentPiece(dao.artworksNow())?.id)
         assertTrue(Engine.forecast(1, 10, dao.artworksNow(), dao.sessionsNow()).startsWith("Once one piece is finished"))
+        Engine.starterContacts(1000).forEach { dao.put(it) }
+        assertEquals(4, dao.contactsNow().size)
+        assertEquals("Your university's art gallery", dao.contactsNow().first().venue)
         s.log("first"); s.log("second")
         assertEquals("second", s.activityLines().first().second)
     }

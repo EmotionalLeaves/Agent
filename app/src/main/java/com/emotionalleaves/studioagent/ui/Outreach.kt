@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emotionalleaves.studioagent.G
 import com.emotionalleaves.studioagent.data.Contact
+import com.emotionalleaves.studioagent.data.Evt
 import com.emotionalleaves.studioagent.domain.Levels
 import com.emotionalleaves.studioagent.domain.Texts
 import com.emotionalleaves.studioagent.net.Fetch
@@ -57,6 +58,9 @@ fun Outreach(nav: NavController) {
     val facts by dao.facts().collectAsState(emptyList())
     val level = Engine.levelOf(works, docs, facts)
     val url = remember { mutableStateOf("") }
+    val events by dao.events().collectAsState(emptyList())
+    val openingPlace = remember { mutableStateOf("") }
+    val openingNote = remember { mutableStateOf("") }
     val subName = remember { mutableStateOf("") }
     val subEmail = remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
@@ -71,6 +75,34 @@ fun Outreach(nav: NavController) {
                 2 -> "Artist-run spaces, plus jurors and organisers of shows that accepted you."
                 else -> "Curators, university and nonprofit galleries, then commercial galleries whose programme fits your work."
             })
+        }
+        val monthStart = Engine.millis(java.time.LocalDate.now().withDayOfMonth(1).atStartOfDay())
+        val went = events.filter { it.type == "opening" && it.date >= monthStart }
+        Panel {
+            Text("Openings this month: ${went.size} of 1", fontWeight = FontWeight.SemiBold)
+            Small("An opening is the free first evening of a show. Going to one a month, and just looking, is how people in the art world slowly come to know your face.")
+            Explain("How do I find one, and what do I do there?", "Look at your university art gallery's page or events calendar, your library's site, or any local gallery's mailing list. Openings are free and usually on a weekday evening. Walk round, look at the work, and leave when you like; ten minutes counts. Nobody expects you to talk to anyone. If you do talk to someone, note their name here afterwards.")
+            Expand("I went to one") {
+                Field("Where", openingPlace)
+                Field("Anyone you met, or anything you noticed (optional)", openingNote)
+                Button(enabled = openingPlace.value.isNotBlank(), onClick = {
+                    val place = openingPlace.value.trim(); val note = openingNote.value.trim(); openingPlace.value = ""; openingNote.value = ""
+                    scope.io {
+                        dao.put(Evt(type = "opening", title = place + (if (note.isNotBlank()) ": $note" else ""), date = now(), done = true))
+                        val known = dao.contactsNow().firstOrNull { it.venue.equals(place, ignoreCase = true) }
+                        val line = "Went to an opening on ${java.time.LocalDate.now()}." + (if (note.isNotBlank()) " $note" else "")
+                        if (known != null) dao.put(known.copy(notes = (known.notes + "\n" + line).trim())) else dao.put(Contact(venue = place, kind = "community", notes = line, createdAt = now()))
+                    }
+                }) { Text("Log it") }
+            }
+            events.filter { it.type == "opening" }.sortedByDescending { it.date }.take(3).forEach { Small("✓ " + fmtDate(it.date) + ": " + it.title) }
+        }
+        if (contacts.none { it.kind != "subscriber" }) {
+            Panel {
+                Text("Do not know where to start?", fontWeight = FontWeight.SemiBold)
+                Small("The app can add four places almost every campus and town has. Each comes with what to find out. Rename them to the real ones as you go.")
+                Button(onClick = { scope.io { Engine.starterContacts(now()).forEach { dao.put(it) } } }) { Text("Give me a starter list") }
+            }
         }
         H("Add a venue or person")
         Field("Their website", url)

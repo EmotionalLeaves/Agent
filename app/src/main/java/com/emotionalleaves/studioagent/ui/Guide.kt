@@ -186,3 +186,34 @@ fun Basics(nav: NavController) {
         basics.forEach { (q, a) -> Expand(q) { Text(a) } }
     }
 }
+
+
+@Composable
+fun PathScreen(nav: NavController) {
+    val works by dao.artworks().collectAsState(emptyList())
+    val docs by dao.docs().collectAsState(emptyList())
+    val facts by dao.facts().collectAsState(emptyList())
+    val rules = com.emotionalleaves.studioagent.work.Engine.rules()
+    val stats = com.emotionalleaves.studioagent.work.Engine.statsOf(works, docs, facts)
+    val level = com.emotionalleaves.studioagent.domain.Levels.level(stats, rules)
+    val gate = com.emotionalleaves.studioagent.domain.Levels.gate(stats, rules)
+    val steps = listOf(
+        Triple("Foundation", "Make your first series, photograph or import it, write the statement.", "Opens Level 1: ${rules.gateWorks} finished pieces with images in one series, and an approved statement."),
+        Triple("First walls", "Free and low-fee local shows: campus, library, cafe, community centre, online.", "Opens Level 2: ${rules.gateShows1} exhibitions on your CV."),
+        Triple("Regional", "Regional juried shows with named jurors, artist-run spaces, small grants.", "Opens Level 3: ${rules.gateShows2} shows, plus an award or an invited show."),
+        Triple("Recognised", "A solo show, residencies, competitive national calls, curators who know your work.", "Opens Level 4: a solo show, plus a residency or grant."),
+        Triple("Established", "Gallery representation, museum group shows, major grants.", "")
+    )
+    Screen("Where this is going", nav) {
+        Text("Five levels, one small step at a time. You only ever need to think about the one you are on.")
+        steps.forEachIndexed { i, (name, what, opens) ->
+            Panel(strong = i == level) {
+                Text("Level $i: $name" + (if (i == level) "  ·  you are here" else if (i < level) "  ✓" else ""), fontWeight = FontWeight.SemiBold)
+                Text(what)
+                if (i == level && level < 4) { LinearProgressIndicator(progress = { gate.progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth()); Text("So far: ${gate.text}") }
+                if (opens.isNotBlank() && i >= level) Small(opens)
+            }
+        }
+        Small("Rough timing for someone with a full-time job: months for the first two levels, years for the rest. The gates decide, not the calendar. You can change the gates or set your level yourself in Settings, Your rules.")
+    }
+}
