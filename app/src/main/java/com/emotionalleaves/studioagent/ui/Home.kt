@@ -405,7 +405,9 @@ fun SessionScreen(nav: NavController) {
             // A ring that fills as time passes: the whole session visible at a glance.
             Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
                 val shown by animateFloatAsState(part, tween(900), label = "ring")
-                Canvas(Modifier.size(250.dp)) {
+                // Smaller when the phone is sideways, so the step under it stays in view.
+                val ringSize = minOf(250, (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.55f).toInt()).dp
+                Canvas(Modifier.size(ringSize)) {
                     val w = 10.dp.toPx()
                     drawArc(track, -90f, 360f, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
                     if (shown > 0f) drawArc(fill, -90f, 360f * shown, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))

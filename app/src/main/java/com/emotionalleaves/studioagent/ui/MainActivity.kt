@@ -160,7 +160,12 @@ fun Root(incoming: MutableState<Incoming?>) {
                         NavigationBarItem(
                             selected = on,
                             onClick = { nav.navigate(r) { popUpTo("home"); launchSingleTop = true } },
-                            icon = { Icon(icon, null) }, label = { Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal) },
+                            icon = { Icon(icon, null) }, label = {
+                                // Tab names grow with the phone's text size, but only so far, so they never break mid-word.
+                                val fs = androidx.compose.ui.platform.LocalDensity.current.fontScale
+                                Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = androidx.compose.ui.unit.TextUnit(13f * minOf(fs, 1.3f) / fs, androidx.compose.ui.unit.TextUnitType.Sp), maxLines = 1, softWrap = false)
+                            },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.primary, selectedTextColor = MaterialTheme.colorScheme.onSurface,
                                 indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
