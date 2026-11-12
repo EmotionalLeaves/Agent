@@ -77,7 +77,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
             "settings/ai", "Open AI settings", G.ai.ready, optional = true, link = "https://platform.claude.com/settings/keys"),
         GuideStep("facts", b, "Add your CV facts",
             "Education, any past shows or publications, skills. The CV is made only from these lines.",
-            listOf("Pick the kind of line.", "Type the year and the line.", "Tap Add line. Even two lines of education is a real CV at this stage."),
+            listOf("Pick the kind of line.", "Type the year and the line.", "Tap Add to CV. Even two lines of education is a real CV at this stage."),
             "facts", "Open CV facts", facts.isNotEmpty()),
         GuideStep("statement", b, "Get your statement and approve it",
             "Nearly every call asks for one. Once approved, the app reuses it everywhere.",

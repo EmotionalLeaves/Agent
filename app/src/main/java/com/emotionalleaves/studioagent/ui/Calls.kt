@@ -181,7 +181,7 @@ fun Calls(nav: NavController) {
                                 withContext(Dispatchers.Main) { paste.value = "" }
                             }
                         }
-                    }) { Text("Add") }
+                    }) { Text("Add this call") }
                     OutlinedButton(onClick = { scope.io { val id = dao.put(Opp(title = "New call", sourceName = "By hand", createdAt = now())); withContext(Dispatchers.Main) { nav.navigate("call/$id") } } }) { Text("By hand") }
                 }
             }
@@ -447,7 +447,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                     val x = a.copy(answers = Engine.answersJson(qa + (q to prior)), packDir = ""); a = x; dao.put(x); markSaved()
                     if (prior.isNotBlank()) status = "You answered a question like this before, so that answer is filled in. Check it still fits this call."
                 }
-            }) { Text("Add") }
+            }) { Text("Add question") }
         }
 
         StageHead(3, "Check", allGreen)
@@ -662,7 +662,7 @@ fun Sources(nav: NavController) {
         Button(enabled = name.value.isNotBlank() && value.value.isNotBlank(), onClick = {
             val s = Source(name = name.value.trim(), kind = kind, url = value.value.trim()); name.value = ""; value.value = ""
             scope.io { dao.put(s) }
-        }) { Text("Add") }
+        }) { Text("Add source") }
         Status(status)
         OutlinedButton(enabled = !busy, onClick = {
             busy = true; status = "Running the daily check..."

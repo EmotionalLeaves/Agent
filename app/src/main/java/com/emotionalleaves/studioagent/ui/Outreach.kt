@@ -163,7 +163,7 @@ fun Outreach(nav: NavController) {
             Button(enabled = subEmail.value.contains("@"), onClick = {
                 val c = Contact(name = subName.value.trim(), email = subEmail.value.trim(), kind = "subscriber", status = "subscriber", createdAt = now())
                 subName.value = ""; subEmail.value = ""; scope.io { dao.put(c) }
-            }) { Text("Add") }
+            }) { Text("Add to list") }
             if (subs.isNotEmpty()) OutlinedButton(onClick = { Share.text(ctx, subs.joinToString(", ") { it.email }) }) { Text("Copy all addresses") }
         }
     }
@@ -257,7 +257,7 @@ fun ContactScreen(nav: NavController, id: Long) {
                 if (c.status == "approved") {
                     if (st.mailReady) Panel(strong = true) {
                         Text("Approved. It goes out with the next daily run, at most ${st.outreachWeeklyCap} emails a week. The follow-up is sent for you.")
-                        TextButton(onClick = { save(c.copy(status = "drafted")) }) { Text("Take it back") }
+                        TextButton(onClick = { save(c.copy(status = "drafted")) }) { Text("Undo") }
                     } else {
                         Button(modifier = Modifier.fillMaxWidth(), onClick = { Share.email(ctx, c.email, c.draftSubject, c.draftBody) }) { Text("Open in my mail app, filled in") }
                         OutlinedButton(onClick = { save(c.copy(status = "sent", sentAt = now(), followUpAt = now() + 24 * DAY)) }) { Text("I sent it") }

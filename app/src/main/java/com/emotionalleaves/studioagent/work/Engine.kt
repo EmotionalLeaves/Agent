@@ -719,7 +719,7 @@ object Engine {
         step("notify") {
             val pend = pending()
             if (LocalDate.now().dayOfWeek == DayOfWeek.SUNDAY && pend.isNotEmpty())
-                Notifier.post(ctx, st, 100, "Admin pass", "${pend.size} things to approve, about 10 minutes.", "admin")
+                Notifier.post(ctx, st, 100, "Waiting for your yes", "${pend.size} " + (if (pend.size == 1) "thing" else "things") + ", about 10 minutes. One tap each.", "admin")
             dao.eventsNow().firstOrNull { it.type == "submit" && !it.done && it.date in (now - DAY)..(now + 2 * DAY) }?.let {
                 Notifier.post(ctx, st, 101, it.title, "This one has a deadline this week.", "appl/${it.applId}")
             }

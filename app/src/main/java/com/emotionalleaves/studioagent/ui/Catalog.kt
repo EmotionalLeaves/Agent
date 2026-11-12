@@ -249,11 +249,11 @@ fun WorkDetail(nav: NavController, id: Long) {
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (w.imagePath.isBlank()) {
-                    Button(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Photograph") }
-                    OutlinedButton(onClick = { pick.launch("image/*") }) { Text("Import file") }
+                    Button(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Take a photo") }
+                    OutlinedButton(onClick = { pick.launch("image/*") }) { Text("Bring in a file") }
                 } else {
-                    TextButton(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Retake") }
-                    TextButton(onClick = { pick.launch("image/*") }) { Text("Replace file") }
+                    TextButton(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Take it again") }
+                    TextButton(onClick = { pick.launch("image/*") }) { Text("Use another file") }
                     TextButton(onClick = { nav.navigate("crop/$id") }) { Text("Straighten and crop") }
                 }
             }

@@ -113,7 +113,7 @@ fun Records(nav: NavController) {
             Button(enabled = todo.value.isNotBlank(), onClick = {
                 val e = Evt(type = "todo", title = todo.value.trim(), date = Ai.parseDate(todoDate.value)); todo.value = ""; todoDate.value = ""
                 scope.io { dao.put(e) }
-            }) { Text("Add") }
+            }) { Text("Add to-do") }
         }
 
         H("Money")

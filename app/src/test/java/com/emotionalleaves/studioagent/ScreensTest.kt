@@ -154,7 +154,7 @@ class ScreensTest {
         shot("51_contact", "contact/${ids["contact"]}", "How realistic")
         shot("52_letters", "letters", "print lab")
         shot("53_sources", "sources", "daily check")
-        shot("54_facts", "facts", "Add line")
+        shot("54_facts", "facts", "Add to CV")
         shot("55_settings_you", "settings/you", "Sizes in")
         shot("56_settings_calm", "settings/calm", "Finished means finished")
         shot("57_sessions", "sessions", "Glaze")

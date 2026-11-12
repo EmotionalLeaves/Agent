@@ -439,18 +439,20 @@ fun SessionScreen(nav: NavController) {
                     else st.sessionPausedAt = now()
                 }) { Text(if (paused) "Resume" else "Pause") }
                 Text("Put the phone down. The timer keeps going.", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Row {
-                }
             } else {
                 H("Before you go")
                 Field("Next time, start with...", nextStep, mic = true)
-                Field("Anything to note (optional)", note, lines = 2)
-                if (photo.isNotBlank()) PathImage(photo, Modifier.fillMaxWidth().height(160.dp))
-                OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, photoFile)) } catch (e: Exception) { } }) { Text(if (photo.isBlank()) "Progress photo (optional)" else "Retake photo") }
+                // One line is all that is asked. A note or photo is there if wanted, folded away.
+                Expand("Add a note or a progress photo", startOpen = note.value.isNotBlank() || photo.isNotBlank()) {
+                    Field("Anything to note", note, lines = 2)
+                    if (photo.isNotBlank()) PathImage(photo, Modifier.fillMaxWidth().height(160.dp))
+                    OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, photoFile)) } catch (e: Exception) { } }) { Text(if (photo.isBlank()) "Take a progress photo" else "Retake photo") }
+                }
                 Button(onClick = { buzz(); finish(true) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("End and save") }
                 Row {
                     TextButton(onClick = { stopping = false }) { Text("Keep going") }
-                    TextButton(onClick = { finish(false) }) { Text("Discard this session") }
+                    Spacer(Modifier.weight(1f))
+                    DangerButton(onClick = { finish(false) }) { Text("Discard this session") }
                 }
             }
         }
@@ -467,7 +469,7 @@ fun Admin(nav: NavController) {
     LaunchedEffect(docs, appls, contacts) { withContext(Dispatchers.IO) { items = try { Engine.pending() } catch (e: Exception) { emptyList() }; loaded = true } }
     Screen("Waiting for your yes", nav) {
         Intro("admin", "Everything that needs a yes from you, in one place. One tap each. When this list is empty you are done.")
-        if (loaded && items.isEmpty()) Empty("Nothing to approve. You are done here.", "Back to Home") { nav.popBackStack() }
+        if (loaded && items.isEmpty()) Empty("Nothing to approve. You are done here.", "Back to Today") { nav.popBackStack() }
         items.forEach { p -> IconRow(if (p.route.startsWith("doc")) Icons.Default.Edit else if (p.route.startsWith("appl")) Icons.AutoMirrored.Filled.Send else Icons.Default.Done, p.title, p.detail) { nav.navigate(p.route) } }
     }
 }
@@ -585,7 +587,7 @@ fun Review(nav: NavController) {
         else if (coming.isEmpty()) Small("None planned yet. They are added with the next daily check.")
         else coming.forEach { Check(false, fmtDate(it.date) + ", ${(it.endDate - it.date) / 60000} min", small = true) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { nav.navigate("week") }) { Text("Change them") }
+            OutlinedButton(onClick = { nav.navigate("week") }) { Text("Change studio times") }
             if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("$pending to approve") }
         }
         Button(onClick = { st.lastReviewWeek = Engine.weekId(); nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Done for the week") }

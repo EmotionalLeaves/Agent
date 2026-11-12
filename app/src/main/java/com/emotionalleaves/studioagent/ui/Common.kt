@@ -142,7 +142,7 @@ fun UndoBar() {
     Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.inverseSurface)) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Removed $label", Modifier.weight(1f), color = MaterialTheme.colorScheme.inverseOnSurface)
-            TextButton(onClick = { val r = Undo.restore; Undo.clear(); if (r != null) scope.io { r() } }) { Text("Put it back", color = MaterialTheme.colorScheme.inversePrimary) }
+            TextButton(onClick = { val r = Undo.restore; Undo.clear(); if (r != null) scope.io { r() } }) { Text("Undo", color = MaterialTheme.colorScheme.inversePrimary) }
         }
     }
 }

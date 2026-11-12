@@ -78,7 +78,7 @@ fun WeekScreen(nav: NavController) {
             OutlinedButton(onClick = {
                 slots.clear(); suggested().forEachIndexed { i, s -> slots.add(EditSlot(i, s.day, s.time.toString(), s.minutes.toString())) }
                 custom = true
-            }) { Text("Change these") }
+            }) { Text("Change studio times") }
         } else {
             slots.forEach { s ->
                 key(s.id) {

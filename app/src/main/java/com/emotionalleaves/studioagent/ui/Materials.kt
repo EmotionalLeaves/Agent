@@ -197,7 +197,7 @@ fun Interview(nav: NavController) {
         Expand("Add your own question") {
             Note("Something about your work these questions miss. Your answer is used in the writing like the others.")
             Field("Your question or topic", ownQuestion)
-            OutlinedButton(enabled = ownQuestion.value.isNotBlank(), onClick = { answers["own:" + ownQuestion.value.trim().take(80)] = ""; ownQuestion.value = "" }) { Text("Add") }
+            OutlinedButton(enabled = ownQuestion.value.isNotBlank(), onClick = { answers["own:" + ownQuestion.value.trim().take(80)] = ""; ownQuestion.value = "" }) { Text("Add question") }
         }
         Status(status)
         Button(modifier = Modifier.fillMaxWidth(), onClick = {
@@ -349,7 +349,7 @@ fun Facts(nav: NavController) {
         Button(enabled = text.value.isNotBlank(), onClick = {
             val t = text.value.trim(); val old = editing; text.value = ""; editing = null
             scope.io { dao.put((old ?: Fact()).copy(category = category, year = year, text = t)) }
-        }) { Text(if (editing != null) "Save changes" else "Add line") }
+        }) { Text(if (editing != null) "Save changes" else "Add to CV") }
         if (editing != null) TextButton(onClick = { editing = null; text.value = "" }) { Text("Cancel the edit") }
         Texts.factCategories.forEach { c ->
             val lines = facts.filter { it.category == c }
