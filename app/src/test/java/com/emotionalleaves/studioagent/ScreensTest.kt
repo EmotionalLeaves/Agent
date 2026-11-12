@@ -209,4 +209,19 @@ class ScreensTest {
         File(dir, "a11y.txt").writeText(out.toString())
         org.junit.Assert.assertFalse(out.toString(), out.contains("unlabelled"))
     }
+
+    /** The largest text size Android offers, to catch anything that breaks. */
+    @Test fun hugeText() {
+        org.robolectric.RuntimeEnvironment.setFontScale(2.0f)
+        seed()
+        shot("45_huge_home", "home", "Start now")
+        shot("46_huge_session", "startnow", "Now: Block in the big shapes")
+    }
+
+    /** The phone turned sideways. */
+    @Test @Config(sdk = [34], qualifiers = "w740dp-h360dp-land-xhdpi") fun sideways() {
+        seed()
+        shot("47_land_home", "home", "Start now")
+        shot("48_land_session", "startnow", "Now: Block in the big shapes")
+    }
 }
