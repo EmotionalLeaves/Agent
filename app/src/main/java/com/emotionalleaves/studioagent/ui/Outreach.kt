@@ -92,7 +92,7 @@ fun Outreach(nav: NavController) {
             Expand("I went to one") {
                 Field("Where", openingPlace)
                 Field("Anyone you met, or anything you noticed (optional)", openingNote)
-                Button(enabled = openingPlace.value.isNotBlank(), onClick = {
+                if (openingPlace.value.isNotBlank()) Button(onClick = {
                     val place = openingPlace.value.trim(); val note = openingNote.value.trim(); openingPlace.value = ""; openingNote.value = ""
                     scope.io {
                         dao.put(Evt(type = "opening", title = place + (if (note.isNotBlank()) ": $note" else ""), date = now(), done = true))
@@ -275,7 +275,7 @@ fun ContactScreen(nav: NavController, id: Long) {
             H("Their reply")
             if (c.lastReply.isNotBlank()) Panel { Text(c.lastReply.take(600)) }
             Field("Paste their reply" + (if (st.mailReady) " (replies to your email are picked up automatically)" else ""), reply, lines = 3)
-            OutlinedButton(enabled = reply.value.isNotBlank(), onClick = { val t = reply.value; reply.value = ""; scope.io({ status = it }) { Engine.applyReply(c, t) } }) { Text("Log reply") }
+            if (reply.value.isNotBlank()) OutlinedButton(onClick = { val t = reply.value; reply.value = ""; scope.io({ status = it }) { Engine.applyReply(c, t) } }) { Text("Log reply") }
         }
         if (c.status == "interested" || c.status == "more") {
             Button(modifier = Modifier.fillMaxWidth(), onClick = {

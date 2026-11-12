@@ -142,7 +142,7 @@ fun Materials(nav: NavController) {
             Field("Name (for example: Cover letter)", newTitle)
             Field("What is it for? Who reads it? (the app writes from this)", newBrief, lines = 2)
             Whole("About how many words", newTarget) { newTarget = it }
-            Button(enabled = newTitle.value.isNotBlank(), onClick = {
+            if (newTitle.value.isNotBlank()) Button(onClick = {
                 val d = Doc(type = "custom", variant = "c${now()}", title = newTitle.value.trim(), brief = newBrief.value.trim(), target = newTarget.coerceAtLeast(20), updatedAt = now())
                 newTitle.value = ""; newBrief.value = ""
                 scope.io { val id = dao.put(d); withContext(Dispatchers.Main) { nav.navigate("doc/$id") } }
@@ -207,7 +207,7 @@ fun Interview(nav: NavController) {
         Expand("Add your own question") {
             Note("Something about your work these questions miss. Your answer is used in the writing like the others.")
             Field("Your question or topic", ownQuestion)
-            OutlinedButton(enabled = ownQuestion.value.isNotBlank(), onClick = { answers["own:" + ownQuestion.value.trim().take(80)] = ""; ownQuestion.value = "" }) { Text("Add question") }
+            if (ownQuestion.value.isNotBlank()) OutlinedButton(onClick = { answers["own:" + ownQuestion.value.trim().take(80)] = ""; ownQuestion.value = "" }) { Text("Add question") }
         }
         Status(status)
         Button(modifier = Modifier.fillMaxWidth(), onClick = {
@@ -356,7 +356,7 @@ fun Facts(nav: NavController) {
             "skill" -> "Skill or tool"
             else -> "What, where"
         }, text)
-        Button(enabled = text.value.isNotBlank(), onClick = {
+        if (text.value.isNotBlank()) Button(onClick = {
             val t = text.value.trim(); val old = editing; text.value = ""; editing = null
             scope.io { dao.put((old ?: Fact()).copy(category = category, year = year, text = t)) }
         }) { Text(if (editing != null) "Save changes" else "Add to CV") }

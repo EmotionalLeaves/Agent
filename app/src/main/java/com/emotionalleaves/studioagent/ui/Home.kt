@@ -171,7 +171,7 @@ fun Home(nav: NavController) {
         if (pinning) {
             Field("What do you want to see here instead?", pinText)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(enabled = pinText.value.isNotBlank(), onClick = { st.pinnedStep = pinText.value.trim(); pinText.value = ""; pinning = false }) { Text("Pin it") }
+                if (pinText.value.isNotBlank()) Button(onClick = { st.pinnedStep = pinText.value.trim(); pinText.value = ""; pinning = false }) { Text("Pin it") }
                 TextButton(onClick = { pinning = false }) { Text("Cancel") }
             }
         }

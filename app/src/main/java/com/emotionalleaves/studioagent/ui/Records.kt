@@ -110,7 +110,7 @@ fun Records(nav: NavController) {
         Expand("Add your own to-do") {
             Field("What needs doing", todo)
             Field("Date, if it has one (YYYY-MM-DD)", todoDate)
-            Button(enabled = todo.value.isNotBlank(), onClick = {
+            if (todo.value.isNotBlank()) Button(onClick = {
                 val e = Evt(type = "todo", title = todo.value.trim(), date = Ai.parseDate(todoDate.value)); todo.value = ""; todoDate.value = ""
                 scope.io { dao.put(e) }
             }) { Text("Add to-do") }
@@ -130,7 +130,7 @@ fun Records(nav: NavController) {
             Choice("What kind", listOf("fee", "shipping", "print", "framing", "other"), kind) { kind = it }
             Num("Amount, " + st.currency, amount) { amount = it }
             Field("What for", note)
-            Button(enabled = amount > 0, onClick = { val l = Ledger(kind = kind, amount = -amount, date = now(), note = note.value.trim()); note.value = ""; amount = 0.0; scope.io { dao.put(l) } }) { Text("Add cost") }
+            if (amount > 0) Button(onClick = { val l = Ledger(kind = kind, amount = -amount, date = now(), note = note.value.trim()); note.value = ""; amount = 0.0; scope.io { dao.put(l) } }) { Text("Add cost") }
         }
 
         Expand("Record a sale") {

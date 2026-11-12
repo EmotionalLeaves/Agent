@@ -181,7 +181,7 @@ fun Works(nav: NavController) {
                 }
             } }
             Field("New series name", newSeries)
-            Button(enabled = newSeries.value.isNotBlank(), onClick = { val n = newSeries.value.trim(); newSeries.value = ""; scope.io { dao.put(Series(name = n, createdAt = now())) } }) { Text("Add series") }
+            if (newSeries.value.isNotBlank()) Button(onClick = { val n = newSeries.value.trim(); newSeries.value = ""; scope.io { dao.put(Series(name = n, createdAt = now())) } }) { Text("Add series") }
         }
     }
 }
@@ -295,7 +295,7 @@ fun WorkDetail(nav: NavController, id: Long) {
                 }
             }
             Field("Add a small step (for example: block in the big shapes)", newStep)
-            OutlinedButton(enabled = newStep.value.isNotBlank(), onClick = { save(w.copy(steps = Texts.stepsText(steps + (false to newStep.value.trim())))); newStep.value = "" }) { Text("Add step") }
+            if (newStep.value.isNotBlank()) OutlinedButton(onClick = { save(w.copy(steps = Texts.stepsText(steps + (false to newStep.value.trim())))); newStep.value = "" }) { Text("Add step") }
 
             H("Finish line")
             Field("This piece is finished when...", w.doneWhen, { save(w.copy(doneWhen = it)) })

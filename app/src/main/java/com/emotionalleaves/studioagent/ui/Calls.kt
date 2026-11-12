@@ -166,7 +166,7 @@ fun Calls(nav: NavController) {
                 H("Add a call")
                 Field("Paste a link or the call text", paste, lines = 2)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(enabled = paste.value.isNotBlank(), onClick = {
+                    if (paste.value.isNotBlank()) Button(onClick = {
                         val t = paste.value.trim(); paste.value = ""; status = "Reading it..."
                         scope.io({ status = it }) {
                             val isUrl = t.startsWith("http") && !t.contains(" ")
@@ -442,7 +442,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                 }
             }
             Field("Add a question", newQuestion)
-            OutlinedButton(enabled = newQuestion.value.isNotBlank(), onClick = {
+            if (newQuestion.value.isNotBlank()) OutlinedButton(onClick = {
                 val q = newQuestion.value.trim(); newQuestion.value = ""
                 scope.io({ status = it }) {
                     // If you have answered this before, start from that answer instead of a blank box.
