@@ -70,7 +70,7 @@ fun WeekScreen(nav: NavController) {
                     if (i > 0) Hair()
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(dayNames[s.day - 1], Modifier.width(56.dp), style = MaterialTheme.typography.titleMedium)
-                        Text(s.time.toString(), Modifier.weight(1f))
+                        Text(s.time.format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT)), Modifier.weight(1f))
                         Text("${s.minutes} min", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -138,27 +138,13 @@ fun SessionsScreen(nav: NavController) {
     val sessions by dao.sessions().collectAsState(emptyList())
     val works by dao.artworks().collectAsState(emptyList())
     val date = remember { mutableStateOf(LocalDate.now().toString()) }
-    val minutes = rememberSaveable { mutableStateOf("") }
+    val minutes = rememberSaveable { mutableStateOf("30") }
     val note = rememberSaveable { mutableStateOf("") }
     var kind by rememberSaveable { mutableStateOf("make") }
     var workId by remember { mutableStateOf(0L) }
     val active = works.filter { it.status != "sold" }.take(12)
     fun name(id: Long) = works.firstOrNull { it.id == id }?.let { it.title.ifBlank { "Untitled #${it.id}" } }.orEmpty()
     Screen("Session history", nav) {
-        Expand("Log a session you did away from the app", startOpen = sessions.isEmpty()) {
-            Field("Date (YYYY-MM-DD)", date)
-            Field("Minutes", minutes, number = true)
-            Choice("Kind", listOf("make", "skill", "light"), kind) { kind = it }
-            if (kind == "make" && active.isNotEmpty()) Choice("Piece (optional)", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, name(workId)) { t -> workId = active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == t }?.id ?: 0L }
-            Field("Note (optional)", note)
-            Button(enabled = (minutes.value.trim().toIntOrNull() ?: 0) > 0, onClick = {
-                val day = try { LocalDate.parse(date.value.trim()) } catch (e: Exception) { LocalDate.now() }
-                val start = Engine.millis(day.atTime(12, 0)); val mins = minutes.value.trim().toIntOrNull() ?: 0
-                val s = Sess(artworkId = if (kind == "make") workId else 0L, kind = kind, start = start, end = start + mins * 60_000L, note = note.value.trim())
-                minutes.value = ""; note.value = ""
-                scope.io { dao.put(s) }
-            }) { Text("Add it") }
-        }
         if (sessions.isEmpty()) Empty("No sessions yet. Each one you finish is listed here.")
         sessions.take(60).forEach { s ->
             Panel {
@@ -168,6 +154,20 @@ fun SessionsScreen(nav: NavController) {
                 if (s.photoPath.isNotBlank()) PathImage(s.photoPath, Modifier.fillMaxWidth(), 500)
                 TextButton(onClick = { scope.remove("the session", { dao.del(s) }, { dao.put(s) }) }) { Text("Remove") }
             }
+        }
+        Expand("Log one you did away from the app") {
+            DateField("Day", date.value) { date.value = it }
+            Count("Minutes", minutes.value.toIntOrNull() ?: 30, 5, 600, 5, "min") { minutes.value = it.toString() }
+            Choice("Kind", listOf("make", "practise", "light"), if (kind == "skill") "practise" else kind) { kind = if (it == "practise") "skill" else it }
+            if (kind == "make" && active.isNotEmpty()) Choice("Piece (optional)", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, name(workId)) { t -> workId = active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == t }?.id ?: 0L }
+            Field("Note (optional)", note)
+            Button(enabled = (minutes.value.trim().toIntOrNull() ?: 0) > 0, onClick = {
+                val day = try { LocalDate.parse(date.value.trim()) } catch (e: Exception) { LocalDate.now() }
+                val start = Engine.millis(day.atTime(12, 0)); val mins = minutes.value.trim().toIntOrNull() ?: 0
+                val s = Sess(artworkId = if (kind == "make") workId else 0L, kind = kind, start = start, end = start + mins * 60_000L, note = note.value.trim())
+                note.value = ""
+                scope.io { dao.put(s) }
+            }) { Text("Add it") }
         }
     }
 }

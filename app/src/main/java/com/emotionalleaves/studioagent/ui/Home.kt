@@ -348,10 +348,15 @@ fun SessionScreen(nav: NavController) {
                     else -> "Open the file. That is the whole first step."
                 })
             }
+            // How long: the usual, or something smaller for a hard day. Five minutes still counts.
+            val usual = "${st.defaultSessionMin} min"
+            var length by rememberSaveable { mutableStateOf(if (kind == "light") "15 min" else usual) }
+            Section("How long?")
+            Choice("", listOf("5 min", "15 min", usual).distinct(), length) { length = it }
             Button(onClick = {
                 buzz()
                 st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
-                st.sessionGoalMin = if (kind == "light") 15 else st.defaultSessionMin
+                st.sessionGoalMin = length.substringBefore(" ").toIntOrNull() ?: st.defaultSessionMin
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
                 if (st.dndInSession) Notifier.dnd(ctx, true)
             }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start") }
