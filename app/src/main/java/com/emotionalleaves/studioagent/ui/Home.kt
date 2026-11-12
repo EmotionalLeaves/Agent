@@ -80,7 +80,16 @@ fun Home(nav: NavController) {
     val gate = Levels.gate(stats, rules)
     val today = LocalDate.now()
 
+    var crashed by remember { mutableStateOf(G.crashFile.exists()) }
     Screen("Studio Agent", nav, back = false) {
+        if (crashed) Panel {
+            Text("The app closed unexpectedly last time", fontWeight = FontWeight.SemiBold)
+            Text("That was the app, not you. Nothing you saved is lost. Sending the details gets it fixed.")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { Share.text(ctx, G.problemReport()) }) { Text("Send the details") }
+                TextButton(onClick = { G.crashFile.delete(); crashed = false }) { Text("Dismiss") }
+            }
+        }
         val n = next
         Panel(strong = true, onClick = { n?.let { if (it.route != "home") nav.navigate(it.route) } }) {
             Text("NEXT", style = MaterialTheme.typography.labelMedium)

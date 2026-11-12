@@ -419,6 +419,9 @@ fun SettingsScreen(nav: NavController, section: String) {
                 }) { Text("Allow calendar and notifications") }
                 OutlinedButton(onClick = { try { ctx.startActivity(Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)) } catch (e: Exception) { } }) { Text("Allow Do Not Disturb") }
                 Note("Social media: there is none in this app. No feeds, no follower counts, no sign-in.")
+                H("Something not working?")
+                Small("Version ${G.versionName()}. The report has no keys, passwords or artwork in it.")
+                OutlinedButton(onClick = { Share.text(ctx, G.problemReport()) }) { Text("Share a problem report") }
             }
             else -> Note("That settings page does not exist.")
         }
