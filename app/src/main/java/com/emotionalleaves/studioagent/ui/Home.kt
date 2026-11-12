@@ -502,16 +502,13 @@ fun ShareScreen(nav: NavController) {
                     val f = File(ctx.cacheDir, "shared.jpg")
                     if (ImageTools.copyUri(ctx, image, f)) bytes = ImageTools.jpegBytes(f.absolutePath)
                 }
-                if (!G.ai.ready) {
-                    // No AI key: read the page or text with plain pattern matching, then show it for a quick look.
-                    val body = if (isUrl) (try { "Link: $t\n" + Fetch.pageText(t) } catch (e: Exception) { "Call from link\n$t" }) else t
-                    val id = Engine.ingestPlain(if (isUrl) body.removePrefix("Link: $t\n").ifBlank { "Call from link" } + "\n" + t else body, "Shared")
+                val page = if (isUrl) (try { Fetch.pageText(t) } catch (e: Exception) { "" }) else ""
+                // Writing help reads it fully; if it is off or does not answer, the plain reader still picks out deadline, fee and link.
+                val n = if (G.ai.ready) try { Engine.ingest((if (isUrl) "Link: $t\n$page" else t).ifBlank { "See the attached picture." }, "Shared", bytes) } catch (e: Exception) { -1 } else -1
+                if (n > 0) { status = "Added $n call" + (if (n > 1) "s" else "") + ". It is in Calls."; busy = false }
+                else {
+                    val id = Engine.ingestPlain(if (isUrl) page.ifBlank { "Call from link" } + "\n" + t else t.ifBlank { "Shared call" }, "Shared")
                     withContext(Dispatchers.Main) { nav.navigate("call/$id") { popUpTo("home") } }
-                } else {
-                    val body = if (isUrl) "Link: $t\n" + Fetch.pageText(t) else t
-                    val n = Engine.ingest(body.ifBlank { "See the attached picture." }, "Shared", bytes)
-                    status = if (n > 0) "Added $n call" + (if (n > 1) "s" else "") + ". It is in Calls." else "No new call found in that."
-                    busy = false
                 }
             }
         }) { Text("Add as an open call") }

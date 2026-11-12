@@ -270,7 +270,7 @@ val sectionNames = listOf(
     Triple("rules", "Your rules", "Level, gates, fee caps, what calls you see, what matters most"),
     Triple("calm", "Focus and calm", "Fewer words, session length, locks against re-checking"),
     Triple("writing", "Writing", "Standing notes for anything the app writes"),
-    Triple("ai", "AI", "The key that lets the app write and read for you"),
+    Triple("ai", "Writing help", "Free AI that drafts and reads calls; on already"),
     Triple("email", "Email", "Let the app send and read email itself"),
     Triple("github", "GitHub", "Backup and your portfolio page"),
     Triple("backup", "Backup file", "Save or restore everything as one file"),
@@ -284,7 +284,6 @@ fun SettingsScreen(nav: NavController, section: String) {
     val tick by st.changed.collectAsState()
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
-    var provider by remember { mutableStateOf(st.aiProvider) }
     var dnd by remember { mutableStateOf(st.dndInSession) }
     var useCal by remember { mutableStateOf(st.useCalendar) }
     var showAll by remember { mutableStateOf(st.showAllLevels) }
@@ -433,29 +432,27 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Count("Rewrites before a text is called ready", st.revisionLimit, 1, 5) { st.revisionLimit = it }
             }
             "ai" -> {
-                Small("Optional. Without a key the app still works and starts every draft for you. With one, drafts read more smoothly and listing pages with many calls can be read.")
-                Choice("Provider", listOf("anthropic", "gemini", "custom"), provider) { provider = it; st.aiProvider = it }
-                Note(when (provider) {
-                    "anthropic" -> "Get a key at platform.claude.com, under Settings, API keys. It is billed separately from any chat subscription."
-                    "gemini" -> "Get a key at aistudio.google.com. Change both model names below to Gemini models."
-                    else -> "Any service that speaks the OpenAI chat format (OpenAI, OpenRouter, a server of your own). Set the address and both model names."
-                })
-                SText("API key", st.aiKey, secret = true) { st.aiKey = it }
-                if (provider == "custom") SText("Service address", st.aiBaseUrl) { st.aiBaseUrl = it }
-                Num("Stop at this much a month (estimate)", st.aiCapUsd) { st.aiCapUsd = it }
-                Small("Spent this month, roughly: ${money(G.ai.spentThisMonth())}.")
-                Expand("Advanced: model names", startOpen = provider != "anthropic") {
-                    SText("Model for writing", st.aiModelWrite) { st.aiModelWrite = it }
-                    SText("Model for reading and sorting", st.aiModelFast) { st.aiModelFast = it }
-                }
+                Small("Writing help is on and free. It drafts statements and emails and reads calls for you, using a public service that needs no account. Only the text being written is sent; nothing is kept on this phone's behalf.")
+                Toggle("Use the free writing help", st.freeAi) { st.freeAi = it }
+                Small("Now writing: ${G.ai.who()}.")
                 Button(enabled = !busy, onClick = {
-                    busy = true; status = "Testing..."
-                    scope.io({ status = "That did not work: $it"; busy = false }) {
-                        G.ai.complete("Reply with the single word OK.", "Say OK.", fast = true, maxTokens = 20)
-                        G.ai.complete("Reply with the single word OK.", "Say OK.", fast = false, maxTokens = 20)
-                        status = "The key works with both models."; busy = false
+                    busy = true; status = "Asking..."
+                    scope.io({ status = "No answer: $it"; busy = false }) {
+                        val a = G.ai.complete("Reply in five words or fewer.", "Say hello to an artist.", fast = true, maxTokens = 30)
+                        status = "It answered: \"${a.take(80)}\""; busy = false
                     }
-                }) { Text("Test the key") }
+                }) { Text("Try it") }
+                Expand("Faster and steadier: a free key of your own") {
+                    Small("The free helper can be slow when it is busy. A Google key is free too and takes a minute: sign in, tap Create API key, copy it, come back. The app works out the rest from the key itself.")
+                    OutlinedButton(onClick = { com.emotionalleaves.studioagent.sys.Share.open(ctx, "https://aistudio.google.com/apikey") }) { Text("Get a free Google key") }
+                    SText("Paste any AI key here (Google, Claude, OpenAI, Groq, OpenRouter)", st.aiKey, secret = true) { G.ai.useKey(it) }
+                    if (st.aiKey.isNotBlank()) {
+                        Small("Recognised as ${Ai.detect(st.aiKey).name}.")
+                        Num("Stop at this much a month (estimate)", st.aiCapUsd) { st.aiCapUsd = it }
+                        Small("Spent this month, roughly: ${money(G.ai.spentThisMonth())}.")
+                        TextButton(onClick = { G.ai.useKey("") }) { Text("Remove the key and go back to the free helper") }
+                    }
+                }
             }
             "email" -> {
                 Small("Optional. Without it, the app opens your mail app with everything filled in and you press Send. With it, approved emails go by themselves and replies are read for you.")

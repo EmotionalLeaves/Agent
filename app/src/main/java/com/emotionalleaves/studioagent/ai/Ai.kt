@@ -19,12 +19,56 @@ import java.util.concurrent.TimeUnit
 
 class AiException(message: String) : Exception(message)
 
-/** One swappable provider layer. Uses your own key; nothing is sent unless a key is set. */
+/**
+ * Writing help with no setup. With no key it uses a free public service that needs no account;
+ * with a key it works out the provider from the key itself, so there is nothing else to choose.
+ */
 class Ai(private val settings: Settings) {
     private val http = OkHttpClient.Builder().connectTimeout(30, TimeUnit.SECONDS).readTimeout(120, TimeUnit.SECONDS).build()
     private val json = "application/json".toMediaType()
 
-    val ready: Boolean get() = settings.aiKey.isNotBlank()
+    /** True when writing help can be used: always, unless the free helper was switched off and there is no key. */
+    val ready: Boolean get() = settings.aiKey.isNotBlank() || settings.freeAi
+
+    /** True when the help is the free public service rather than your own key. */
+    val free: Boolean get() = settings.aiKey.isBlank()
+
+    companion object {
+        data class Kind(val provider: String, val name: String, val base: String, val write: String, val fast: String)
+
+        /** Which service a key belongs to, read from how the key starts. */
+        fun detect(key: String): Kind {
+            val k = key.trim()
+            return when {
+                k.startsWith("sk-ant-") -> Kind("anthropic", "Claude", "", "claude-sonnet-5-5", "claude-haiku-5-5")
+                k.startsWith("AIza") -> Kind("gemini", "Google Gemini", "", "gemini-flash-latest", "gemini-flash-lite-latest")
+                k.startsWith("sk-or-") -> Kind("custom", "OpenRouter", "https://openrouter.ai/api/v1", "openrouter/auto", "openrouter/auto")
+                k.startsWith("gsk_") -> Kind("custom", "Groq", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", "llama-3.1-8b-instant")
+                k.startsWith("sk_") || k.startsWith("pk_") -> Kind("custom", "Pollinations", "https://gen.pollinations.ai/v1", "openai", "openai")
+                else -> Kind("custom", "OpenAI", "https://api.openai.com/v1", "gpt-5-mini", "gpt-5-nano")
+            }
+        }
+
+        /** Free services that answer with no key and no account, tried in order. */
+        val FREE = listOf(
+            Triple("https://text.pollinations.ai/openai", "openai", "Pollinations"),
+            Triple("https://api.llm7.io/v1/chat/completions", "default", "LLM7"),
+        )
+    }
+
+    /** Sets a key and everything that follows from it in one go. */
+    fun useKey(key: String) {
+        val k = key.trim()
+        settings.aiKey = k
+        if (k.isBlank()) return
+        val d = detect(k)
+        settings.aiProvider = d.provider
+        if (d.base.isNotBlank()) settings.aiBaseUrl = d.base
+        settings.aiModelWrite = d.write; settings.aiModelFast = d.fast
+    }
+
+    /** In plain words: which helper is writing for you. */
+    fun who(): String = if (free) "the free helper (no account)" else detect(settings.aiKey).name
 
     fun spentThisMonth(): Double {
         val m = YearMonth.now().toString()
@@ -40,7 +84,8 @@ class Ai(private val settings: Settings) {
 
     suspend fun complete(system: String, user: String, fast: Boolean = false, imageJpeg: ByteArray? = null, maxTokens: Int = 2000): String =
         withContext(Dispatchers.IO) {
-            if (!ready) throw AiException("Add an AI key in Settings to use this.")
+            if (!ready) throw AiException("Writing help is switched off. Turn it on in You, Writing help.")
+            if (free) return@withContext freeComplete(system, user, maxTokens, imageJpeg)
             if (spentThisMonth() >= settings.aiCapUsd) throw AiException("Monthly AI spend cap reached. Raise it in Settings if you want to continue.")
             val model = if (fast) settings.aiModelFast else settings.aiModelWrite
             when (settings.aiProvider) {
@@ -117,6 +162,29 @@ class Ai(private val settings: Settings) {
             addSpend(u?.optInt("prompt_tokens") ?: 0, u?.optInt("completion_tokens") ?: 0, fast)
             o.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message")?.optString("content").orEmpty().trim()
         }
+    }
+
+    /** The free services: short waits between tries, and a plain message if none of them answers. */
+    private fun freeComplete(system: String, user: String, maxTokens: Int, image: ByteArray?): String {
+        if (image != null) throw AiException("Reading a photo needs a key of your own. Paste the call's words instead, or add a free key in You, Writing help.")
+        var last = ""
+        for ((url, model, _) in FREE) {
+            val body = JSONObject().put("model", model).put("max_tokens", maxTokens.coerceAtMost(1500)).put("messages", JSONArray()
+                .put(JSONObject().put("role", "system").put("content", system))
+                .put(JSONObject().put("role", "user").put("content", user.take(24_000))))
+            val req = Request.Builder().url(url).header("User-Agent", "StudioAgent/1.0").post(body.toString().toRequestBody(json)).build()
+            try {
+                http.newCall(req).execute().use { r ->
+                    val text = r.body?.string().orEmpty()
+                    if (r.isSuccessful) {
+                        val answer = try { JSONObject(text).optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message")?.optString("content").orEmpty() } catch (e: Exception) { text }
+                        if (answer.isNotBlank()) return answer.trim()
+                    }
+                    last = "${r.code}"
+                }
+            } catch (e: Exception) { last = e.javaClass.simpleName }
+        }
+        throw AiException("The free writing help did not answer just now ($last). Try again in a minute; everything else works without it.")
     }
 
     private fun errorMessage(body: String): String = try {

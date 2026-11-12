@@ -23,23 +23,112 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 
-/** Reads one public page as plain text. Identifies itself, one request, no crawling. */
+/** Reads one public page as plain text. Identifies itself, asks robots.txt first, no crawling. */
 object Fetch {
-    private val http = OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build()
+    private val http = OkHttpClient.Builder().connectTimeout(20, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).followRedirects(true).build()
+    const val AGENT = "StudioAgent/1.0 (personal artist tool; reads a page at most once a day)"
 
-    fun pageText(url: String): String {
-        val req = Request.Builder().url(url).header("User-Agent", "StudioAgent/1.0 (personal artist tool; one page per day)").build()
+    /** [automatic] reads (the daily check) follow robots.txt; a page you open yourself is read like a browser would. */
+    fun html(url: String, automatic: Boolean = true): org.jsoup.nodes.Document {
+        if (automatic && !Robots.allowed(url)) throw Exception("This site asks apps not to read that page")
+        val req = Request.Builder().url(url).header("User-Agent", AGENT).header("Accept", "text/html,application/xhtml+xml").build()
         return http.newCall(req).execute().use { r ->
             if (!r.isSuccessful) throw Exception("Page returned ${r.code}")
-            val html = r.body?.string().orEmpty()
-            val doc = Jsoup.parse(html, url)
-            doc.select("script, style, nav, footer, noscript").remove()
-            val text = doc.body()?.text().orEmpty()
-            (doc.title() + "\n" + text).trim()
+            Jsoup.parse(r.body?.string().orEmpty(), r.request.url.toString())
         }
     }
 
+    fun text(doc: org.jsoup.nodes.Document): String {
+        val d = doc.clone()
+        d.select("script, style, nav, footer, noscript, header, form, iframe").remove()
+        // Keep line breaks between blocks, so the first line is a title and dates stay near their labels.
+        d.select("br, p, h1, h2, h3, h4, li, tr, div, dt, dd").forEach { it.prepend("\n") }
+        val body = d.body()?.wholeText().orEmpty().lines().map { it.trim().replace(Regex("\\s+"), " ") }.filter { it.isNotBlank() }.joinToString("\n")
+        val h1 = doc.selectFirst("h1")?.text()?.trim().orEmpty()
+        return (listOf(h1.ifBlank { doc.title() }) + body).joinToString("\n").trim()
+    }
+
+    fun pageText(url: String): String = text(html(url, automatic = false))
+
     fun htmlToText(html: String): String = Jsoup.parse(html).text()
+
+    internal fun get(url: String): String? = try {
+        http.newCall(Request.Builder().url(url).header("User-Agent", AGENT).build()).execute().use { r -> if (r.isSuccessful) r.body?.string() else null }
+    } catch (e: Exception) { null }
+}
+
+/** Honours a site's robots.txt: if it asks bots to stay out of a page, the app does not read it. */
+object Robots {
+    private val cache = mutableMapOf<String, Pair<Long, List<String>>>()
+
+    fun allowed(url: String): Boolean {
+        val u = try { java.net.URI(url) } catch (e: Exception) { return false }
+        val host = u.scheme + "://" + u.host
+        val now = System.currentTimeMillis()
+        val rules = cache[host]?.takeIf { now - it.first < 86_400_000 }?.second ?: run {
+            val txt = Fetch.get("$host/robots.txt").orEmpty()
+            val r = disallowed(txt)
+            cache[host] = now to r
+            r
+        }
+        val path = (u.rawPath ?: "/").ifBlank { "/" } + (u.rawQuery?.let { "?$it" } ?: "")
+        return rules.none { it.isNotBlank() && path.startsWith(it.removeSuffix("*").removeSuffix("$")) }
+    }
+
+    /** The Disallow lines that apply to every bot (User-agent: *) or to this app by name. */
+    fun disallowed(txt: String): List<String> {
+        val out = mutableListOf<String>()
+        var applies = false; var inAgents = false
+        txt.lines().map { it.substringBefore('#').trim() }.filter { it.isNotBlank() }.forEach { line ->
+            val key = line.substringBefore(':').trim().lowercase(); val v = line.substringAfter(':', "").trim()
+            when (key) {
+                "user-agent" -> { if (!inAgents) applies = false; inAgents = true; if (v == "*" || v.contains("studioagent", true)) applies = true }
+                "disallow" -> { inAgents = false; if (applies && v.isNotBlank()) out += v }
+                else -> inAgents = false
+            }
+        }
+        return out
+    }
+}
+
+/**
+ * Reads a listing page (many calls on one page) without AI: finds the links that look like individual calls,
+ * judged by the words and dates around each link. Each one is then opened and read on its own.
+ */
+object Listing {
+    private val callWords = Regex("call for|open call|deadline|juried|exhibition|residency|grant|competition|submission|entries|entry|apply|fellowship|prize|award|commission|festival|art fair|show", RegexOption.IGNORE_CASE)
+    private val skipWords = Regex("^(log ?in|sign ?(up|in)|register|about|contact|privacy|terms|faq|help|blog|home|cart|donate|shop|search|menu|next|previous|more|read more|learn more|view all|subscribe|newsletter|advertise|pricing|careers|jobs)$", RegexOption.IGNORE_CASE)
+    private val skipHref = Regex("facebook\\.com|instagram\\.com|twitter\\.com|x\\.com/|linkedin\\.com|youtube\\.com|tiktok\\.com|pinterest\\.com|mailto:|tel:|javascript:|#$|/login|/signin|/register|/account|/cart|/privacy|/terms|\\.(pdf|jpg|png|zip)$", RegexOption.IGNORE_CASE)
+
+    data class Link(val url: String, val text: String, val context: String, val score: Int)
+
+    fun links(doc: org.jsoup.nodes.Document, max: Int = 30): List<Link> {
+        val seen = mutableSetOf<String>()
+        val out = mutableListOf<Link>()
+        val base = try { java.net.URI(doc.location()).host.orEmpty() } catch (e: Exception) { "" }
+        for (a in doc.select("main a[href], article a[href], body a[href]")) {
+            val href = a.absUrl("href").substringBefore('#')
+            val text = a.text().trim()
+            if (href.isBlank() || !href.startsWith("http") || href in seen) continue
+            if (text.length !in 6..160 || skipWords.matches(text) || skipHref.containsMatchIn(href)) continue
+            if (a.parents().any { it.tagName() in setOf("nav", "footer", "header") }) continue
+            // The smallest block around the link that still reads like one listing.
+            var box: org.jsoup.nodes.Element = a
+            for (p in a.parents()) { if (p.text().length > 900) break; box = p; if (p.tagName() in setOf("li", "article", "tr")) break }
+            val ctx = box.text().take(900)
+            var score = 0
+            if (callWords.containsMatchIn(text)) score += 2
+            if (callWords.containsMatchIn(ctx)) score += 1
+            if (com.emotionalleaves.studioagent.domain.CallReader.dates(ctx).isNotEmpty()) score += 2
+            if (Regex("deadline|due|closes", RegexOption.IGNORE_CASE).containsMatchIn(ctx)) score += 1
+            val host = try { java.net.URI(href).host.orEmpty() } catch (e: Exception) { "" }
+            if (host == base && java.net.URI(href).path.orEmpty().length <= 1) continue
+            if (score < 3) continue
+            seen += href
+            out += Link(href, text, ctx, score)
+        }
+        return out.sortedByDescending { it.score }.take(max)
+    }
 }
 
 /** Writes files to a GitHub repo with a personal access token (backup and the portfolio page). */

@@ -128,8 +128,9 @@ fun Outreach(nav: NavController) {
                 busy = true; status = "Reading their site..."
                 scope.io({ status = it; busy = false }) {
                     val u = url.value.trim().let { if (it.startsWith("http")) it else "https://$it" }
-                    val j = G.ai.venueResearch(Fetch.pageText(u))
-                    val id = dao.put(Contact(
+                    val page = try { Fetch.pageText(u) } catch (e: Exception) { "" }
+                    val j = try { G.ai.venueResearch(page) } catch (e: Exception) { null }
+                    val id = if (j == null) dao.put(Starter.venue(u, page, now())) else dao.put(Contact(
                         venue = j.optString("venue"), name = j.optString("contact_name"), email = j.optString("email"), website = u,
                         kind = j.optString("kind").takeIf { it in contactKinds } ?: "community", acceptsSubmissions = j.optBoolean("accepts_submissions", true),
                         submissionNotes = j.optString("submission_notes"), notes = j.optString("notes"), createdAt = now()
@@ -137,7 +138,7 @@ fun Outreach(nav: NavController) {
                     status = ""; busy = false
                     withContext(Dispatchers.Main) { url.value = ""; nav.navigate("contact/$id") }
                 }
-            }) { Text("Research it") }
+            }) { Text("Look it up") }
             OutlinedButton(onClick = { scope.io { val id = dao.put(Contact(website = url.value.trim(), createdAt = now())); withContext(Dispatchers.Main) { nav.navigate("contact/$id") } } }) { Text("Add by hand") }
         }
 
@@ -227,7 +228,7 @@ fun ContactScreen(nav: NavController, id: Long) {
                     if (G.ai.ready) Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
                         busy = true; status = "Drafting..."
                         scope.io({ status = it; busy = false }) {
-                            val (subject, body, follow) = G.ai.outreach(c.venue, c.notes + "\nSubmission instructions: " + c.submissionNotes, Engine.factsText(), Engine.voice(), st.website)
+                            val (subject, body, follow) = try { G.ai.outreach(c.venue, c.notes + "\nSubmission instructions: " + c.submissionNotes, Engine.factsText(), Engine.voice(), st.website) } catch (e: Exception) { Starter.email(c) }
                             val x = c.copy(draftSubject = subject, draftBody = body, followUpBody = follow, status = "drafted"); c = x; dao.put(x); status = ""; busy = false
                         }
                     }) { Text("Draft the email and its follow-up") }

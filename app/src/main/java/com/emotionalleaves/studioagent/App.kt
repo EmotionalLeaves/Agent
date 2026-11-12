@@ -48,7 +48,7 @@ class App : Application() {
     /** Everything useful for fixing a problem, with no keys, passwords or artwork in it. */
     fun problemReport(): String = buildString {
         appendLine("Studio Agent ${versionName()}, Android ${android.os.Build.VERSION.RELEASE}, ${android.os.Build.MODEL}")
-        appendLine("AI: ${if (ai.ready) settings.aiProvider else "none"}; email: ${if (settings.mailReady) "set" else "none"}; GitHub: ${if (settings.ghReady) "set" else "none"}")
+        appendLine("AI: ${if (ai.ready) ai.who() else "off"}; email: ${if (settings.mailReady) "set" else "none"}; GitHub: ${if (settings.ghReady) "set" else "none"}")
         appendLine("Last daily check: ${settings.lastDailyStatus}")
         if (crashFile.exists()) { appendLine("Last crash:"); appendLine(crashFile.readText()) }
         appendLine("Recent activity:")

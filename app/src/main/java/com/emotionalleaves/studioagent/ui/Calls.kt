@@ -170,15 +170,13 @@ fun Calls(nav: NavController) {
                         val t = paste.value.trim(); paste.value = ""; status = "Reading it..."
                         scope.io({ status = it }) {
                             val isUrl = t.startsWith("http") && !t.contains(" ")
-                            if (!G.ai.ready) {
-                                val body = if (isUrl) (try { Fetch.pageText(t) } catch (e: Exception) { "Call from link" }) + "\n" + t else t
-                                val id = Engine.ingestPlain(body, "Pasted")
+                            val page = if (isUrl) (try { Fetch.pageText(t) } catch (e: Exception) { "" }) else ""
+                            val n = if (G.ai.ready) try { Engine.ingest(if (isUrl) "Link: $t\n$page" else t, "Pasted") } catch (e: Exception) { -1 } else -1
+                            if (n > 0) status = "Added $n. It is at the top of All."
+                            else {
+                                val id = Engine.ingestPlain(if (isUrl) page.ifBlank { "Call from link" } + "\n" + t else t, "Pasted")
                                 status = "Saved. The app picked out what it could (deadline, fee, link). Check those and fill in the rest."
-                                withContext(Dispatchers.Main) { paste.value = ""; nav.navigate("call/$id") }
-                            } else {
-                                val n = Engine.ingest(if (isUrl) "Link: $t\n" + Fetch.pageText(t) else t, "Pasted")
-                                status = if (n > 0) "Added $n." else "No new call found in that."
-                                withContext(Dispatchers.Main) { paste.value = "" }
+                                withContext(Dispatchers.Main) { nav.navigate("call/$id") }
                             }
                         }
                     }) { Text("Add this call") }
@@ -270,8 +268,8 @@ fun CallDetail(nav: NavController, id: Long) {
                 status = "Reading the page..."
                 scope.io({ status = it }) {
                     val page = Fetch.pageText(o.url)
-                    if (G.ai.ready) {
-                        val found = G.ai.extractCalls("Link: ${o.url}\n" + page, o.sourceName).firstOrNull() ?: throw Exception("Could not find a call on that page. It may load its content in a way the app cannot read; fill in the details yourself.")
+                    val found = if (G.ai.ready) try { G.ai.extractCalls("Link: ${o.url}\n" + page, o.sourceName).firstOrNull() } catch (e: Exception) { null } else null
+                    if (found != null) {
                         val merged = Engine.scored(found.copy(id = o.id, url = o.url.ifBlank { found.url }, status = o.status, createdAt = o.createdAt), p)
                         o = merged; dao.put(merged)
                     } else {
@@ -411,14 +409,16 @@ fun ApplScreen(nav: NavController, id: Long) {
         Field((if (o.statementLimit > 0) "Limit ${o.statementLimit} words. " else "") + "Edit only if this call needs it", a.statement, { save(a.copy(statement = it, packDir = "")) }, lines = 5)
         Small("${Texts.words(a.statement)} words" + (if (o.statementLimit > 0) " of ${o.statementLimit} allowed" else ""))
         Field("How these works fit this call (2 to 3 sentences)", a.themeText, { save(a.copy(themeText = it, packDir = "")) }, lines = 3)
-        if (!G.ai.ready && a.themeText.isBlank()) TextButton(onClick = {
-            save(a.copy(themeText = Starter.fit(works.filter { it.id in chosenIds }.map { it.title.ifBlank { "Untitled" } }, o, a.statement), packDir = ""))
-        }) { Text("Start it for me") }
+        val starterFit = { Starter.fit(works.filter { it.id in chosenIds }.map { it.title.ifBlank { "Untitled" } }, o, a.statement) }
+        if (!G.ai.ready && a.themeText.isBlank()) TextButton(onClick = { save(a.copy(themeText = starterFit(), packDir = "")) }) { Text("Start it for me") }
         if (G.ai.ready && a.revisions < st.revisionLimit + 1) TextButton(enabled = !busy, onClick = {
             busy = true; status = "Writing..."
             scope.io({ status = it; busy = false }) {
-                val t = G.ai.themeParagraph(o, Engine.factsText(chosenIds), Engine.voice())
-                val x = a.copy(themeText = t, revisions = a.revisions + 1, packDir = ""); a = x; dao.put(x); status = ""; busy = false
+                val t = try { G.ai.themeParagraph(o, Engine.factsText(chosenIds), Engine.voice()) } catch (e: Exception) {
+                    if (a.themeText.isNotBlank()) throw e
+                    status = "The writing help did not answer, so here is a starter to finish."; starterFit()
+                }
+                val x = a.copy(themeText = t, revisions = a.revisions + 1, packDir = ""); a = x; dao.put(x); if (status == "Writing...") status = ""; busy = false
             }
         }) { Text(if (a.themeText.isBlank()) "Write the fit paragraph for me" else "Rewrite it") }
 
@@ -432,7 +432,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                         if (G.ai.ready) TextButton(enabled = !busy, onClick = {
                             busy = true; status = "Writing..."
                             scope.io({ status = it; busy = false }) {
-                                val t = G.ai.write("an answer to this application question: $q", 120, Engine.factsText(chosenIds), Engine.voice(), "The call: ${o.title}. Theme: ${o.theme}")
+                                val t = try { G.ai.write("an answer to this application question: $q", 120, Engine.factsText(chosenIds), Engine.voice(), "The call: ${o.title}. Theme: ${o.theme}") } catch (e: Exception) { if (ans.isNotBlank()) throw e; Starter.answer(a.statement) }
                                 val x = a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to t else p }), packDir = ""); a = x; dao.put(x); status = ""; busy = false
                             }
                         }) { Text("Draft an answer") }
@@ -672,7 +672,7 @@ fun Sources(nav: NavController) {
             busy = true; status = "Running the daily check..."
             scope.io({ status = it; busy = false }) { status = Engine.runDaily(ctx); busy = false }
         }) { Text("Run the daily check now") }
-        if (!G.ai.ready) Note("Without an AI key, calls from email alerts are still read for title, deadline, fee and link. Web pages that list many calls need the key; paste single calls into Calls instead.")
+        Note("Listing pages are read once a day: the app opens each new call on the page and picks out its title, deadline and fee. Sites that ask apps to stay out are left alone.")
     }
 }
 

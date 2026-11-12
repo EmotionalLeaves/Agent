@@ -123,6 +123,8 @@ class Settings(ctx: Context) {
 
     // AI
     var aiProvider by S("aiProvider", "anthropic")
+    /** Use the free, no-account writing help when there is no key of your own. */
+    var freeAi by B("freeAi", true)
     var aiKey by S("aiKey", "", true)
     var aiModelWrite by S("aiModelWrite", "claude-sonnet-5-5")
     var aiModelFast by S("aiModelFast", "claude-haiku-5-5")

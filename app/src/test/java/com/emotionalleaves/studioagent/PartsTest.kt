@@ -105,7 +105,13 @@ class PartsTest {
             listOf(Papers.cv(ctx, s, facts), Papers.portfolio(ctx, s, works, "A statement.", 5), Papers.imageList(ctx, s, works, true),
                 Papers.labels(ctx, s, works), Papers.certificate(ctx, s, works[0], 2), Papers.billOfSale(ctx, s, works[0], "Sam Buyer", 1300.0, 1),
                 Papers.proposal(ctx, s, "Riverside Gallery", "Night", "A statement.", "A bio.", works))
-        } catch (e: Throwable) { org.junit.Assume.assumeTrue("PDF drawing is not available off a phone: $e", false); return }
+        } catch (e: Throwable) {
+            File("build/screens").apply { mkdirs() }.resolve("pdf_skipped.txt").writeText(e.toString() + "\n" + e.stackTrace.take(8).joinToString("\n"))
+            org.junit.Assume.assumeTrue("PDF drawing is not available off a phone: $e", false); return
+        }
+        // Kept with the screenshots so the pages can be looked at.
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        files.forEach { it.copyTo(File(docs, it.name), overwrite = true) }
         assertEquals(listOf("Leaves_CV.pdf", "Leaves_Portfolio.pdf", "Leaves_Price_list.pdf", "Leaves_Wall_labels.pdf", "Leaves_Certificate_Piece1_2.pdf", "Leaves_Bill_of_sale_Piece1.pdf", "Leaves_Proposal_RiversideGallery.pdf"), files.map { it.name })
         files.forEach { f -> assertTrue(f.name, f.length() > 300 && String(f.readBytes().copyOf(5)) == "%PDF-") }
     }

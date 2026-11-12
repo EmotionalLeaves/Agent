@@ -331,7 +331,7 @@ fun DocScreen(nav: NavController, id: Long) {
                     }
                 }) { Text(if (G.ai.ready) "Or build it from my own answers, no AI" else "Build it from my interview answers") }
             }
-            if (!G.ai.ready) Note("No AI key is needed for this. With one, the app writes a smoother draft.")
+            Note("Building from your answers uses your exact words and needs no internet.")
         }
         if (d.type == "custom") DangerButton(onClick = { scope.remove(d.title.ifBlank { "the document" }, { dao.del(d) }, { dao.put(d) }); nav.popBackStack() }) { Text("Delete this document") }
     }

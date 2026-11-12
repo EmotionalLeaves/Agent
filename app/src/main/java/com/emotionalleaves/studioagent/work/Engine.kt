@@ -715,6 +715,46 @@ object Engine {
         return NextStep("Start a session", "Nothing else needs you today.", "session")
     }
 
+    // ------------------------------------------------------------ finding calls
+
+    /**
+     * Reads each listing page once: finds the links that look like single calls, opens up to [perSource] new ones,
+     * and reads each for title, deadline, fee and the rest. Works without AI; with AI the reading is fuller.
+     */
+    suspend fun scanSources(now: Long, perSource: Int = 6): Int = withContext(Dispatchers.IO) {
+        var total = 0
+        val known = dao.oppsNow().map { it.url }.filter { it.isNotBlank() }.toMutableSet()
+        for (s in dao.sourcesNow().filter { it.kind == "url" && it.enabled && it.url.isNotBlank() }) {
+            val status = try {
+                val doc = Fetch.html(s.url)
+                val links = com.emotionalleaves.studioagent.net.Listing.links(doc).filter { it.url !in known }
+                var added = 0
+                for (l in links.take(perSource)) {
+                    known += l.url
+                    val text = try { "Link: ${l.url}\n" + Fetch.text(Fetch.html(l.url)) } catch (e: Exception) { continue }
+                    added += readCall(text, s.name, l.text, l.url, now)
+                }
+                if (links.isEmpty() && Fetch.text(doc).length < 400) "The page shows almost nothing without a browser, so it cannot be read"
+                else if (added == 0) "Looked; nothing new" else "Added $added " + (if (added == 1) "call" else "calls")
+            } catch (e: Exception) { "Could not read: ${com.emotionalleaves.studioagent.ui.plainError(e)}" }
+            total += Regex("Added (\\d+)").find(status)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+            dao.put(s.copy(lastFetched = now, lastStatus = status))
+        }
+        total
+    }
+
+    /** One call's page text into the list. AI reads it when it can; the plain reader always works. Skips calls already closed. */
+    private suspend fun readCall(text: String, sourceName: String, linkText: String, url: String, now: Long): Int {
+        if (ai.ready) try { return ingest(text, sourceName) } catch (e: Exception) { }
+        val o = com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, now)
+        if (o.deadline in 1 until now) return 0
+        val looksLikeCall = o.deadline > 0 || Regex("open call|call for|submission|apply", RegexOption.IGNORE_CASE).containsMatchIn(text.take(3000))
+        if (!looksLikeCall) return 0
+        // The page heading is usually the best title; the link's own words stand in when the heading is missing or generic.
+        val title = if (o.title == "Shared call" || o.title.length >= 90 || o.title.startsWith("Link:") || linkText.length in 12..90 && o.title.length < 8) linkText else o.title
+        return addCalls(listOf(o.copy(title = title.take(90), url = url, dedupeKey = Texts.dedupeKey("", o.deadline, title))))
+    }
+
     // ------------------------------------------------------------ the daily run
 
     suspend fun runDaily(ctx: Context): String {
@@ -725,15 +765,7 @@ object Engine {
         }
         step("expire") { dao.oppsNow().filter { it.status in setOf("new", "later") && it.deadline in 1..now }.forEach { dao.put(it.copy(status = "expired")) } }
         step("plan week") { planWeek(ctx) }
-        step("sources") {
-            if (ai.ready) dao.sourcesNow().filter { it.kind == "url" && it.enabled && it.url.isNotBlank() }.forEach { s ->
-                val status = try {
-                    val text = withContext(Dispatchers.IO) { Fetch.pageText(s.url) }
-                    if (text.length < 400) "Page had almost no readable text (it may load its content with scripts)" else "Added ${ingest(text, s.name)} calls"
-                } catch (e: Exception) { "Could not read: ${com.emotionalleaves.studioagent.ui.plainError(e)}" }
-                dao.put(s.copy(lastFetched = now, lastStatus = status))
-            }
-        }
+        step("sources") { scanSources(now) }
         step("email") { withContext(Dispatchers.IO) { checkMail(ctx) } }
         step("outreach") { withContext(Dispatchers.IO) { sendOutreach(now) } }
         step("rescore") { rescore() }
