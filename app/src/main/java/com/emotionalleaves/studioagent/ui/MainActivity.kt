@@ -112,7 +112,7 @@ fun tabFor(route: String, tabs: List<String>): String {
         "home", "session", "done", "admin", "week", "sessions", "review", "share" -> "home"
         "works", "work", "crop", "ideas" -> "works"
         "calls", "call", "appl", "web", "sources" -> "calls"
-        "outreach", "contact", "letters" -> "outreach"
+        "outreach", "contact", "letters" -> "more"
         else -> "more"
     }
     return if (home in tabs) home else "more"
@@ -142,10 +142,10 @@ fun Root(incoming: MutableState<Incoming?>) {
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route.orEmpty()
     val tick by st.changed.collectAsState()
-    // Five places, always the same, each named for what is in it.
+    // Four places, always the same, each named for what is in it.
     val tabs = listOf(
         Triple("home", "Today", Icons.Default.Home), Triple("works", "Studio", Icons.Default.Create), Triple("calls", "Calls", Icons.Default.Search),
-        Triple("outreach", "People", Icons.Default.Person), Triple("more", "You", Icons.Default.AccountCircle)
+        Triple("more", "You", Icons.Default.AccountCircle)
     )
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),

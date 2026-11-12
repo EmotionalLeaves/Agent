@@ -95,9 +95,9 @@ class AppTest {
             "works" to "Add a piece", "ideas" to "Nothing parked", "materials" to "Your own documents", "interview" to "Save answers", "facts" to "Year",
             "calls" to "Add a call", "sources" to "Run the daily check now", "outreach" to "Your email list", "records" to "Quarterly report",
             "settings" to "Your rules", "settings/you" to "Sizes in", "settings/hours" to "Your studio times themselves", "settings/rules" to "What matters most when ranking",
-            "settings/writing" to "Standing notes", "settings/ai" to "Test the key", "settings/email" to "App password",
+            "settings/writing" to "Standing notes", "settings/ai" to "Use the free writing help", "settings/email" to "App password",
             "settings/github" to "Back up to GitHub now", "settings/backup" to "Choose a backup folder", "settings/permissions" to "Allow Do Not Disturb",
-            "guide" to "Take the tour", "receipts" to "What the app did on its own", "settings/calm" to "Finished means finished", "done" to "It is all stored", "week" to "Change studio times", "sessions" to "No sessions yet", "more" to "Plain answers", "share" to "Park as an idea"
+            "guide" to "Take the tour", "receipts" to "What the app did on its own", "settings/calm" to "Finished means finished", "done" to "It is all stored", "week" to "Change studio times", "sessions" to "No sessions yet", "more" to "People and venues", "share" to "Park as an idea"
         ).forEach { (route, expect) -> opens(route, expect) }
     }
 

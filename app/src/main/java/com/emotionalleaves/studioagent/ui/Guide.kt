@@ -68,7 +68,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
 
         GuideStep("print", a, "Get one piece printed and framed",
             "This is the moment digital work becomes something that can hang. The app walks each step and tells you what to ask for.",
-            listOf("Open a finished piece in Studio.", "Open Getting it printed.", "Do only the highlighted step, then tap Done.", "Ready-made emails (in People) has the message to send a print lab."),
+            listOf("Open a finished piece in Studio.", "Open Getting it printed.", "Do only the highlighted step, then tap Done.", "Ready-made emails (in You, People and venues) has the message to send a print lab."),
             "works", "Open Studio", works.any { it.printStage >= 5 } || m("print"), optional = true, manual = true),
         GuideStep("facts", b, "Add your CV facts",
             "Education, any past shows or publications, skills. The CV is made only from these lines.",
@@ -156,6 +156,7 @@ fun Guide(nav: NavController) {
                 }
             }
         }
+        Expand("Where this is going: the five levels") { LevelsBody() }
     }
 }
 
@@ -175,20 +176,29 @@ val basics = listOf(
     "What is an artist CV?" to "A plain list of your education, exhibitions, awards and similar. A short one is completely normal when you start. The app adds a line each time you get into something.",
     "What happens if I get in?" to "You deliver or ship the framed work by a date, it hangs for a few weeks, and you collect whatever does not sell. Venues usually keep a share of any sale, called commission. The app turns the acceptance into a checklist.",
     "What if I am not chosen?" to "That is the usual result for everyone, including artists who show a lot. It is not a verdict on the work. The app frees the pieces for the next call and does not make you go over it.",
-    "What are the levels in this app?" to "A way to keep the next step small. Level 0 is making your first series. Each level opens slightly bigger opportunities. You can ignore them, or set your level yourself in You, Your rules, Your rules."
+    "What are the levels in this app?" to "A way to keep the next step small. Level 0 is making your first series. Each level opens slightly bigger opportunities. You can ignore them, or set your level yourself in You, Settings, Your rules."
 )
 
+/** Everything about the app itself in one place: the tour, plain answers, and what the app is. */
 @Composable
 fun Basics(nav: NavController) {
-    Screen("Plain answers", nav) {
-        Intro("basics", "Tap any question. None of this is a test, and you can use the whole app without reading it.")
+    Screen("Help", nav) {
+        OutlinedButton(onClick = { nav.navigate("tour") }, modifier = Modifier.fillMaxWidth()) { Text("Take the two-minute tour again") }
+        Section("Plain answers")
+        Small("Tap any question. None of this is a test, and you can use the whole app without reading it.")
         basics.forEach { (q, a) -> Expand(q) { Text(a) } }
+        Section("About this app")
+        AboutBody()
     }
 }
 
 
 @Composable
-fun PathScreen(nav: NavController) {
+fun PathScreen(nav: NavController) = Guide(nav)
+
+/** The five levels as one timeline, with the gate to the next one. Shown folded at the foot of the Guide. */
+@Composable
+fun LevelsBody() {
     val works by dao.artworks().collectAsState(emptyList())
     val docs by dao.docs().collectAsState(emptyList())
     val facts by dao.facts().collectAsState(emptyList())
@@ -203,8 +213,8 @@ fun PathScreen(nav: NavController) {
         Triple("Recognised", "A solo show, residencies, competitive national calls, curators who know your work.", "Opens Level 4: a solo show, plus a residency or grant."),
         Triple("Established", "Gallery representation, museum group shows, major grants.", "")
     )
-    Screen("Where this is going", nav) {
-        Intro("path", "Five levels, one small step at a time. You only ever need to think about the one you are on.")
+    run {
+        Small("Five levels, one small step at a time. You only ever need to think about the one you are on.")
         Column {
             steps.forEachIndexed { i, (name, what, opens) ->
                 Timeline(i < level, current = i == level, last = i == steps.lastIndex) {
@@ -220,6 +230,6 @@ fun PathScreen(nav: NavController) {
                 }
             }
         }
-        Small("Rough timing for someone with a full-time job: months for the first two levels, years for the rest. The gates decide, not the calendar. You can change the gates or set your level yourself in You, Your rules, Your rules.")
+        Small("Rough timing for someone with a full-time job: months for the first two levels, years for the rest. The gates decide, not the calendar. You can change the gates or set your level yourself in Settings, Your rules.")
     }
 }

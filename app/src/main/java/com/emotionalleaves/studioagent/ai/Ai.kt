@@ -61,7 +61,7 @@ class Ai(private val settings: Settings) {
 
     suspend fun complete(system: String, user: String, fast: Boolean = false, imageJpeg: ByteArray? = null, maxTokens: Int = 2000): String =
         withContext(Dispatchers.IO) {
-            if (!ready) throw AiException("Writing help is switched off. Turn it on in You, Writing help.")
+            if (!ready) throw AiException("Writing help is switched off. Turn it on in You, Settings, Writing help.")
             if (free) return@withContext freeComplete(system, user, maxTokens, imageJpeg)
             if (spentThisMonth() >= settings.aiCapUsd) throw AiException("Monthly AI spend cap reached. Raise it in Settings if you want to continue.")
             val model = if (fast) settings.aiModelFast else settings.aiModelWrite
@@ -143,7 +143,7 @@ class Ai(private val settings: Settings) {
 
     /** The free services: short waits between tries, and a plain message if none of them answers. */
     private fun freeComplete(system: String, user: String, maxTokens: Int, image: ByteArray?): String {
-        if (image != null) throw AiException("Reading a photo needs a key of your own. Paste the call's words instead, or add a free key in You, Writing help.")
+        if (image != null) throw AiException("Reading a photo needs a key of your own. Paste the call's words instead, or add a free key in You, Settings, Writing help.")
         var last = ""
         for ((url, model, _) in FREE) {
             val body = JSONObject().put("model", model).put("max_tokens", maxTokens.coerceAtMost(1500)).put("messages", JSONArray()

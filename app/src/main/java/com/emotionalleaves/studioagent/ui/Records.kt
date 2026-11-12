@@ -88,8 +88,8 @@ fun Records(nav: NavController) {
     val todo = rememberSaveable { mutableStateOf("") }
     val todoDate = rememberSaveable { mutableStateOf("") }
 
-    Screen("To-dos and money", nav) {
-        Intro("records", "The paperwork drawer: what is left to do for shows you got into, your own to-dos, money in and out, and a report once a quarter. Nothing here needs checking daily.")
+    Screen("Records", nav) {
+        Intro("records", "The paperwork drawer: what is left to do for shows you got into, your own to-dos, money in and out, a report once a quarter, and proof of everything sent. Nothing here needs checking daily.")
         val tasks = events.filter { (it.type == "task" || it.type == "todo") && !it.done }
         H("To do")
         if (tasks.isEmpty()) Empty("Nothing open. When you get into a show, its delivery and pick-up steps appear here by themselves.")
@@ -209,19 +209,22 @@ fun Records(nav: NavController) {
         }
         val learned = st.noReasonCounts()
         if (learned.isNotEmpty()) Note("The ranking has learned from your No answers: " + learned.entries.joinToString(", ") { "${it.key} ×${it.value}" })
+        ReceiptsBody()
     }
 }
 
 /** One page that answers "did it send?" and "what has the app been doing?" so neither needs checking twice. */
 @Composable
-fun Receipts(nav: NavController) {
+fun Receipts(nav: NavController) = Records(nav)
+
+@Composable
+fun ReceiptsBody() {
     val appls by dao.appls().collectAsState(emptyList())
     val opps by dao.opps().collectAsState(emptyList())
     val contacts by dao.contacts().collectAsState(emptyList())
     val tick by st.changed.collectAsState()
-    Screen("Receipts", nav) {
-        Intro("receipts", "If you ever wonder whether something really went out, the answer is here, with the time. One look is enough; this list does not change behind your back.")
-        H("Sent")
+    run {
+        Section("Sent, with proof")
         val sent = appls.filter { it.submittedAt > 0 }.map { Triple(it.submittedAt, "Application: " + (opps.firstOrNull { o -> o.id == it.oppId }?.title ?: "call"), it.proofText) } +
             contacts.filter { it.sentAt > 0 }.map { Triple(it.sentAt, "Email to " + it.venue.ifBlank { it.email }, if (it.status == "followed_up") "Follow-up sent too. Nothing more will go to them." else "") }
         if (sent.isEmpty()) Empty("Nothing sent yet. Each application and email you send is listed here with proof, so you never need to check twice.")
@@ -235,10 +238,11 @@ fun Receipts(nav: NavController) {
                 }
             }
         }
-        H("What the app did on its own")
-        val lines = if (tick >= 0) st.activityLines() else emptyList()
-        if (lines.isEmpty()) Empty("Nothing yet. The daily check runs once a day when the phone is online.")
-        lines.take(40).forEach { (at, text) -> Small(fmtDate(at) + ", " + clock(at) + ": " + text) }
+        Expand("What the app did on its own") {
+            val lines = if (tick >= 0) st.activityLines() else emptyList()
+            if (lines.isEmpty()) Empty("Nothing yet. The daily check runs once a day when the phone is online.")
+            lines.take(40).forEach { (at, text) -> Small(fmtDate(at) + ", " + clock(at) + ": " + text) }
+        }
     }
 }
 
@@ -422,8 +426,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 H("Finished means finished")
                 Toggle("Lock texts once I approve them", lockApproved) { lockApproved = it; st.lockApproved = it }
                 Count("Rewrites before a text is called ready", st.revisionLimit, 1, 5) { st.revisionLimit = it }
-                Small("Sent applications lock on their own. Every editing screen shows the time it last saved, and Receipts lists everything that went out.")
-                OutlinedButton(onClick = { nav.navigate("receipts") }) { Text("Open Receipts") }
+                Small("Sent applications lock on their own. Every editing screen shows the time it last saved, and Records lists everything that went out.")
             }
             "writing" -> {
                 Intro("writing", "These apply to everything the app writes for you: statements, bios, emails, answers.")

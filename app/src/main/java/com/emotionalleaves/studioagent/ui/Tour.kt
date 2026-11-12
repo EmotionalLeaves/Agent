@@ -51,7 +51,7 @@ import kotlinx.coroutines.launch
 /**
  * The first thing a new install shows: how the app works, one idea per page, with a picture of the real screen.
  * It ends by starting the app straight away. Nothing has to be filled in; a name is optional.
- * Open it again any time from You, The tour.
+ * Open it again any time from You, Help.
  */
 private class TourPage(val title: String, val text: String, val picture: @Composable () -> Unit)
 

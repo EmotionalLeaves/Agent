@@ -69,7 +69,7 @@ fun Outreach(nav: NavController) {
     val subEmail = rememberSaveable { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
-    Screen("People", nav, back = false) {
+    Screen("People and venues", nav) {
         Intro("people", "Venues and people worth knowing, and what has passed between you. The app drafts short, personal emails and remembers to follow up once. Nothing is sent without your yes.")
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Small("At level $level")

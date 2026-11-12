@@ -360,7 +360,7 @@ fun SessionScreen(nav: NavController) {
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
                 if (st.dndInSession) Notifier.dnd(ctx, true)
             }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start") }
-            if (st.dndInSession && !Notifier.dndGranted(ctx)) Small("Want the phone silenced during sessions? Allow it in You, Permissions.")
+            if (st.dndInSession && !Notifier.dndGranted(ctx)) Small("Want the phone silenced during sessions? Allow it in You, Settings, Permissions.")
         }
     } else {
         var nowMs by remember { mutableStateOf(now()) }
@@ -530,20 +530,12 @@ fun ShareScreen(nav: NavController) {
 @Composable
 fun More(nav: NavController) {
     Screen("You", nav, back = false) {
-        Section("Your words")
         IconRow(Icons.Default.Edit, "Statement, bio and CV", "Written from your own answers; nothing made up") { nav.navigate("materials") }
-        Section("Progress")
-        IconRow(Icons.Default.CheckCircle, "Guide", "Set-up steps, one at a time") { nav.navigate("guide") }
-        IconRow(Icons.Default.Star, "Where this is going", "The five levels and the next small step") { nav.navigate("path") }
-        Section("Records")
-        IconRow(Icons.Default.AccountBox, "To-dos and money", "Delivery steps, costs, sales, reports") { nav.navigate("records") }
-        IconRow(Icons.AutoMirrored.Filled.List, "Receipts", "Everything sent, with proof") { nav.navigate("receipts") }
-        Section("Settings")
-        sectionNames.forEach { (id, title, sub) -> IconRow(sectionIcons.getValue(id), title, sub) { nav.navigate("settings/$id") } }
-        Section("Help")
-        IconRow(Icons.Default.PlayArrow, "The tour", "How it all fits, in two minutes") { nav.navigate("tour") }
-        IconRow(Icons.Default.Info, "Plain answers", "What the art-world words mean") { nav.navigate("basics") }
-        IconRow(Icons.Default.Info, "About this app", "Version, privacy, credits") { nav.navigate("about") }
+        IconRow(Icons.Default.Person, "People and venues", "Places to show, and emails to them") { nav.navigate("outreach") }
+        IconRow(Icons.Default.CheckCircle, "Guide", "Set-up steps one at a time, and the five levels") { nav.navigate("guide") }
+        IconRow(Icons.Default.AccountBox, "Records", "To-dos, money, sales, and proof of what was sent") { nav.navigate("records") }
+        IconRow(Icons.Default.Settings, "Settings", "Your details, hours, rules, writing help, email, backup") { nav.navigate("settings") }
+        IconRow(Icons.Default.Info, "Help", "The tour, plain answers, about this app") { nav.navigate("basics") }
     }
 }
 

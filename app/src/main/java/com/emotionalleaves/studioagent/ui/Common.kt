@@ -130,7 +130,7 @@ fun plainError(e: Throwable): String {
     return when {
         e is java.net.UnknownHostException || e is java.net.ConnectException || m.contains("Unable to resolve host") -> "No internet connection right now. Nothing was lost; try again when you are online."
         e is java.net.SocketTimeoutException || m.contains("timeout", true) -> "The other end took too long to answer. Try again in a minute."
-        m.contains("401") || m.contains("403") || m.contains("invalid x-api-key", true) || m.contains("authentication", true) -> "The key or password was not accepted. Check it in You, under AI or Email."
+        m.contains("401") || m.contains("403") || m.contains("invalid x-api-key", true) || m.contains("authentication", true) -> "The key or password was not accepted. Check it in You, Settings, under Writing help or Email."
         m.contains("429") || m.contains("rate limit", true) -> "The service is busy. Try again in a few minutes."
         e is javax.net.ssl.SSLException -> "A secure connection could not be made. Try again on another network."
         m.isBlank() || m.startsWith("java.") || m.startsWith("kotlin.") || m.length > 220 -> "Something went wrong. Nothing was lost; try again."
