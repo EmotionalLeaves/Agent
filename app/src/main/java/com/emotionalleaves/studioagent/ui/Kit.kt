@@ -292,8 +292,8 @@ fun IconRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String
                 Icon(icon, null, Modifier.size(20.dp), tint = cs.onSecondaryContainer)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, style = MaterialTheme.typography.titleSmall)
-                if (sub.isNotBlank()) Text(sub, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                if (sub.isNotBlank()) Text(sub, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = cs.outline)
         }

@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.Icons
@@ -373,7 +375,9 @@ fun Facts(nav: NavController) {
 fun DocRow(label: String, text: String, approved: Boolean, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column {
-        Row(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }.heightIn(min = 56.dp).padding(vertical = 10.dp),
+        Row(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }
+            .semantics(mergeDescendants = true) { stateDescription = if (approved) "approved" else if (text.isNotBlank()) "draft waiting for you" else "not written" }
+            .heightIn(min = 56.dp).padding(vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Mark(approved, current = !approved && text.isNotBlank())
             Column(Modifier.weight(1f)) {

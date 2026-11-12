@@ -531,7 +531,7 @@ fun WorkTile(w: Artwork, seriesName: String, focus: Boolean, onClick: () -> Unit
             if (focus) TapeStrip(Modifier.align(Alignment.TopCenter).offset(y = (-6).dp), 2f)
         }
         Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleMedium, maxLines = 2)
+            Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             val facts = listOfNotNull(w.year.takeIf { it > 0 }?.toString(), if (w.widthIn > 0 && w.heightIn > 0) Texts.dims(w.widthIn, w.heightIn) else null)
             if (facts.isNotEmpty()) Small(facts.joinToString(", "))
             Text(statusWords(w.status) + (if (seriesName.isNotBlank()) ", $seriesName" else ""), style = MaterialTheme.typography.labelMedium,

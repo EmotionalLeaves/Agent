@@ -77,6 +77,8 @@ fun Tour(nav: NavController) {
     }
     val buzz = rememberBuzz()
     val last = pager.currentPage == pages.lastIndex
+    // The back gesture turns back a page before it leaves the tour.
+    androidx.activity.compose.BackHandler(enabled = pager.currentPage > 0) { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } }
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).imePadding().padding(horizontal = 24.dp, vertical = 16.dp)) {
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("${pager.currentPage + 1} of ${pages.size}", Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

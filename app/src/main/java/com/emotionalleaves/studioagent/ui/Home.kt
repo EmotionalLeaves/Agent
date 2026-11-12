@@ -440,6 +440,8 @@ fun SessionScreen(nav: NavController) {
                 }) { Text(if (paused) "Resume" else "Pause") }
                 Text("Put the phone down. The timer keeps going.", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
+                // Back here means "not yet", not "leave".
+                BackHandler { stopping = false }
                 H("Before you go")
                 Field("Next time, start with...", nextStep, mic = true)
                 // One line is all that is asked. A note or photo is there if wanted, folded away.

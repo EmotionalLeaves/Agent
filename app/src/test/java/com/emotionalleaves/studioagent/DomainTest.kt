@@ -230,4 +230,25 @@ class DomainTest {
         val b = Texts.dedupeKey("riverside arts center", 1_800_000_000_000L + 3600_000, "WINTER OPEN - small works 2026")
         assertEquals(a, b)
     }
+
+    @Test fun errorsReadAsPlainWords() {
+        val off = com.emotionalleaves.studioagent.ui.plainError(java.net.UnknownHostException("Unable to resolve host \"api.anthropic.com\""))
+        assertTrue(off.startsWith("No internet connection"))
+        val slow = com.emotionalleaves.studioagent.ui.plainError(java.net.SocketTimeoutException("timeout"))
+        assertTrue(slow.contains("too long"))
+        val key = com.emotionalleaves.studioagent.ui.plainError(Exception("HTTP 401: invalid x-api-key"))
+        assertTrue(key.contains("not accepted"))
+        val raw = com.emotionalleaves.studioagent.ui.plainError(IllegalStateException("java.lang.IllegalStateException: closed"))
+        assertTrue(raw.startsWith("Something went wrong"))
+        assertEquals("Could not find a call on that page.", com.emotionalleaves.studioagent.ui.plainError(Exception("Could not find a call on that page.")))
+    }
+
+    @Test fun starterDraftsLeaveBlanks() {
+        val o = com.emotionalleaves.studioagent.data.Opp(title = "Winter Open", theme = "night")
+        val fit = com.emotionalleaves.studioagent.ui.Starter.fit(listOf("Night Shift", "Walk-in Cooler"), o, "I draw the kitchen at five. The light is blue.")
+        assertTrue(fit.contains("\"Night Shift\" and \"Walk-in Cooler\" belong together."))
+        assertTrue(fit.contains("I draw the kitchen at five."))
+        assertTrue(fit.contains("["))
+        assertEquals("[Your answer, in a sentence or two]", com.emotionalleaves.studioagent.ui.Starter.answer(""))
+    }
 }
