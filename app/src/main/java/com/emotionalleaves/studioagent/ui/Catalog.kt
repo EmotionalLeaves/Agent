@@ -192,7 +192,11 @@ fun WorkDetail(nav: NavController, id: Long) {
         Note("Photographing: daylight from the side, no flash, the work flat against a wall, phone parallel to it. A grey card in one corner helps the colour.")
         Status(status)
         if (w.imagePath.isNotBlank() && (w.status == "in_progress" || w.status == "finished"))
-            Button(onClick = { save(w.copy(status = "documented")) }, modifier = Modifier.fillMaxWidth()) { Text("Finished and documented") }
+            Button(onClick = {
+                val (filledWork, filled) = Engine.fillBlanks(w.copy(status = "documented"))
+                save(filledWork)
+                status = if (filled.isEmpty()) "Documented ✓. It can now go to calls." else "Documented ✓. Filled in for you: " + filled.joinToString(", ") + ". Change any of it whenever you like; reopen the piece to see it in the boxes."
+            }, modifier = Modifier.fillMaxWidth()) { Text("Finished and documented") }
         SavedLine()
 
         if (w.status == "in_progress") {

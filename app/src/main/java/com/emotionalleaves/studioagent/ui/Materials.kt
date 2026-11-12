@@ -45,6 +45,17 @@ val interviewQuestions = listOf(
     "words" to "Two or three sentences about your work, the way you would say them to a friend."
 )
 
+/** A sentence to finish, for when a question feels too big to answer cold. */
+val interviewStarters = mapOf(
+    "what" to "Try: \"They are pictures of ___, made with ___, about this big.\" Describing one piece is enough.",
+    "why" to "Try: \"I keep coming back to ___ because ___.\" \"I do not know yet, but I notice I always draw ___\" is a real answer.",
+    "how" to "Try: \"I start by ___, then ___, and I know it is done when ___.\"",
+    "looking" to "Anything counts: a game, a show, a street, a person at work. \"Nothing in particular\" is fine too.",
+    "background" to "Try: \"I grew up in ___. I learned to make things by ___. My day job is ___ and it shows up in the work as ___.\"",
+    "viewer" to "Try: \"I want someone to stop and notice ___.\" Or just say what you feel when it works.",
+    "words" to "Say it out loud the way you would to a co-worker, then tap Speak instead and say it again."
+)
+
 /** type, variant, label, word target */
 private val docSlots = listOf(
     listOf("statement", "50", "Statement, 50 words"), listOf("statement", "150", "Statement, 150 words"),
@@ -163,7 +174,10 @@ fun Interview(nav: NavController) {
     Screen("Interview", nav) {
         Note("About 10 minutes, once. Talk or type. Rough is good: your own words are what make the writing sound like you. You can stop and come back.")
         interviewQuestions.forEach { (k, q) ->
-            key(k) { Field(q, answers[k].orEmpty(), { answers[k] = it }, lines = 3, mic = true) }
+            key(k) {
+                Field(q, answers[k].orEmpty(), { answers[k] = it }, lines = 3, mic = true)
+                interviewStarters[k]?.let { Explain("Not sure what to say?", it) }
+            }
         }
         answers.keys.filter { it.startsWith("own:") }.sorted().forEach { k ->
             key(k) { Field(k.removePrefix("own:"), answers[k].orEmpty(), { answers[k] = it }, lines = 3, mic = true) }
@@ -294,6 +308,7 @@ fun Facts(nav: NavController) {
     var editing by remember { mutableStateOf<Fact?>(null) }
     Screen("CV facts", nav) {
         Note("Only true, finished things. A show you applied to is not a line; a show you were in is. Accepted applications are added here automatically.")
+        Explain("I have nothing to put here", "Everyone starts there. Add where you studied (or \"self-taught\"), and one or two skills or tools you really use. No exhibitions yet is normal and honest; the app adds each one as it happens, and early calls do not expect a long list.")
         Choice("Kind", Texts.factCategories, category) { category = it }
         key(editing?.id) { Whole("Year", year) { year = it } }
         Field(when (category) {

@@ -212,6 +212,10 @@ class AppTest {
         assertEquals(id, s.sessionArtwork); assertEquals("make", s.sessionKind); assertEquals(5, s.sessionGoalMin)
         assertTrue(s.sessionStart > 0)
         assertEquals("session", Engine.nextStep().route)
+        val (filled, what) = Engine.fillBlanks(Artwork(id = 7, format = "print", pixelW = 4800, pixelH = 6000, status = "documented"))
+        assertEquals("Untitled #7", filled.title); assertEquals(16.0, filled.widthIn, 0.0); assertEquals(20.0, filled.heightIn, 0.0)
+        assertEquals(10, filled.editionSize); assertEquals(480.0, filled.price, 0.0); assertEquals(5, what.size)
+        assertTrue(Engine.fillBlanks(filled).second.isEmpty())
         val other = dao.put(Artwork(title = "Second Piece", status = "in_progress", createdAt = 99))
         s.sessionStart = 0
         assertEquals(other, Engine.currentPiece(dao.artworksNow())?.id)

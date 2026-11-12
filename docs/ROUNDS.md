@@ -42,3 +42,14 @@ build-1 database. The camera, calendar, email, AI services, GitHub and the web f
 | Certainty | "Saved" with the time on every editing screen; a done page after each session; Receipts lists everything sent and everything the app did in the background; approved texts lock |
 | Calmer | No red warnings; fit shown in words; optional fewer-words mode; a "Done this week" list with no streaks; park an idea straight from Home |
 | Settings | A "Focus and calm" section where each of these can be switched |
+
+## Builds 8 to 11: four improvement cycles
+
+| Cycle | Added |
+| --- | --- |
+| 1 Find bugs first | A crash catcher with one-tap "send the details"; a problem report in Settings, Permissions; tests for image straightening, colour fix and export, backup and restore, and the whole AI pipeline against a stand-in server. Setup now needs only a first name: every other question has a "not sure" or "decide for me" choice. A Plain answers page and tap-to-explain notes cover terms nobody should be expected to know |
+| 2 Never lose work | Automatic daily backup to a folder you pick, keeping the newest five; every delete can be put back for 30 seconds |
+| 3 Time you can see | A week strip on Home, a finish forecast for each series from your real pace, one focus piece a week |
+| 4 Start over | When a piece is marked documented, blanks are filled with safe defaults and listed; sentence starters for every interview question; help for an empty CV |
+
+Still not possible to test without a phone: PDFs, the camera, the calendar, real email, real AI services, GitHub, folder backup, the web form filler.

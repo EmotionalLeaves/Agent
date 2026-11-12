@@ -245,6 +245,25 @@ object Engine {
         planWeek(ctx)
     }
 
+    /**
+     * When a piece is marked documented, fill in whatever the artist left blank with safe defaults,
+     * and say exactly what was filled so nothing is a surprise. Returns the piece and the plain-words list.
+     */
+    fun fillBlanks(a: Artwork): Pair<Artwork, List<String>> {
+        var w = a; val filled = mutableListOf<String>()
+        if (w.title.isBlank()) { w = w.copy(title = "Untitled #${w.id}"); filled += "a working title" }
+        if (w.year <= 0) { w = w.copy(year = LocalDate.now().year); filled += "the year" }
+        if ((w.widthIn <= 0 || w.heightIn <= 0) && w.format == "print") Texts.suggestedPrintSize(w.pixelW, w.pixelH)?.let {
+            w = w.copy(widthIn = it.first, heightIn = it.second); filled += "the size (${Texts.dim(it.second)} x ${Texts.dim(it.first)} in, the largest sharp print)"
+        }
+        if (w.format == "print" && w.editionSize <= 0) { w = w.copy(editionSize = 10); filled += "an edition of 10" }
+        if (w.price <= 0 && !w.nfs && w.widthIn > 0 && w.heightIn > 0) {
+            val p = Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn)
+            if (p > 0) { w = w.copy(price = p); filled += "a price of ${st.currency}${"%.0f".format(p)} from your rule" }
+        }
+        return w to filled
+    }
+
     /** The piece to work on: this week's chosen one if it is still in progress, otherwise the most recent in progress. */
     fun currentPiece(works: List<Artwork>): Artwork? =
         works.firstOrNull { it.id == st.focusWork && it.status == "in_progress" } ?: works.firstOrNull { it.status == "in_progress" }
