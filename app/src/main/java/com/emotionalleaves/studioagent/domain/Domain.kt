@@ -419,6 +419,9 @@ object Texts {
     )
     val factCategories = cvOrder.map { it.first }
 
+    /** The heading a CV uses for a kind of line, for example "Solo Exhibitions". */
+    fun factName(key: String): String = cvOrder.firstOrNull { it.first == key }?.second ?: key.replaceFirstChar { it.uppercase() }
+
     /** The CV is built only from recorded facts; nothing is invented or padded. */
     fun cv(name: String, contact: String, facts: List<Fact>): List<Pair<String, List<String>>> {
         val out = mutableListOf<Pair<String, List<String>>>()
@@ -487,22 +490,35 @@ object CallReader {
     fun fee(text: String): Double {
         val l = text.lowercase()
         if (Regex("no (entry |application |submission )?fee|free to (enter|apply|submit)|free entry").containsMatchIn(l)) return 0.0
-        val near = Regex("(?:fee|entry|entries|application)[^$]{0,60}\\$\\s?(\\d+(?:\\.\\d{1,2})?)").find(l) ?: Regex("\\$\\s?(\\d+(?:\\.\\d{1,2})?)[^.]{0,40}(?:fee|entry|per entry|to enter)").find(l)
+        // An amount, but not a prize: "$12,000" and "$1K" are not fees.
+        val amount = "\\$\\s?(\\d{1,3}(?:\\.\\d{1,2})?)(?![\\d,.]*\\d|\\s?[km]\\b|\\s?(?:thousand|million))"
+        val near = Regex("(?:fee|entry|entries|application)[^$]{0,60}$amount").find(l) ?: Regex("$amount[^.]{0,40}(?:fee|entry|per entry|to enter)").find(l)
         return near?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
+    }
+
+    private fun kindOf(l: String): String? = when {
+        Regex("residenc").containsMatchIn(l) -> "residency"; Regex("\\bgrants?\\b|fellowship").containsMatchIn(l) -> "grant"
+        Regex("art fair|festival").containsMatchIn(l) -> "fair"; Regex("magazine|publication|journal|zine\\b").containsMatchIn(l) -> "publication"
+        l.contains("commission") && l.contains("public art") -> "commission"
+        Regex("exhibit|juried|open call|call for (art|entr)|show\\b|competition|prize|award|salon").containsMatchIn(l) -> "exhibition"
+        else -> null
+    }
+
+    /** "Home | Winter Open 2027" and "Winter Open 2027 - Riverside Arts" read as "Winter Open 2027". */
+    fun cleanTitle(t: String): String {
+        val parts = t.split(" | ", " – ", " — ").map { it.trim() }.filter { it.isNotBlank() && !it.equals("home", true) }
+        return (parts.firstOrNull() ?: t).trim()
     }
 
     fun read(text: String, today: LocalDate, zone: java.time.ZoneId, sourceName: String, now: Long): Opp {
         val l = text.lowercase()
         val url = Regex("https?://[^\\s)>\\]]+").find(text)?.value.orEmpty()
         val email = Regex("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}").find(text)?.value.orEmpty()
-        val title = text.lines().map { it.trim() }.firstOrNull { it.isNotBlank() && !it.startsWith("http") && !it.startsWith("Link:") }.orEmpty().take(90).ifBlank { "Shared call" }
+        val title = cleanTitle(text.lines().map { it.trim() }.firstOrNull { it.isNotBlank() && !it.startsWith("http") && !it.startsWith("Link:") }.orEmpty()).take(120).ifBlank { "Shared call" }
         val d = deadline(text, today)
         val deadlineMs = d?.atTime(23, 59)?.atZone(zone)?.toInstant()?.toEpochMilli() ?: 0L
-        val kind = when {
-            l.contains("residency") -> "residency"; l.contains("grant") || l.contains("fellowship") -> "grant"
-            l.contains("art fair") || l.contains("festival") -> "fair"; l.contains("magazine") || l.contains("publication") || l.contains("journal") -> "publication"
-            l.contains("commission") && l.contains("public art") -> "commission"; else -> "exhibition"
-        }
+        // The kind is read from the title first, then the opening of the page, so a menu that mentions "residencies" does not decide it.
+        val kind = kindOf(title.lowercase()) ?: kindOf(l.take(1200)) ?: "exhibition"
         val scope = when {
             l.contains("international") || l.contains("worldwide") -> "international"; l.contains("national") || l.contains("open to all u.s.") -> "national"
             l.contains("regional") -> "regional"; l.contains("online exhibition") || l.contains("virtual exhibition") || l.contains("online only") -> "online"

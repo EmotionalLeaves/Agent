@@ -106,7 +106,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
             "sources", "Open Call sources", sources.isNotEmpty() || m("sources"), optional = true),
         GuideStep("apply", d, "Send your first application",
             "The app builds the whole pack. You look once and send.",
-            listOf("In Calls, tap Yes on a call.", "Check the works it picked. Swap any.", "Tap Build the pack.", "When every check is ticked, send it: by email, or with Open the entry form.", "Tap the button that locks it as done. After that there is nothing to check."),
+            listOf("In Calls, tap Yes on a call.", "Check the works it picked. Swap any.", "Fill anything the checks ask for. When every check is ticked the pack is made by itself.", "Send it: by email, or with Fill in the entry form.", "Tap the button that locks it as done. After that there is nothing to check."),
             "calls", "Open Calls", appls.any { it.status in setOf("submitted", "accepted", "declined") }),
 
         GuideStep("tile", e, "Put Start session one swipe away",

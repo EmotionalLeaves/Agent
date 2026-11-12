@@ -473,12 +473,17 @@ fun ApplScreen(nav: NavController, id: Long) {
         Status(status)
         SavedLine()
 
-        StageHead(4, "Build the pack", files.isNotEmpty())
-        if (files.isEmpty()) Button(enabled = !busy && chosenIds.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = {
-            busy = true; status = "Building the pack..."
-            scope.io({ status = it; busy = false }) { val dir = Engine.buildPack(ctx, a, o); a = a.copy(packDir = dir.absolutePath); status = "Pack built."; busy = false }
-        }) { Text("Build the pack") }
-        else {
+        StageHead(4, "The pack", files.isNotEmpty())
+        // Once every check passes the files are made by themselves: nothing to press.
+        LaunchedEffect(allGreen, a.packDir) {
+            if (allGreen && files.isEmpty() && chosenIds.isNotEmpty() && !busy) {
+                busy = true; status = "Every check passes, so the pack is being made..."
+                try { val dir = Engine.buildPack(ctx, a, o); a = a.copy(packDir = dir.absolutePath); status = "Pack made." } catch (e: Exception) { status = plainError(e) }
+                busy = false
+            }
+        }
+        if (files.isEmpty() && !allGreen) Small("The pictures, CV, image list and statement are made here as soon as every check above passes.")
+        if (files.isNotEmpty()) {
             files.forEach { Note("${it.name}  (${it.length() / 1024} KB)") }
             OutlinedButton(onClick = { Share.files(ctx, files) }) { Text("Share or save the files") }
         }

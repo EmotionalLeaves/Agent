@@ -75,7 +75,7 @@ class LiveProbeTest {
 
         log("\n== Starter listing sites, exactly as the daily check reads them")
         val now = System.currentTimeMillis()
-        (com.emotionalleaves.studioagent.work.Engine.starterSources + listOf("ArtJobs" to "https://www.artjobs.com/open-calls", "Artshow" to "https://www.artshow.com/juriedshows/index.html")).forEach { (name, url) ->
+        com.emotionalleaves.studioagent.work.Engine.starterSources.forEach { (name, url) ->
             log("\n-- $name $url")
             try {
                 log("robots allows: ${Robots.allowed(url)}")

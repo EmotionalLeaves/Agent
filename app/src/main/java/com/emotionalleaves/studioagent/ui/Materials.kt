@@ -10,6 +10,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.height
@@ -348,7 +349,7 @@ fun Facts(nav: NavController) {
     Screen("CV facts", nav) {
         Intro("facts", "Only true, finished things. A show you applied to is not a line; a show you were in is. Accepted applications are added here automatically.")
         Explain("I have nothing to put here", "Everyone starts there. Add where you studied (or \"self-taught\"), and one or two skills or tools you really use. No exhibitions yet is normal and honest; the app adds each one as it happens, and early calls do not expect a long list.")
-        Choice("Kind", Texts.factCategories, category) { category = it }
+        Pick("Kind of line", Texts.factCategories, category, names = { Texts.factName(it) }) { category = it }
         key(editing?.id) { Whole("Year", year) { year = it } }
         Field(when (category) {
             "education" -> "Degree or course, school, city"
@@ -360,16 +361,21 @@ fun Facts(nav: NavController) {
             val t = text.value.trim(); val old = editing; text.value = ""; editing = null
             scope.io { dao.put((old ?: Fact()).copy(category = category, year = year, text = t)) }
         }) { Text(if (editing != null) "Save changes" else "Add to CV") }
-        if (editing != null) TextButton(onClick = { editing = null; text.value = "" }) { Text("Cancel the edit") }
+        editing?.let { f ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { editing = null; text.value = "" }) { Text("Cancel") }
+                TextButton(onClick = { editing = null; text.value = ""; scope.remove("the CV line", { dao.del(f) }, { dao.put(f) }) }) { Text("Remove this line") }
+            }
+        }
         Texts.factCategories.forEach { c ->
             val lines = facts.filter { it.category == c }
             if (lines.isNotEmpty()) {
-                H(c.replaceFirstChar { it.uppercase() })
+                H(Texts.factName(c))
+                // Tap a line to change or remove it: one target per line instead of two buttons.
                 lines.forEach { f ->
-                    Row {
-                        Text((if (f.year > 0) "${f.year}  " else "") + f.text, Modifier.weight(1f))
-                        TextButton(onClick = { editing = f; category = f.category; year = f.year; text.value = f.text }) { Text("Edit") }
-                        TextButton(onClick = { scope.remove("the CV line", { dao.del(f) }, { dao.put(f) }) }) { Text("Remove") }
+                    Row(Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClickLabel = "Change this line") { editing = f; category = f.category; year = f.year; text.value = f.text }, verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (f.year > 0) "${f.year}" else "", Modifier.width(52.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(f.text, Modifier.weight(1f), fontWeight = if (editing?.id == f.id) FontWeight.Bold else FontWeight.Normal)
                     }
                 }
             }

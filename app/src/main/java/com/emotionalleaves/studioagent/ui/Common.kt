@@ -1,5 +1,13 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material3.DropdownMenuItem
+
+import androidx.compose.material3.MenuAnchorType
+
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+
+import androidx.compose.material3.ExposedDropdownMenuBox
+
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.width
@@ -224,10 +232,30 @@ fun Field(label: String, state: MutableState<String>, lines: Int = 1, number: Bo
 fun Choice(label: String, options: List<String>, selected: String, names: ((String) -> String)? = null, onSelect: (String) -> Unit) {
     // Two or three short options that switch a view read best as one joined bar, like tabs.
     if (names == null && label.isBlank() && options.size in 2..3 && options.all { it.length <= 12 } && selected in options) { Segments(options, selected, onSelect); return }
+    // Long lists become one box that opens a list, instead of a wall of chips.
+    if (options.size > 6) { Pick(label, options, selected, names, onSelect); return }
     Column {
         if (label.isNotBlank()) Small(label)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             options.forEach { o -> FilterChip(selected = o == selected, onClick = { onSelect(o) }, label = { Text(names?.invoke(o) ?: o.replace('_', ' ').replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodyMedium, fontWeight = if (o == selected) FontWeight.Bold else FontWeight.Normal) }) }
+        }
+    }
+}
+
+/** One tidy box showing the current choice; tap to see the list. */
+@Composable
+fun Pick(label: String, options: List<String>, selected: String, names: ((String) -> String)? = null, onSelect: (String) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val show = { o: String -> names?.invoke(o) ?: o.replace('_', ' ').replaceFirstChar { it.uppercase() } }
+    ExposedDropdownMenuBox(expanded = open, onExpandedChange = { open = it }) {
+        OutlinedTextField(
+            value = if (selected in options) show(selected) else "", onValueChange = {}, readOnly = true, singleLine = true,
+            label = if (label.isNotBlank()) ({ Text(label) }) else null, placeholder = { Text("Choose") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = open) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable)
+        )
+        ExposedDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            options.forEach { o -> DropdownMenuItem(text = { Text(show(o), fontWeight = if (o == selected) FontWeight.Bold else FontWeight.Normal) }, onClick = { open = false; onSelect(o) }) }
         }
     }
 }

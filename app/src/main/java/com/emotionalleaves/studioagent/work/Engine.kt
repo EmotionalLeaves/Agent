@@ -728,12 +728,12 @@ object Engine {
 
     // ------------------------------------------------------------ finding calls
 
-    /** Listing sites checked on the build server: they allow reading, show their calls without a browser, and list US calls. */
+    /** Listing sites checked on the build server: they allow reading, show their calls without a browser, and list many US calls. */
     val starterSources = listOf(
         "ArtCall" to "https://artcall.org/calls",
         "Artwork Archive" to "https://www.artworkarchive.com/call-for-entry",
-        "CaFE (Creative West)" to "https://opportunities.wearecreativewest.org/upcoming-deadlines?sort=deadline_asc&status=OPEN",
-        "Smarter Entry" to "https://www.smarterentry.com/CallsForEntry",
+        "ArtJobs" to "https://www.artjobs.com/open-calls",
+        "Artshow" to "https://www.artshow.com/juriedshows/index.html",
     )
 
     /** On a new install the listing sites are already there, so calls arrive with nothing to set up. */
@@ -786,8 +786,8 @@ object Engine {
         val looksLikeCall = o.deadline > 0 || Regex("open call|call for|submission|apply", RegexOption.IGNORE_CASE).containsMatchIn(text.take(3000))
         if (!looksLikeCall) return null
         // The page heading is usually the best title; the link's own words stand in when the heading is missing or generic.
-        val generic = o.title == "Shared call" || o.title.length >= 90 || o.title.startsWith("Link:") || o.title.length < 12 || o.title.equals(siteTitle, true)
-        val title = (if (generic && linkText.length >= 12 && !linkText.startsWith("Apply", true)) linkText else o.title).take(90)
+        val generic = o.title == "Shared call" || o.title.length >= 120 || o.title.startsWith("Link:") || o.title.length < 12 || o.title.equals(siteTitle, true)
+        val title = (if (generic && linkText.length >= 12 && !linkText.startsWith("Apply", true)) linkText.removeSuffix("...").trim() else o.title).take(120)
         return o.copy(title = title, url = url, dedupeKey = Texts.dedupeKey("", o.deadline, title))
     }
 
