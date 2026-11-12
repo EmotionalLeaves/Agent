@@ -466,12 +466,12 @@ fun ApplScreen(nav: NavController, id: Long) {
             }) { Text("Approve and send") }
             else {
                 Button(enabled = allGreen && files.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = { Share.email(ctx, a.emailTo, a.emailSubject, a.emailBody, files) }) { Text("Open in my mail app, filled in") }
-                OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Sent from your mail app to ${a.emailTo} on ${LocalDate.now()}.") } }) { Text("I sent it: lock as done") }
+                OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Sent from your mail app to ${a.emailTo} on ${fmtDate(now())}.") } }) { Text("I sent it: lock as done") }
                 Note("Add your email and an app password in Settings and the app sends it for you instead.")
             }
         } else {
             Button(enabled = o.url.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = { nav.navigate("web/${a.id}") }) { Text("Open the entry form and fill it") }
-            OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Submitted on the organiser's site on ${LocalDate.now()}.") } }) { Text("I submitted it: lock as done") }
+            OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Submitted on the organiser's site on ${fmtDate(now())}.") } }) { Text("I submitted it: lock as done") }
         }
         if (!allGreen) Note("Sending unlocks when every check above passes.")
     }
@@ -541,7 +541,7 @@ fun WebFill(nav: NavController, id: Long) {
                                 w.draw(Canvas(b)); b
                             }
                             ImageTools.saveJpeg(shot, f, 85)
-                            val proof = withContext(Dispatchers.Main) { "Submitted on ${w.title.orEmpty()} (${w.url.orEmpty()}) on ${LocalDate.now()}." }
+                            val proof = withContext(Dispatchers.Main) { "Submitted on ${w.title.orEmpty()} (${w.url.orEmpty()}) on ${fmtDate(now())}." }
                             Engine.markSubmitted(a, proof, f.absolutePath)
                             withContext(Dispatchers.Main) { nav.navigate("appl/${a.id}") { popUpTo("calls") } }
                         }
@@ -627,7 +627,7 @@ fun Sources(nav: NavController) {
                 Toggle("${s.name}  (${s.kind})", s.enabled) { on -> scope.io { dao.put(s.copy(enabled = on)) } }
                 Note(s.url)
                 if (s.lastStatus.isNotBlank()) Note("${fmtDate(s.lastFetched)}: ${s.lastStatus}")
-                TextButton(onClick = { scope.io { dao.del(s) } }) { Text("Remove") }
+                TextButton(onClick = { scope.remove("the source", { dao.del(s) }, { dao.put(s) }) }) { Text("Remove") }
             }
         }
         H("Add a source")

@@ -94,7 +94,7 @@ fun Outreach(nav: NavController) {
                     scope.io {
                         dao.put(Evt(type = "opening", title = place + (if (note.isNotBlank()) ": $note" else ""), date = now(), done = true))
                         val known = dao.contactsNow().firstOrNull { it.venue.equals(place, ignoreCase = true) }
-                        val line = "Went to an opening on ${java.time.LocalDate.now()}." + (if (note.isNotBlank()) " $note" else "")
+                        val line = "Went to an opening on ${fmtDate(now())}." + (if (note.isNotBlank()) " $note" else "")
                         if (known != null) dao.put(known.copy(notes = (known.notes + "\n" + line).trim())) else dao.put(Contact(venue = place, kind = "community", notes = line, createdAt = now()))
                     }
                 }) { Text("Log it") }

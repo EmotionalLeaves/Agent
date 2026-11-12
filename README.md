@@ -17,6 +17,12 @@ Open the newest release on your phone, download the `.apk`, and install it. Late
 2. Allow calendar and notifications if you want studio time booked and quiet reminders.
 3. Optional, in More > Settings: an AI key, email with an app password, a GitHub token for backup and the portfolio page.
 
+## Look and feel
+
+Gallery-wall white, graphite text, one cobalt for actions, and masking-tape yellow only for the one thing to do now.
+Titles are set in Bricolage Grotesque, everything else in a copy of Atkinson Hyperlegible with a plain zero (renamed Studio Legible, as its licence asks).
+Every build photographs the main screens in light, dark and large text and attaches them to the release as `screens.zip`.
+
 ## Where things are
 
 - `app/src/main/java/.../domain` rules with no Android in them: career levels, call scoring, week planner, text rules (unit tested)

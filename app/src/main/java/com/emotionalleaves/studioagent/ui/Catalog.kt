@@ -169,7 +169,7 @@ fun Works(nav: NavController) {
                     }
                     Field("What ties these works together? (used for the series statement)", notes, { notes = it; scope.io { dao.put(s.copy(notes = it, name = name.trim().ifBlank { s.name })) } }, lines = 2, mic = true)
                     Whole("How many works you are aiming for", s.targetCount) { n -> if (n > 0) scope.io { dao.put(s.copy(targetCount = n, notes = notes, name = name.trim().ifBlank { s.name })) } }
-                    TextButton(onClick = { scope.io { works.filter { it.seriesId == s.id }.forEach { dao.put(it.copy(seriesId = 0)) }; dao.del(s) } }) { Text("Delete this series (its works are kept)") }
+                    TextButton(onClick = { val members = works.filter { it.seriesId == s.id }; scope.remove("the series", { members.forEach { dao.put(it.copy(seriesId = 0)) }; dao.del(s) }, { dao.put(s); members.forEach { dao.put(it) } }) }) { Text("Delete this series (its works are kept)") }
                 }
             } }
             Field("New series name", newSeries)

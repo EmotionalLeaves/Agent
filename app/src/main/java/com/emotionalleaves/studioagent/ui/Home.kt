@@ -5,7 +5,8 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
-import androidx.compose.material.icons.filled.Send
+import androidx.activity.compose.BackHandler
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.RadioButton
@@ -315,6 +316,8 @@ fun Onboarding(nav: NavController) {
         if (Build.VERSION.SDK_INT >= 33) wanted += Manifest.permission.POST_NOTIFICATIONS
         perms.launch(wanted.toTypedArray())
     }
+    // The phone's back gesture steps back a page instead of leaving setup.
+    BackHandler(enabled = page > 0) { page-- }
     Screen("Set up", nav, bare = true) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             (0 until pages).forEach { i -> Box(Modifier.weight(1f).height(4.dp).clip(RoundedCornerShape(2.dp)).background(if (i <= page) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)) }
@@ -530,7 +533,7 @@ fun Admin(nav: NavController) {
     Screen("Admin pass", nav) {
         Intro("admin", "Everything that needs a yes from you, in one place. One tap each. When this list is empty you are done.")
         if (loaded && items.isEmpty()) Empty("Nothing to approve. You are done here.", "Back to Home") { nav.popBackStack() }
-        items.forEach { p -> IconRow(if (p.route.startsWith("doc")) Icons.Default.Edit else if (p.route.startsWith("appl")) Icons.Default.Send else Icons.Default.Done, p.title, p.detail) { nav.navigate(p.route) } }
+        items.forEach { p -> IconRow(if (p.route.startsWith("doc")) Icons.Default.Edit else if (p.route.startsWith("appl")) Icons.AutoMirrored.Filled.Send else Icons.Default.Done, p.title, p.detail) { nav.navigate(p.route) } }
     }
 }
 

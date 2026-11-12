@@ -118,3 +118,25 @@ Twenty passes that replace the look rather than adjust it.
 18. Choice chips: capitalised, regular weight unless chosen.
 19. Dark mode contrast fixes.
 20. Final audit from screenshots of every main screen, light and dark.
+
+## Design cycles 21 to 70 (builds 30 to 35)
+
+1-10. Plain zero in the body face; paper-white fields; framed empty states; Guide and levels drawn as steps on a line; shorter Materials rows; a saved line with a tick.
+11-20. Call facts at a glance (deadline, fee, fit) with urgent deadlines in red; editing folded away; the application as five numbered stages (works, words, check, pack, send); tidier All and Applied lists.
+21-28. Money as two figures with forms folded; People level as one line and openings as a big count; research button only when AI is on; Settings grouped with icons.
+29-36. The week as a schedule sheet; session kinds explained in place; a three-step line on a fresh Home; receipts grouped by month.
+37-44. Status messages as a tinted strip; Ideas as a pinboard; Home extras as icon rows; a length meter on documents; screenshots at large text size.
+45-50. Buttons grow with text size; session buttons stacked; Admin with icons; Park it appears only with text; dark and large-text pass.
+
+## Overall checks, round 1
+
+1. Text contrast measured for every colour pair; the outline grey darkened to pass 3:1.
+2. Compiler warnings: none left.
+3. Every icon button has a spoken name.
+4. Every delete can be undone (call sources and series were missing it).
+5. Proof lines use readable dates, not 2026-11-11.
+6. The back gesture steps back through setup instead of leaving it.
+7. Every list has an empty state.
+8. All screens still open in tests, fresh and with data.
+9. Large-text screenshots checked; nothing clips.
+10. README describes the look.

@@ -100,7 +100,7 @@ private val LightColors = lightColorScheme(
     secondary = Color(0xFFA4441F), onSecondary = Color.White, secondaryContainer = Color(0xFFDDE3FA), onSecondaryContainer = Color(0xFF14256C),
     tertiary = Color(0xFF6D5A12), onTertiary = Color.White, tertiaryContainer = Tape, onTertiaryContainer = Graphite,
     background = Wall, onBackground = Graphite, surface = Wall, onSurface = Graphite,
-    surfaceVariant = Color(0xFFE6E7E3), onSurfaceVariant = Pencil, outline = Color(0xFF8D9094), outlineVariant = Hairline,
+    surfaceVariant = Color(0xFFE6E7E3), onSurfaceVariant = Pencil, outline = Color(0xFF7A7E83), outlineVariant = Hairline,
     surfaceTint = Color.Transparent, inverseSurface = Graphite, inverseOnSurface = Wall, inversePrimary = Color(0xFFA9B9FF),
     surfaceContainerLowest = Color.White, surfaceContainerLow = Color(0xFFF7F7F5), surfaceContainer = Color(0xFFEBEBE7),
     surfaceContainerHigh = Color(0xFFE4E5E1), surfaceContainerHighest = Color(0xFFDDDED9), surfaceBright = Color.White, surfaceDim = Color(0xFFDADBD6)
