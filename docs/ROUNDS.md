@@ -252,3 +252,32 @@ AI (5 rounds)
 - Any key is recognised by how it starts; there are no provider or model settings to choose.
 - "Get a free key" and "Paste the key I copied".
 - When the helper doesn't answer, every writing button falls back to the plain starter, so nothing stops.
+
+## Loop 8: design, professional, practical, simplicity and AI batches, plus 10 AI-and-streamlining sets (builds 95 to 110)
+
+Practical
+- A real mail server in the tests: the application email goes out with its attachments and your name as sender; the gallery's reply is read back and the application marked accepted; a wrong password fails in plain words and keeps the application.
+- Entry forms: numbered work boxes ("Title of work 2") get that work's details; pack files attach to web forms through the app's file provider.
+- The same call found on two listing sites is kept once.
+- Calls the writing help reads are checked against the plain reader (a wrong year is corrected, a missing fee or email filled); closed calls are skipped.
+- The daily check stays inside the phone's ten-minute background limit.
+- Pay-to-show and rights-grab terms are flagged without AI.
+- One calm Saturday notice when calls fit you.
+- Price and size the app fills appear in their boxes at once.
+- Files shared to mail and other apps carry read access the way every app expects.
+
+Professional
+- A4 or Letter paper by country.
+- Emails the writing help drafts always end with your real signature.
+
+AI (free helper, every one with a plain fallback)
+- In plain words: three lines on each call (what it is, what they want, one thing to watch). Checked live.
+- Suggest small steps for a piece, in order, each startable in five minutes. Checked live.
+- Ask anything, in Help. Checked live.
+- Screen tests never use the public service.
+
+Simplicity
+- Settings pages merged from ten to six.
+- The You page shows the next set-up step with its own button; the Guide row appears once set-up is done.
+- Today: one Start now button, plus "Tired? Just 5 minutes" instead of an energy question first.
+- Finished Guide groups fold to one line; the sources list is one switch per site; the duplicate next-step box on a piece is gone.
