@@ -286,7 +286,7 @@ fun DocScreen(nav: NavController, id: Long) {
             Check(true, "Written only from your interview and CV facts")
         }
         Status(status)
-        if (d.approved) { if (!locked) Panel(strong = true) { Text("Approved. Editing it un-approves it.") } }
+        if (d.approved) { if (!locked) Panel { Text("Approved. Editing it un-approves it.") } }
         else if (d.text.isNotBlank()) {
             if (d.revisions >= limit) Panel(strong = true) {
                 Text("That is ${d.revisions} revision passes. " + (if (lengthOk && jargon.isEmpty()) "It meets every check, so it is ready as it is." else "Fix the open check above, then it is ready."))

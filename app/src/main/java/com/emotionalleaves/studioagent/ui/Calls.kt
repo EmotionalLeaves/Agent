@@ -342,7 +342,7 @@ fun ApplScreen(nav: NavController, id: Long) {
     if (loaded.status in setOf("submitted", "accepted", "declined")) {
         val chosen = works.filter { it.id in Engine.workIds(loaded) }
         Screen(o.title, nav) {
-            Panel(strong = true) {
+            Panel {
                 Text(when (loaded.status) { "accepted" -> "Accepted"; "declined" -> "Not this time"; else -> "Submitted. Done." }, fontWeight = FontWeight.SemiBold)
                 Text("Sent ${fmtDate(loaded.submittedAt)}.")
                 if (loaded.proofText.isNotBlank()) Note(loaded.proofText)
@@ -481,7 +481,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             Field("To", a.emailTo, { save(a.copy(emailTo = it.trim())) })
             Field("Subject", a.emailSubject, { save(a.copy(emailSubject = it)) })
             Field("Email", a.emailBody, { save(a.copy(emailBody = it)) }, lines = 6)
-            if (a.status == "sending") Panel(strong = true) {
+            if (a.status == "sending") Panel {
                 Text("Approved. It sends in about 10 minutes.")
                 OutlinedButton(onClick = { Engine.cancelSend(ctx, a.id); save(a.copy(status = "ready")) }) { Text("Undo") }
             } else if (st.mailReady) Button(enabled = allGreen && files.isNotEmpty(), modifier = Modifier.fillMaxWidth(), onClick = {

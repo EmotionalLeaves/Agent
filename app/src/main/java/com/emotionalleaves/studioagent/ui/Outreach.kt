@@ -210,11 +210,11 @@ fun ContactScreen(nav: NavController, id: Long) {
 
         H("Email")
         when {
-            !allowed -> Panel(strong = true) {
+            !allowed -> Panel {
                 Text("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}. You are at Level $level.")
                 Note("For now: go to their openings, join their mailing list, and note who you meet here. That is what makes a later email welcome. (This limit can be turned off in You, Your rules.)")
             }
-            !c.acceptsSubmissions -> Panel(strong = true) {
+            !c.acceptsSubmissions -> Panel {
                 Text("They do not take unsolicited submissions, so no email.")
                 Note("Build the relationship instead: openings, their mailing list, a hello in person.")
             }
@@ -255,7 +255,7 @@ fun ContactScreen(nav: NavController, id: Long) {
                     if (c.draftBody.isNotBlank()) Panel { Text(c.draftSubject, fontWeight = FontWeight.SemiBold); Text(c.draftBody) }
                 }
                 if (c.status == "approved") {
-                    if (st.mailReady) Panel(strong = true) {
+                    if (st.mailReady) Panel {
                         Text("Approved. It goes out with the next daily run, at most ${st.outreachWeeklyCap} emails a week. The follow-up is sent for you.")
                         TextButton(onClick = { save(c.copy(status = "drafted")) }) { Text("Undo") }
                     } else {

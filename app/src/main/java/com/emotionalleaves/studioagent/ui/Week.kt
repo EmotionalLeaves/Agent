@@ -107,7 +107,7 @@ fun WeekScreen(nav: NavController) {
 
         H("Pause")
         if (tick >= 0 && st.pausedUntil > now()) {
-            Panel(strong = true) { Text("Paused until ${fmtDate(st.pausedUntil)}. No blocks, no reminders, nothing counted as missed.") }
+            Panel { Text("Paused until ${fmtDate(st.pausedUntil)}. No blocks, no reminders, nothing counted as missed.") }
             Button(onClick = { st.pausedUntil = 0L; replan("Welcome back. The week is planned again.") }) { Text("Resume now") }
         } else {
             Note("Busy week, low week, away: pause and the app stops planning and reminding. You can still start a session whenever you like.")
