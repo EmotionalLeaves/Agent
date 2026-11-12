@@ -348,7 +348,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Num("Price rule: per square inch", st.pricePerSqIn) { st.pricePerSqIn = it }
             }
             "hours" -> {
-                Note("The app sends nothing during work hours on work days, and nothing from one hour before bedtime until 7:00.")
+                Intro("hours", "The app sends nothing during work hours on work days, and nothing from one hour before bedtime until 7:00.")
                 DaysField("Days you work", st.workDays) { st.workDays = it }
                 TimeField("Work starts", st.workStart) { st.workStart = it }
                 TimeField("Work ends", st.workEnd) { st.workEnd = it }
@@ -360,7 +360,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Small("Your studio times themselves are on Today: tap This week.")
             }
             "rules" -> {
-                Note("The defaults follow the plan: start free and local, climb when a gate is met. Every one of them is yours to change.")
+                Intro("rules", "The defaults follow the plan: start free and local, climb when a gate is met. Every one of them is yours to change.")
                 H("Level")
                 Choice("My level", listOf("automatic", "0", "1", "2", "3", "4"), levelPick) { levelPick = it; st.levelOverride = it.toIntOrNull() ?: -1 }
                 Note("Automatic works it out from your catalog and CV. Pick a number if you already have a history the app does not know about.")
@@ -406,7 +406,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 OutlinedButton(onClick = { nav.navigate("receipts") }) { Text("Open Receipts") }
             }
             "writing" -> {
-                Note("These apply to everything the app writes for you: statements, bios, emails, answers.")
+                Intro("writing", "These apply to everything the app writes for you: statements, bios, emails, answers.")
                 SText("Standing notes (for example: never call it a journey; mention that I cook for a living)", st.writingNotes, lines = 3) { st.writingNotes = it }
                 SText("Words or phrases never to use (comma separated)", st.extraJargon, lines = 2) { st.extraJargon = it }
                 Count("Rewrites before a text is called ready", st.revisionLimit, 1, 5) { st.revisionLimit = it }

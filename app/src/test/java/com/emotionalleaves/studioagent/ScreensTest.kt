@@ -164,7 +164,7 @@ class ScreensTest {
     @Test fun settingsAndTools() {
         val ids = seed()
         shot("60_rules", "settings/rules", "What matters most when ranking")
-        shot("61_writing", "settings/writing", "These apply to everything")
+        shot("61_writing", "settings/writing", "Standing notes")
         shot("62_ai", "settings/ai", "Test the key")
         shot("63_email", "settings/email", "Send me a test email")
         shot("64_backup", "settings/backup", "Choose a backup folder")

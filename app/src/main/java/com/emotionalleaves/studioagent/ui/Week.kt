@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -125,7 +127,7 @@ fun WeekScreen(nav: NavController) {
                 }
             }
         }
-        Panel(onClick = { nav.navigate("sessions") }) { Text("Session history", fontWeight = FontWeight.SemiBold); Note("See, fix or remove past sessions, or log one you did away from the app.") }
+        IconRow(Icons.AutoMirrored.Filled.List, "Session history", "See, fix or remove past sessions, or log one you forgot") { nav.navigate("sessions") }
     }
 }
 

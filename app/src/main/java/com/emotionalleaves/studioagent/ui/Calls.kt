@@ -227,7 +227,7 @@ fun CallDetail(nav: NavController, id: Long) {
     val facts by dao.facts().collectAsState(emptyList())
     val ledger by dao.ledger().collectAsState(emptyList())
     val loaded = opps.firstOrNull { it.id == id }
-    if (loaded == null) { Screen("Call", nav) { Note("One moment") }; return }
+    if (loaded == null) { Screen("Call", nav) { Loading() }; return }
     var o by remember(id) { mutableStateOf(loaded) }
     var status by remember { mutableStateOf("") }
     var deadlineText by remember { mutableStateOf(if (loaded.deadline > 0) Engine.date(loaded.deadline).toString() else "") }
@@ -333,7 +333,7 @@ fun ApplScreen(nav: NavController, id: Long) {
     val events by dao.events().collectAsState(emptyList())
     val loaded = appls.firstOrNull { it.id == id }
     val o = opps.firstOrNull { it.id == loaded?.oppId }
-    if (loaded == null || o == null) { Screen("Application", nav) { Note("One moment") }; return }
+    if (loaded == null || o == null) { Screen("Application", nav) { Loading() }; return }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     val resultText = remember { mutableStateOf("") }

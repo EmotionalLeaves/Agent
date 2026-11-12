@@ -1,5 +1,12 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -104,27 +111,18 @@ fun Materials(nav: NavController) {
         H("Statements and bios")
         docSlots.forEach { (type, variant, label) ->
             val d = docs.firstOrNull { it.type == type && it.variant == variant && it.seriesId == 0L }
-            Panel(onClick = { open(type, variant) }) {
-                Text(label)
-                Note(when { d == null || d.text.isBlank() -> "Not written yet"; d.approved -> "Approved, ${Texts.words(d.text)} words"; else -> "Draft, waiting for your yes" })
-            }
+            DocRow(label, d?.text.orEmpty(), d?.approved == true) { open(type, variant) }
         }
         if (series.isNotEmpty()) H("Series statements")
         series.forEach { s ->
             val d = docs.firstOrNull { it.type == "statement" && it.variant == "100" && it.seriesId == s.id }
-            Panel(onClick = { open("statement", "100", s.id) }) {
-                Text("${s.name}, 100 words")
-                Note(when { d == null || d.text.isBlank() -> "Not written yet"; d.approved -> "Approved"; else -> "Draft, waiting for your yes" })
-            }
+            DocRow("${s.name}, 100 words", d?.text.orEmpty(), d?.approved == true) { open("statement", "100", s.id) }
         }
 
         H("Your own documents")
-        Note("Anything else you need written: a cover letter, a project description, an answer you get asked often. Any name, any length.")
+        Small("A cover letter, a project description, an answer you get asked often. Any name, any length.")
         docs.filter { it.type == "custom" }.forEach { d ->
-            Panel(onClick = { nav.navigate("doc/${d.id}") }) {
-                Text(d.title.ifBlank { "Untitled document" })
-                Note(when { d.text.isBlank() -> "Not written yet"; d.approved -> "Approved, ${Texts.words(d.text)} words"; else -> "Draft, waiting for your yes" })
-            }
+            DocRow(d.title.ifBlank { "Untitled document" }, d.text, d.approved) { nav.navigate("doc/${d.id}") }
         }
         Expand("New document") {
             Field("Name (for example: Cover letter)", newTitle)
@@ -216,7 +214,7 @@ fun DocScreen(nav: NavController, id: Long) {
     val docs by dao.docs().collectAsState(emptyList())
     val series by dao.series().collectAsState(emptyList())
     val loaded = docs.firstOrNull { it.id == id }
-    if (loaded == null) { Screen("Document", nav) { Note("One moment") }; return }
+    if (loaded == null) { Screen("Document", nav) { Loading() }; return }
     var d by remember(id) { mutableStateOf(loaded) }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
@@ -355,5 +353,24 @@ fun Facts(nav: NavController) {
                 }
             }
         }
+    }
+}
+
+
+/** One piece of writing: a tick when approved, a dot when a draft waits for you, an empty ring when not written. */
+@Composable
+fun DocRow(label: String, text: String, approved: Boolean, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Column {
+        Row(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }.heightIn(min = 56.dp).padding(vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Mark(approved, current = !approved && text.isNotBlank())
+            Column(Modifier.weight(1f)) {
+                Text(label, style = MaterialTheme.typography.titleSmall)
+                Small(when { text.isBlank() -> "Not written yet"; approved -> "Approved, ${Texts.words(text)} words"; else -> "Draft, waiting for your yes" })
+            }
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = cs.outline)
+        }
+        Hair()
     }
 }

@@ -188,7 +188,7 @@ fun WorkDetail(nav: NavController, id: Long) {
     val works by dao.artworks().collectAsState(emptyList())
     val series by dao.series().collectAsState(emptyList())
     val loaded = works.firstOrNull { it.id == id }
-    if (loaded == null) { Screen("Piece", nav) { Note("One moment") }; return }
+    if (loaded == null) { Screen("Piece", nav) { Loading() }; return }
     var w by remember(id) { mutableStateOf(loaded) }
     var status by remember { mutableStateOf("") }
     fun save(x: Artwork) { w = x; scope.io { dao.put(x); markSaved() } }
@@ -405,7 +405,7 @@ fun CropScreen(nav: NavController, id: Long) {
     val scope = rememberCoroutineScope()
     val works by dao.artworks().collectAsState(emptyList())
     val w = works.firstOrNull { it.id == id }
-    if (w == null) { Screen("Straighten", nav) { Note("One moment") }; return }
+    if (w == null) { Screen("Straighten", nav) { Loading() }; return }
     val src = w.originalPath.ifBlank { w.imagePath }
     var tried by remember { mutableStateOf(false) }
     val preview by produceState<Bitmap?>(null, src) { value = withContext(Dispatchers.IO) { try { ImageTools.decode(src, 1200) } catch (e: Exception) { null } }; tried = true }
@@ -414,7 +414,7 @@ fun CropScreen(nav: NavController, id: Long) {
     var fix by remember { mutableStateOf(w.format == "physical") }
     var status by remember { mutableStateOf("") }
     Screen("Straighten and crop", nav) {
-        Note("Drag each dot onto a corner of the artwork. The result is squared up to those corners.")
+        Small("Drag each dot onto a corner of the artwork. The result is squared up to those corners.")
         val bmp = preview
         if (bmp != null) {
             val img = remember(bmp) { bmp.asImageBitmap() }

@@ -372,3 +372,10 @@ fun DaysField(label: String, value: String, onValue: (String) -> Unit) {
         }
     }
 }
+
+/** While something is being read from storage: a quiet bar, no words to read. */
+@Composable
+fun Loading() {
+    androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 24.dp).height(3.dp),
+        color = MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+}

@@ -178,7 +178,7 @@ fun ContactScreen(nav: NavController, id: Long) {
     val facts by dao.facts().collectAsState(emptyList())
     val series by dao.series().collectAsState(emptyList())
     val loaded = contacts.firstOrNull { it.id == id }
-    if (loaded == null) { Screen("Contact", nav) { Note("One moment") }; return }
+    if (loaded == null) { Screen("Contact", nav) { Loading() }; return }
     var c by remember(id) { mutableStateOf(loaded) }
     // Background sends and replies change the row; pick those up without fighting your typing.
     LaunchedEffect(loaded.status, loaded.lastReply) {
