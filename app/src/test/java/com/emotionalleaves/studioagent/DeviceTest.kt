@@ -237,7 +237,7 @@ class AppTest {
     @Test fun theHomeCardFollowsPinsAndSnoozes() = runBlocking {
         ctx
         val s = G.settings
-        assertEquals("onboarding", Engine.nextStep().route)
+        assertEquals("tour", Engine.nextStep().route)
         s.firstName = "Jade"
         assertEquals("interview", Engine.nextStep().route)
         s.pinnedStep = "Call the framer"
