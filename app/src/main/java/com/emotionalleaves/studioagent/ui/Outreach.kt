@@ -112,6 +112,15 @@ fun Outreach(nav: NavController) {
         Field("Their website", url)
         Status(status)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (!G.ai.ready) Button(enabled = !busy && url.value.isNotBlank(), onClick = {
+                busy = true; status = "Reading their site..."
+                scope.io({ status = it; busy = false }) {
+                    val u = url.value.trim().let { if (it.startsWith("http")) it else "https://$it" }
+                    val id = dao.put(Starter.venue(u, try { Fetch.pageText(u) } catch (e: Exception) { "" }, now()))
+                    status = ""; busy = false
+                    withContext(Dispatchers.Main) { url.value = ""; nav.navigate("contact/$id") }
+                }
+            }) { Text("Look it up") }
             if (G.ai.ready) Button(enabled = !busy && url.value.isNotBlank(), onClick = {
                 busy = true; status = "Reading their site..."
                 scope.io({ status = it; busy = false }) {
@@ -128,7 +137,6 @@ fun Outreach(nav: NavController) {
             }) { Text("Research it") }
             OutlinedButton(onClick = { scope.io { val id = dao.put(Contact(website = url.value.trim(), createdAt = now())); withContext(Dispatchers.Main) { nav.navigate("contact/$id") } } }) { Text("Add by hand") }
         }
-        if (!G.ai.ready) Note("Researching a site and drafting emails need an AI key (Settings).")
 
         val people = contacts.filter { it.kind != "subscriber" }
         if (people.isNotEmpty()) H("Venues and people")
@@ -206,14 +214,18 @@ fun ContactScreen(nav: NavController, id: Long) {
             }
             else -> {
                 if (c.draftBody.isBlank() && c.status == "research") {
-                    Button(enabled = !busy && G.ai.ready, modifier = Modifier.fillMaxWidth(), onClick = {
+                    if (!G.ai.ready) Button(modifier = Modifier.fillMaxWidth(), onClick = {
+                        val (subject, body, follow) = Starter.email(c)
+                        save(c.copy(draftSubject = subject, draftBody = body, followUpBody = follow, status = "drafted"))
+                    }) { Text("Start the email for me") }
+                    if (G.ai.ready) Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
                         busy = true; status = "Drafting..."
                         scope.io({ status = it; busy = false }) {
                             val (subject, body, follow) = G.ai.outreach(c.venue, c.notes + "\nSubmission instructions: " + c.submissionNotes, Engine.factsText(), Engine.voice(), st.website)
                             val x = c.copy(draftSubject = subject, draftBody = body, followUpBody = follow, status = "drafted"); c = x; dao.put(x); status = ""; busy = false
                         }
                     }) { Text("Draft the email and its follow-up") }
-                    if (!G.ai.ready) Note("Needs an AI key, or write it yourself below.")
+                    if (!G.ai.ready) Small("A short starter from your details, with [brackets] for the one line only you can write.")
                 }
                 val editable = c.status in setOf("research", "drafted")
                 if (editable) {
@@ -223,7 +235,8 @@ fun ContactScreen(nav: NavController, id: Long) {
                     Field("Follow-up, sent once after 3 to 4 weeks of silence", c.followUpBody, { save(c.copy(followUpBody = it, status = "drafted")) }, lines = 3)
                     if (c.draftBody.isNotBlank()) {
                         if (c.revisions >= limit) Note("That is ${c.revisions} rewrites. It is short and specific: it is ready.")
-                        Button(enabled = c.email.contains("@") && c.draftSubject.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = { save(c.copy(status = "approved")) }) { Text("Approve both") }
+                        if (('[' in c.draftBody) || ('[' in c.followUpBody)) Small("Fill in the [square brackets] first.")
+                        Button(enabled = c.email.contains("@") && c.draftSubject.isNotBlank() && '[' !in c.draftBody && '[' !in c.followUpBody, modifier = Modifier.fillMaxWidth(), onClick = { save(c.copy(status = "approved")) }) { Text("Approve both") }
                         if (G.ai.ready) TextButton(enabled = !busy, onClick = {
                             busy = true; status = "Rewriting..."
                             scope.io({ status = it; busy = false }) {

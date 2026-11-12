@@ -256,12 +256,27 @@ fun CallDetail(nav: NavController, id: Long) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (o.status in setOf("new", "later", "no")) Button(onClick = { scope.io({ status = it }) { val aid = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Yes, apply") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, o.url) }) { Text("Open link") }
-            if (o.url.isNotBlank() && G.ai.ready) OutlinedButton(onClick = {
+            if (o.url.isNotBlank()) OutlinedButton(onClick = {
                 status = "Reading the page..."
                 scope.io({ status = it }) {
-                    val found = G.ai.extractCalls("Link: ${o.url}\n" + Fetch.pageText(o.url), o.sourceName).firstOrNull() ?: throw Exception("Could not find a call on that page. It may load its content in a way the app cannot read; fill in the details by hand.")
-                    val merged = Engine.scored(found.copy(id = o.id, url = o.url.ifBlank { found.url }, status = o.status, createdAt = o.createdAt), p)
-                    o = merged; dao.put(merged); status = "Details filled in from the page. Check the deadline and fee against the page yourself."
+                    val page = Fetch.pageText(o.url)
+                    if (G.ai.ready) {
+                        val found = G.ai.extractCalls("Link: ${o.url}\n" + page, o.sourceName).firstOrNull() ?: throw Exception("Could not find a call on that page. It may load its content in a way the app cannot read; fill in the details yourself.")
+                        val merged = Engine.scored(found.copy(id = o.id, url = o.url.ifBlank { found.url }, status = o.status, createdAt = o.createdAt), p)
+                        o = merged; dao.put(merged)
+                    } else {
+                        // No AI: the plain reader fills only what is still empty (deadline, fee, title).
+                        val r = com.emotionalleaves.studioagent.domain.CallReader.read(page, LocalDate.now(), java.time.ZoneId.systemDefault(), o.sourceName, now())
+                        val merged = Engine.scored(o.copy(
+                            deadline = if (o.deadline > 0) o.deadline else r.deadline,
+                            fee = if (o.fee > 0) o.fee else r.fee,
+                            title = if (o.title.isBlank() || o.title == "New call") r.title.ifBlank { o.title } else o.title,
+                            rawText = o.rawText.ifBlank { page.take(4000) }
+                        ), p)
+                        o = merged; dao.put(merged)
+                        deadlineText = if (merged.deadline > 0) Engine.date(merged.deadline).toString() else ""
+                    }
+                    status = "Filled in from the page. Check the deadline and fee against the page yourself."
                 }
             }) { Text("Read the page for me") }
         }
@@ -388,6 +403,9 @@ fun ApplScreen(nav: NavController, id: Long) {
         Field((if (o.statementLimit > 0) "Limit ${o.statementLimit} words. " else "") + "Edit only if this call needs it", a.statement, { save(a.copy(statement = it, packDir = "")) }, lines = 5)
         Note("${Texts.words(a.statement)} words")
         Field("How these works fit this call (2 to 3 sentences)", a.themeText, { save(a.copy(themeText = it, packDir = "")) }, lines = 3)
+        if (!G.ai.ready && a.themeText.isBlank()) TextButton(onClick = {
+            save(a.copy(themeText = Starter.fit(works.filter { it.id in chosenIds }.map { it.title.ifBlank { "Untitled" } }, o, a.statement), packDir = ""))
+        }) { Text("Start it for me") }
         if (G.ai.ready && a.revisions < st.revisionLimit + 1) TextButton(enabled = !busy, onClick = {
             busy = true; status = "Writing..."
             scope.io({ status = it; busy = false }) {
@@ -410,6 +428,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                                 val x = a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to t else p }), packDir = ""); a = x; dao.put(x); status = ""; busy = false
                             }
                         }) { Text("Draft an answer") }
+                        else if (ans.isBlank()) TextButton(onClick = { save(a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to Starter.answer(a.statement) else p }), packDir = "")) }) { Text("Start from my statement") }
                         TextButton(onClick = { save(a.copy(answers = Engine.answersJson(qa.filterIndexed { j, _ -> j != i }), packDir = "")) }) { Text("Remove") }
                     }
                 }
@@ -643,7 +662,7 @@ fun Sources(nav: NavController) {
             busy = true; status = "Running the daily check..."
             scope.io({ status = it; busy = false }) { status = Engine.runDaily(ctx); busy = false }
         }) { Text("Run the daily check now") }
-        if (!G.ai.ready) Note("Reading calls out of pages and emails needs an AI key (Settings).")
+        if (!G.ai.ready) Note("Without an AI key, calls from email alerts are still read for title, deadline, fee and link. Web pages that list many calls need the key; paste single calls into Calls instead.")
     }
 }
 

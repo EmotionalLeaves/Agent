@@ -42,9 +42,9 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
     val a = "Start here"; val b = "Let the app write for you"; val c = "Sending and saving"; val d = "Finding shows"; val e = "Shortcuts"
     return listOf(
         GuideStep("setup", a, "Tell the app who you are",
-            "Your name goes on your CV and file names. Your work hours keep the app silent while you are at work.",
-            listOf("Answer four short questions.", "Say yes or no to calendar and notifications. Both are optional and can be changed later."),
-            "onboarding", "Open setup", st.onboarded),
+            "A two-minute look at how the app works. Your name, hours and week are optional and can be set any time.",
+            listOf("Take the tour. Nothing to fill in.", "If you like, set your work hours so the app stays quiet while you are at work."),
+            "tour", "Take the tour", st.onboarded),
         GuideStep("interview", a, "Do the interview",
             "Everything the app writes for you is built from these answers, so it sounds like you and never invents anything.",
             listOf("Seven questions. Talk or type.", "Rough answers are fine. Three answered is enough to start.", "Tap Save answers. You can come back and add more any time."),

@@ -164,7 +164,10 @@ class Settings(ctx: Context) {
     val kinds: List<String> get() = callKinds.split(",").map { it.trim() }.filter { it.isNotBlank() }
     val jargonExtra: List<String> get() = extraJargon.split(",").map { it.trim() }.filter { it.isNotBlank() }
     val fullName get() = "$firstName $lastName".trim()
-    val onboarded get() = firstName.isNotBlank()
+    /** Set when the tour ends. The app is fully usable from then on, name or no name. */
+    var setupDone by B("setupDone", false)
+    var tourSeen by B("tourSeen", false)
+    val onboarded get() = setupDone || firstName.isNotBlank()
     val mailReady get() = mailUser.isNotBlank() && mailPass.isNotBlank()
     val ghReady get() = ghToken.isNotBlank()
 

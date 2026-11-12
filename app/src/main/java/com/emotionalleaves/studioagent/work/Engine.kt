@@ -413,6 +413,8 @@ object Engine {
         if (o.statementLimit > 0) out += "Statement within ${o.statementLimit} words (${Texts.words(a.statement)})" to (Texts.words(a.statement) <= o.statementLimit)
         out += "No stock art jargon" to Texts.jargonIn(a.statement + " " + a.themeText, st.jargonExtra).isEmpty()
         val qa = answers(a)
+        // Starter drafts made without AI leave [square brackets] for you to fill; nothing goes out with one left in.
+        out += "No [blanks] left to fill" to !(a.statement + a.themeText + qa.joinToString(" ") { it.second }).contains('[')
         if (qa.isNotEmpty()) out += "Every question answered (${qa.count { it.second.isNotBlank() }} of ${qa.size})" to qa.all { it.second.isNotBlank() }
         if (o.fee > 0) out += "Fee of $${"%.0f".format(o.fee)} fits this month's budget" to (o.fee <= feeLeft)
         if (a.method == "email") out += "Submission email address known" to a.emailTo.contains("@")
@@ -578,7 +580,8 @@ object Engine {
                 continue
             }
             val src = sources.firstOrNull { m.from.contains(it.url.trim(), ignoreCase = true) }
-            if (src != null && ai.ready) try { ingest(m.subject + "\n" + m.text, src.name) } catch (e: Exception) { }
+            // With AI the email is read properly; without it the plain reader still picks out title, deadline, fee and link.
+            if (src != null) try { if (ai.ready) ingest(m.subject + "\n" + m.text, src.name) else ingestPlain(m.subject + "\n" + m.text, src.name) } catch (e: Exception) { }
         }
         st.lastMailCheck = msgs.maxOf { it.date }
         st.log("Checked your inbox: ${msgs.size} new messages looked at.")
@@ -650,7 +653,7 @@ object Engine {
     suspend fun nextStep(): NextStep {
         val now = System.currentTimeMillis(); val today = LocalDate.now()
         if (st.sessionStart > 0) return NextStep("Session in progress", "Tap to go back to it.", "session")
-        if (!st.onboarded) return NextStep("Set up in 2 minutes", "Your name, your week and how you want to show work.", "onboarding")
+        if (!st.onboarded) return NextStep("Start with the two-minute tour", "How the app works, a page at a time. Nothing to fill in.", "tour")
         if (st.pinnedStep.isNotBlank()) return NextStep(st.pinnedStep, "Pinned by you. Clear it below when it is done.", "home")
         if (st.snoozeDay == today.toString()) return NextStep("Nothing else needs you today", "You set today's step aside. It will be back tomorrow.", "session")
         if (st.pausedUntil > now) return NextStep("Planning is paused", "Until ${date(st.pausedUntil)}. Nothing is being counted or missed. Start a session any time you feel like it.", "session")

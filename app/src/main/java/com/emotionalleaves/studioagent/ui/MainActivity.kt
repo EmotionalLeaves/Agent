@@ -72,6 +72,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handle(intent)
+        // A brand-new install opens on the tour, unless a share, widget or notification asked for a screen.
+        if (savedInstanceState == null && incoming.value == null && !st.tourSeen && !st.onboarded) incoming.value = Incoming("tour")
         setContent { StudioTheme { Root(incoming) } }
     }
 
@@ -91,7 +93,7 @@ class MainActivity : ComponentActivity() {
         val route = i.getStringExtra("route") ?: return
         if (route != "startnow") { incoming.value = Incoming(route); return }
         // The tile and the widget start the clock straight away: no screen of choices first.
-        if (!st.onboarded) { incoming.value = Incoming("onboarding"); return }
+        if (!st.onboarded) { incoming.value = Incoming("tour"); return }
         lifecycleScope.launch {
             if (st.sessionStart == 0L) {
                 try { withContext(Dispatchers.IO) { Engine.quickStart(st.defaultSessionMin) } } catch (e: Exception) { }
@@ -153,7 +155,7 @@ fun Root(incoming: MutableState<Incoming?>) {
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             // Sessions, setup and the saved screen get the whole phone: nothing else to tap.
-            if (route.substringBefore('/') !in setOf("session", "onboarding", "done", "crop", "share")) Column {
+            if (route.substringBefore('/') !in setOf("session", "onboarding", "done", "crop", "share", "tour")) Column {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 NavigationBar(containerColor = MaterialTheme.colorScheme.background, tonalElevation = 0.dp) {
                     tabs.forEach { (r, label, icon) ->
@@ -183,6 +185,7 @@ fun Root(incoming: MutableState<Incoming?>) {
         ) {
             composable("home") { Home(nav) }
             composable("onboarding") { Onboarding(nav) }
+            composable("tour") { Tour(nav) }
             composable("session") { SessionScreen(nav) }
             composable("admin") { Admin(nav) }
             composable("share") { ShareScreen(nav) }

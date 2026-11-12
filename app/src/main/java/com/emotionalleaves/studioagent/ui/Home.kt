@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.ui.semantics.selected
@@ -259,7 +260,7 @@ fun Home(nav: NavController) {
             val todo = guide.filter { !it.done }
             Section("How it goes")
             Column {
-                listOf("Set up" to "Your name and your week. Two minutes, every question has a not-sure answer.",
+                listOf("Look around" to "A two-minute tour. Nothing to fill in.",
                     "Make" to "Tap Start and the timer runs. The app keeps track of each piece and the next small step.",
                     "Show" to "Once a few pieces are done, it finds open calls that fit and builds each application for your yes.").forEachIndexed { i, (t, d) ->
                     Timeline(done = false, current = i == 0, last = i == 2) {
@@ -588,6 +589,7 @@ fun More(nav: NavController) {
     Screen("More", nav, back = false) {
         listOf(
             "Help" to listOf(
+                Tile("The tour", "How it all fits, in two minutes", "tour", Icons.Default.PlayArrow),
                 Tile("Guide", "Setup, one step at a time", "guide", Icons.Default.CheckCircle),
                 Tile("Plain answers", "What the words mean", "basics", Icons.Default.Info),
                 Tile("Where this is going", "The five levels", "path", Icons.Default.Star)
