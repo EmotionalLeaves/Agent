@@ -348,7 +348,7 @@ object Engine {
                 "You answer questions from an artist who is new to the art world, works a full-time day job, and has ADHD. Answer in at most five short sentences of plain words. " +
                     "Be practical and honest; say when something depends on the call or the venue. Never invent specific organisations, prices or deadlines. " +
                     "The artist uses an app that finds open calls, writes statements from their own answers, builds application packs and sends them; mention it only when it helps.",
-                q.take(800), fast = true, maxTokens = 400).trim()
+                q.take(800), fast = true, maxTokens = 900).trim()
         } catch (e: Exception) { }
         if (best != null && bestScore > 0) best.first + "\n\n" + best.second
         else "The writing help did not answer just now. Try the plain answers below, or ask again in a minute."
