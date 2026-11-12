@@ -177,8 +177,10 @@ object Engine {
                 maxWorks = if (o.maxWorks <= 0) plain.maxWorks else o.maxWorks
             ), text))
         } else raw.map { local(it, text) }
+        val open = found.filter { it.deadline == 0L || it.deadline >= System.currentTimeMillis() + DAY }
+        if (open.isEmpty()) return 0
         val practice = practice()
-        val withFit = found.map { o ->
+        val withFit = open.map { o ->
             if (practice.isBlank() || o.theme.isBlank()) o
             else try { val (fit, why) = ai.themeFit(o, practice); o.copy(themeFit = fit, themeReason = why) } catch (e: Exception) { o }
         }
@@ -827,6 +829,8 @@ object Engine {
      */
     suspend fun scanSources(now: Long, perSource: Int = 6): Int = withContext(Dispatchers.IO) {
         seedSources()
+        // The phone gives a background job about ten minutes. AI reading gets the first four; after that the plain reader carries on alone.
+        val started = System.currentTimeMillis()
         var total = 0
         val known = dao.oppsNow().map { it.url }.filter { it.isNotBlank() }.toMutableSet()
         for (s in dao.sourcesNow().filter { it.kind == "url" && it.enabled && it.url.isNotBlank() }) {
@@ -837,7 +841,7 @@ object Engine {
                 for (l in links.take(perSource)) {
                     known += l.url
                     val text = try { "Link: ${l.url}\n" + Fetch.text(Fetch.html(l.url)) } catch (e: Exception) { continue }
-                    added += readCall(text, s.name, l.text, l.url, now, doc.title())
+                    added += readCall(text, s.name, l.text, l.url, now, doc.title(), useAi = System.currentTimeMillis() - started < 4 * 60_000)
                 }
                 if (links.isEmpty() && Fetch.text(doc).length < 400) "The page shows almost nothing without a browser, so it cannot be read"
                 else if (added == 0) "Looked; nothing new" else "Added $added " + (if (added == 1) "call" else "calls")
@@ -849,8 +853,8 @@ object Engine {
     }
 
     /** One call's page text into the list. AI reads it when it can; the plain reader always works. Skips calls already closed. */
-    private suspend fun readCall(text: String, sourceName: String, linkText: String, url: String, now: Long, siteTitle: String = ""): Int {
-        if (ai.ready) try { val n = ingest(text, sourceName); if (n > 0) return n } catch (e: Exception) { }
+    private suspend fun readCall(text: String, sourceName: String, linkText: String, url: String, now: Long, siteTitle: String = "", useAi: Boolean = true): Int {
+        if (useAi && ai.ready) try { val n = ingest(text, sourceName); if (n > 0) return n } catch (e: Exception) { }
         val o = plainCall(text, sourceName, linkText, url, now, siteTitle) ?: return 0
         return addCalls(listOf(o))
     }
