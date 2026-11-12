@@ -12,11 +12,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.unit.dp
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -93,49 +102,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/** One palette everywhere: warm paper, deep green, a little terracotta. No stock purple. */
-private val LightColors = lightColorScheme(
-    primary = Color(0xFF2F5D50), onPrimary = Color.White, primaryContainer = Color(0xFFD9EAE3), onPrimaryContainer = Color(0xFF10261F),
-    secondary = Color(0xFFA9571F), onSecondary = Color.White, secondaryContainer = Color(0xFFDCEBE5), onSecondaryContainer = Color(0xFF16332B),
-    tertiary = Color(0xFF7A5C2E), onTertiary = Color.White, tertiaryContainer = Color(0xFFF3E4C8), onTertiaryContainer = Color(0xFF2B1F08),
-    background = Color(0xFFFAF9F6), onBackground = Color(0xFF1D1C1A), surface = Color(0xFFFAF9F6), onSurface = Color(0xFF1D1C1A),
-    surfaceVariant = Color(0xFFECE9E2), onSurfaceVariant = Color(0xFF55524B), outline = Color(0xFF8A867D), outlineVariant = Color(0xFFDAD6CD),
-    surfaceTint = Color(0xFF2F5D50), inverseSurface = Color(0xFF32302C), inverseOnSurface = Color(0xFFF5F0E8), inversePrimary = Color(0xFF9BD1BF),
-    surfaceContainerLowest = Color(0xFFFFFFFF), surfaceContainerLow = Color(0xFFF6F4EF), surfaceContainer = Color(0xFFF1EFE9),
-    surfaceContainerHigh = Color(0xFFECE9E2), surfaceContainerHighest = Color(0xFFE7E4DC), surfaceBright = Color(0xFFFAF9F6), surfaceDim = Color(0xFFDDDAD2)
-)
-
-private val DarkColors = darkColorScheme(
-    primary = Color(0xFF9BD1BF), onPrimary = Color(0xFF0B3128), primaryContainer = Color(0xFF214A3F), onPrimaryContainer = Color(0xFFD9EAE3),
-    secondary = Color(0xFFE8B48A), onSecondary = Color(0xFF4A2A10), secondaryContainer = Color(0xFF2A3B35), onSecondaryContainer = Color(0xFFD9EAE3),
-    tertiary = Color(0xFFDDC28F), onTertiary = Color(0xFF3D2E0C), tertiaryContainer = Color(0xFF554420), onTertiaryContainer = Color(0xFFF3E4C8),
-    background = Color(0xFF151513), onBackground = Color(0xFFE8E4DC), surface = Color(0xFF151513), onSurface = Color(0xFFE8E4DC),
-    surfaceVariant = Color(0xFF3A3833), onSurfaceVariant = Color(0xFFC9C5BB), outline = Color(0xFF938F86), outlineVariant = Color(0xFF45433D),
-    surfaceTint = Color(0xFF9BD1BF), inverseSurface = Color(0xFFE8E4DC), inverseOnSurface = Color(0xFF32302C), inversePrimary = Color(0xFF2F5D50),
-    surfaceContainerLowest = Color(0xFF0F0F0E), surfaceContainerLow = Color(0xFF1C1C1A), surfaceContainer = Color(0xFF21211E),
-    surfaceContainerHigh = Color(0xFF2B2B27), surfaceContainerHighest = Color(0xFF363631), surfaceBright = Color(0xFF3B3A36), surfaceDim = Color(0xFF151513)
-)
-
-/** Slightly smaller, tighter text than the stock scale, with clear steps between heading, body and note. */
-private val AppType = Typography().let { t ->
-    t.copy(
-        displayMedium = t.displayMedium.copy(fontSize = 52.sp, lineHeight = 56.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.sp),
-        headlineSmall = t.headlineSmall.copy(fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = 0.sp),
-        titleLarge = t.titleLarge.copy(fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold),
-        titleMedium = t.titleMedium.copy(fontSize = 16.sp, lineHeight = 22.sp, letterSpacing = 0.sp),
-        bodyLarge = t.bodyLarge.copy(fontSize = 15.sp, lineHeight = 22.sp, letterSpacing = 0.1.sp),
-        bodyMedium = t.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp, letterSpacing = 0.1.sp),
-        bodySmall = t.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp, letterSpacing = 0.1.sp),
-        labelLarge = t.labelLarge.copy(fontSize = 14.sp, letterSpacing = 0.1.sp),
-        labelMedium = t.labelMedium.copy(letterSpacing = 0.8.sp)
-    )
-}
-
-@Composable
-fun StudioTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) DarkColors else LightColors, typography = AppType, content = content)
-}
-
 /** Which bottom tab a screen belongs to, so the bar always shows where you are, even a few taps deep. */
 fun tabFor(route: String, tabs: List<String>): String {
     val head = route.substringBefore('/')
@@ -177,26 +143,44 @@ fun Root(incoming: MutableState<Incoming?>) {
     // Simple layout keeps the bar to four things. Calls and People are still one tap away under More.
     val tabs = if (tick >= 0 && st.simpleMode) listOf(
         Triple("home", "Home", Icons.Default.Home), Triple("works", "Studio", Icons.Default.Create),
-        Triple("guide", "Guide", Icons.Default.Info), Triple("more", "More", Icons.Default.Menu)
+        Triple("guide", "Guide", Icons.Default.CheckCircle), Triple("more", "More", Icons.Default.Menu)
     ) else listOf(
         Triple("home", "Home", Icons.Default.Home), Triple("works", "Studio", Icons.Default.Create), Triple("calls", "Calls", Icons.Default.Search),
         Triple("outreach", "People", Icons.Default.Person), Triple("more", "More", Icons.Default.Menu)
     )
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            NavigationBar {
-                tabs.forEach { (r, label, icon) ->
-                    NavigationBarItem(
-                        selected = tabFor(route, tabs.map { it.first }) == r,
-                        onClick = { nav.navigate(r) { popUpTo("home"); launchSingleTop = true } },
-                        icon = { Icon(icon, label) }, label = { Text(label) }
-                    )
+            // Sessions, setup and the saved screen get the whole phone: nothing else to tap.
+            if (route.substringBefore('/') !in setOf("session", "onboarding", "done", "crop", "share")) Column {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                NavigationBar(containerColor = MaterialTheme.colorScheme.background, tonalElevation = 0.dp) {
+                    tabs.forEach { (r, label, icon) ->
+                        val on = tabFor(route, tabs.map { it.first }) == r
+                        NavigationBarItem(
+                            selected = on,
+                            onClick = { nav.navigate(r) { popUpTo("home"); launchSingleTop = true } },
+                            icon = { Icon(icon, null) }, label = { Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary, selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant, unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
                 }
             }
         }
     ) { pad ->
-        NavHost(nav, startDestination = "home", modifier = Modifier.padding(pad)) {
+        NavHost(
+            nav, startDestination = "home", modifier = Modifier.padding(pad),
+            // A short, quiet move: forward slides in a little from the right, back slides away to it.
+            enterTransition = { fadeIn(tween(200)) + slideInHorizontally(tween(240)) { it / 14 } },
+            exitTransition = { fadeOut(tween(140)) },
+            popEnterTransition = { fadeIn(tween(200)) },
+            popExitTransition = { fadeOut(tween(160)) + slideOutHorizontally(tween(220)) { it / 14 } }
+        ) {
             composable("home") { Home(nav) }
             composable("onboarding") { Onboarding(nav) }
             composable("session") { SessionScreen(nav) }

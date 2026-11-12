@@ -40,6 +40,7 @@ class ScreensTest {
     private fun shot(name: String, route: String, expect: String) {
         ActivityScenario.launch<MainActivity>(Intent(ctx, MainActivity::class.java).putExtra("route", route)).use { scenario ->
             try { compose.waitUntil(15_000) { compose.onAllNodesWithText(expect, substring = true).fetchSemanticsNodes().isNotEmpty() } } catch (e: Throwable) { }
+            try { compose.waitForIdle() } catch (e: Throwable) { }
             try {
                 var bmp: Bitmap? = null
                 var note = ""

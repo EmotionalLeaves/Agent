@@ -1,5 +1,14 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.aspectRatio
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,13 +23,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -111,12 +117,13 @@ fun Works(nav: NavController) {
         }
     }
     Screen("Studio", nav, back = false) {
-        Intro("studio", "Every piece you make lives here, with its image and details. Works are single pieces; Series are groups that belong together.")
+        Intro("studio", "Every piece you make lives here, with its image and details. Works are single pieces; Series are groups that belong together. Already have finished files? Bring in files picks several at once and each becomes a piece.")
         Choice("", listOf("works", "series"), tab) { tab = it }
         if (tab == "works") {
-            Button(onClick = { scope.io { val id = dao.put(newWork()); withContext(Dispatchers.Main) { nav.navigate("work/$id") } } }, modifier = Modifier.fillMaxWidth()) { Text("Add a piece") }
-            OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text("Bring in existing work") }
-            Small("Already have finished files? Pick several at once and each becomes a piece.")
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(onClick = { scope.io { val id = dao.put(newWork()); withContext(Dispatchers.Main) { nav.navigate("work/$id") } } }, modifier = Modifier.weight(1f)) { Text("Add a piece") }
+                OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Bring in files") }
+            }
             Status(importStatus)
             if (works.isEmpty()) Empty("No pieces yet. Start one, or bring in work you have already made.")
             if (works.size > 5) {
@@ -126,19 +133,11 @@ fun Works(nav: NavController) {
             val q = search.value.trim().lowercase()
             works.filter { w ->
                 (show == "all" || w.status == show) && (q.isBlank() || listOf(w.title, w.tags, w.medium, w.status, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).any { it.lowercase().contains(q) })
-            }.forEach { w ->
-                Panel(onClick = { nav.navigate("work/${w.id}") }) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Thumb(w.imagePath, w.title, 56)
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(w.title.ifBlank { "Untitled #${w.id}" }, fontWeight = FontWeight.SemiBold)
-                            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Tag(w.status, strong = w.status == "in_progress")
-                                if (tick >= 0 && st.focusWork == w.id && w.status == "in_progress") Tag("this week's piece", strong = true)
-                                series.firstOrNull { it.id == w.seriesId }?.let { Tag(it.name) }
-                            }
-                        }
-                    }
+            }.chunked(2).forEach { pair ->
+                // Hung like a wall: picture, then a small label underneath with title, year and size.
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    pair.forEach { w -> Box(Modifier.weight(1f)) { WorkTile(w, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty(), tick >= 0 && st.focusWork == w.id) { nav.navigate("work/${w.id}") } } }
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
             }
             if (works.size > 1) TextButton(onClick = {
@@ -465,4 +464,30 @@ fun Ideas(nav: NavController) {
             }
         }
     }
+}
+
+
+/** One piece on the wall: the picture (or its initial on a blank sheet) and a wall label. */
+@Composable
+fun WorkTile(w: Artwork, seriesName: String, focus: Boolean, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.fillMaxWidth().aspectRatio(0.8f).clip(RoundedCornerShape(3.dp)).background(cs.surfaceContainerLowest), contentAlignment = Alignment.Center) {
+            if (w.imagePath.isNotBlank() && File(w.imagePath).exists()) PathImage(w.imagePath, Modifier.fillMaxSize(), 500, ContentScale.Crop)
+            else Text(w.title.trim().take(1).uppercase().ifBlank { "?" }, style = MaterialTheme.typography.displayLarge, color = cs.outlineVariant)
+            if (focus) TapeStrip(Modifier.align(Alignment.TopCenter).offset(y = (-6).dp), 2f)
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleMedium, maxLines = 2)
+            val facts = listOfNotNull(w.year.takeIf { it > 0 }?.toString(), if (w.widthIn > 0 && w.heightIn > 0) Texts.dims(w.widthIn, w.heightIn) else null)
+            if (facts.isNotEmpty()) Small(facts.joinToString(", "))
+            Text(statusWords(w.status) + (if (seriesName.isNotBlank()) ", $seriesName" else ""), style = MaterialTheme.typography.labelMedium,
+                color = if (w.status == "in_progress") cs.primary else cs.onSurfaceVariant, maxLines = 1)
+        }
+    }
+}
+
+fun statusWords(s: String): String = when (s) {
+    "in_progress" -> "In progress"; "idea" -> "Idea"; "finished" -> "Finished"; "documented" -> "Ready to send"; "available" -> "Available"
+    "pending" -> "Out on a call"; "shown" -> "Shown"; "sold" -> "Sold"; else -> s.replace('_', ' ').replaceFirstChar { it.uppercase() }
 }

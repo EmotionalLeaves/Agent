@@ -6,11 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -134,7 +131,7 @@ fun Guide(nav: NavController) {
         steps = loaded
         if (openId.isBlank() || loaded.firstOrNull { it.id == openId }?.done == true) openId = (loaded.firstOrNull { !it.done && !it.optional } ?: loaded.firstOrNull { !it.done })?.id.orEmpty()
     }
-    Screen("Guide", nav) {
+    Screen("Guide", nav, back = !st.simpleMode) {
         val done = steps.count { it.done }
         Text("One step at a time. Only the open step needs you; ignore the rest until you get there.")
         Panel(onClick = { nav.navigate("basics") }) { Text("New to exhibiting?", fontWeight = FontWeight.SemiBold); Small("Plain answers to the things nobody explains. You do not need to know any of it to start.") }

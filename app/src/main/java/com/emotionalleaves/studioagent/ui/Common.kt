@@ -48,7 +48,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.rememberScrollState
@@ -67,7 +66,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -144,31 +142,7 @@ fun UndoBar() {
 }
 
 @Composable
-fun Screen(
-    title: String, nav: NavController, back: Boolean = true,
-    actions: @Composable RowScope.() -> Unit = {},
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = { UndoBar() },
-        topBar = {
-            TopAppBar(
-                title = { Text(title, maxLines = 1) },
-                navigationIcon = { if (back) IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
-                actions = actions
-            )
-        }
-    ) { pad ->
-        Column(
-            Modifier.padding(pad).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp), content = content
-        )
-    }
-}
-
-@Composable
-fun H(text: String) = Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp).semantics { heading() })
+fun H(text: String) = Section(text)
 
 /** Small grey explanation. Hidden when "fewer words" is on, so screens can be as quiet as you like. */
 @Composable
@@ -192,28 +166,11 @@ fun SavedLine() {
 
 fun fitLabel(score: Int): String = if (st.fitWords) Texts.fitWord(score) else "Fit $score of 100"
 
-/**
- * The app's card. Plain panels are white with a hairline edge; [strong] ones are tinted for the one thing that matters on a screen.
- * A panel you can tap shows a small arrow, so it is obvious without trying.
- */
-@Composable
-fun Panel(onClick: (() -> Unit)? = null, strong: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
-    val colors = CardDefaults.cardColors(containerColor = if (strong) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLowest,
-        contentColor = if (strong) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface)
-    val m = Modifier.fillMaxWidth().let { if (onClick != null) it.clip(MaterialTheme.shapes.medium).clickable(role = Role.Button) { onClick() } else it }
-    Card(modifier = m, colors = colors, border = if (strong) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-        Row(Modifier.heightIn(min = if (onClick != null) 48.dp else 0.dp).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp), content = content)
-            if (onClick != null) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, Modifier.padding(start = 6.dp), tint = MaterialTheme.colorScheme.outline)
-        }
-    }
-}
-
 @Composable
 fun Field(label: String, value: String, onValue: (String) -> Unit, lines: Int = 1, number: Boolean = false, secret: Boolean = false, mic: Boolean = false) {
     val speak = if (mic) rememberMic { said -> onValue((value + " " + said).trim()) } else null
     OutlinedTextField(
-        value = value, onValueChange = onValue, label = { Text(label) }, modifier = Modifier.fillMaxWidth(),
+        value = value, onValueChange = onValue, label = { Text(label) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
         singleLine = lines == 1, minLines = lines,
         trailingIcon = if (speak != null) ({ IconButton(onClick = speak) { MicIcon() } }) else null,
         keyboardOptions = KeyboardOptions(
@@ -313,14 +270,14 @@ private val thumbs = android.util.LruCache<String, ImageBitmap>(40)
 
 /** Shows an image file, decoded small and off the main thread. */
 @Composable
-fun PathImage(path: String, modifier: Modifier = Modifier, maxSide: Int = 700) {
+fun PathImage(path: String, modifier: Modifier = Modifier, maxSide: Int = 700, scale: ContentScale = ContentScale.Fit) {
     val stamp = if (path.isBlank()) 0L else File(path).lastModified()
     val key = "$path|$stamp|$maxSide"
     val bmp by produceState<ImageBitmap?>(thumbs.get(key), key) {
         if (value == null) value = withContext(Dispatchers.IO) { ImageTools.decode(path, maxSide)?.asImageBitmap()?.also { thumbs.put(key, it) } }
     }
     val b = bmp
-    if (b != null) Image(b, null, modifier, contentScale = ContentScale.Fit)
+    if (b != null) Image(b, null, modifier, contentScale = scale)
     else Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant))
 }
 
@@ -349,18 +306,6 @@ fun Expand(title: String, startOpen: Boolean = false, content: @Composable Colum
     }
 }
 
-/** One short explanation the first time a screen is opened. Gone for good after "Got it". */
-@Composable
-fun Intro(key: String, text: String) {
-    val tick by st.changed.collectAsState()
-    if (tick >= 0 && key !in st.seenIntros.split(",")) {
-        Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(12.dp)).padding(start = 12.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(text, Modifier.weight(1f).padding(vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            TextButton(onClick = { st.seenIntros = st.seenIntros + "," + key }) { Text("Got it") }
-        }
-    }
-}
-
 /** A size box that shows inches or centimetres, whichever you chose, and always stores inches. */
 @Composable
 fun Dim(label: String, valueIn: Double, onIn: (Double) -> Unit) {
@@ -371,9 +316,9 @@ fun Dim(label: String, valueIn: Double, onIn: (Double) -> Unit) {
 /** A small label for one fact about a thing: a status, a date, a price. */
 @Composable
 fun Tag(text: String, strong: Boolean = false) {
-    Text(text.replace('_', ' '), style = MaterialTheme.typography.bodySmall,
+    Text(text.replace('_', ' ').replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelMedium,
         color = if (strong) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.background(if (strong) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 3.dp))
+        modifier = Modifier.background(if (strong) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(4.dp)).padding(horizontal = 7.dp, vertical = 2.dp))
 }
 
 /** A piece's picture in a list, or its initial on a quiet tile when there is no picture yet. */
@@ -389,8 +334,8 @@ fun Thumb(path: String, title: String, size: Int = 64) {
 /** What a list shows when it is empty: one line of what goes here and, at most, one thing to tap. */
 @Composable
 fun Empty(text: String, action: String = "", onAction: () -> Unit = {}) {
-    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainerLow, RoundedCornerShape(16.dp)).padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column(Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)).padding(horizontal = 20.dp, vertical = 24.dp), horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (action.isNotBlank()) OutlinedButton(onClick = onAction) { Text(action) }
     }
 }
