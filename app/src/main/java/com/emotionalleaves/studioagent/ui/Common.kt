@@ -191,7 +191,7 @@ fun Choice(label: String, options: List<String>, selected: String, onSelect: (St
     Column {
         if (label.isNotBlank()) Small(label)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            options.forEach { o -> FilterChip(selected = o == selected, onClick = { onSelect(o) }, label = { Text(o.replace('_', ' ').replaceFirstChar { it.uppercase() }) }) }
+            options.forEach { o -> FilterChip(selected = o == selected, onClick = { onSelect(o) }, label = { Text(o.replace('_', ' ').replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodyMedium, fontWeight = if (o == selected) FontWeight.Bold else FontWeight.Normal) }) }
         }
     }
 }

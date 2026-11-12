@@ -204,7 +204,7 @@ fun Home(nav: NavController) {
                             Text("MTWTFSS"[i].toString(), style = MaterialTheme.typography.labelMedium, fontWeight = if (day == today) FontWeight.Bold else FontWeight.Normal,
                                 color = if (day == today) cs.onSurface else cs.onSurfaceVariant)
                             Box(Modifier.size(width = 26.dp, height = 34.dp).clip(RoundedCornerShape(3.dp)).let {
-                                if (worked) it.background(cs.primary) else if (planned) it.border(2.dp, cs.primary, RoundedCornerShape(3.dp)) else it.background(cs.surfaceContainer)
+                                if (worked) it.background(cs.primary) else if (planned) it.border(2.dp, cs.primary, RoundedCornerShape(3.dp)) else it.background(cs.surfaceContainerHigh)
                             })
                         }
                     }
@@ -269,22 +269,24 @@ fun DoneScreen(nav: NavController) {
     val sessions by dao.sessions().collectAsState(emptyList())
     val works by dao.artworks().collectAsState(emptyList())
     val s = sessions.firstOrNull()
-    Screen("Session saved", nav, back = false) {
-        Panel(strong = true) {
-            Text("Saved", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
-            if (s != null) {
-                val mins = ((s.end - s.start) / 60000).coerceAtLeast(0)
-                Text("$mins minutes" + (works.firstOrNull { it.id == s.artworkId }?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".")
-                if (s.nextStep.isNotBlank()) Text("Next time starts with: ${s.nextStep}")
-                Text(if (mins < 10) "Short sessions count. You showed up." else "That counts toward your week.")
+    Screen("Session saved", nav, bare = true) {
+        Space(40)
+        Text("Saved.", style = MaterialTheme.typography.displayLarge)
+        if (s != null) {
+            val mins = ((s.end - s.start) / 60000).coerceAtLeast(0)
+            Text("$mins minutes" + (works.firstOrNull { it.id == s.artworkId }?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".", style = MaterialTheme.typography.headlineSmall)
+            Text(if (mins < 10) "Short sessions count. You showed up." else "That counts toward your week.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (s.nextStep.isNotBlank()) WallLabel(onClick = null) {
+                Small("Next time starts with")
+                Text(s.nextStep, style = MaterialTheme.typography.titleLarge)
             }
         }
         Small("It is all stored. You can close the app.")
+        Space(8)
         Button(onClick = { nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("OK") }
     }
 }
 
-/** Setup as five small pages, one question each, so nothing on screen needs reading twice. */
 @Composable
 fun Onboarding(nav: NavController) {
     val first = remember { mutableStateOf(st.firstName) }
@@ -404,7 +406,7 @@ fun SessionScreen(nav: NavController) {
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
                 if (st.dndInSession) Notifier.dnd(ctx, true)
             }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text("Start") }
-            if (st.dndInSession && !Notifier.dndGranted(ctx)) Note("To silence your phone during sessions, allow Do Not Disturb access in Settings (More, Settings, Permissions).")
+            if (st.dndInSession && !Notifier.dndGranted(ctx)) Small("Want the phone silenced during sessions? Allow it in Settings, Permissions.")
         }
     } else {
         var nowMs by remember { mutableStateOf(now()) }

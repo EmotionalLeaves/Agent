@@ -97,7 +97,7 @@ class AppTest {
             "settings" to "Your rules", "settings/you" to "Sizes in", "settings/hours" to "Change my studio times", "settings/rules" to "What matters most when ranking",
             "settings/writing" to "These apply to everything", "settings/ai" to "Test the key", "settings/email" to "Send me a test email",
             "settings/github" to "Back up to GitHub now", "settings/backup" to "Choose a backup folder", "settings/permissions" to "Allow Do Not Disturb",
-            "guide" to "Tell the app who you are", "receipts" to "What the app did on its own", "settings/calm" to "Finished means finished", "done" to "Session saved", "week" to "Change these", "sessions" to "No sessions yet", "more" to "Look up", "share" to "Park as an idea"
+            "guide" to "Tell the app who you are", "receipts" to "What the app did on its own", "settings/calm" to "Finished means finished", "done" to "It is all stored", "week" to "Change these", "sessions" to "No sessions yet", "more" to "Look up", "share" to "Park as an idea"
         ).forEach { (route, expect) -> opens(route, expect) }
     }
 

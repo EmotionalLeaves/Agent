@@ -116,7 +116,7 @@ class ScreensTest {
         shot("23_review", "review", "Done for the week")
         shot("24_records", "records", "To do")
         shot("25_session_running", "startnow", "Now: Block in the big shapes")
-        shot("26_done", "done", "Session saved")
+        shot("26_done", "done", "It is all stored")
     }
 
     /** The same screens after dark, to check nothing turns unreadable. */

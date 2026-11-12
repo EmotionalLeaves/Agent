@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.net.Uri
@@ -116,12 +117,15 @@ fun Calls(nav: NavController) {
                     1 -> "Local, campus and community calls."
                     2 -> "Regional juried shows."
                     else -> "Competitive calls, judged case by case."
-                } + " These limits are yours to change in Settings, Your rules.")
+                } + " Change this in Settings, Your rules.")
                 if (list.isEmpty()) Empty("No calls waiting. When you see one anywhere, tap Share and choose Studio Agent, or paste it below.")
                 list.forEach { o ->
                     key(o.id) {
                         Panel {
-                            Text(o.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth().clickable { nav.navigate("call/${o.id}") })
+                            Row(Modifier.fillMaxWidth().clickable { nav.navigate("call/${o.id}") }, verticalAlignment = Alignment.CenterVertically) {
+                                Text(o.title, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Full details", tint = MaterialTheme.colorScheme.outline)
+                            }
                             if (whereLine(o).isNotBlank()) Small(whereLine(o))
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Tag(fitLabel(o.fitScore), strong = true)
