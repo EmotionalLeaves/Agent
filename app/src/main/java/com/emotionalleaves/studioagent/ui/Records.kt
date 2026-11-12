@@ -323,11 +323,8 @@ fun SettingsScreen(nav: NavController, section: String) {
                             }
                             IconRow(icons.getValue(id), title, sub + (if (tick >= 0 && state.isNotBlank()) ". $state" else "")) { nav.navigate("settings/$id") }
                         }
-                        if (group == "Everyday") IconRow(Icons.Default.DateRange, "Your week", "Studio times, pausing, session history") { nav.navigate("week") }
                     }
                 }
-                Section("Help")
-                IconRow(Icons.Default.CheckCircle, "Guide and layout", "Setup steps, simple layout on or off") { nav.navigate("guide") }
             }
             "you" -> {
                 Small("All optional. Each is used only where it is needed: your CV, file names, entry forms.")

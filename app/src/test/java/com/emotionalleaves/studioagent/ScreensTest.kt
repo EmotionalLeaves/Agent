@@ -129,7 +129,7 @@ class ScreensTest {
         shot("34_dark_guide", "guide", "done")
         shot("35_dark_session", "startnow", "Now: Block in the big shapes")
         shot("36_dark_piece", "work/${ids["wip"]}", "Small steps")
-        shot("37_dark_settings", "settings", "Your rules")
+        shot("37_dark_you", "more", "Plain answers")
         shot("38_dark_tour", "tour", "From the studio to a wall")
         shot("39_dark_done", "done", "It is all stored")
     }
