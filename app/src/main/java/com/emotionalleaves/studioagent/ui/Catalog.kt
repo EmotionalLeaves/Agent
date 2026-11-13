@@ -137,6 +137,8 @@ fun Works(nav: NavController) {
                 OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Add from my files") }
             }
             TextButton(onClick = { nav.navigate("commission") }) { Text("Someone wants a piece made for them") }
+            val unphotographed = works.count { it.imagePath.isBlank() && it.status in setOf("finished", "documented", "available") && it.format != "digital" }
+            if (unphotographed >= 2) TextButton(onClick = { nav.navigate("photoshoot") }) { Text("Photograph ${Texts.count(unphotographed, "finished piece")} in one go") }
             Status(importStatus)
             // Where the work is right now: pieces out at shows, by place, so nothing is forgotten on a wall.
             val out = works.filter { it.status in setOf("shown", "pending") && it.location.isNotBlank() && it.location != "Studio" }.groupBy { it.location }
