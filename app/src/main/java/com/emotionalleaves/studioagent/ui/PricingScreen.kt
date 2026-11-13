@@ -55,6 +55,16 @@ fun PricingScreen(nav: NavController) {
             val old = unpriced
             scope.undoable("Prices set for ${Texts.count(old.size, "piece")}", { old.forEach { dao.put(it.copy(price = Texts.price(it.widthIn, it.heightIn, st.pricePerSqIn))) } }, { old.forEach { dao.put(it) } })
         }) { Text("Price the ${Texts.count(unpriced.size, "piece")} with no price, from the rule") }
+        // What your hours earn at these prices: not a rule for pricing art, but worth knowing.
+        val sessions by dao.sessions().collectAsState(emptyList())
+        val timed = works.filter { it.price > 0 && !it.nfs }.mapNotNull { w -> sessions.filter { it.artworkId == w.id && it.end > it.start }.sumOf { (it.end - it.start) / 3_600_000.0 }.takeIf { it >= 1 }?.let { h -> w to h } }
+        if (timed.size >= 2) Panel {
+            Text("What your hours earn", fontWeight = FontWeight.SemiBold)
+            val perHour = timed.sumOf { it.first.price } / timed.sumOf { it.second }
+            Text("About ${money(perHour)} an hour of making, across ${Texts.count(timed.size, "piece")} with sessions logged.")
+            timed.sortedBy { it.first.price / it.second }.take(3).forEach { (w, h) -> Small("${w.title.ifBlank { "Untitled" }}: ${"%.0f".format(h)} hours, ${money(w.price / h)} an hour") }
+            Small("Art is not priced by the hour, and early prices are low for everyone. But a piece that took three times as long as its neighbors may deserve a higher price, or a smaller size next time.")
+        }
         Section("Raising prices")
         val year = java.time.LocalDate.now().year
         val sold = ledger.count { it.kind == "sale" && it.artworkId > 0 && Engine.date(it.date).year == year }

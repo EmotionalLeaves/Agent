@@ -466,3 +466,4 @@ One real change per round. Pushed and built every ten rounds.
 460. A show you are in can be posted from its own photos: the room and the work in one grid picture, with the show's name, place and dates, a thank-you to everyone who came and to the venue, and plain tags.
 461. A guard against hyperfocus: a session still running fifteen minutes before your bedtime gets one gentle notification to jot where you are and stop; it is all there tomorrow.
 462. Everything the app can do now lists The year ahead and the ready-made emails too, and the tour's last page says where that list lives.
+463. Your prices shows what your hours earn at them, from the sessions you logged: about how much an hour of making brings across your pieces, and the three that earn least, with a plain note that art is not priced by the hour but a piece that took far longer than its neighbors may deserve more.
