@@ -361,3 +361,4 @@ One real change per round. Pushed and built every ten rounds.
 355. Your own studio times step around what is already in your phone's calendar (a changed shift, an appointment): an hour or two later the same evening, or skipped that day, instead of booking over it.
 356. Studio: finished pieces that already have pictures are offered in one tap: "Mark all 4 Ready to send", with empty details filled in.
 357. README describes the new features: the month calendar, the board, eight sources, places near you, shows of your own, the widget and the new documents.
+358. Applications whose checks all pass get their files made by the daily check, so the pack is waiting and sending is one look and one tap.

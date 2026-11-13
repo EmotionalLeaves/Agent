@@ -1290,6 +1290,16 @@ object Engine {
         step("outreach") { withContext(Dispatchers.IO) { sendOutreach(now) } }
         step("rescore") { rescore() }
         step("venues") { researchVenues() }
+        // Applications whose checks all pass get their files made overnight, so sending is one look and one tap.
+        step("packs") {
+            val works = dao.artworksNow(); val left = feeLeft(dao.ledgerNow())
+            dao.applsNow().filter { it.submittedAt == 0L && it.status !in setOf("sending", "accepted", "declined") && (it.packDir.isBlank() || !File(it.packDir).exists()) }.forEach { a ->
+                val o = dao.oppsNow().firstOrNull { it.id == a.oppId } ?: return@forEach
+                if (workIds(a).isNotEmpty() && checklist(a, o, works, left, now).all { it.second }) {
+                    val dir = buildPack(ctx, a, o); dao.put(a.copy(packDir = dir.absolutePath))
+                }
+            }
+        }
         step("openings") { findOpenings() }
         step("backup") { backupToGitHub(ctx) }
         step("folder backup") {
