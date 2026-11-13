@@ -492,3 +492,4 @@ One real change per round. Pushed and built every ten rounds.
 486. Foundations shows your practice so far as pictures: the photos from your recent practice sessions in a grid with their dates, the clearest sign that it is working.
 487. Supplies: what you work with, with a tap when something is running low (a common starting list is one tap). The shopping list is ready to send or take to the store, and the session screen mentions anything running low, so a missing tube of white never stops a session.
 488. Words calls and galleries use: a plain-language glossary of thirty terms someone starting out meets (juried, prospectus, consignment, edition and artist proof, giclée, hanging fee, salon hang, wire and D-rings...), searchable, in Everything the app can do.
+489. A call's page explains up to three of its own words that someone starting out may not know (prospectus, juried, consignment, giclée...), right there, from the glossary.

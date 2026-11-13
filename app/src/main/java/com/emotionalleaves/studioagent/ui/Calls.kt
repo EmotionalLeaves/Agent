@@ -347,6 +347,9 @@ fun CallDetail(nav: NavController, id: Long) {
                 .takeIf { it.isNotEmpty() }?.let { signs -> signs.take(2).forEach { Text("Worth checking: " + it.what, color = MaterialTheme.colorScheme.secondary) } }
             // What this kind of call is, and what usually decides it.
             callKindTip(o.kind).takeIf { it.isNotBlank() }?.let { Small(it) }
+            // Words in this call that someone starting out may not know, explained right here.
+            remember(o.rawText) { val t = o.rawText.lowercase(); glossary.filter { (term, _) -> term.lowercase().split(" / ", " (").map { it.trim(')', ' ') }.any { k -> k.length > 3 && Regex("\\b" + Regex.escape(k) + "\\b").containsMatchIn(t) } }.take(3) }
+                .forEach { (term, meaning) -> Small("$term: $meaning") }
             // Who chooses, and what they have chosen before: ten minutes of looking says what to send.
             if (o.jurors.isNotBlank() || o.title.length > 4) Row {
                 if (o.jurors.isNotBlank()) TextButton(onClick = { Share.open(ctx, "https://www.google.com/search?q=" + java.net.URLEncoder.encode(o.jurors.substringBefore(",").trim() + " artist curator", "UTF-8")) }, modifier = Modifier.offset(x = (-12).dp)) { Text("Look up the juror") }
