@@ -27,22 +27,24 @@ Every build photographs the main screens in light, dark and large text and attac
 
 Four tabs, the same every time. Each thing has one place.
 
-- **Today**: the one next step, Start now, your week (tap it for studio times, pausing and session history), deadlines, and anything waiting for your yes.
+- **Today**: the one next step, Start now, your week (tap it for the month calendar, studio times, pausing and session history), the next 7 days, the road to your first show, and anything waiting for your yes.
 - **Studio**: your pieces, series and parked ideas.
-- **Calls**: open calls this week, all of them, what you applied to, and where calls come from.
+- **Calls**: open calls this week, all of them (with a find box), and what you applied to as a board that follows each entry from chosen to the show and home again.
 - **You**, six rows: Statement, bio and CV; People and venues; Guide (with the five levels); Records (to-dos, money, sales, proof of what was sent); Settings; Help (the tour, plain answers, about).
 
 ## Quick ways in
 
 - Long-press the icon: Start now, Calls, Park an idea.
-- The Start now widget and quick-settings tile start a session in one tap.
+- The Start now widget and quick-settings tile start a session in one tap. The Next step widget shows today's step on the home screen.
 - Share a link, text or flyer into the app to add a call, or photograph a flyer from Calls: its words are read on the phone (offline, no key). Share several pictures from the gallery to add them as pieces.
 
 ## Works with nothing set up
 
-- Calls: four public listing sites (ArtCall, Artwork Archive, ArtJobs, Artshow) are read once a day without AI, and only where the site's robots.txt allows it. Each new call's own page is opened and read for title, deadline, fee, kind and scope.
+- Calls: eight public listing sites (CaFÉ, ArtCall, Artwork Archive, Art Deadline, ArtConnect, ArtRabbit, ArtJobs, Artshow) are read once a day without AI, and only where the site's robots.txt allows it. Each new call's own page is opened and read for title, deadline, fee, kind and scope.
 - Writing help: a free public service that needs no account (Pollinations, with LLM7 as the fallback). If it doesn't answer, every button falls back to a starter built from your own words. A key of your own, from any provider, can be pasted in; the app recognises the provider from the key.
 - Help from the writing help, each with a plain fallback: "In plain words" on every call, "Suggest small steps" on a piece, and "Ask anything" in Help.
 - Email: type your address and the servers fill themselves in for Gmail, Yahoo, iCloud, AOL, Fastmail and Zoho. Without email set up, each application opens in your mail app, filled in.
-- Documents: CV, portfolio, price list, wall labels, certificate, bill of sale and proposal, set in the app's typefaces, with titles of works in italics, sizes as h × w in with cm, catalog numbers, and Lastname_What.pdf names. Exported pictures carry your name and a copyright line inside the file.
+- Places: real galleries, art centers, libraries, print labs and framers near you, from OpenStreetMap (no key). Venues' own sites are read for exhibition pages and upcoming openings.
+- Shows of your own: a venue's yes becomes dated steps, a flyer with a QR code, labels, an agreement to sign, photos of the show, and what to say at the opening.
+- Documents: CV, portfolio, catalogue of works, price list, wall labels, flyer, sign-up sheet, agreement, certificate, bill of sale and proposal (with the series drawn on a wall at real size), and all materials as one zip, set in the app's typefaces, with titles of works in italics, sizes as h × w in with cm, catalog numbers, and Lastname_What.pdf names. Exported pictures carry your name and a copyright line inside the file.
 
