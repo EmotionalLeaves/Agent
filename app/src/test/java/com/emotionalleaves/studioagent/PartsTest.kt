@@ -382,7 +382,8 @@ class PartsTest {
         val img = picture("kit.jpg", 1600, 1200).absolutePath
         G.dao.put(com.emotionalleaves.studioagent.data.Artwork(title = "Blue Hour", year = 2026, medium = "Archival pigment print", widthIn = 16.0, heightIn = 12.0, imagePath = img, status = "documented", createdAt = 1))
         G.dao.put(com.emotionalleaves.studioagent.data.Doc(type = "statement", text = "I photograph kitchens at dawn, before the first shift.", approved = true))
-        val zip = Engine.pressKit(ctx)
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = File(ctx.cacheDir, "kit_preview")
+        val zip = try { Engine.pressKit(ctx) } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
         val names = java.util.zip.ZipFile(zip).use { z -> z.entries().toList().map { it.name } }
         assertTrue(names.toString(), names.any { it.startsWith("Leaves_01_Blue") && it.endsWith(".jpg") })
         assertTrue(names.toString(), names.contains("Leaves_Portfolio.pdf"))
