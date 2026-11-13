@@ -1482,3 +1482,33 @@ object People {
         "Hi ${them.ifBlank { "there" }}, it was good to draw next to you${if (where.isNotBlank()) " at $where" else ""}. " +
             "I'm trying to go most weeks. If you hear of any open calls or shows for people starting out, I'd love to know, and I'll pass on any I find. $me"
 }
+
+// ---------------------------------------------------------------- answers you have written before
+/**
+ * Entry forms ask the same few things in different words ("Tell us about your practice", "Describe your work").
+ * An answer written once is offered again when a new form asks something close to it.
+ */
+object AnswerBank {
+    data class Past(val question: String, val answer: String, val from: String)
+
+    private val filler = setOf("a", "an", "the", "and", "or", "of", "to", "in", "on", "for", "your", "you", "us", "we", "our", "is", "are", "be",
+        "what", "how", "why", "please", "tell", "describe", "briefly", "about", "this", "that", "with", "do", "does", "it", "its", "if", "any", "words", "word", "max", "maximum", "up")
+    private val same = mapOf("practice" to "work", "artwork" to "work", "artworks" to "work", "pieces" to "work", "piece" to "work", "works" to "work",
+        "influences" to "influence", "inspiration" to "influence", "inspires" to "influence", "inspired" to "influence",
+        "goals" to "goal", "hope" to "goal", "hopes" to "goal", "plans" to "goal", "plan" to "goal",
+        "background" to "bio", "biography" to "bio", "yourself" to "bio", "experience" to "bio",
+        "connect" to "fit", "connects" to "fit", "relate" to "fit", "relates" to "fit", "fits" to "fit", "theme" to "fit")
+
+    fun words(q: String): Set<String> = q.lowercase().split(Regex("[^a-z]+")).filter { it.length > 1 && it !in filler }.map { same[it] ?: it }.toSet()
+
+    fun likeness(a: String, b: String): Double {
+        val x = words(a); val y = words(b)
+        if (x.isEmpty() || y.isEmpty()) return 0.0
+        return (x intersect y).size.toDouble() / (x union y).size
+    }
+
+    /** The closest past answer to [question], when it is close enough to be worth offering; the longest wins a tie. */
+    fun best(question: String, past: List<Past>): Past? = past.filter { it.answer.isNotBlank() }
+        .map { it to likeness(question, it.question) }.filter { it.second >= 0.5 }
+        .maxWithOrNull(compareBy({ it.second }, { it.first.answer.length }))?.first
+}

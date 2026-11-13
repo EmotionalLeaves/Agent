@@ -852,9 +852,16 @@ fun ApplScreen(nav: NavController, id: Long) {
                     status = "Drafted. Read each one and change anything that is not quite true or not you."; busy = false
                 }
             }) { Text("Draft all ${blanks} answers") }
+            // Everything answered on other entries, to offer again when a question here asks much the same.
+            val past = appls.filter { it.id != a.id }.flatMap { other -> Engine.answers(other).map { (pq, pa) -> com.emotionalleaves.studioagent.domain.AnswerBank.Past(pq, pa, opps.firstOrNull { it.id == other.oppId }?.title.orEmpty()) } }
             qa.forEachIndexed { i, (q, ans) ->
                 key(i, q) {
                     Field(q, ans, { v -> save(a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to v else p }), packDir = "")) }, lines = 3)
+                    if (ans.isBlank()) com.emotionalleaves.studioagent.domain.AnswerBank.best(q, past)?.let { b ->
+                        TextButton(onClick = { save(a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to b.answer else p }), packDir = "")) }, modifier = Modifier.offset(x = (-12).dp)) {
+                            Text("Use what you wrote" + (if (b.from.isNotBlank()) " for " + b.from else " before"))
+                        }
+                    }
                     // A budget question: add lines (what, how much) and the answer is written as a list with its total.
                     if (q.contains("budget", ignoreCase = true)) Expand("Build the budget") {
                         val item = rememberSaveable(i) { mutableStateOf("") }
