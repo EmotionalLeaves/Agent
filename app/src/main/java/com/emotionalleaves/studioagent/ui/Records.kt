@@ -94,6 +94,24 @@ fun Records(nav: NavController) {
 
     Screen("Records", nav) {
         Intro("records", "The paperwork drawer: what is left to do for shows you got into, your own to-dos, money in and out, a report once a quarter, and proof of everything sent. Nothing here needs checking daily.")
+        // The year so far, counted: what a whole year of small sessions adds up to.
+        val sessionsAll by dao.sessions().collectAsState(emptyList())
+        val people by dao.contacts().collectAsState(emptyList())
+        val yr = java.time.LocalDate.now().year
+        val yStart = Engine.millis(java.time.LocalDate.of(yr, 1, 1).atStartOfDay())
+        val hoursYear = sessionsAll.filter { it.start >= yStart && it.end > it.start }.sumOf { (it.end - it.start) / 3_600_000.0 }
+        val yearLines = listOfNotNull(
+            hoursYear.takeIf { it >= 1 }?.let { "%.0f hours of making".format(it) },
+            works.count { it.createdAt >= yStart && it.imagePath.isNotBlank() }.takeIf { it > 0 }?.let { Texts.count(it, "piece") + " with pictures" },
+            appls.count { it.submittedAt >= yStart }.takeIf { it > 0 }?.let { Texts.count(it, "application") + " sent" },
+            appls.count { it.status == "accepted" && it.submittedAt >= yStart }.takeIf { it > 0 }?.let { Texts.count(it, "show") + " you were in" },
+            events.count { it.type == "opening" && it.done && it.date >= yStart }.takeIf { it > 0 }?.let { Texts.count(it, "opening") + " visited" },
+            people.count { it.kind == "subscriber" }.takeIf { it > 0 }?.let { Texts.count(it, "person", "people") + " on your list" }
+        )
+        if (yearLines.isNotEmpty()) Panel {
+            Text("$yr so far", fontWeight = FontWeight.SemiBold)
+            yearLines.forEach { Text(it) }
+        }
         val tasks = events.filter { (it.type == "task" || it.type == "todo") && !it.done }
         H("To do")
         if (tasks.isEmpty()) Empty("Nothing open. When you get into a show, its delivery and pick-up steps appear here by themselves.")
