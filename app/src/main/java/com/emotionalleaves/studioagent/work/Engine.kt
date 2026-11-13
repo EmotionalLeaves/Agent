@@ -1506,7 +1506,7 @@ object Engine {
     /** The glossary entry a question names: its main words or the words in brackets ("Call for art (open call)"). */
     fun glossaryAnswer(q: String): String? = com.emotionalleaves.studioagent.ui.glossary.firstOrNull { (term, _) ->
         val t = term.lowercase()
-        (listOf(t.substringBefore(" (")) + Regex("\\(([^)]*)\\)").findAll(t).map { it.groupValues[1] }.toList()).any { k -> k.length > 2 && Regex("\\b" + Regex.escape(k) + "s?\\b").containsMatchIn(q) }
+        (t.substringBefore(" (").split(" / ") + Regex("\\(([^)]*)\\)").findAll(t).map { it.groupValues[1] }.toList()).any { k -> k.length > 2 && Regex("\\b" + Regex.escape(k) + "s?\\b").containsMatchIn(q) }
     }?.let { (term, def) -> "$term: $def\nGO: glossary" }
 
     /** The tool whose name or description shares the question's main words, best match first. */
