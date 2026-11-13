@@ -3,6 +3,7 @@ package com.emotionalleaves.studioagent.ui
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DropdownMenuItem
 
 import androidx.compose.material3.MenuAnchorType
@@ -484,6 +485,7 @@ fun SearchScreen(nav: NavController) {
     val docs by dao.docs().collectAsState(emptyList())
     val ideas by dao.ideas().collectAsState(emptyList())
     val sessionsAll by dao.sessions().collectAsState(emptyList())
+    val eventsAll by dao.events().collectAsState(emptyList())
     val scope = rememberCoroutineScope()
     var answer by remember { mutableStateOf("") }
     var asking by remember { mutableStateOf(false) }
@@ -519,7 +521,12 @@ fun SearchScreen(nav: NavController) {
         // Your own notes too: ideas, and what you wrote at the end of sessions.
         val i = ideas.filter { hit(it.text) }.take(5)
         val sn = sessionsAll.filter { (it.note.isNotBlank() || it.nextStep.isNotBlank()) && hit(it.note, it.nextStep) }.take(5)
-        if (!question && words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty() && i.isEmpty() && sn.isEmpty()) Small("Nothing matches that.")
+        // Your to-dos, and the app's own tools ("postcards", "teach", "prices"), so a feature is found by its name.
+        val todo = eventsAll.filter { it.type == "task" && !it.done && hit(it.title) }.take(5)
+        val tl = toolGroups.flatMap { it.second }.filter { hit(it.first, it.second) }.take(4)
+        if (tl.isNotEmpty()) { Section("Tools"); tl.forEach { (t, why, r) -> IconRow(Icons.Default.Menu, t, why) { nav.navigate(r) } } }
+        if (!question && words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty() && i.isEmpty() && sn.isEmpty() && todo.isEmpty() && tl.isEmpty()) Small("Nothing matches that.")
+        if (todo.isNotEmpty()) { Section("To do"); todo.forEach { x -> IconRow(Icons.Default.DateRange, x.title, fmtDate(x.date)) { nav.navigate("records") } } }
         if (w.isNotEmpty()) { Section("Pieces"); w.forEach { x -> IconRow(Icons.Default.Edit, x.title.ifBlank { "Untitled" }, statusWords(x.status)) { nav.navigate("work/${x.id}") } } }
         if (c.isNotEmpty()) { Section("Calls"); c.forEach { x -> IconRow(Icons.Default.DateRange, x.title, listOf(x.organiser, x.city).filter { it.isNotBlank() }.joinToString(", ")) { nav.navigate("call/${x.id}") } } }
         if (p.isNotEmpty()) { Section("People and venues"); p.forEach { x -> IconRow(Icons.Default.Person, x.venue.ifBlank { x.name.ifBlank { x.email } }, if (x.kind == "subscriber") "On your email list" else kindWords(x.kind)) { nav.navigate("contact/${x.id}") } } }

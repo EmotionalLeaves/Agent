@@ -547,3 +547,4 @@ One real change per round. Pushed and built every ten rounds.
 540. Until you have found some, one Sunday mid-month Today suggests "Draw with other people this month" (a drop-in life drawing session or a sketch group), opening Your people. Shown that Sunday only, once a month, and never again once you have ticked a place you have been.
 541. Supplies, after "Bought them all": one number for what it cost, and "Put it in Records" files it as art supplies for the year (and taxes); Skip is fine too. "Clear all but the low ones" now has Undo, like everything else that removes things.
 542. "New in this version" on Today now lists what rounds 521 to 541 added, in seven lines.
+543. Find anything finds tools and to-dos too: type "postcards", "teach" or "prices" and the tool comes up by name, first; open to-dos (yours and the app's) are listed with their dates.
