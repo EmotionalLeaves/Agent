@@ -331,6 +331,8 @@ fun CallDetail(nav: NavController, id: Long) {
             o.fitReasons.lines().filter { it.isNotBlank() }.forEach { Text(it) }
             if (why.isNotEmpty()) Text("Held back by your rules: " + why.joinToString("; "), color = MaterialTheme.colorScheme.secondary)
             Flags(o)
+            // What this kind of call is, and what usually decides it.
+            callKindTip(o.kind).takeIf { it.isNotBlank() }?.let { Small(it) }
             // Call pages are long and full of jargon: the writing help says what it is and what they want, in three plain lines.
             var plain by remember(o.id) { mutableStateOf(Engine.plainWordsCached(o)) }
             LaunchedEffect(o.id) { if (plain.isEmpty()) plain = try { Engine.plainWords(o) } catch (e: Exception) { emptyList() } }
@@ -1104,3 +1106,14 @@ fun JuryView(nav: NavController, id: Long) {
 
 /** Everything a call says about itself, in one lowercase string to search. */
 fun callWords(o: Opp): String = listOf(o.title, o.organiser, o.venue, o.city, o.theme, o.mediums, o.eligibility, o.kind, o.sourceName, o.rawText.take(3000)).joinToString(" ").lowercase()
+
+/** One line on what each kind of call is and what usually decides it. */
+fun callKindTip(kind: String): String = when (kind) {
+    "exhibition" -> "A show: jurors look at the pictures first, so the images and how well they belong together decide most of it."
+    "residency" -> "Time and space to work somewhere. They want a clear plan for the time there and why that place."
+    "grant" -> "Money for a project. They want what you will make, a simple budget, and a realistic timeline."
+    "fair" -> "You rent a booth and sell. Count the booth fee against what you could sell before saying yes."
+    "publication" -> "Your work in print or online. Good pictures of the work matter most."
+    "commission" -> "A piece made for a place or a brief. They want your idea for it and similar work you have made."
+    else -> ""
+}

@@ -357,3 +357,4 @@ One real change per round. Pushed and built every ten rounds.
 351. When no words can be read from a flyer photo, the message adds that the phone's text reader may still be downloading if it happens every time.
 352. After an update, Today shows "New in this version" once: five lines about the newest, most useful changes, then Got it.
 353. Every venue's page says what to expect from that kind of place (how libraries, artist-run spaces, nonprofits, commercial galleries and campuses book shows, and the usual first step).
+354. Every call's page says in one line what that kind of call is and what usually decides it (exhibitions: the pictures; residencies: a plan; grants: project, budget, timeline; fairs: booth fee against sales).
