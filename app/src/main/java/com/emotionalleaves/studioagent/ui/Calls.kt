@@ -410,6 +410,11 @@ fun CallDetail(nav: NavController, id: Long) {
             }) { Text("Ask") }
             if (answer.isNotBlank()) Panel { Text(answer) }
         }
+        // When the call does not say: a short, polite question to the organizer, written for you.
+        if (Texts.looksLikeEmail(o.email)) TextButton(onClick = {
+            val body = "Hello,\n\nI am interested in applying to ${o.title}. Could you tell me " + (if (o.deadline <= 0) "the deadline, " else "") + (if (!Texts.feeStated(o)) "whether there is an entry fee, " else "") + "and [your question]?\n\nThank you,\n\n" + com.emotionalleaves.studioagent.work.Papers.signature(st)
+            Share.email(ctx, o.email, "Question about ${o.title}", body)
+        }) { Text("Email the organizer a question") }
         Expand("Details", startOpen = placeholderTitle(o.title) || o.deadline <= 0) {
         Field("Title", o.title, { save(o.copy(title = it)) })
         Choice("Kind of call", Ai.callKinds, o.kind, names = { mapOf("fair" to "Art fair", "commission" to "Commission (a work made for them)")[it] ?: it.replaceFirstChar { c -> c.uppercase() } }) { save(o.copy(kind = it)) }
