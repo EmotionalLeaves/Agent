@@ -640,3 +640,4 @@ One real change per round. Pushed and built every ten rounds.
 633. A little zine of your pieces, from Market day: eight pages from one sheet of paper (a cover, six pieces with their titles, and a back page with your website and a code to scan), laid out so one fold-and-cut makes a booklet, with the folding steps on a second page. Sold for a few dollars at a market, or given away with a purchase.
 634. "Zine" joins the plain words, Market day's description names the sign and the zine (so searching finds them), and the README mentions the zine.
 635. Business cards, ten to a sheet, from Market day: the standard 3.5 by 2 inches with cut marks, one of your pieces small on the left, your name and what you make, your website, email and phone, and a code to scan. For openings, markets and anyone who asks.
+636. Business cards are in Statement, bio and CV as well, beside the portfolio and slides, with your first portfolio piece on them.
