@@ -929,7 +929,7 @@ fun Review(nav: NavController) {
         val monthLine = listOfNotNull(
             works.count { it.imagePath.isNotBlank() && it.createdAt >= monthStart }.takeIf { it > 0 }?.let { Texts.count(it, "piece") + " added with a picture" },
             applsAll.count { it.submittedAt >= monthStart }.takeIf { it > 0 }?.let { Texts.count(it, "application") + " sent" },
-            sessions.filter { it.start >= monthStart && it.end > it.start }.let { l -> if (l.isEmpty()) null else "${l.sumOf { (it.end - it.start) / 60000 } / 60} hours of making" }
+            sessions.filter { it.start >= monthStart && it.end > it.start }.let { l -> if (l.isEmpty()) null else l.sumOf { (it.end - it.start) / 60000 }.toInt().let { m -> if (m < 60) Texts.count(m, "minute") + " of making" else "${"%.1f".format(m / 60.0).removeSuffix(".0")} hours of making" } }
         )
         if (monthLine.isNotEmpty()) Small("This month: " + monthLine.joinToString(", ") + ".")
         Text(if (mine.isEmpty()) "No sessions logged this week. That is information, not a verdict. If the plan did not fit your week, the plan is what should change."
