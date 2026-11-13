@@ -290,6 +290,13 @@ object Engine {
             // Your own template is followed exactly; the suggested week keeps to one block a day and steps around clashes.
             if (custom) {
                 if (millis(start) in plannedStarts) continue
+                // Something already in your calendar then (a changed shift, an appointment): an hour or two later the same day, or not that day.
+                if (Cal.busy(ctx, millis(start), millis(start.plusMinutes(slot.minutes.toLong())))) {
+                    val bed = Planner.time(st.bedtime, LocalTime.of(22, 30))
+                    val moved = listOf(60L, 120L).map { start.plusMinutes(it) }.firstOrNull { t -> !t.plusMinutes(slot.minutes.toLong()).toLocalTime().isAfter(bed) && t.toLocalDate() == start.toLocalDate() &&
+                        !Cal.busy(ctx, millis(t), millis(t.plusMinutes(slot.minutes.toLong()))) } ?: continue
+                    start = moved
+                }
                 val s = millis(start); val e = millis(start.plusMinutes(slot.minutes.toLong()))
                 val calId = if (st.useCalendar) Cal.add(ctx, "Studio time", s, e, "Planned by Studio Agent from your own week.") else 0L
                 dao.put(Evt(type = "studio", title = "Studio time", date = s, endDate = e, calendarId = calId))

@@ -358,3 +358,4 @@ One real change per round. Pushed and built every ten rounds.
 352. After an update, Today shows "New in this version" once: five lines about the newest, most useful changes, then Got it.
 353. Every venue's page says what to expect from that kind of place (how libraries, artist-run spaces, nonprofits, commercial galleries and campuses book shows, and the usual first step).
 354. Every call's page says in one line what that kind of call is and what usually decides it (exhibitions: the pictures; residencies: a plan; grants: project, budget, timeline; fairs: booth fee against sales).
+355. Your own studio times step around what is already in your phone's calendar (a changed shift, an appointment): an hour or two later the same evening, or skipped that day, instead of booking over it.
