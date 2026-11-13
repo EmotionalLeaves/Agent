@@ -214,7 +214,7 @@ object Papers {
         return pdf.save(out(ctx, docName(s, "Wall_labels")))
     }
 
-    // ------------------------------------------------------------ certificate    /**
+    /**
      * Labels for the back of each piece: who made it, what it is, which way is up, how it hangs, and how to reach you.
      * A piece that goes astray at a show finds its way home.
      */
@@ -245,6 +245,8 @@ object Papers {
         }
         return pdf.save(out(ctx, docName(s, "Back_labels")))
     }
+
+    // ------------------------------------------------------------ certificate
 
 
 
