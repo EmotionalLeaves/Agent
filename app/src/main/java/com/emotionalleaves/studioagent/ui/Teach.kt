@@ -76,9 +76,21 @@ fun TeachScreen(nav: NavController) {
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
         } }, modifier = Modifier.fillMaxWidth()) { Text("A handout for the people who come (PDF)") }
         OutlinedButton(onClick = { Share.text(ctx, title.value.trim() + "\n\n" + Workshop.outline(kind, minutes).joinToString("\n") { "${it.minutes} min: ${it.what}" } + "\n\nBring:\n" + Workshop.supplies(kind, people).joinToString("\n") { "- $it" }) }, modifier = Modifier.fillMaxWidth()) { Text("Share the outline and list") }
+        // Once a date is agreed: the class and its shopping go on your week, and the supplies on your list.
+        val scope = androidx.compose.runtime.rememberCoroutineScope()
+        var booked by rememberSaveable { mutableStateOf("") }
+        if (booked.isBlank()) DateField("Booked? The date of the class", "") { d ->
+            val day = java.time.LocalDate.parse(d); val t = title.value.trim()
+            scope.io {
+                G.dao.put(com.emotionalleaves.studioagent.data.Evt(type = "task", title = "Teach: $t", date = com.emotionalleaves.studioagent.work.Engine.millis(day.atTime(18, 0))))
+                G.dao.put(com.emotionalleaves.studioagent.data.Evt(type = "task", title = "Buy the supplies for \"$t\"", date = com.emotionalleaves.studioagent.work.Engine.millis(day.minusDays(3).atTime(18, 0))))
+                val have = supplies(st.supplies)
+                st.supplies = suppliesText(have + Workshop.supplies(kind, people).filter { n -> have.none { it.first.equals(n, true) } }.map { it to true })
+            }
+            booked = d
+        } else Small("Booked for ${fmtDate(com.emotionalleaves.studioagent.work.Engine.millis(java.time.LocalDate.parse(booked).atTime(18, 0)))}: the class and a shopping day three days before are on your to-dos, and the supplies are on your list.")
         // Once it has happened: a line on the CV, under Teaching and Talks.
         var taught by rememberSaveable { mutableStateOf(false) }
-        val scope = androidx.compose.runtime.rememberCoroutineScope()
         var paid by rememberSaveable { mutableStateOf(0.0) }
         if (!taught) Num("What you were paid for it, if anything (" + st.currency + ")", paid) { paid = it }
         if (!taught) androidx.compose.material3.TextButton(onClick = {

@@ -615,3 +615,4 @@ One real change per round. Pushed and built every ten rounds.
 608. One answer to "is today a work day?" everywhere: the quiet hours for notifications and the entry steps planned in 15-minute evenings now follow days off, extra shifts and a break from work too, not only the usual work days.
 609. A test for which days count as work days: the usual ones, less this week's days off, plus an extra shift, all of them off during a break, and last week's settings ignored.
 610. A handout for the class, from Teach a class: one page for the people who come, with the class's running order, three small things to try at home (for the kind of class it is), a line that doing it badly is how everyone starts, and where to find you.
+611. Booked? Once a venue says yes, give Teach a class the date: the class goes on your to-dos, a shopping day three days before it, and every supply for that many people onto your supplies list as needed.
