@@ -541,6 +541,17 @@ fun WorkDetail(nav: NavController, id: Long) {
             }) { Text("Export pictures") }
             OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.certificate(ctx, st, w, (w.editionUsed + 1).coerceAtLeast(1)); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Certificate of authenticity") }
             OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, listOf(w))) }) { Text("Ask a print lab for a quote") }
+            OutlinedButton(enabled = w.imagePath.isNotBlank(), onClick = {
+                scope.io({ status = it }) {
+                    val f = com.emotionalleaves.studioagent.media.Post.render(w.imagePath, st.fullName, File(ImageTools.exportDir(ctx), Papers.docName(st, "Post_" + w.title.filter { it.isLetterOrDigit() }.take(24), "jpg")))
+                        ?: throw Exception("The picture of this piece could not be opened.")
+                    val words = com.emotionalleaves.studioagent.media.Post.caption(w.title, w.year, Papers.medium(w), if (w.widthIn > 0) Texts.dims(w.widthIn, w.heightIn, w.depthIn) else "", w.notes, st.city,
+                        available = !w.nfs && w.status != "sold" && w.status != "idea", inProgress = w.status == "in_progress")
+                    st.lastPosted = System.currentTimeMillis()
+                    status = "The words are copied too: if the app shows only the picture, paste them in the caption."
+                    withContext(Dispatchers.Main) { Share.post(ctx, f, words) }
+                }
+            }) { Text("Post it online") }
         }
         TextButton(onClick = {
             scope.io { val copy = dao.put(w.copy(id = 0, title = (w.title + " (copy)").trim(), imagePath = "", originalPath = "", detailPath = "", extraImages = "", pixelW = 0, pixelH = 0, status = "in_progress", steps = "", nextStep = "", createdAt = now())); withContext(Dispatchers.Main) { nav.navigate("work/$copy") } }

@@ -475,6 +475,21 @@ class PartsTest {
         assertTrue(G.dao.applsNow().single { it.id == id }.workIds.startsWith("$b,$a"))
     }
 
+    @Test fun aPostShowsTheWholePieceWithWords() {
+        ctx
+        val art = android.graphics.Bitmap.createBitmap(400, 200, android.graphics.Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.rgb(200, 20, 20)) }
+        val b = com.emotionalleaves.studioagent.media.Post.draw(art, "Jade Leaves")
+        assertEquals(1080, b.width); assertEquals(1350, b.height)
+        // A wide piece is shown whole: red reaches near both sides, the corners stay the quiet field.
+        assertTrue(android.graphics.Color.red(b.getPixel(100, 675)) > 150 && android.graphics.Color.green(b.getPixel(100, 675)) < 80)
+        assertTrue(android.graphics.Color.green(b.getPixel(10, 10)) > 200)
+        val words = com.emotionalleaves.studioagent.media.Post.caption("Walk-in Cooler", 2026, "Gouache on paper", "9 × 12 in", "Painted at six in the morning before the breakfast rush. More later.", "Austin, TX", available = true)
+        assertTrue(words.startsWith("Walk-in Cooler (2026)"))
+        assertTrue(words.contains("Painted at six in the morning before the breakfast rush."))
+        assertTrue(words.contains("#gouache") && words.contains("#austinartist"))
+        assertTrue(com.emotionalleaves.studioagent.media.Post.caption("Study", 2026, "oil", "", "", "", available = false, inProgress = true).startsWith("In progress: Study"))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

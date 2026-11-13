@@ -195,6 +195,8 @@ class Settings(ctx: Context) {
     var calmToday by B("calmToday", false)
     /** The last session end the "welcome back" step has been shown for, so it shows once per gap. */
     var welcomedBack by L("welcomedBack", 0)
+    /** When a post was last made from the app; a gentle weekly nudge comes from it. */
+    var lastPosted by L("lastPosted", 0)
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")

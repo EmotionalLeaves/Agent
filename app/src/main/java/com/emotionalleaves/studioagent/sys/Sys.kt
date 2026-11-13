@@ -185,6 +185,18 @@ object Share {
         start(ctx, Intent.createChooser(i, "Send").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
     }
 
+    /**
+     * A picture with its words, for posting. The words are also copied, because some apps (Instagram among them)
+     * take only the picture: paste them in the caption box.
+     */
+    fun post(ctx: Context, f: File, caption: String) {
+        try { (ctx.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).setPrimaryClip(android.content.ClipData.newPlainText("Caption", caption)) } catch (e: Exception) { }
+        val u = uri(ctx, f)
+        val i = Intent(Intent.ACTION_SEND).setType("image/jpeg").putExtra(Intent.EXTRA_STREAM, u).putExtra(Intent.EXTRA_TEXT, caption).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        i.clipData = android.content.ClipData.newRawUri("", u)
+        start(ctx, Intent.createChooser(i, "Post").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
+    }
+
     fun text(ctx: Context, text: String) =
         start(ctx, Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), "Send"))
 
