@@ -1143,9 +1143,14 @@ object Engine {
         if (inMs <= 0) return
         val req = OneTimeWorkRequestBuilder<GoalWorker>().setInitialDelay(inMs, TimeUnit.MILLISECONDS).setInputData(workDataOf("goal" to goal, "start" to st.sessionStart)).build()
         try { WorkManager.getInstance(ctx).enqueueUniqueWork("goal", ExistingWorkPolicy.REPLACE, req) } catch (e: Exception) { }
+        // Five minutes before the end, a quiet nudge to jot where you stopped: tomorrow starts from that line, not from scratch.
+        if (goal >= 15 && inMs > 6 * 60_000) {
+            val warn = OneTimeWorkRequestBuilder<GoalWorker>().setInitialDelay(inMs - 5 * 60_000, TimeUnit.MILLISECONDS).setInputData(workDataOf("goal" to goal, "start" to st.sessionStart, "warn" to true)).build()
+            try { WorkManager.getInstance(ctx).enqueueUniqueWork("goal-warn", ExistingWorkPolicy.REPLACE, warn) } catch (e: Exception) { }
+        }
     }
 
-    fun cancelGoal(ctx: Context) { try { WorkManager.getInstance(ctx).cancelUniqueWork("goal") } catch (e: Exception) { } }
+    fun cancelGoal(ctx: Context) { try { WorkManager.getInstance(ctx).cancelUniqueWork("goal"); WorkManager.getInstance(ctx).cancelUniqueWork("goal-warn") } catch (e: Exception) { } }
 
     fun queueSend(ctx: Context, applId: Long) {
         val req = OneTimeWorkRequestBuilder<SendWorker>().setInitialDelay(10, TimeUnit.MINUTES).setInputData(workDataOf("id" to applId))
@@ -1800,6 +1805,7 @@ class GoalWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, 
         val s = G.settings
         if (s.sessionStart == 0L || s.sessionStart != inputData.getLong("start", -1)) return Result.success()
         val goal = inputData.getInt("goal", 0)
+        if (inputData.getBoolean("warn", false)) { Notifier.post(applicationContext, s, 53, "Five minutes left", "A good moment to jot where you stopped, so next time starts there.", "session"); return Result.success() }
         Notifier.post(applicationContext, s, 52, "That is your $goal minutes", "Stopping now is a complete session. Keep going only if you want to.", "session")
         return Result.success()
     }
