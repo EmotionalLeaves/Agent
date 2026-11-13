@@ -1216,6 +1216,9 @@ object Engine {
         }
     }
 
+    /** A break that has ended gives the usual weekly hours back. */
+    fun endBreak() { if (st.hoursBeforeBreak > 0) { st.weeklyHours = st.hoursBeforeBreak; st.hoursBeforeBreak = 0 } }
+
     /** This week's work days: the usual ones, less days off and a break, plus any extra shift. */
     fun workDaysNow(): Set<Int> = if (st.offUntil.isNotBlank() && st.offUntil >= LocalDate.now().toString()) thisWeek(st.extraThisWeek)
         else Planner.days(st.workDays) - thisWeek(st.offThisWeek) + thisWeek(st.extraThisWeek)
@@ -1974,6 +1977,7 @@ object Engine {
                 st.tierRecord = r; st.tierRecordInit = true
             }
         }
+        step("break") { if (st.hoursBeforeBreak > 0 && (st.offUntil.isBlank() || st.offUntil < LocalDate.now().toString())) endBreak() }
         step("plan week") { planWeek(ctx) }
         // The quick steps run before the long read of the listing sites, so a slow site can never crowd them out.
         step("email") { withContext(Dispatchers.IO) { checkMail(ctx) } }

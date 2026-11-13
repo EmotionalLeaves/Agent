@@ -251,6 +251,8 @@ class Settings(ctx: Context) {
     /** "YYYY-MM-DD": on a break from work until then (inclusive); every day is a free day. */
     var offUntil by S("offUntil")
     var breakTold by S("breakTold")
+    /** Weekly hours before they were doubled for a break; 0 when not doubled. */
+    var hoursBeforeBreak by I("hoursBeforeBreak", 0)
     var breakToldDay by S("breakToldDay")
     /** Drop-off packing ticks: "applId:bits". */
     var packed by S("packed")

@@ -108,7 +108,12 @@ fun WeekScreen(nav: NavController) {
         DateField(if (breakOn) "On a break from work until" else "On a break from work? Until when", st.offUntil) { st.offUntil = it; scope.io { Engine.replan(ctx) } }
         if (breakOn) {
             Small("Every day until then is planned as a free day. A break is a good time for more studio hours, if you want them: change the hours below.")
-            androidx.compose.material3.TextButton(onClick = { st.offUntil = ""; scope.io { Engine.replan(ctx) } }) { Text("The break is over") }
+            // More studio time for the break only: the usual hours come back by themselves when it ends.
+            if (st.hoursBeforeBreak == 0 && st.weeklyHours > 0) androidx.compose.material3.TextButton(onClick = {
+                st.hoursBeforeBreak = st.weeklyHours; st.weeklyHours = st.weeklyHours * 2; scope.io { Engine.replan(ctx) }
+            }) { Text("Double my studio hours during the break") }
+            else if (st.hoursBeforeBreak > 0) Small("Doubled to ${st.weeklyHours} hours for the break; back to ${st.hoursBeforeBreak} when it ends.")
+            androidx.compose.material3.TextButton(onClick = { st.offUntil = ""; Engine.endBreak(); scope.io { Engine.replan(ctx) } }) { Text("The break is over") }
         }
         H("Studio times")
         if (!custom) {
