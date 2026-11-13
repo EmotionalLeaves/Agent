@@ -174,6 +174,8 @@ object Engine {
             appendLine("Name: ${st.fullName}")
             if (st.city.isNotBlank()) appendLine("Based in: ${st.city} ${st.region}")
             appendLine("Works in: ${st.mediums}")
+            // The day job, only as the artist wrote it, and only for writing that is about them.
+            if (st.job.isNotBlank()) appendLine("Day job (mention only if it helps): ${st.job}")
             docs.filter { it.type == "interview" && it.text.isNotBlank() }.forEach { appendLine("Artist said (${it.variant}): ${it.text}") }
             if (facts.isNotEmpty()) { appendLine("CV facts:"); facts.forEach { appendLine("- ${it.category} ${if (it.year > 0) it.year else ""} ${it.text}") } }
             else appendLine("CV facts: none yet. Do not mention exhibitions or awards.")
