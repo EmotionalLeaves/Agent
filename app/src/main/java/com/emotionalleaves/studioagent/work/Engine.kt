@@ -1206,6 +1206,13 @@ object Engine {
                     val what = c.notes.substringBefore(".").ifBlank { "A place near you" }
                     return NextStep("Go and look at ${c.venue}", "$what. Look at the walls, pick up a card, ask who books shows if it feels easy. That is the whole step.", "contact/${c.id}")
                 }
+        // Once a week, on a Sunday: put one finished piece where people who look you up will find it.
+        if (today.dayOfWeek == DayOfWeek.SUNDAY && now - st.lastPosted > 6 * DAY) {
+            val posted = st.postedIds.split(",").toSet()
+            works.filter { it.imagePath.isNotBlank() && it.status in setOf("documented", "available", "shown", "sold") && it.id.toString() !in posted }.maxByOrNull { it.createdAt }?.let { w ->
+                return NextStep("Post ${w.title.ifBlank { "a piece" }} online", "Jurors and venues look you up. Open Pictures and papers on the piece and tap Post it online: the picture and the words are made for you.", "work/${w.id}")
+            }
+        }
         // Calls that fit, once a week at most, and only when you have not looked already.
         if (now - st.lastCallsLook > 6 * DAY) {
             val fit = shortlist(dao.oppsNow(), profile(), now, stretchOk(now), st.shortlistSize)

@@ -547,7 +547,7 @@ fun WorkDetail(nav: NavController, id: Long) {
                         ?: throw Exception("The picture of this piece could not be opened.")
                     val words = com.emotionalleaves.studioagent.media.Post.caption(w.title, w.year, Papers.medium(w), if (w.widthIn > 0) Texts.dims(w.widthIn, w.heightIn, w.depthIn) else "", w.notes, st.city,
                         available = !w.nfs && w.status != "sold" && w.status != "idea", inProgress = w.status == "in_progress")
-                    st.lastPosted = System.currentTimeMillis()
+                    st.lastPosted = System.currentTimeMillis(); if (w.id.toString() !in st.postedIds.split(",")) st.postedIds = (st.postedIds.split(",").filter { it.isNotBlank() } + w.id.toString()).takeLast(300).joinToString(",")
                     status = "The words are copied too: if the app shows only the picture, paste them in the caption."
                     withContext(Dispatchers.Main) { Share.post(ctx, f, words) }
                 }

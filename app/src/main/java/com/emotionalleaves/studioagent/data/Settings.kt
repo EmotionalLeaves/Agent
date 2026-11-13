@@ -197,6 +197,8 @@ class Settings(ctx: Context) {
     var welcomedBack by L("welcomedBack", 0)
     /** When a post was last made from the app; a gentle weekly nudge comes from it. */
     var lastPosted by L("lastPosted", 0)
+    /** Pieces already posted from the app (ids, comma separated), so the nudge suggests a new one. */
+    var postedIds by S("postedIds")
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")
