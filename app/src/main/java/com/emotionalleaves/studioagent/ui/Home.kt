@@ -445,7 +445,7 @@ fun SessionScreen(nav: NavController) {
                 // Back here means "not yet", not "leave".
                 BackHandler { stopping = false }
                 H("Before you go")
-                Field("Next time, start with...", nextStep, mic = true)
+                Field("Next time, start with…", nextStep, mic = true)
                 // One line is all that is asked. A note or photo is there if wanted, folded away.
                 Expand("Add a note or a progress photo", startOpen = note.value.isNotBlank() || photo.isNotBlank()) {
                     Field("Anything to note", note, lines = 2)
@@ -491,7 +491,7 @@ fun ShareScreen(nav: NavController) {
         Field("Text or link", text, lines = 4)
         Status(status)
         Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
-            busy = true; status = "Reading it..."
+            busy = true; status = "Reading it…"
             scope.io({ status = it; busy = false }) {
                 val t = text.value.trim()
                 val isUrl = t.startsWith("http") && !t.contains(" ")

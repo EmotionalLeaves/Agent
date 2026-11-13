@@ -207,7 +207,7 @@ fun Basics(nav: NavController) {
             asking = true; reply = ""
             val q = question.value.trim()
             scope.io({ reply = it; asking = false }) { reply = Engine.ask(q, basics); asking = false }
-        }) { Text(if (asking) "Thinking..." else "Ask") }
+        }) { Text(if (asking) "Thinking…" else "Ask") }
         if (reply.isNotBlank()) Panel { Text(reply) }
         Section("Plain answers")
         Small("Tap any question. None of this is a test, and you can use the whole app without reading it.")

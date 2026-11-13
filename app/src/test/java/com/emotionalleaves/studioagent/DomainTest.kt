@@ -192,6 +192,10 @@ class DomainTest {
         assertEquals(30.0, CallReader.fee("Application fee: $30. Grant of $5,000."), 0.0)
         assertEquals("exhibition", CallReader.read("Winter Juried Exhibit\nMenu: residencies, grants, jobs", today, zone, "x", 1L).kind)
         assertEquals("Creative Futures 2027", CallReader.cleanTitle("Home | Creative Futures 2027"))
+        // Numbers typed the way people type them.
+        assertEquals(1200.0, Texts.number("$1,200")!!, 0.0); assertEquals(12.5, Texts.number("12,5")!!, 0.0)
+        assertEquals(16.0, Texts.number("16 in")!!, 0.0); assertEquals(null, Texts.number("about"))
+        assertEquals("1 file", Texts.count(1, "file")); assertEquals("3 files", Texts.count(3, "file"))
         // Warning signs a beginner would not know to look for, found without AI.
         assertTrue(CallReader.read("Gallery 9 Open\nAll artists are accepted. Wall fee $300. Deadline March 1, 2027", today, zone, "x", 1L).guaranteed)
         assertTrue(CallReader.read("Photo Prize\nEntrants grant us a perpetual, irrevocable licence. Deadline March 1, 2027", today, zone, "x", 1L).rightsGrab)

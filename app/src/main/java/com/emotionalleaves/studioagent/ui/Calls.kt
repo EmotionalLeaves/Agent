@@ -134,13 +134,13 @@ fun Calls(nav: NavController) {
                     Empty("No calls waiting. The app looks once a day on its own. When you see one anywhere, tap Share and choose Studio Agent, or paste it below.")
                     var looking by remember { mutableStateOf(false) }
                     OutlinedButton(enabled = !looking, onClick = {
-                        looking = true; status = "Looking at the listing sites. This takes a minute or two..."
+                        looking = true; status = "Looking at the listing sites. This takes a minute or two…"
                         scope.io({ status = it; looking = false }) {
                             val n = Engine.scanSources(now()); Engine.rescore()
                             status = if (n == 0) "Looked. Nothing new right now; the app checks again tomorrow." else "Found $n new " + (if (n == 1) "call" else "calls") + ". Ones that fit your level are above; the rest are under All."
                             looking = false
                         }
-                    }) { Text(if (looking) "Looking..." else "Look for calls now") }
+                    }) { Text(if (looking) "Looking…" else "Look for calls now") }
                 }
                 list.forEach { o ->
                     key(o.id) {
@@ -179,7 +179,7 @@ fun Calls(nav: NavController) {
                 Field("Paste a link or the call text", paste, lines = 2)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (paste.value.isNotBlank()) Button(onClick = {
-                        val t = paste.value.trim(); paste.value = ""; status = "Reading it..."
+                        val t = paste.value.trim(); paste.value = ""; status = "Reading it…"
                         scope.io({ status = it }) {
                             val isUrl = t.startsWith("http") && !t.contains(" ")
                             val page = if (isUrl) (try { Fetch.pageText(t) } catch (e: Exception) { "" }) else ""
@@ -285,7 +285,7 @@ fun CallDetail(nav: NavController, id: Long) {
             if (o.status in setOf("new", "later", "no")) Button(onClick = { scope.io({ status = it }) { val aid = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Yes, apply") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, o.url) }) { Text("Open link") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = {
-                status = "Reading the page..."
+                status = "Reading the page…"
                 scope.io({ status = it }) {
                     val page = Fetch.pageText(o.url)
                     val found = if (G.ai.ready) try { G.ai.extractCalls("Link: ${o.url}\n" + page, o.sourceName).firstOrNull() } catch (e: Exception) { null } else null
@@ -338,7 +338,7 @@ fun CallDetail(nav: NavController, id: Long) {
         }
         Row {
             if (o.organiser.isNotBlank()) TextButton(onClick = { st.blocked = (st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() } + o.organiser).distinct().joinToString(", "); status = "Blocked. Their calls will be held back." }) { Text("Block this organiser") }
-            DangerButton(onClick = { scope.remove(o.title.ifBlank { "the call" }, { dao.del(o) }, { dao.put(o) }); nav.popBackStack() }) { Text("Delete") }
+            DangerButton(onClick = { scope.remove(o.title.ifBlank { "the call" }, { dao.del(o) }, { dao.put(o) }); nav.popBackStack() }) { Text("Delete this call") }
         }
     }
 }
@@ -378,7 +378,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                 H("Result")
                 Field("Paste the result email (optional: builds your checklist)", resultText, lines = 3)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(enabled = !busy, onClick = { busy = true; status = "Setting up your checklist..."; scope.io({ status = it; busy = false }) { Engine.recordResult(ctx, loaded, true, resultText.value); status = ""; busy = false } }) { Text("Accepted") }
+                    Button(enabled = !busy, onClick = { busy = true; status = "Setting up your checklist…"; scope.io({ status = it; busy = false }) { Engine.recordResult(ctx, loaded, true, resultText.value); status = ""; busy = false } }) { Text("Accepted") }
                     OutlinedButton(enabled = !busy, onClick = { scope.io { Engine.recordResult(ctx, loaded, false, resultText.value) } }) { Text("Not this time") }
                 }
             }
@@ -432,13 +432,13 @@ fun ApplScreen(nav: NavController, id: Long) {
         val starterFit = { Starter.fit(works.filter { it.id in chosenIds }.map { it.title.ifBlank { "Untitled" } }, o, a.statement) }
         if (!G.ai.ready && a.themeText.isBlank()) TextButton(onClick = { save(a.copy(themeText = starterFit(), packDir = "")) }) { Text("Start it for me") }
         if (G.ai.ready && a.revisions < st.revisionLimit + 1) TextButton(enabled = !busy, onClick = {
-            busy = true; status = "Writing..."
+            busy = true; status = "Writing…"
             scope.io({ status = it; busy = false }) {
                 val t = try { G.ai.themeParagraph(o, Engine.factsText(chosenIds), Engine.voice()) } catch (e: Exception) {
                     if (a.themeText.isNotBlank()) throw e
                     status = "The writing help did not answer, so here is a starter to finish."; starterFit()
                 }
-                val x = a.copy(themeText = t, revisions = a.revisions + 1, packDir = ""); a = x; dao.put(x); if (status == "Writing...") status = ""; busy = false
+                val x = a.copy(themeText = t, revisions = a.revisions + 1, packDir = ""); a = x; dao.put(x); if (status == "Writing…") status = ""; busy = false
             }
         }) { Text(if (a.themeText.isBlank()) "Write the fit paragraph for me" else "Rewrite it") }
 
@@ -450,14 +450,14 @@ fun ApplScreen(nav: NavController, id: Long) {
                     Field(q, ans, { v -> save(a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to v else p }), packDir = "")) }, lines = 3)
                     Row {
                         if (G.ai.ready) TextButton(enabled = !busy, onClick = {
-                            busy = true; status = "Writing..."
+                            busy = true; status = "Writing…"
                             scope.io({ status = it; busy = false }) {
                                 val t = try { G.ai.write("an answer to this application question: $q", 120, Engine.factsText(chosenIds), Engine.voice(), "The call: ${o.title}. Theme: ${o.theme}") } catch (e: Exception) { if (ans.isNotBlank()) throw e; Starter.answer(a.statement) }
                                 val x = a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to t else p }), packDir = ""); a = x; dao.put(x); status = ""; busy = false
                             }
                         }) { Text("Draft an answer") }
                         else if (ans.isBlank()) TextButton(onClick = { save(a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to Starter.answer(a.statement) else p }), packDir = "")) }) { Text("Start from my statement") }
-                        TextButton(onClick = { save(a.copy(answers = Engine.answersJson(qa.filterIndexed { j, _ -> j != i }), packDir = "")) }) { Text("Remove") }
+                        TextButton(onClick = { save(a.copy(answers = Engine.answersJson(qa.filterIndexed { j, _ -> j != i }), packDir = "")) }) { Text("Remove this question") }
                     }
                 }
             }
@@ -485,7 +485,7 @@ fun ApplScreen(nav: NavController, id: Long) {
         // Once every check passes the files are made by themselves: nothing to press.
         LaunchedEffect(allGreen, a.packDir) {
             if (allGreen && files.isEmpty() && chosenIds.isNotEmpty() && !busy) {
-                busy = true; status = "Every check passes, so the pack is being made..."
+                busy = true; status = "Every check passes, so the pack is being made…"
                 try { val dir = Engine.buildPack(ctx, a, o); a = a.copy(packDir = dir.absolutePath); status = "Pack made." } catch (e: Exception) { status = plainError(e) }
                 busy = false
             }
@@ -710,7 +710,7 @@ fun Sources(nav: NavController) {
         }) { Text("Add source") }
         Status(status)
         OutlinedButton(enabled = !busy, onClick = {
-            busy = true; status = "Running the daily check..."
+            busy = true; status = "Running the daily check…"
             scope.io({ status = it; busy = false }) { status = Engine.runDaily(ctx); busy = false }
         }) { Text("Run the daily check now") }
         Note("Listing pages are read once a day: the app opens each new call on the page and picks out its title, deadline and fee. Sites that ask apps to stay out are left alone.")

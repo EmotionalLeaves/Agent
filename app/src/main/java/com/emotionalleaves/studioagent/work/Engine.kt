@@ -94,6 +94,7 @@ object Engine {
     fun profileOf(works: List<Artwork>, docs: List<Doc>, facts: List<Fact>, ledger: List<Ledger>): Profile = Profile(
         level = levelOf(works, docs, facts), routes = st.routes, rules = rules(), kinds = st.kinds,
         availableWorks = works.count { available(it) },
+        currency = st.currency,
         feeBudgetLeft = feeLeft(ledger),
         goals = st.goals, blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts()
     )
@@ -572,7 +573,7 @@ object Engine {
         if (a.status != "sending") return false
         return try {
             withContext(Dispatchers.IO) { Mail.send(st.smtpHost, st.mailUser, st.mailPass, a.emailTo, a.emailSubject, a.emailBody, packFiles(a), st.fullName) }
-            markSubmitted(a, "Sent by email to ${a.emailTo} on ${com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis())} with ${packFiles(a).size} attachments.")
+            markSubmitted(a, "Sent by email to ${a.emailTo} on ${com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis())} with ${Texts.count(packFiles(a).size, "attachment")}.")
             true
         } catch (e: Exception) {
             // Never fail quietly: say so, in plain words, and open the application when tapped.

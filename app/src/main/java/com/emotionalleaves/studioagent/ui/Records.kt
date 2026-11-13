@@ -49,6 +49,7 @@ import com.emotionalleaves.studioagent.G
 import com.emotionalleaves.studioagent.ai.Ai
 import com.emotionalleaves.studioagent.data.Evt
 import com.emotionalleaves.studioagent.data.Ledger
+import com.emotionalleaves.studioagent.domain.Texts
 import com.emotionalleaves.studioagent.net.Mail
 import androidx.compose.material3.FilterChip
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -449,7 +450,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Toggle("Use the free writing help", st.freeAi) { st.freeAi = it }
                 Small("Now writing: ${G.ai.who()}.")
                 Button(enabled = !busy, onClick = {
-                    busy = true; status = "Asking..."
+                    busy = true; status = "Asking…"
                     scope.io({ status = "No answer: $it"; busy = false }) {
                         val a = G.ai.complete("Reply in five words or fewer.", "Say hello to an artist.", fast = true, maxTokens = 30)
                         status = "It answered: \"${a.take(80)}\""; busy = false
@@ -486,7 +487,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                     SText("Incoming server", st.imapHost) { st.imapHost = it }
                 }
                 if (st.mailUser.isNotBlank() && st.mailPass.isNotBlank()) Button(enabled = !busy, onClick = {
-                    busy = true; status = "Sending a test..."
+                    busy = true; status = "Sending a test…"
                     scope.io({ status = "That did not work: $it"; busy = false }) {
                         Mail.send(st.smtpHost, st.mailUser, st.mailPass, st.mailUser, "Studio Agent test", "If you can read this, Studio Agent can send email for you.")
                         Mail.recent(st.imapHost, st.mailUser, st.mailPass, now() - 60_000, 3)
@@ -500,10 +501,10 @@ fun SettingsScreen(nav: NavController, section: String) {
                 SText("Backup repository (yourname/name, keep it private)", st.ghBackupRepo) { st.ghBackupRepo = it }
                 SText("Portfolio page repository (yourname/name, public)", st.ghPagesRepo) { st.ghPagesRepo = it }
                 Button(enabled = !busy, onClick = {
-                    busy = true; status = "Backing up..."
+                    busy = true; status = "Backing up…"
                     scope.io({ status = "That did not work: $it"; busy = false }) {
                         val n = Engine.backupToGitHub(ctx)
-                        status = if (n == 0) "Nothing was uploaded. Check the token and the backup repository name." else "Backed up $n files. It now repeats on its own every day."; busy = false
+                        status = if (n == 0) "Nothing was uploaded. Check the token and the backup repository name." else "Backed up ${Texts.count(n, "file")}. It now repeats on its own every day."; busy = false
                     }
                 }) { Text("Back up to GitHub now") }
                 Note("The portfolio page is published from You, Statement bio and CV. The first time, also open the public repository's Settings, Pages, and choose the main branch.")
@@ -515,7 +516,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Small("Pick a folder that is copied off the phone if you can (for example one inside Google Drive's files), so a lost phone does not lose your catalog.")
                 OutlinedButton(onClick = { folder.launch(null) }) { Text(if (st.backupFolder.isBlank()) "Choose a backup folder" else "Choose a different folder") }
                 if (st.backupFolder.isNotBlank()) Button(enabled = !busy, onClick = {
-                    busy = true; status = "Backing up..."
+                    busy = true; status = "Backing up…"
                     scope.io({ status = "That did not work: $it"; busy = false }) { val name = Backup.toFolder(ctx, st); st.log("Backup saved to your folder: $name"); status = "Saved $name ✓"; busy = false }
                 }) { Text("Back up there now") }
                 H("By hand")

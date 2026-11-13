@@ -251,7 +251,7 @@ object Papers {
         pdf.text(listOf(name(s), venue.takeIf { it.isNotBlank() }?.let { "for $it" }).filterNotNull().joinToString(" "), 12f, gap = 2f)
         contactLine(s).takeIf { it.isNotBlank() }?.let { pdf.text(it, 9.5f, grey = true) }
         pdf.space(14f)
-        if (seriesName.isNotBlank()) { pdf.row("Body of work", SpannableStringBuilder(pdf.em(seriesName)).append(", ${works.size} works")) }
+        if (seriesName.isNotBlank()) { pdf.row("Body of work", SpannableStringBuilder(pdf.em(seriesName)).append(", " + Texts.count(works.size, "work"))) }
         val wall = works.sumOf { if (it.widthIn > 0) it.widthIn + 12 else 0.0 }
         if (wall > 0) pdf.row("Wall needed", "About ${"%.0f".format(Math.ceil(wall / 12))} linear feet, hung in one row with 12 in between works")
         pdf.space(8f)

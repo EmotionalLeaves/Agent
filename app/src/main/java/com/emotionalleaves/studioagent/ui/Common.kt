@@ -119,12 +119,16 @@ val st get() = G.settings
 
 fun now() = System.currentTimeMillis()
 
-private val dateFmt = DateTimeFormatter.ofPattern("EEE d MMM yyyy")
+/** The phone's own date order with the weekday first: "Tue, Dec 22, 2026" in the US, "Tue, 22 Dec 2026" in the UK. */
+private val dateFmt: DateTimeFormatter = try {
+    DateTimeFormatter.ofPattern("EEE, " + java.time.format.DateTimeFormatterBuilder.getLocalizedDateTimePattern(
+        java.time.format.FormatStyle.MEDIUM, null, java.time.chrono.IsoChronology.INSTANCE, java.util.Locale.getDefault()))
+} catch (e: Exception) { DateTimeFormatter.ofPattern("EEE d MMM yyyy") }
 /** A time of day in the phone's own style (5:00 PM or 17:00). */
 fun clock(ms: Long): String = Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT))
 
 fun fmtDate(ms: Long): String = if (ms <= 0) "no date" else Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(dateFmt)
-fun money(d: Double): String = (if (d < 0) "-" else "") + st.currency + "%.2f".format(kotlin.math.abs(d))
+fun money(d: Double): String = (if (d < 0) "-" else "") + st.currency + "%,.2f".format(kotlin.math.abs(d))
 fun jargon(text: String): List<String> = Texts.jargonIn(text, st.jargonExtra)
 
 /** Run database or network work off the main thread; errors land in [onError] instead of crashing. */

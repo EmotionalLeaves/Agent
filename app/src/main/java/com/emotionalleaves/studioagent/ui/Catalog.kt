@@ -82,13 +82,13 @@ fun newWork(): Artwork = Artwork(
 @Composable
 fun Num(label: String, value: Double, onValue: (Double) -> Unit) {
     var t by remember { mutableStateOf(if (value == 0.0) "" else Texts.dim(value)) }
-    Field(label, t, { t = it; onValue(it.toDoubleOrNull() ?: 0.0) }, number = true)
+    Field(label, t, { t = it; onValue(Texts.number(it) ?: 0.0) }, number = true)
 }
 
 @Composable
 fun Whole(label: String, value: Int, onValue: (Int) -> Unit) {
     var t by remember { mutableStateOf(if (value == 0) "" else value.toString()) }
-    Field(label, t, { t = it; onValue(it.trim().toIntOrNull() ?: 0) }, number = true)
+    Field(label, t, { t = it; onValue(Texts.number(it)?.toInt() ?: 0) }, number = true)
 }
 
 @Composable
@@ -107,17 +107,17 @@ fun Works(nav: NavController) {
     var importStatus by remember { mutableStateOf("") }
     val many = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         if (uris.isNotEmpty()) {
-            importStatus = "Bringing in ${uris.size} files..."
+            importStatus = "Bringing in ${Texts.count(uris.size, "file")}…"
             scope.io({ importStatus = it }) {
                 var ok = 0; val problems = mutableListOf<String>()
                 uris.forEachIndexed { i, uri ->
                     val name = try {
                         ctx.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
                     } catch (e: Exception) { null } ?: "Untitled ${i + 1}"
-                    try { Engine.importFile(ctx, uri, name); ok++ } catch (e: Exception) { problems += e.message.orEmpty() }
-                    importStatus = "Brought in $ok of ${uris.size}..."
+                    try { Engine.importFile(ctx, uri, name); ok++ } catch (e: Exception) { problems += "$name (" + plainError(e) + ")" }
+                    importStatus = "Brought in $ok of ${uris.size}…"
                 }
-                importStatus = "Done. $ok pieces added, each with a title from its file name and a size, edition and price filled in from safe defaults. Open any piece to change them." +
+                importStatus = "Done. $ok " + (if (ok == 1) "piece" else "pieces") + " added, each with a title from its file name and a size, edition and price filled in from safe defaults. Open any piece to change them." +
                     (if (problems.isNotEmpty()) " Skipped: " + problems.joinToString("; ") else "")
             }
         }
@@ -209,7 +209,7 @@ fun WorkDetail(nav: NavController, id: Long) {
 
     /** A new photo or file: keep the original untouched and make a working copy for screens and juries. */
     fun attached(photo: Boolean) {
-        status = "Preparing the image..."
+        status = "Preparing the image…"
         scope.io({ status = it }) {
             val (pw, ph) = ImageTools.size(orig.absolutePath)
             var b: Bitmap = ImageTools.decode(orig.absolutePath, 2400) ?: throw Exception("That file could not be read as an image.")
@@ -314,13 +314,13 @@ fun WorkDetail(nav: NavController, id: Long) {
                         val list = Engine.suggestSteps(w)
                         withContext(Dispatchers.Main) { save(w.copy(steps = Texts.stepsText(list.map { false to it }))); thinking = false }
                     }
-                }) { Text(if (thinking) "Thinking of steps..." else "Suggest small steps") }
+                }) { Text(if (thinking) "Thinking of steps…" else "Suggest small steps") }
             }
             Field("Add a small step (for example: block in the big shapes)", newStep)
             if (newStep.value.isNotBlank()) OutlinedButton(onClick = { save(w.copy(steps = Texts.stepsText(steps + (false to newStep.value.trim())))); newStep.value = "" }) { Text("Add step") }
 
             H("Finish line")
-            Field("This piece is finished when...", w.doneWhen, { save(w.copy(doneWhen = it)) })
+            Field("This piece is finished when…", w.doneWhen, { save(w.copy(doneWhen = it)) })
             Note("Decide it now, while you are calm. When the piece meets this, it is finished, even if part of you wants one more pass.")
             OutlinedButton(onClick = { save(w.copy(status = "finished")) }) { Text(if (w.doneWhen.isNotBlank()) "It meets my finish line: call it finished" else "Call it finished") }
         }
@@ -409,7 +409,7 @@ fun WorkDetail(nav: NavController, id: Long) {
         Section("Files to send")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(enabled = w.imagePath.isNotBlank(), onClick = {
-                status = "Exporting..."
+                status = "Exporting…"
                 scope.io({ status = it }) {
                     val out = ImageTools.exportDir(ctx)
                     val base = Texts.fileName(st.lastName, w.title, w.year, Papers.medium(w), w.widthIn, w.heightIn).removeSuffix(".jpg")
@@ -485,7 +485,7 @@ fun CropScreen(nav: NavController, id: Long) {
             Toggle("Also neutralise the colour cast (for photos of physical work)", fix) { fix = it }
             Status(status)
             Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                status = "Working..."
+                status = "Working…"
                 scope.io({ status = it }) {
                     val big = ImageTools.decode(src, 2400) ?: throw Exception("Could not open the image.")
                     val corners = FloatArray(8) { i -> if (i % 2 == 0) pts[i / 2].x else pts[i / 2].y }

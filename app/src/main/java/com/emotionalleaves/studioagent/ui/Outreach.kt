@@ -116,7 +116,7 @@ fun Outreach(nav: NavController) {
         Status(status)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (!G.ai.ready && url.value.isNotBlank()) Button(enabled = !busy, onClick = {
-                busy = true; status = "Reading their site..."
+                busy = true; status = "Reading their site…"
                 scope.io({ status = it; busy = false }) {
                     val u = url.value.trim().let { if (it.startsWith("http")) it else "https://$it" }
                     val id = dao.put(Starter.venue(u, try { Fetch.pageText(u) } catch (e: Exception) { "" }, now()))
@@ -125,7 +125,7 @@ fun Outreach(nav: NavController) {
                 }
             }) { Text("Look it up") }
             if (G.ai.ready && url.value.isNotBlank()) Button(enabled = !busy, onClick = {
-                busy = true; status = "Reading their site..."
+                busy = true; status = "Reading their site…"
                 scope.io({ status = it; busy = false }) {
                     val u = url.value.trim().let { if (it.startsWith("http")) it else "https://$it" }
                     val page = try { Fetch.pageText(u) } catch (e: Exception) { "" }
@@ -230,7 +230,7 @@ fun ContactScreen(nav: NavController, id: Long) {
                         save(c.copy(draftSubject = subject, draftBody = body, followUpBody = follow, status = "drafted"))
                     }) { Text("Start the email for me") }
                     if (G.ai.ready) Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
-                        busy = true; status = "Drafting..."
+                        busy = true; status = "Drafting…"
                         scope.io({ status = it; busy = false }) {
                             val (subject, body, follow) = try { G.ai.outreach(c.venue, c.notes + "\nSubmission instructions: " + c.submissionNotes, Engine.factsText(), Engine.voice(), st.website) } catch (e: Exception) { Starter.email(c) }
                             val x = c.copy(draftSubject = subject, draftBody = body, followUpBody = follow, status = "drafted"); c = x; dao.put(x); status = ""; busy = false
@@ -249,7 +249,7 @@ fun ContactScreen(nav: NavController, id: Long) {
                         if (('[' in c.draftBody) || ('[' in c.followUpBody)) Small("Fill in the [square brackets] first.")
                         Button(enabled = c.email.contains("@") && c.draftSubject.isNotBlank() && '[' !in c.draftBody && '[' !in c.followUpBody, modifier = Modifier.fillMaxWidth(), onClick = { save(c.copy(status = "approved")) }) { Text("Approve both") }
                         if (G.ai.ready) TextButton(enabled = !busy, onClick = {
-                            busy = true; status = "Rewriting..."
+                            busy = true; status = "Rewriting…"
                             scope.io({ status = it; busy = false }) {
                                 val (subject, body, follow) = G.ai.outreach(c.venue, c.notes + "\nSubmission instructions: " + c.submissionNotes, Engine.factsText(), Engine.voice(), st.website)
                                 val x = c.copy(draftSubject = subject, draftBody = body, followUpBody = follow, status = "drafted", revisions = c.revisions + 1); c = x; dao.put(x); status = ""; busy = false
@@ -293,6 +293,6 @@ fun ContactScreen(nav: NavController, id: Long) {
                 }
             }) { Text("Build an exhibition proposal PDF") }
         }
-        DangerButton(onClick = { scope.remove(c.venue.ifBlank { c.name.ifBlank { "the contact" } }, { dao.del(c) }, { dao.put(c) }); nav.popBackStack() }) { Text("Delete") }
+        DangerButton(onClick = { scope.remove(c.venue.ifBlank { c.name.ifBlank { "the contact" } }, { dao.del(c) }, { dao.put(c) }); nav.popBackStack() }) { Text("Delete this contact") }
     }
 }

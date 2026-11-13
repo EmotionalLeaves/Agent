@@ -168,7 +168,7 @@ fun Materials(nav: NavController) {
             Text("Portfolio web page", fontWeight = FontWeight.SemiBold)
             Note("One plain page with your documented works, approved statement, CV and email. Published to your own GitHub Pages repo. No feed, no follower counts.")
             Button(onClick = {
-                status = "Publishing... this uploads each image, so it can take a minute."
+                status = "Publishing… this uploads each image, so it can take a minute."
                 scope.io({ status = it }) { val url = Engine.publishPortfolio(ctx); status = "Published: $url (GitHub can take a few minutes to show changes)" }
             }) { Text("Publish or update") }
             if (st.website.isNotBlank()) TextButton(onClick = { Share.open(ctx, st.website) }) { Text("Open ${st.website}") }
@@ -260,7 +260,7 @@ fun DocScreen(nav: NavController, id: Long) {
     }
 
     fun generate() {
-        busy = true; status = "Writing..."
+        busy = true; status = "Writing…"
         scope.io({ status = it; busy = false }) {
             val extra = series.firstOrNull { it.id == d.seriesId }?.let { "About this series, in the artist's words: ${it.notes}" }.orEmpty() +
                 (if (d.type == "custom") "What this document is for: ${d.brief}" else "")

@@ -115,7 +115,8 @@ data class Profile(
     val feeBudgetLeft: Double = 0.0,
     val goals: String = "",
     val blocked: List<String> = emptyList(),
-    val noReasons: Map<String, Int> = emptyMap()
+    val noReasons: Map<String, Int> = emptyMap(),
+    val currency: String = "$"
 )
 
 object Scoring {
@@ -173,7 +174,7 @@ object Scoring {
         var money = if (o.fee <= 0.0) 100 else (100 - o.fee * 2).roundToInt().coerceAtLeast(20)
         if (o.prizes.isNotBlank()) money = min(100, money + 10)
         if ((p.noReasons["fee"] ?: 0) >= 3 && o.fee > 0) money = (money - 20).coerceAtLeast(0)
-        reasons += if (o.fee <= 0.0) "Free to enter" else "Fee $${"%.0f".format(o.fee)}"
+        reasons += if (o.fee <= 0.0) "Free to enter" else "Fee ${p.currency}${"%.0f".format(o.fee)}"
 
         val odds = when (t) { 1 -> 80; 2 -> 60; else -> 40 }
 
@@ -445,6 +446,18 @@ object Texts {
         }
         return out
     }
+
+    /** Reads a typed number the way people type it: "$1,200", "1 200", "12,5", "16 in". Null when there is no number. */
+    fun number(t: String): Double? {
+        var x = t.trim().replace(Regex("[^0-9.,]"), "")
+        if (x.isEmpty()) return null
+        // A single comma with one or two digits after it is a decimal comma; otherwise commas group thousands.
+        x = if (Regex("^\\d+,\\d{1,2}$").matches(x)) x.replace(',', '.') else x.replace(",", "")
+        return x.toDoubleOrNull()
+    }
+
+    /** "1 file", "3 files": a count with the right form of the word. */
+    fun count(n: Int, one: String, many: String = one + "s"): String = "$n " + if (n == 1) one else many
 
     /** CV sections in the usual order, newest first inside each, for documents that lay the years out in a column. */
     fun cvSections(facts: List<Fact>): List<Pair<String, List<Fact>>> = cvOrder.mapNotNull { (key, heading) ->

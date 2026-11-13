@@ -57,7 +57,7 @@ fun WeekScreen(nav: NavController) {
     var custom by remember { mutableStateOf(st.weekTemplate.isNotBlank()) }
     var counter by remember { mutableStateOf(100) }
     var status by remember { mutableStateOf("") }
-    fun replan(message: String) { status = "Re-planning..."; scope.io({ status = it }) { Engine.replan(ctx); status = message } }
+    fun replan(message: String) { status = "Re-planning…"; scope.io({ status = it }) { Engine.replan(ctx); status = message } }
 
     Screen("Your week", nav) {
         Intro("week", "These are the times the app books for making work. They are a plan, not a test: skip one and nothing is marked missed. Change anything here to fit your real life.")
@@ -88,7 +88,7 @@ fun WeekScreen(nav: NavController) {
                             Column(Modifier.weight(1f)) { Field("Start (HH:MM)", s.time, { v -> val i = slots.indexOfFirst { it.id == s.id }; if (i >= 0) slots[i] = slots[i].copy(time = v) }) }
                             Column(Modifier.weight(1f)) { Field("Minutes", s.minutes, { v -> val i = slots.indexOfFirst { it.id == s.id }; if (i >= 0) slots[i] = slots[i].copy(minutes = v) }, number = true) }
                         }
-                        TextButton(onClick = { slots.removeAll { it.id == s.id } }) { Text("Remove") }
+                        TextButton(onClick = { slots.removeAll { it.id == s.id } }) { Text("Remove this time") }
                     }
                 }
             }
@@ -152,7 +152,7 @@ fun SessionsScreen(nav: NavController) {
                 if (s.nextStep.isNotBlank()) Note("Next time: ${s.nextStep}")
                 if (s.note.isNotBlank()) Note(s.note)
                 if (s.photoPath.isNotBlank()) PathImage(s.photoPath, Modifier.fillMaxWidth(), 500)
-                TextButton(onClick = { scope.remove("the session", { dao.del(s) }, { dao.put(s) }) }) { Text("Remove") }
+                TextButton(onClick = { scope.remove("the session", { dao.del(s) }, { dao.put(s) }) }) { Text("Remove this session") }
             }
         }
         Expand("Log one you did away from the app") {
