@@ -898,6 +898,7 @@ fun Review(nav: NavController) {
         else if (coming.isEmpty()) Small(if (planned) "None fit the week as it is set. Change studio times below." else "Planning them now…")
         else coming.forEach { Check(false, fmtDate(it.date) + ", " + clock(it.date) + ", ${(it.endDate - it.date) / 60000} min", small = true) }
         OutlinedButton(onClick = { nav.navigate("week") }, modifier = Modifier.fillMaxWidth()) { Text("Change studio times") }
+        OutlinedButton(onClick = { nav.navigate("dump") }, modifier = Modifier.fillMaxWidth()) { Text("Empty your head before the week") }
         if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }, modifier = Modifier.fillMaxWidth()) { Text("Look at ${Texts.count(pending, "thing")} waiting for your yes") }
         Button(onClick = { st.lastReviewWeek = Engine.weekId(); nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Done for the week") }
     }

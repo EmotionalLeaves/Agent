@@ -136,7 +136,8 @@ object CvImport {
         "education" to Regex("education|degree|training", RegexOption.IGNORE_CASE), "award" to Regex("award|prize|honou?r", RegexOption.IGNORE_CASE),
         "grant" to Regex("grant|fellowship", RegexOption.IGNORE_CASE), "residency" to Regex("residenc", RegexOption.IGNORE_CASE),
         "collection" to Regex("collection", RegexOption.IGNORE_CASE), "press" to Regex("press|review|bibliograph", RegexOption.IGNORE_CASE),
-        "publication" to Regex("publication|published", RegexOption.IGNORE_CASE), "skill" to Regex("skill", RegexOption.IGNORE_CASE))
+        "publication" to Regex("publication|published", RegexOption.IGNORE_CASE), "skill" to Regex("skill", RegexOption.IGNORE_CASE),
+        "teaching" to Regex("teach|workshop|lecture|talks?\\b", RegexOption.IGNORE_CASE))
 
     fun read(text: String): List<Fact> {
         var kind = "group"
@@ -654,7 +655,7 @@ object Texts {
     private val cvOrder = listOf(
         "education" to "Education", "solo" to "Solo Exhibitions", "group" to "Group Exhibitions",
         "invited" to "Invited Exhibitions", "award" to "Awards", "grant" to "Grants", "residency" to "Residencies",
-        "collection" to "Collections", "press" to "Press", "publication" to "Publications", "skill" to "Skills"
+        "teaching" to "Teaching and Talks", "collection" to "Collections", "press" to "Press", "publication" to "Publications", "skill" to "Skills"
     )
     val factCategories = cvOrder.map { it.first }
 

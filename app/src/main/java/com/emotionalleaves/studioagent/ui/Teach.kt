@@ -55,6 +55,14 @@ fun TeachScreen(nav: NavController) {
         Panel { Text(body, style = MaterialTheme.typography.bodyMedium) }
         Button(onClick = { Share.email(ctx, to?.email ?: "", "A beginner class: " + title.value.trim(), body) }, modifier = Modifier.fillMaxWidth()) { Text(if (to != null) "Send to ${to.venue.ifBlank { to.name }}" else "Write the email") }
         OutlinedButton(onClick = { Share.text(ctx, title.value.trim() + "\n\n" + Workshop.outline(kind, minutes).joinToString("\n") { "${it.minutes} min: ${it.what}" } + "\n\nBring:\n" + Workshop.supplies(kind, people).joinToString("\n") { "- $it" }) }, modifier = Modifier.fillMaxWidth()) { Text("Share the outline and list") }
+        // Once it has happened: a line on the CV, under Teaching and Talks.
+        var taught by rememberSaveable { mutableStateOf(false) }
+        val scope = androidx.compose.runtime.rememberCoroutineScope()
+        if (!taught) androidx.compose.material3.TextButton(onClick = {
+            taught = true
+            val line = "\"" + title.value.trim() + "\", a beginner class" + (to?.let { ", " + it.venue.ifBlank { it.name } } ?: "") + (st.city.takeIf { it.isNotBlank() }?.let { ", $it" } ?: "")
+            scope.io { G.dao.put(com.emotionalleaves.studioagent.data.Fact(category = "teaching", year = java.time.LocalDate.now().year, text = line)) }
+        }) { Text("I taught it: add it to my CV") } else Small("On your CV, under Teaching and Talks.")
         if (places.isEmpty()) Small("Libraries and community centers near you are in Places near you; any you add with an email appear here.")
     }
 }
