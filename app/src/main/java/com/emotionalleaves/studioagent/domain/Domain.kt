@@ -840,6 +840,14 @@ object CallReader {
 }
 
 
+/** Money in and out by month, for a picture of the year: income and costs per month, January first. */
+object MoneyByMonth {
+    fun of(year: Int, entries: List<Pair<LocalDate, Double>>): List<Pair<Double, Double>> = (1..12).map { m ->
+        val inMonth = entries.filter { it.first.year == year && it.first.monthValue == m }
+        inMonth.filter { it.second > 0 }.sumOf { it.second } to -inMonth.filter { it.second < 0 }.sumOf { it.second }
+    }
+}
+
 /** An entry in small pieces: five 15-minute steps, one per evening, spread over the days before the send date. */
 object EntrySteps {
     val steps = listOf("choose the works", "check each picture and its details", "the paragraph on how it fits", "fill in the form or the email", "send it")

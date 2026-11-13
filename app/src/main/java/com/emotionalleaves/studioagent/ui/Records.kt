@@ -53,6 +53,9 @@ import com.emotionalleaves.studioagent.domain.Texts
 import com.emotionalleaves.studioagent.net.Mail
 import androidx.compose.material3.FilterChip
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.runtime.collectAsState
 import com.emotionalleaves.studioagent.domain.Scoring
 import com.emotionalleaves.studioagent.media.ImageTools
@@ -119,6 +122,25 @@ fun Records(nav: NavController) {
                 com.emotionalleaves.studioagent.media.ImageTools.saveJpeg(com.emotionalleaves.studioagent.media.Post.year(bms, "My $yr in art", yearLines, st.fullName), f, 90)
                 withContext(Dispatchers.Main) { Share.post(ctx, f, "My $yr in art:\n" + yearLines.joinToString("\n") { "• $it" }) }
             } }) { Text("Share my year as a picture") }
+        }
+        // The year's money as a picture: what came in above the line, what went out below, month by month.
+        val months = com.emotionalleaves.studioagent.domain.MoneyByMonth.of(yr, ledger.map { Engine.date(it.date) to it.amount })
+        if (months.any { it.first > 0 || it.second > 0 }) Panel {
+            Text("$yr, month by month", fontWeight = FontWeight.SemiBold)
+            val top = months.maxOf { maxOf(it.first, it.second) }.coerceAtLeast(1.0)
+            val inColor = MaterialTheme.colorScheme.primary; val outColor = MaterialTheme.colorScheme.outline; val axis = MaterialTheme.colorScheme.outlineVariant
+            val desc = months.mapIndexedNotNull { i, (a, b) -> if (a > 0 || b > 0) java.time.Month.of(i + 1).getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.US) + " in ${money(a)}, out ${money(b)}" else null }.joinToString("; ")
+            androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(140.dp).semantics { contentDescription = desc }) {
+                val w = size.width / 12f; val mid = size.height / 2f
+                months.forEachIndexed { i, (a, b) ->
+                    val x = i * w + w * 0.2f; val bw = w * 0.6f
+                    if (a > 0) drawRect(inColor, androidx.compose.ui.geometry.Offset(x, mid - (a / top * mid * 0.95).toFloat()), androidx.compose.ui.geometry.Size(bw, (a / top * mid * 0.95).toFloat()))
+                    if (b > 0) drawRect(outColor, androidx.compose.ui.geometry.Offset(x, mid), androidx.compose.ui.geometry.Size(bw, (b / top * mid * 0.95).toFloat()))
+                }
+                drawLine(axis, androidx.compose.ui.geometry.Offset(0f, mid), androidx.compose.ui.geometry.Offset(size.width, mid), 2f)
+            }
+            Row { listOf("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D").forEach { Text(it, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, textAlign = androidx.compose.ui.text.style.TextAlign.Center) } }
+            Small("Above the line: sales and other money in. Below: costs.")
         }
         val tasks = events.filter { (it.type == "task" || it.type == "todo") && !it.done }
         H("To do")
