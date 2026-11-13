@@ -622,3 +622,4 @@ One real change per round. Pushed and built every ten rounds.
 615. Two more seasons: in March, photograph in spring light (everything finished over the winter, before the spring calls), and in July, autumn calls are opening.
 616. In the weekly look ahead, with three or more pieces in progress and none chosen for next week, "Can't choose? Pick for me" picks the one that has waited longest since you last worked on it.
 617. A to-do on Today opens where it is done: "Teach: ..." opens Teach a class, "Buy the supplies..." opens Supplies, "Email the library..." the ready-made emails, "Photograph..." the photoshoot, "Apply to..." Calls; anything else opens your to-do list as before.
+618. To-dos found with Find anything open where they are done too: the piece, the entry, or the tool their words name.
