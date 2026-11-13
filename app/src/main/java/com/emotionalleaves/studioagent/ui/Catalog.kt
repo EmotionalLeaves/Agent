@@ -848,6 +848,18 @@ fun IdeasBody(nav: NavController) {
         }
         val open = if (reviewing) allOpen.filter { it !in old } else allOpen
         if (open.isEmpty() && !reviewing) Empty("Nothing parked. When an idea keeps circling while you work, put it here and let it go.")
+        // Too many to choose between: one picked for you, at random, to try or to skip. Choosing is often the hardest part.
+        var picked by remember { mutableStateOf<Long?>(null) }
+        if (open.size >= 3 && !reviewing) {
+            val p = open.firstOrNull { it.id == picked }
+            if (p == null) TextButton(onClick = { picked = open.random().id }) { Text("Can't choose? Pick one for me") }
+            else Panel(strong = true) {
+                Text("This one:", fontWeight = FontWeight.SemiBold)
+                Text(p.text.ifBlank { "(a picture)" })
+                Row { TextButton(onClick = { picked = open.filter { it.id != p.id }.random().id }) { Text("Another") }; TextButton(onClick = { picked = null }) { Text("Never mind") } }
+                Small("Like it? \"Start as a piece\" is on its card below.")
+            }
+        }
         // A pinboard: each idea a small sheet with a pin, two across.
         open.chunked(2).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
