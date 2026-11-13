@@ -526,3 +526,4 @@ One real change per round. Pushed and built every ten rounds.
 519. "New in this version" brought up to date with the rounds since 490.
 520. A week with different shifts: Your week has "Off work this week" days to tick; the studio times for this week are planned again around them, and next week goes back to your usual hours by itself.
 521. "It is all too much", in the menu on Today's step: three quiet days in one tap. Today shows only "Five minutes, any piece" (five minutes or none both count), every other card waits, no notifications arrive, and only a deadline within a day still breaks through. "Show everything on Today" ends it early.
+522. "Remind me this evening", in the menu on Today's step: the step comes back as a notification at six (or in two hours when it is already evening), so it can leave your head until then.

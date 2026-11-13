@@ -210,6 +210,7 @@ fun Home(nav: NavController) {
                         else {
                             if (st.snoozeDay == today.toString()) DropdownMenuItem(text = { Text("Bring today's step back") }, onClick = { st.snoozeDay = ""; menu = false })
                             else DropdownMenuItem(text = { Text("Not today") }, onClick = { st.snoozeDay = today.toString(); menu = false })
+                            n?.let { step -> DropdownMenuItem(text = { Text("Remind me this evening") }, onClick = { Engine.remindLater(ctx, step.title, step.route); menu = false }) }
                             // When it is all too much: three quiet days, the step shrinks to five minutes, everything else waits.
                             DropdownMenuItem(text = { Text("It is all too much") }, onClick = { st.calmUntil = System.currentTimeMillis() + 3 * 86_400_000L; menu = false })
                             DropdownMenuItem(text = { Text("Pin my own step") }, onClick = { pinning = true; menu = false })

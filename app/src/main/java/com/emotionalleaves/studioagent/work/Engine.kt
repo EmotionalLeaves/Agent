@@ -1170,6 +1170,16 @@ object Engine {
         }
     }
 
+    /** Remind me later: today's step comes back as a notification this evening (or in two hours when it is already evening). */
+    fun remindLater(ctx: Context, title: String, route: String) {
+        val now = java.time.LocalDateTime.now()
+        val at = now.toLocalDate().atTime(18, 0).let { if (it.isAfter(now.plusMinutes(30))) it else now.plusHours(2) }
+        val delay = millis(at) - System.currentTimeMillis()
+        val req = OneTimeWorkRequestBuilder<ReminderWorker>().setInitialDelay(delay, TimeUnit.MILLISECONDS)
+            .setInputData(workDataOf("title" to title, "route" to route, "minutes" to 0)).build()
+        try { WorkManager.getInstance(ctx).enqueueUniqueWork("later", ExistingWorkPolicy.REPLACE, req) } catch (e: Exception) { }
+    }
+
     fun cancelGoal(ctx: Context) { try { listOf("goal", "goal-warn", "goal-bed").forEach { WorkManager.getInstance(ctx).cancelUniqueWork(it) } } catch (e: Exception) { } }
 
     fun queueSend(ctx: Context, applId: Long) {
