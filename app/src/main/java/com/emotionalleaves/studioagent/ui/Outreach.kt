@@ -388,7 +388,16 @@ fun ContactScreen(nav: NavController, id: Long) {
                         Text("Approved. It goes out with the next daily run, at most ${st.outreachWeeklyCap} emails a week. The follow-up is sent for you.")
                         TextButton(onClick = { save(c.copy(status = "drafted")) }) { Text("Undo") }
                     } else {
-                        Button(modifier = Modifier.fillMaxWidth(), onClick = { Share.email(ctx, c.email, c.draftSubject, c.draftBody) }) { Text("Open in my mail app, filled in") }
+                        Button(modifier = Modifier.fillMaxWidth(), onClick = {
+                            // Three pictures go with it, small enough for any inbox: venues decide from the work.
+                            scope.io {
+                                val dir = java.io.File(ctx.cacheDir, "outreach").apply { deleteRecursively(); mkdirs() }
+                                val pics = Engine.portfolioOrdered(dao.artworksNow()).take(3).mapIndexedNotNull { i, w ->
+                                    java.io.File(dir, Texts.fileName(st.lastName.ifBlank { st.firstName }, w.title, w.year, "", 0.0, 0.0, number = i + 1))
+                                        .takeIf { com.emotionalleaves.studioagent.media.ImageTools.export(w.imagePath, 1400, 700_000, it, st.fullName, Papers.caption(w)) } }
+                                withContext(Dispatchers.Main) { Share.email(ctx, c.email, c.draftSubject, c.draftBody, pics) }
+                            }
+                        }) { Text("Open in my mail app, with three pictures") }
                         OutlinedButton(onClick = { save(c.copy(status = "sent", sentAt = now(), followUpAt = now() + 24 * DAY)) }) { Text("I sent it") }
                     }
                 }
