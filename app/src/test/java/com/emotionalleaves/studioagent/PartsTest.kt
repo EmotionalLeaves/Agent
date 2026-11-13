@@ -458,4 +458,27 @@ class PartsTest {
         assertTrue(dark in 400..3200)
     }
 
+
+    @Test fun anOpeningAtAVenueBecomesAnInvitation() = kotlinx.coroutines.runBlocking {
+        ctx
+        val day = java.time.LocalDate.now().plusDays(10)
+        val words = day.format(java.time.format.DateTimeFormatter.ofPattern("MMMM d, yyyy", java.util.Locale.US))
+        val server = MockWebServer()
+        server.dispatcher = object : okhttp3.mockwebserver.Dispatcher() {
+            override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest): MockResponse =
+                if (request.path == "/") MockResponse().setBody("<html><body><h1>Gallery 4</h1><p>New show: Small Hours. Opening reception: $words, 6 to 8 pm. All welcome.</p></body></html>")
+                else MockResponse().setResponseCode(404)
+        }
+        server.start()
+        try {
+            G.dao.contactsNow().forEach { G.dao.del(it) }
+            G.dao.put(com.emotionalleaves.studioagent.data.Contact(venue = "Gallery 4", website = server.url("/").toString()))
+            assertEquals(1, Engine.findOpenings())
+            val e = G.dao.eventsNow().single { it.type == "invite" }
+            assertEquals("Opening at Gallery 4", e.title)
+            assertEquals(day, Engine.date(e.date))
+            assertEquals("the same opening is not added twice", 0, Engine.findOpenings())
+        } finally { server.shutdown() }
+    }
+
 }
