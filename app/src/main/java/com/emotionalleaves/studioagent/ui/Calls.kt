@@ -582,8 +582,38 @@ fun ApplScreen(nav: NavController, id: Long) {
                         }) { Text(if (e.date > 0) "Change day" else "Set a day") }
                     }
                 }
+                // Your own show, with friends: a group show is how most artists get their first walls.
+                val contactsAll by dao.contacts().collectAsState(emptyList())
+                val ledgerAll by dao.ledger().collectAsState(emptyList())
+                val guests = contactsAll.filter { it.kind == "artist" && it.notes.contains("Show:$id;") }
+                val guestPieces = guests.flatMap { g -> com.emotionalleaves.studioagent.domain.GroupShow.pieces(g.submissionNotes).map { it.copy(id = -(g.id * 100 + it.title.hashCode().toLong().mod(97L)), tags = "guest:" + g.name) } }
+                if (o.sourceName == "Your own show") Expand(if (guests.isEmpty()) "Show with other artists" else "Showing with " + guests.joinToString(", ") { it.name.ifBlank { it.email } }) {
+                    Small("Two to four artists share the work of a show and bring twice the visitors. Add them, send the invitation, and paste their list of pieces when it comes back.")
+                    guests.forEach { g -> key(g.id) {
+                        Panel {
+                            Text(g.name.ifBlank { g.email }, fontWeight = FontWeight.SemiBold)
+                            var list by remember(g.id) { mutableStateOf(g.submissionNotes) }
+                            Field("Their pieces, one per line: Title, medium, 9 x 12 in, $250", list, { list = it; scope.io { dao.put(g.copy(submissionNotes = it)) } }, lines = 4)
+                            val n = com.emotionalleaves.studioagent.domain.GroupShow.pieces(list).size
+                            if (n > 0) Small(Texts.count(n, "piece") + " read.")
+                            Row {
+                                if (g.email.isNotBlank()) TextButton(onClick = { Share.email(ctx, g.email, "Join a group show" + (if (o.title.isNotBlank()) ": ${o.title}" else ""), com.emotionalleaves.studioagent.domain.GroupShow.invite(st.firstName, o.title, o.venue, o.exhibitionDates, guests.size + 1)) }) { Text("Send the invitation") }
+                                TextButton(onClick = { scope.remove("${g.name} from the show", { dao.del(g) }, { dao.put(g) }) }) { Text("Remove") }
+                            }
+                        }
+                    } }
+                    val gName = rememberSaveable { mutableStateOf("") }; val gMail = rememberSaveable { mutableStateOf("") }
+                    Field("Another artist's name", gName); Field("Their email", gMail)
+                    if (gName.value.isNotBlank()) TextButton(onClick = {
+                        val c = com.emotionalleaves.studioagent.data.Contact(name = gName.value.trim(), email = gMail.value.trim(), kind = "artist", status = "showing", notes = "Show:$id; showing with you in ${o.title}.", createdAt = now())
+                        gName.value = ""; gMail.value = ""; scope.io { dao.put(c) }
+                    }) { Text("Add to the show") }
+                    val costs = -ledgerAll.filter { it.oppId == o.id && it.amount < 0 }.sumOf { it.amount }
+                    if (guests.isNotEmpty() && costs > 0) Note("Costs so far ${money(costs)}: ${money(com.emotionalleaves.studioagent.domain.GroupShow.share(costs, guests.size + 1))} each, split ${guests.size + 1} ways.")
+                    else if (guests.isNotEmpty()) Small("Costs you add in Records for this show are split evenly here.")
+                }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.labels(ctx, st, chosen); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Wall labels") }
+                    OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.labels(ctx, st, chosen + guestPieces) { w -> w.tags.removePrefix("guest:").takeIf { w.tags.startsWith("guest:") }.orEmpty() }; withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text(if (guestPieces.isEmpty()) "Wall labels" else "Wall labels for everyone") }
                     // For a library, cafe or community space: what was agreed by email, on one page to sign.
                     if (o.sourceName == "Your own show") OutlinedButton(onClick = { scope.io({ status = it }) {
                         val f = Papers.agreement(ctx, st, o.venue, chosen, o.exhibitionDates, o.commission)

@@ -469,4 +469,14 @@ class DomainTest {
         val all = F.weeks.flatMap { it.exercises }.fold("") { acc, e -> F.mark(acc, e.id) }
         assertEquals(null, F.current(all))
     }
+
+    @Test fun aGroupShowReadsTheirList() {
+        val G = com.emotionalleaves.studioagent.domain.GroupShow
+        val p = G.pieces("Night Shift, gouache on paper, 9 x 12 in, $250\n- Prep Table, acrylic, 16x20, NFS\nUntitled sketch")
+        assertEquals(listOf("Night Shift", "Prep Table", "Untitled sketch"), p.map { it.title })
+        assertEquals("gouache on paper", p[0].medium); assertEquals(9.0, p[0].widthIn, 0.0); assertEquals(12.0, p[0].heightIn, 0.0); assertEquals(250.0, p[0].price, 0.0)
+        assertTrue(p[1].nfs); assertEquals(16.0, p[1].widthIn, 0.0); assertEquals("acrylic", p[1].medium)
+        assertEquals(40.0, G.share(120.0, 3), 0.001)
+        assertTrue(G.invite("Jade", "Night Kitchen", "Central Library", "May 2027", 3).contains("alongside 2 other artists"))
+    }
 }

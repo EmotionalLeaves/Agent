@@ -840,6 +840,32 @@ object CallReader {
 }
 
 
+/** A show with other artists: their pieces from a plain list, the costs shared, and the note that brings them in. */
+object GroupShow {
+    /** "Title, medium, 12 x 16 in, $250" per line, any part left out; read into pieces for labels and the price list. */
+    fun pieces(list: String): List<com.emotionalleaves.studioagent.data.Artwork> = list.lines().map { it.trim().trimStart('-', '*', '•', ' ') }.filter { it.isNotBlank() }.mapNotNull { line ->
+        val parts = line.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        if (parts.isEmpty()) return@mapNotNull null
+        val size = parts.firstNotNullOfOrNull { Regex("(\\d+(?:\\.\\d+)?)\\s*[x×]\\s*(\\d+(?:\\.\\d+)?)").find(it) }
+        val price = parts.firstNotNullOfOrNull { p -> Regex("^\\$\\s?(\\d[\\d,]*(?:\\.\\d{2})?)$|^(\\d[\\d,]*)\\s*(usd|dollars)$", RegexOption.IGNORE_CASE).find(p)?.let { m -> (m.groupValues[1].ifBlank { m.groupValues[2] }).replace(",", "").toDoubleOrNull() } }
+        val nfs = parts.any { it.equals("nfs", true) || it.equals("not for sale", true) }
+        val rest = parts.drop(1).filter { p -> !(size != null && p.contains(size.value)) && !Regex("^\\$|usd|dollars|^nfs$|not for sale", RegexOption.IGNORE_CASE).containsMatchIn(p) }
+        com.emotionalleaves.studioagent.data.Artwork(title = parts[0], medium = rest.firstOrNull().orEmpty(), widthIn = size?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0,
+            heightIn = size?.groupValues?.get(2)?.toDoubleOrNull() ?: 0.0, price = price ?: 0.0, nfs = nfs, status = "documented")
+    }
+
+    fun share(totalCosts: Double, artists: Int): Double = if (artists <= 0) totalCosts else Math.round(totalCosts / artists * 100) / 100.0
+
+    fun invite(you: String, title: String, venue: String, dates: String, others: Int): String =
+        "Hi! I am putting on a small group show" + (if (title.isNotBlank()) ", $title," else "") + (if (venue.isNotBlank()) " at $venue" else "") + (if (dates.isNotBlank()) ", $dates" else "") + ", " +
+            "and I would love to have your work in it" + (if (others > 1) " alongside ${others - 1} other artist${if (others > 2) "s" else ""}" else "") + ".\n\n" +
+            "If you are in, could you send me, for two or three pieces:\n" +
+            "Title, medium, size, price (or NFS), one per line, like: Night Shift, gouache on paper, 9 x 12 in, $250\n" +
+            "and a good photo of each, plus two sentences about your work.\n\n" +
+            "We would split the costs (printing, wine, anything the venue asks) evenly, and each keep our own sales. I will make the labels, the price list and the flyer.\n\n" +
+            "Thank you!\n$you"
+}
+
 /** The physical checks before a piece leaves the studio, by what it is. Ticks are kept as bits per piece. */
 object HangReady {
     fun items(format: String, framed: Boolean): List<String> = buildList {

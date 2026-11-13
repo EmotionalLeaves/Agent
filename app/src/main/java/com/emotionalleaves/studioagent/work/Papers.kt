@@ -180,7 +180,7 @@ object Papers {
     // ------------------------------------------------------------ wall labels
 
     /** Eight labels to a page, two across, with light corner marks to cut along. */
-    fun labels(ctx: Context, s: Settings, works: List<Artwork>): File {
+    fun labels(ctx: Context, s: Settings, works: List<Artwork>, artistOf: (Artwork) -> String = { "" }): File {
         val pdf = pdf(ctx, s, "", margin = 36, footer = false)
         val cols = 2; val rows = 4
         val cw = pdf.width / cols.toFloat()
@@ -204,7 +204,7 @@ object Papers {
                 val l = pdf.layout(t, (cw - 2 * pad).toInt(), size, face, grey)
                 c.save(); c.translate(x + pad, ty); l.draw(c); c.restore(); ty += l.height + gap
             }
-            put(name(s), 12f, Pdf.Face.BOLD, gap = 6f)
+            put(artistOf(a).ifBlank { name(s) }, 12f, Pdf.Face.BOLD, gap = 6f)
             put(SpannableStringBuilder(pdf.em(a.title.ifBlank { "Untitled" })).append(if (a.year > 0) ", ${a.year}" else ""), 11.5f, gap = 6f)
             details(a).forEach { put(it, 9.5f) }
             if (!a.nfs && a.price > 0) { ty += 4f; put(money(s, a.price), 10.5f) }
