@@ -135,6 +135,14 @@ fun Works(nav: NavController) {
                 OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Add from my files") }
             }
             Status(importStatus)
+            // Finished pieces with pictures are one tap from going out: all of them at once.
+            val almost = works.filter { it.status == "finished" && it.imagePath.isNotBlank() }
+            if (almost.isNotEmpty()) Panel {
+                Text(Texts.count(almost.size, "finished piece") + " " + (if (almost.size == 1) "has its" else "have their") + " picture" + (if (almost.size == 1) "" else "s") + " but " + (if (almost.size == 1) "is" else "are") + " not marked Ready to send yet.")
+                OutlinedButton(onClick = { scope.io { almost.forEach { w -> dao.put(Engine.fillBlanks(w.copy(status = "documented")).first) }; importStatus = "Marked ${Texts.count(almost.size, "piece")} Ready to send. Empty details were filled in; open any piece to check them." } }) {
+                    Text(if (almost.size == 1) "Mark it Ready to send" else "Mark all ${almost.size} Ready to send")
+                }
+            }
             if (works.isEmpty()) Empty("No pieces yet. Start one, or bring in work you have already made.")
             if (works.size > 5) {
                 Field("Search title, tag, medium or series", search)

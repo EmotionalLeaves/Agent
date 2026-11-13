@@ -359,3 +359,4 @@ One real change per round. Pushed and built every ten rounds.
 353. Every venue's page says what to expect from that kind of place (how libraries, artist-run spaces, nonprofits, commercial galleries and campuses book shows, and the usual first step).
 354. Every call's page says in one line what that kind of call is and what usually decides it (exhibitions: the pictures; residencies: a plan; grants: project, budget, timeline; fairs: booth fee against sales).
 355. Your own studio times step around what is already in your phone's calendar (a changed shift, an appointment): an hour or two later the same evening, or skipped that day, instead of booking over it.
+356. Studio: finished pieces that already have pictures are offered in one tap: "Mark all 4 Ready to send", with empty details filled in.
