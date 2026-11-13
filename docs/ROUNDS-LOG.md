@@ -464,3 +464,4 @@ One real change per round. Pushed and built every ten rounds.
 458. All calls are grouped by the month they close (with how many in each), then those with no deadline given and those closed, so the year of calls reads like a calendar.
 459. Your themes can start from your own statement: "Suggest from my statement" picks the words it leans on most (kitchen, night...), leaving out the small and general ones, to keep or change.
 460. A show you are in can be posted from its own photos: the room and the work in one grid picture, with the show's name, place and dates, a thank-you to everyone who came and to the venue, and plain tags.
+461. A guard against hyperfocus: a session still running fifteen minutes before your bedtime gets one gentle notification to jot where you are and stop; it is all there tomorrow.
