@@ -71,6 +71,14 @@ object Shared {
 class MainActivity : ComponentActivity() {
     private val incoming = mutableStateOf<Incoming?>(null)
 
+    override fun onResume() {
+        super.onResume()
+        // A long gap since the app was last opened: Today greets it kindly instead of showing the backlog first.
+        val now = System.currentTimeMillis(); val last = st.lastOpened
+        if (last > 0 && now - last >= 7 * 86_400_000L) st.awayDays = ((now - last) / 86_400_000L).toInt()
+        st.lastOpened = now
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

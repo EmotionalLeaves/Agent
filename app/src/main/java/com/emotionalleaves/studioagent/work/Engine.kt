@@ -1201,6 +1201,14 @@ object Engine {
             dao.eventsNow().count { it.type == "opening" && it.done }, dao.contactsNow().count { it.sentAt > 0 && it.kind != "subscriber" }))
     }
 
+    /** To-dos whose day went by are spread over the next week (two days from now on), a few a day, so none shout "overdue". Deadlines stay put. */
+    suspend fun spreadOverdue(): Int {
+        val today = LocalDate.now(); val start = millis(today.atStartOfDay())
+        val late = dao.eventsNow().filter { it.type == "task" && !it.done && it.date in 1 until start }.sortedBy { it.date }
+        late.forEachIndexed { i, e -> dao.put(e.copy(date = millis(today.plusDays(2L + i / 2 % 6).atTime(18, 0)))) }
+        return late.size
+    }
+
     fun cancelGoal(ctx: Context) { try { listOf("goal", "goal-warn", "goal-bed").forEach { WorkManager.getInstance(ctx).cancelUniqueWork(it) } } catch (e: Exception) { } }
 
     fun queueSend(ctx: Context, applId: Long) {

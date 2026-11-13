@@ -254,6 +254,9 @@ class Settings(ctx: Context) {
     var playlist by S("playlist")
     /** A focus or blocker app to open when a session starts: "package|label". */
     var focusApp by S("focusApp")
+    var lastOpened by L("lastOpened", 0)
+    /** Days away before this visit, when it was a week or more; cleared once greeted. */
+    var awayDays by I("awayDays", 0)
     /** Calls to send in a year; no's count toward it just the same. */
     var yearSends by I("yearSends", 24)
     /** The kinds of artist gathering you have been to, by key. */

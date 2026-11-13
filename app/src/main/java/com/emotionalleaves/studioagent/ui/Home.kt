@@ -227,6 +227,12 @@ fun Home(nav: NavController) {
                 }
             }
         }
+        // Back after a week or more away: nothing is late from here, and the week is planned again from today.
+        if (st.onboarded && st.awayDays >= 7) Panel(strong = true) {
+            Text("Welcome back", fontWeight = FontWeight.SemiBold)
+            Text("It has been ${st.awayDays} days. Nothing is lost, and nothing is overdue from here: what went by has gone by, and any to-dos that slipped are spread over the coming week. One step today is plenty.", style = MaterialTheme.typography.bodyMedium)
+            TextButton(onClick = { st.awayDays = 0; scope.io { Engine.spreadOverdue(); Engine.replan(ctx) } }) { Text("Thanks, plan my week from today") }
+        }
         // The day after quiet days end: a soft way back in, not a pile of everything that waited.
         if (st.onboarded && !calm && st.calmUntil in (System.currentTimeMillis() - 86_400_000L)..System.currentTimeMillis())
             Small("Welcome back. Just the one step below today; everything else will find its place over the next few days.")
