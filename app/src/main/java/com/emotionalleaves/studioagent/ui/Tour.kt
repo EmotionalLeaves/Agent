@@ -91,7 +91,11 @@ fun Tour(nav: NavController) {
         HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth()) { i ->
             val p = pages[i]
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Box(Modifier.fillMaxWidth().heightIn(min = 250.dp).padding(top = 8.dp).clearAndSetSemantics { }, contentAlignment = Alignment.Center) { p.picture() }
+                // Each page on its own painted field, the picture held on a card in front of it.
+                Box(Modifier.fillMaxWidth().height(320.dp).padding(top = 8.dp).clip(RoundedCornerShape(28.dp)).clearAndSetSemantics { }, contentAlignment = Alignment.Center) {
+                    ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = 900L + i, shift = (i * 13 - 30).toFloat())
+                    Box(Modifier.padding(26.dp).clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)).padding(18.dp), contentAlignment = Alignment.Center) { p.picture() }
+                }
                 Text(p.title, style = MaterialTheme.typography.headlineLarge)
                 Text(p.text, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (i == pages.lastIndex) {
