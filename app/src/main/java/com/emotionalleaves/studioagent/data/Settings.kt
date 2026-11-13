@@ -183,6 +183,9 @@ class Settings(ctx: Context) {
     var friendlyVenues by S("friendlyVenues")
     /** The exercise a practice session is on. */
     var practiceText by S("practiceText")
+    /** The foundations exercise a practice session is on ("3b"), and the ones done. */
+    var practiceId by S("practiceId")
+    var foundationsDone by S("foundationsDone")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

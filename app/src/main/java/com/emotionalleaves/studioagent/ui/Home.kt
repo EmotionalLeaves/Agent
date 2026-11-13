@@ -414,11 +414,22 @@ fun SessionScreen(nav: NavController) {
                 Text(lightPrompts[n % lightPrompts.size], style = MaterialTheme.typography.titleMedium)
                 TextButton(onClick = { n = (n + 1) % practicePrompts.size }, modifier = Modifier.offset(x = (-12).dp)) { Text("Another one") }
             }
+            // Practice follows the twelve weeks of foundations, one exercise after another; "something else" is always there.
+            val foundation = remember(st.foundationsDone) { com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone) }
+            val week = remember(st.foundationsDone) { com.emotionalleaves.studioagent.domain.Foundations.current(st.foundationsDone) }
+            var useFoundation by rememberSaveable { mutableStateOf(true) }
             if (kind == "skill") {
                 Panel {
-                    Small("Today's exercise")
-                    Text(practicePrompts[n], style = MaterialTheme.typography.titleMedium)
-                    TextButton(onClick = { n = (n + 1) % practicePrompts.size }, modifier = Modifier.offset(x = (-12).dp)) { Text("Another one") }
+                    if (useFoundation && foundation != null && week != null) {
+                        Small("Foundations, week ${week.n} of 12: ${week.skill}")
+                        Text(foundation.text, style = MaterialTheme.typography.titleMedium)
+                        Small(week.why)
+                        TextButton(onClick = { useFoundation = false }, modifier = Modifier.offset(x = (-12).dp)) { Text("Something else instead") }
+                    } else {
+                        Small("Today's exercise")
+                        Text(practicePrompts[n], style = MaterialTheme.typography.titleMedium)
+                        TextButton(onClick = { n = (n + 1) % practicePrompts.size }, modifier = Modifier.offset(x = (-12).dp)) { Text("Another one") }
+                    }
                 }
             }
             val left = work?.let { Engine.firstStep(it) }.orEmpty().ifBlank { sessions.firstOrNull { it.artworkId == workId && it.nextStep.isNotBlank() }?.nextStep.orEmpty() }
@@ -441,7 +452,9 @@ fun SessionScreen(nav: NavController) {
                 st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
                 st.sessionGoalMin = length.substringBefore(" ").toIntOrNull() ?: st.defaultSessionMin
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
-                st.practiceText = when (kind) { "skill" -> practicePrompts[n]; "light" -> lightPrompts[n % lightPrompts.size]; else -> "" }
+                val fromCourse = kind == "skill" && useFoundation && foundation != null
+                st.practiceText = when (kind) { "skill" -> if (fromCourse) foundation!!.text else practicePrompts[n]; "light" -> lightPrompts[n % lightPrompts.size]; else -> "" }
+                st.practiceId = if (fromCourse) foundation!!.id else ""
                 // Working on an idea makes it a piece in progress.
                 if (kind == "make" && work?.status == "idea") scope.io { dao.put(work.copy(status = "in_progress")) }
                 if (st.dndInSession) Notifier.dnd(ctx, true)
@@ -470,6 +483,8 @@ fun SessionScreen(nav: NavController) {
             Notifier.sessionEnded(ctx)
             Engine.cancelGoal(ctx)
             val end = start + Engine.sessionElapsed(now()); val kind = st.sessionKind; val artId = st.sessionArtwork
+            // A foundations exercise practiced and saved is done; the next one comes up next time.
+            if (save && kind == "skill" && st.practiceId.isNotBlank()) { st.foundationsDone = com.emotionalleaves.studioagent.domain.Foundations.mark(st.foundationsDone, st.practiceId); st.practiceId = "" }
             st.sessionStart = 0L; st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
             Notifier.dnd(ctx, false)
             scope.io {
@@ -728,6 +743,7 @@ fun More(nav: NavController) {
         val statementOk = docs.any { it.type == "statement" && it.approved && it.text.isNotBlank() }
         IconRow(Icons.Default.Edit, "Statement, bio and CV", (if (statementOk) "Statement approved" else "Statement not approved yet") + ", " + Texts.count(facts.size, "CV line")) { nav.navigate("materials") }
         IconRow(Icons.Default.Person, "People and venues", if (venues == 0) "Find real places near you to show" else "Places to show, and emails to them") { nav.navigate("outreach") }
+        com.emotionalleaves.studioagent.domain.Foundations.current(st.foundationsDone).let { wk -> IconRow(Icons.Default.Star, "Foundations", if (wk == null) "All twelve weeks done" else "Week ${wk.n} of 12: ${wk.skill}") { nav.navigate("foundations") } }
         IconRow(Icons.Default.AccountBox, "Records", "To-dos, money, sales, and proof of what was sent") { nav.navigate("records") }
         if (steps != null && next == null) IconRow(Icons.Default.CheckCircle, "Guide", "Set-up is done. The five levels, and where you are") { nav.navigate("guide") }
         IconRow(Icons.Default.Settings, "Settings", "Your details, hours, rules, writing help, email, backup") { nav.navigate("settings") }

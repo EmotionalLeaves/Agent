@@ -456,4 +456,17 @@ class DomainTest {
         assertFalse(P.mediaMatch(listOf("ceramics", "sculpture"), "acrylic, digital"))
         assertTrue(P.mediaMatch(listOf("digital art"), "digital, archival print"))
     }
+
+    @Test fun foundationsMoveOn() {
+        val F = com.emotionalleaves.studioagent.domain.Foundations
+        assertEquals(12, F.weeks.size); assertTrue(F.weeks.all { it.exercises.size == 3 })
+        assertEquals("1a", F.next("")!!.id)
+        var s = F.mark("", "1a"); s = F.mark(s, "1b"); s = F.mark(s, "1c")
+        assertEquals(2, F.current(s)!!.n); assertEquals("2a", F.next(s)!!.id)
+        s = F.mark(s, "10a"); s = F.mark(s, "2a")
+        assertEquals("1a,1b,1c,2a,10a", s)
+        assertEquals("2b", F.next(s)!!.id)
+        val all = F.weeks.flatMap { it.exercises }.fold("") { acc, e -> F.mark(acc, e.id) }
+        assertEquals(null, F.current(all))
+    }
 }

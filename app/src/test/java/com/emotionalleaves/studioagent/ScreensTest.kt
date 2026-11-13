@@ -186,6 +186,7 @@ class ScreensTest {
         shot("67d_commission", "commission", "Promised by")
         shot("67e_year", "year", "this month")
         shot("67f_check", "check", "Paste the message")
+        shot("67g_foundations", "foundations", "Seeing shapes")
         shot("68_web", "web/${ids["draft"]}", "Fill")
         shot("69_basics", "basics", "What is an open call?")
     }
