@@ -406,6 +406,7 @@ fun SessionScreen(nav: NavController) {
         val secs = (Engine.sessionElapsed(nowMs) / 1000).coerceAtLeast(0)
         val work = works.firstOrNull { it.id == st.sessionArtwork }
         fun finish(save: Boolean) {
+            com.emotionalleaves.studioagent.media.Noise.stop()
             Notifier.sessionEnded(ctx)
             Engine.cancelGoal(ctx)
             val end = start + Engine.sessionElapsed(now()); val kind = st.sessionKind; val artId = st.sessionArtwork
@@ -478,10 +479,17 @@ fun SessionScreen(nav: NavController) {
                 // One big way out, one quiet way to pause. Stacked, so long words never get squeezed.
                 Button(modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp), onClick = { stopping = true }) { Text("I am stopping") }
                 OutlinedButton(modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), onClick = {
-                    if (paused) { st.sessionPausedTotal = st.sessionPausedTotal + (now() - st.sessionPausedAt); st.sessionPausedAt = 0L }
-                    else st.sessionPausedAt = now()
+                    if (paused) { st.sessionPausedTotal = st.sessionPausedTotal + (now() - st.sessionPausedAt); st.sessionPausedAt = 0L; if (st.sessionNoise) com.emotionalleaves.studioagent.media.Noise.start() }
+                    else { st.sessionPausedAt = now(); com.emotionalleaves.studioagent.media.Noise.stop() }
                 }) { Text(if (paused) "Resume" else "Pause") }
                 Text("Put the phone down. The timer keeps going.", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                // A steady hum to settle into: on or off with one tap, remembered for next time.
+                var hum by remember { mutableStateOf(com.emotionalleaves.studioagent.media.Noise.playing) }
+                LaunchedEffect(Unit) { if (st.sessionNoise && !hum && !paused) { com.emotionalleaves.studioagent.media.Noise.start(); hum = true } }
+                TextButton(onClick = {
+                    if (hum) com.emotionalleaves.studioagent.media.Noise.stop() else com.emotionalleaves.studioagent.media.Noise.start()
+                    hum = !hum; st.sessionNoise = hum
+                }, modifier = Modifier.fillMaxWidth()) { Text(if (hum) "Turn the background hum off" else "Play a background hum (brown noise)") }
             } else {
                 // Back here means "not yet", not "leave".
                 BackHandler { stopping = false }

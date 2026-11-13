@@ -116,7 +116,9 @@ data class Profile(
     val goals: String = "",
     val blocked: List<String> = emptyList(),
     val noReasons: Map<String, Int> = emptyMap(),
-    val currency: String = "$"
+    val currency: String = "$",
+    /** Organizers and venues that have shown your work: a second yes is far likelier than a first. */
+    val friends: List<String> = emptyList()
 )
 
 object Scoring {
@@ -193,7 +195,9 @@ object Scoring {
         val base = listOf(0.30, 0.20, 0.15, 0.15, 0.10, 0.10)
         val w = base.mapIndexed { i, b -> b * p.rules.weights.getOrElse(i) { 2 }.coerceIn(1, 3) / 2.0 }
         val parts = listOf(theme, career, money, odds, effort, goal)
-        val total = parts.indices.sumOf { parts[it] * w[it] } / w.sum()
+        var total = parts.indices.sumOf { parts[it] * w[it] } / w.sum()
+        val known = p.friends.firstOrNull { f -> f.length > 3 && listOf(o.organiser, o.venue, o.title).any { it.contains(f, ignoreCase = true) } }
+        if (known != null) { total += 12; reasons += "$known has shown your work before" }
         return total.roundToInt().coerceIn(0, 100) to reasons
     }
 }

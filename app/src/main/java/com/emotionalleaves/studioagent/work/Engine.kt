@@ -103,8 +103,16 @@ object Engine {
         availableWorks = works.count { available(it) },
         currency = st.currency,
         feeBudgetLeft = feeLeft(ledger),
-        goals = st.goals, blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts()
+        goals = st.goals, blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts(),
+        friends = st.friendlyVenues.split("\n").filter { it.isNotBlank() }
     )
+
+    /** Remembers who said yes, so their next call is brought forward. */
+    fun rememberFriend(vararg names: String) {
+        val now = st.friendlyVenues.split("\n").filter { it.isNotBlank() }.toMutableList()
+        names.map { it.trim() }.filter { it.length > 3 && now.none { n -> n.equals(it, true) } }.forEach { now += it }
+        st.friendlyVenues = now.takeLast(60).joinToString("\n")
+    }
 
     suspend fun stats(): CareerStats = statsOf(dao.artworksNow(), dao.docsNow(), dao.factsNow())
     suspend fun level(): Int = Levels.level(stats(), rules())
@@ -669,6 +677,7 @@ object Engine {
         ownShowSteps(opening, weeks).forEach { (t, d) -> dao.put(Evt(type = "task", title = t, date = millis(d.atTime(if (t.startsWith("Go to")) 18 else 12, 0)), oppId = oppId, applId = applId)) }
         dao.artworksNow().filter { it.id in workIds && available(it) }.forEach { dao.put(it.copy(status = "shown")) }
         dao.put(c.copy(status = "interested", notes = (c.notes + "\nShow agreed: $title, $dates.").trim()))
+        rememberFriend(c.venue)
         return applId
     }
 
@@ -801,6 +810,7 @@ object Engine {
     fun cancelSend(ctx: Context, applId: Long) { WorkManager.getInstance(ctx).cancelUniqueWork("send-$applId") }
 
     suspend fun recordResult(ctx: Context, a: Appl, accepted: Boolean, text: String) {
+        if (accepted) dao.oppsNow().firstOrNull { it.id == a.oppId }?.let { rememberFriend(it.organiser, it.venue) }
         val opp = dao.oppsNow().firstOrNull { it.id == a.oppId }
         val works = dao.artworksNow().filter { it.id in workIds(a) }
         dao.put(a.copy(status = if (accepted) "accepted" else "declined", resultText = text.take(4000)))

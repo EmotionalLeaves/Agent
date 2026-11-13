@@ -177,6 +177,10 @@ class Settings(ctx: Context) {
     var urgentTold by S("urgentTold")
     /** Venues whose own websites have been read once for exhibition pages. */
     var venuesRead by S("venuesRead")
+    /** Brown noise during sessions, on by your choice. */
+    var sessionNoise by B("sessionNoise", false)
+    /** Organizers and venues that have shown your work. */
+    var friendlyVenues by S("friendlyVenues")
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")
