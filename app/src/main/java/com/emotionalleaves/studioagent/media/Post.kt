@@ -73,6 +73,23 @@ object Post {
         return b
     }
 
+    /** A year of work in one picture: the pieces in a grid above, the year in a few plain lines below. */
+    fun year(arts: List<Bitmap>, heading: String, lines: List<String>, credit: String, outW: Int = W, outH: Int = H): Bitmap {
+        val gridH = (outH * 0.6f).toInt()
+        val grid = process(arts.take(6), "", outW, gridH)
+        val b = Bitmap.createBitmap(outW, outH, Bitmap.Config.ARGB_8888)
+        val c = Canvas(b); c.drawColor(0xFFF4F3EF.toInt())
+        c.drawBitmap(grid, 0f, 0f, null)
+        val margin = outW * 0.07f
+        val big = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF222222.toInt(); textSize = outW * 0.06f; isFakeBoldText = true }
+        val body = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF333333.toInt(); textSize = outW * 0.036f }
+        var y = gridH + outW * 0.08f
+        c.drawText(heading.take(40), margin, y, big); y += outW * 0.07f
+        lines.take(6).forEach { c.drawText(it.take(48), margin, y, body); y += outW * 0.052f }
+        if (credit.isNotBlank()) c.drawText(credit.take(60), margin, outH - margin * 0.6f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF6B6A66.toInt(); textSize = outW * 0.026f })
+        return b
+    }
+
     fun render(imagePath: String, credit: String, dest: File): File? {
         val b = draw(imagePath, credit) ?: return null
         ImageTools.saveJpeg(b, dest, 92)

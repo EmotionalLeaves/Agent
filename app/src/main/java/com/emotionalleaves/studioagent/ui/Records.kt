@@ -111,6 +111,14 @@ fun Records(nav: NavController) {
         if (yearLines.isNotEmpty()) Panel {
             Text("$yr so far", fontWeight = FontWeight.SemiBold)
             yearLines.forEach { Text(it) }
+            // The year as one picture to keep or post: the pieces above, these lines below.
+            val made = works.filter { it.createdAt >= yStart && it.imagePath.isNotBlank() && it.status !in setOf("idea", "in_progress") }
+            if (made.isNotEmpty()) TextButton(onClick = { scope.io {
+                val bms = Engine.portfolioOrdered(made).ifEmpty { made }.take(6).mapNotNull { com.emotionalleaves.studioagent.media.ImageTools.decode(it.imagePath, 600) }
+                val f = File(com.emotionalleaves.studioagent.media.ImageTools.exportDir(ctx), com.emotionalleaves.studioagent.work.Papers.docName(st, "Year_$yr", "jpg"))
+                com.emotionalleaves.studioagent.media.ImageTools.saveJpeg(com.emotionalleaves.studioagent.media.Post.year(bms, "My $yr in art", yearLines, st.fullName), f, 90)
+                withContext(Dispatchers.Main) { Share.post(ctx, f, "My $yr in art:\n" + yearLines.joinToString("\n") { "• $it" }) }
+            } }) { Text("Share my year as a picture") }
         }
         val tasks = events.filter { (it.type == "task" || it.type == "todo") && !it.done }
         H("To do")

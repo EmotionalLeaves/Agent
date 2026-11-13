@@ -628,6 +628,16 @@ class PartsTest {
         assertTrue(android.graphics.Color.red(last) < 40 && android.graphics.Color.green(last) < 40 && android.graphics.Color.blue(last) < 40)
     }
 
+    @Test fun aYearInOnePicture() {
+        ctx
+        val arts = (1..3).map { android.graphics.Bitmap.createBitmap(120, 160, android.graphics.Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.rgb(30, 60, 160)) } }
+        val b = com.emotionalleaves.studioagent.media.Post.year(arts, "My 2026 in art", listOf("40 hours of making", "6 pieces with pictures"), "Jade Leaves")
+        assertEquals(1350, b.height)
+        // Pictures in the top part, the quiet field under the words.
+        assertTrue((0 until 810 step 10).any { y -> android.graphics.Color.blue(b.getPixel(300, y)) > 140 && android.graphics.Color.red(b.getPixel(300, y)) < 60 })
+        assertEquals(0xFFF4F3EF.toInt(), b.getPixel(1070, 1340))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!
