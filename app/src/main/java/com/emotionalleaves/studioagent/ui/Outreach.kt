@@ -145,6 +145,14 @@ fun Outreach(nav: NavController) {
                 Button(onClick = { scope.io { Engine.starterContacts(now()).forEach { dao.put(it) } } }) { Text("Give me a starter list") }
             }
         }
+        // A Saturday out: up to four places you have not visited yet, as one route in the maps app.
+        val toVisit = contacts.filter { it.kind in setOf("commercial", "nonprofit", "artist_run", "community", "campus") && it.status == "research" && !it.notes.contains("Visited on") && !it.venue.startsWith("Your ") && it.venue.isNotBlank() }.take(4)
+        if (toVisit.size >= 2) OutlinedButton(onClick = {
+            fun q(v: String) = android.net.Uri.encode(v + if (st.city.isNotBlank()) ", " + st.city else "")
+            val url = "https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=" + q(toVisit.last().venue) +
+                "&waypoints=" + toVisit.dropLast(1).joinToString("%7C") { q(it.venue) }
+            Share.open(ctx, url)
+        }, modifier = Modifier.fillMaxWidth()) { Text("A walk past ${toVisit.size} places you have not seen yet") }
         // The quickest way to a real list: what the map knows is near you.
         Button(onClick = { nav.navigate("nearby") }, modifier = Modifier.fillMaxWidth()) { Text("Find places near me") }
         H("Add a venue or person")
