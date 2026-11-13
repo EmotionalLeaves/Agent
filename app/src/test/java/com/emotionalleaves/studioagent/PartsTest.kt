@@ -416,10 +416,11 @@ class PartsTest {
         val small = com.emotionalleaves.studioagent.media.Mockup.render(img, 8.0, 6.0, true, File(ctx.cacheDir, "w8.jpg"))!!
         val big = com.emotionalleaves.studioagent.media.Mockup.render(img, 40.0, 30.0, true, File(ctx.cacheDir, "w40.jpg"))!!
         assertTrue(small.length() > 1000 && big.length() > 1000)
-        // The bigger print covers much more of the wall: count non-wall pixels across the middle row.
-        fun covered(f: File): Int { val b = android.graphics.BitmapFactory.decodeFile(f.absolutePath); val y = b.height / 2
-            return (0 until b.width).count { x -> val p = b.getPixel(x, y); android.graphics.Color.blue(p) < 200 } }
-        assertTrue("${covered(small)} vs ${covered(big)}", covered(big) > covered(small) * 3)
+        // The bigger print spans much more of the wall: measure between the dark frame edges across the middle.
+        fun span(wIn: Double, hIn: Double): Int { val bm = com.emotionalleaves.studioagent.media.Mockup.draw(img, wIn, hIn, true)!!; val y = bm.height / 2
+            val dark = (0 until bm.width).filter { x -> android.graphics.Color.red(bm.getPixel(x, y)) < 80 }
+            return if (dark.isEmpty()) 0 else dark.last() - dark.first() }
+        assertTrue("${span(8.0, 6.0)} vs ${span(40.0, 30.0)}", span(40.0, 30.0) > span(8.0, 6.0) * 3)
         assertEquals(null, com.emotionalleaves.studioagent.media.Mockup.render(img, 0.0, 0.0, true, File(ctx.cacheDir, "w0.jpg")))
         java.io.File(ctx.cacheDir, "w40.jpg").copyTo(java.io.File("build/screens/docs/on_the_wall.jpg").apply { parentFile?.mkdirs() }, overwrite = true)
     }

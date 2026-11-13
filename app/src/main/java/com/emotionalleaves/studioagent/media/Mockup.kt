@@ -18,6 +18,12 @@ object Mockup {
     private const val WALL_IN = 120.0
 
     fun render(imagePath: String, widthIn: Double, heightIn: Double, framed: Boolean, dest: File, outW: Int = 1600, outH: Int = 1100): File? {
+        val b = draw(imagePath, widthIn, heightIn, framed, outW, outH) ?: return null
+        ImageTools.saveJpeg(b, dest, 90)
+        return dest
+    }
+
+    fun draw(imagePath: String, widthIn: Double, heightIn: Double, framed: Boolean, outW: Int = 1600, outH: Int = 1100): Bitmap? {
         if (widthIn <= 0 || heightIn <= 0) return null
         val art = ImageTools.decode(imagePath, 1600) ?: return null
         val b = Bitmap.createBitmap(outW, outH, Bitmap.Config.ARGB_8888)
@@ -54,7 +60,6 @@ object Mockup {
         c.drawRect(RectF(cx - bw / 2, floorY - bh, cx + bw / 2, floorY - bh + 3 * k), bench)
         c.drawRect(RectF(cx - bw / 2 + 2 * k, floorY - bh, cx - bw / 2 + 4 * k, floorY), bench)
         c.drawRect(RectF(cx + bw / 2 - 4 * k, floorY - bh, cx + bw / 2 - 2 * k, floorY), bench)
-        ImageTools.saveJpeg(b, dest, 90)
-        return dest
+        return b
     }
 }
