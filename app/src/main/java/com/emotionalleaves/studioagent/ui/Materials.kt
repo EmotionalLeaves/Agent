@@ -403,6 +403,16 @@ fun Facts(nav: NavController) {
     var editing by remember { mutableStateOf<Fact?>(null) }
     Screen("CV facts", nav) {
         Intro("facts", "Only true, finished things. A show you applied to is not a line; a show you were in is. Accepted applications are added here automatically.")
+        // Already have a CV somewhere? Paste it once; each line lands under its heading, to check and fix.
+        Expand("Paste a CV you already have") {
+            val pasted = rememberSaveable { mutableStateOf("") }
+            Field("Your CV as text (headings and lines like 2024 Group show, Venue, City)", pasted, lines = 8)
+            val lines = com.emotionalleaves.studioagent.domain.CvImport.read(pasted.value)
+            if (lines.isNotEmpty()) Button(onClick = {
+                scope.io { val have = facts.map { it.text.lowercase() }.toSet(); lines.filter { it.text.lowercase() !in have }.forEach { dao.put(it) } }
+                pasted.value = ""
+            }) { Text("Add ${Texts.count(lines.size, "line")} to my CV") }
+        }
         Explain("I have nothing to put here", "Everyone starts there. Add where you studied (or \"self-taught\"), and one or two skills or tools you really use. No exhibitions yet is normal and honest; the app adds each one as it happens, and early calls do not expect a long list.")
         Pick("Kind of line", Texts.factCategories, category, names = { Texts.factName(it) }) { category = it }
         key(editing?.id) { Whole("Year", year) { year = it } }

@@ -326,6 +326,14 @@ class DomainTest {
         assertEquals(null, e.onlyFor("Open to artists living in Ohio.", ""))
     }
 
+    @Test fun aPastedCvBecomesLinesUnderTheirHeadings() {
+        val cv = "EDUCATION\n2018 BFA, State University, Austin\n\nSelected Group Exhibitions\n2024 Small Works, Riverside Arts, Austin\n- 2023 Night Market, Pop-up, Dallas\nAwards\n2022 Juror's Mention, Winter Open"
+        val f = com.emotionalleaves.studioagent.domain.CvImport.read(cv)
+        assertEquals(listOf("education", "group", "group", "award"), f.map { it.category })
+        assertEquals(listOf(2018, 2024, 2023, 2022), f.map { it.year })
+        assertEquals("Small Works, Riverside Arts, Austin", f[1].text)
+    }
+
     @Test fun errorsReadAsPlainWords() {
         val off = com.emotionalleaves.studioagent.ui.plainError(java.net.UnknownHostException("Unable to resolve host \"api.anthropic.com\""))
         assertTrue(off.startsWith("No internet connection"))

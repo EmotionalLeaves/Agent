@@ -123,6 +123,33 @@ data class Profile(
     val region: String = ""
 )
 
+/** An existing CV, pasted as text, read into CV lines: section headings set the kind, a year at the start of a line sets the year. */
+object CvImport {
+    private val headings = listOf(
+        "solo" to Regex("solo", RegexOption.IGNORE_CASE), "group" to Regex("group|exhibition|shows?\\b", RegexOption.IGNORE_CASE),
+        "education" to Regex("education|degree|training", RegexOption.IGNORE_CASE), "award" to Regex("award|prize|honou?r", RegexOption.IGNORE_CASE),
+        "grant" to Regex("grant|fellowship", RegexOption.IGNORE_CASE), "residency" to Regex("residenc", RegexOption.IGNORE_CASE),
+        "collection" to Regex("collection", RegexOption.IGNORE_CASE), "press" to Regex("press|review|bibliograph", RegexOption.IGNORE_CASE),
+        "publication" to Regex("publication|published", RegexOption.IGNORE_CASE), "skill" to Regex("skill", RegexOption.IGNORE_CASE))
+
+    fun read(text: String): List<Fact> {
+        var kind = "group"
+        val out = mutableListOf<Fact>()
+        text.lines().map { it.trim().trimStart('-', '•', '*', ' ') }.filter { it.isNotBlank() }.forEach { line ->
+            val year = Regex("^((19|20)\\d\\d)(\\s*[-–]\\s*((19|20)\\d\\d|present))?[\\s,.:]+").find(line)
+            if (year == null && line.length < 40 && !line.contains(',')) {
+                // A short line with no year and no comma reads as a section heading.
+                headings.firstOrNull { it.second.containsMatchIn(line) }?.let { kind = it.first }
+                return@forEach
+            }
+            val y = year?.groupValues?.get(1)?.toIntOrNull() ?: 0
+            val rest = if (year != null) line.substring(year.range.last + 1).trim() else line
+            if (rest.length >= 4) out += Fact(category = kind, year = y, text = rest)
+        }
+        return out
+    }
+}
+
 /** Where a call is open to, read from its words: "open to artists living in Ohio", "Texas residents only". */
 object Eligible {
     val states = listOf("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois",
