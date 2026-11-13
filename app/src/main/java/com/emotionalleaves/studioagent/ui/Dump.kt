@@ -7,6 +7,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,9 @@ fun DumpScreen(nav: NavController) {
     val text = rememberSaveable { mutableStateOf("") }
     val moved = remember { mutableStateListOf<Pair<Int, Dump.Kind>>() }
     var putAway by rememberSaveable { mutableStateOf("") }
+    val works by dao.artworks().collectAsState(emptyList())
+    // A job that names one of your pieces belongs to that piece, so it shows up on its page and in its sessions.
+    fun pieceFor(t: String) = works.filter { it.status != "idea" && it.title.length >= 4 }.firstOrNull { t.contains(it.title, ignoreCase = true) }
     val lines = Dump.sort(text.value).mapIndexed { i, l -> moved.lastOrNull { it.first == i }?.let { l.copy(kind = it.second) } ?: l }
     Screen("Empty your head", nav) {
         Intro("dump", "Everything that is buzzing around, one line each, in any order. Nothing needs deciding: the app sorts it into jobs (with their day when you name one), things to buy, and ideas, and puts each away.")
@@ -59,7 +63,7 @@ fun DumpScreen(nav: NavController) {
                             val next = Dump.Kind.values()[(l.kind.ordinal + 1) % Dump.Kind.values().size]
                             moved.add(i to next)
                         }, label = { Text(l.kind.label) })
-                        Text(l.text + (l.day?.takeIf { l.kind == Dump.Kind.TASK }?.let { "  (" + dayName(it) + ")" } ?: ""), Modifier.weight(1f))
+                        Text(l.text + (l.day?.takeIf { l.kind == Dump.Kind.TASK }?.let { "  (" + dayName(it) + ")" } ?: "") + (if (l.kind == Dump.Kind.TASK) pieceFor(l.text)?.let { "  for " + it.title } ?: "" else ""), Modifier.weight(1f))
                     }
                 }
             }
@@ -71,7 +75,7 @@ fun DumpScreen(nav: NavController) {
                 scope.undoable("Put away ${keep.size} ${if (keep.size == 1) "thing" else "things"}", {
                     keep.forEach { l ->
                         when (l.kind) {
-                            Dump.Kind.TASK -> { val d = l.day ?: LocalDate.now().plusDays(2); evts += dao.put(Evt(type = "task", title = l.text, date = Engine.millis(d.atTime(18, 0)))) }
+                            Dump.Kind.TASK -> { val d = l.day ?: LocalDate.now().plusDays(2); evts += dao.put(Evt(type = "task", title = l.text, date = Engine.millis(d.atTime(18, 0)), artworkId = pieceFor(l.text)?.id ?: 0)) }
                             Dump.Kind.IDEA -> { ideas += dao.put(Idea(text = l.text, createdAt = now)) }
                             Dump.Kind.SUPPLY -> {
                                 val have = supplies(st.supplies)

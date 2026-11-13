@@ -646,3 +646,4 @@ One real change per round. Pushed and built every ten rounds.
 639. The writing helper knows your day job, as you wrote it, and is told to mention it only where it helps (a bio, a statement about work and kitchens), never as a label.
 640. "New in this version" lists what rounds 621 to 639 added.
 641. Public art, in plain words: a Basics answer on public art calls (painted utility boxes, crosswalks, small murals: often open to beginners, a fixed fee plus paint, a design sketch) with what to search for, and "Public art" in the glossary.
+642. A job emptied from your head that names one of your pieces ("varnish Night Shift on Saturday") belongs to that piece: the preview says "for Night Shift", and the to-do opens the piece's page when it comes up.
