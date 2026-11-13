@@ -42,6 +42,19 @@ import kotlinx.coroutines.withContext
 
 val contactKinds = listOf("campus", "community", "artist_run", "juror", "nonprofit", "university", "curator", "commercial")
 
+/** What to expect from each kind of place, said once on its page: how they book, and the usual first step. */
+fun kindTip(k: String): String = when (k) {
+    "campus" -> "Campus galleries and libraries often run a staff or community show each year and book wall space a term ahead. Ask the gallery coordinator or the front desk."
+    "community" -> "Libraries, cafes and community centers usually book local artists for a month at a time, two to six months ahead. A short email with three pictures is the usual first step."
+    "artist_run" -> "Artist-run spaces are run by artists, often volunteers. Going to their openings first matters more than a perfect email."
+    "nonprofit" -> "Nonprofit art centers often have an annual open or members' show, and calls for proposals. Their website's Opportunities page is the place to look."
+    "university" -> "University galleries mostly show invited or faculty work; their open calls are usually for students. Worth knowing, rarely a first show."
+    "commercial" -> "Commercial galleries sell work and usually find artists through shows and introductions, not cold emails. Go to openings; apply only if their site invites submissions."
+    "curator" -> "Curators pick work for shows. A short, specific note about why your work fits something they have done works best."
+    "juror" -> "Jurors choose work for a call. You rarely write to them directly; going to their talks is the usual way to meet."
+    else -> ""
+}
+
 /** A kind of venue in plain words. */
 fun kindWords(k: String): String = mapOf("campus" to "On your campus", "community" to "Community space", "artist_run" to "Artist-run space", "juror" to "Juror",
     "nonprofit" to "Nonprofit art center", "university" to "University gallery", "curator" to "Curator", "commercial" to "Commercial gallery")[k] ?: k.replace('_', ' ').replaceFirstChar { it.uppercase() }
@@ -256,6 +269,7 @@ fun ContactScreen(nav: NavController, id: Long) {
             Small("Pages about showing work there, found by the daily check. Read these before writing.")
             pages.forEach { (t, u) -> TextButton(onClick = { Share.open(ctx, u) }, modifier = Modifier.offset(x = (-12).dp)) { Text(t) } }
         }
+        kindTip(c.kind).takeIf { it.isNotBlank() }?.let { Small(it) }
         // Time to try again: a fresh draft, and the old exchange stays in the notes.
         if (c.status in setOf("followed_up", "not_now") && c.revisitAt in 1..now()) OutlinedButton(onClick = {
             save(c.copy(status = "research", draftSubject = "", draftBody = "", followUpBody = "", revisitAt = 0, notes = (c.notes + "\nWrote again from ${fmtDate(now())}.").trim()))
