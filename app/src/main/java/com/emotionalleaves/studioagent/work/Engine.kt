@@ -181,8 +181,25 @@ object Engine {
         val before = dao.oppsNow().maxOfOrNull { it.id } ?: 0L
         val text = if (words.isNotBlank()) "Words read from a photo of a flyer or poster:\n$words" else "A photo of a flyer or poster for a call for artists."
         if (ai.ready && (words.isNotBlank() || bytes != null)) try { ingest(text, sourceName, bytes) } catch (e: Exception) { }
-        dao.oppsNow().filter { it.id > before }.maxByOrNull { it.id }?.let { return it.id to true }
-        return if (words.isNotBlank()) ingestPlain(words, sourceName) to true else ingestPlain("Call from a flyer photo", sourceName) to false
+        val id = dao.oppsNow().filter { it.id > before }.maxByOrNull { it.id }?.id
+            ?: if (words.isNotBlank()) ingestPlain(words, sourceName) else return ingestPlain("Call from a flyer photo", sourceName) to false
+        fillFromPage(id)
+        return id to true
+    }
+
+    /** A flyer gives a web address but rarely every detail: the call's own page fills the boxes still empty. Quiet when offline. */
+    suspend fun fillFromPage(id: Long) {
+        val o = dao.oppsNow().firstOrNull { it.id == id } ?: return
+        if (o.url.isBlank() || (o.deadline > 0 && o.fee > 0 && o.email.isNotBlank())) return
+        val page = try { Fetch.pageText(o.url) } catch (e: Exception) { return }
+        if (page.isBlank()) return
+        val r = CallReader.read(page, LocalDate.now(), zone, o.sourceName, System.currentTimeMillis())
+        dao.put(scored(o.copy(
+            deadline = if (o.deadline > 0) o.deadline else r.deadline, fee = if (o.fee > 0) o.fee else r.fee,
+            email = o.email.ifBlank { r.email }, maxWorks = if (o.maxWorks > 0) o.maxWorks else r.maxWorks,
+            statementLimit = if (o.statementLimit > 0) o.statementLimit else r.statementLimit,
+            rawText = (o.rawText + "\n\nFrom the call's page:\n" + page.take(5000)).trim()
+        ), profile()))
     }
 
     suspend fun ingest(text: String, sourceName: String, image: ByteArray? = null, fromListing: Boolean = false): Int {

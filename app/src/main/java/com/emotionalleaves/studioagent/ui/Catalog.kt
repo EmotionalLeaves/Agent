@@ -334,7 +334,13 @@ fun WorkDetail(nav: NavController, id: Long) {
         H("Where it stands")
         // Four you set; the rest (out on a call, shown, sold) the app sets when they happen.
         val manual = listOf("idea", "in_progress", "finished", "documented")
-        if (w.status in manual || w.status == "available") Choice("Status", manual, if (w.status == "available") "documented" else w.status, names = ::statusWords) { save(w.copy(status = it)) }
+        if (w.status in manual || w.status == "available") {
+            // Choosing Ready to send here does the same as the button above: empty details are filled in for you.
+            Choice("Status", manual, if (w.status == "available") "documented" else w.status, names = ::statusWords) {
+                if (it == "documented" && w.status != "documented") { val (filled, _) = Engine.fillBlanks(w.copy(status = "documented")); save(filled) } else save(w.copy(status = it))
+            }
+            if (w.status in setOf("documented", "available") && w.imagePath.isBlank()) Small("It needs its picture before it can go to calls. Add one at the top of this page.")
+        }
         else {
             Row { Tag(statusWords(w.status), strong = true) }
             // Which call it is out on, one tap away.

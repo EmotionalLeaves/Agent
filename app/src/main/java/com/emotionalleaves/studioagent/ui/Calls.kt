@@ -245,7 +245,7 @@ fun Calls(nav: NavController) {
                             // Accepted: the one thing to do next, with its day, so the show does not slip.
                             "accepted" -> "Accepted. " + (evts.filter { it.applId == a.id && it.type == "task" && !it.done }.sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.firstOrNull()
                                 ?.let { "Next: " + it.title + (if (it.date > 0) ", " + fmtDate(it.date) else "") } ?: "Everything on its list is done.")
-                            "declined" -> "Not this time"
+                            "declined" -> "Not this time. The works are free for the next call."
                             "sending" -> "Sending shortly"
                             else -> "Being prepared" + (o?.deadline?.takeIf { it > 0 }?.let { ". Deadline ${fmtDate(it)}, " + Planner.weekendsLeft(LocalDate.now(), Engine.date(it)) } ?: "")
                         })
@@ -278,7 +278,8 @@ fun CallDetail(nav: NavController, id: Long) {
         // The facts that decide it, at a glance: when, what it costs, how well it fits.
         Panel {
             if (whereLine(o).isNotBlank()) Small(whereLine(o))
-            if (o.sourceName.isNotBlank() && o.sourceName !in setOf("Pasted", "Shared", "probe")) Small("Found on ${o.sourceName}" + (if (o.createdAt > 1_000_000_000_000L) ", ${fmtDate(o.createdAt)}" else ""))
+            if (o.sourceName == "Flyer photo") Small("Read from a flyer photo. Check the deadline and fee against the flyer itself.")
+            else if (o.sourceName.isNotBlank() && o.sourceName !in setOf("Pasted", "Shared", "probe", "By hand")) Small("Found on ${o.sourceName}" + (if (o.createdAt > 1_000_000_000_000L) ", ${fmtDate(o.createdAt)}" else ""))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Small("Deadline")
@@ -310,6 +311,12 @@ fun CallDetail(nav: NavController, id: Long) {
             if (o.status in setOf("new", "later", "no")) Button(onClick = { scope.io({ status = it }) { val aid = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Yes, apply") }
             else if (o.status in setOf("yes", "applied", "accepted", "declined")) Button(onClick = { scope.io { val aid = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Open the application") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, o.url) }) { Text("Open the call's page") }
+            // No deadline known but an address is: a short polite question, ready in the mail app.
+            if (o.deadline <= 0 && Texts.looksLikeEmail(o.email)) OutlinedButton(onClick = {
+                val l = letters.first { it.title == "Ask a question about a call" }
+                val place = o.venue.ifBlank { o.organiser }
+                Share.email(ctx, o.email, fillLetter(l.subject, "", place), fillLetter(l.body, "", place))
+            }) { Text("Ask them by email") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = {
                 status = "Reading the page…"
                 scope.io({ status = it }) {

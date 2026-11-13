@@ -212,3 +212,13 @@ One real change per round. Pushed and built every ten rounds.
 208. Applied: a submitted entry says how its result arrives: picked up from email when it is connected, otherwise one tap when you hear.
 209. Six weeks after an entry with no result, the weekend's next step gently asks whether you heard back.
 210. The flyer buttons wrap onto two lines with large text instead of squeezing.
+211. A piece marked Ready to send without a picture says it needs one before it can go to calls.
+212. Choosing Ready to send from the status list fills in empty details, the same as the button.
+213. Looking up a venue: anything the writing help leaves blank (name, email) is filled from the page by the plain reader.
+214. Help has a plain answer for adding a call from a flyer, including how to hold the phone.
+215. A call read from a flyer photo says so, and asks you to check the deadline and fee against the flyer; "Found on By hand" no longer shows.
+216. A call from a flyer photo opens its printed web address and fills the boxes still empty (deadline, fee, email, how many works) from the call's own page.
+217. Ready-made emails: "Ask a question about a call", for flyers that leave out the deadline, fee or how to enter.
+218. A call with no deadline but an email address offers "Ask them by email": the question about deadline, fee and how to enter opens ready in the mail app.
+219. A venue's "Open their site" sits outside the folded details, and works for addresses typed without https.
+220. Applied: "Not this time" adds that the works are free for the next call.

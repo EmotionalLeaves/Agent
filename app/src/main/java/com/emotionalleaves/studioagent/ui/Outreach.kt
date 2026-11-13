@@ -135,8 +135,10 @@ fun Outreach(nav: NavController) {
                     val u = url.value.trim().let { if (it.startsWith("http")) it else "https://$it" }
                     val page = try { Fetch.pageText(u) } catch (e: Exception) { "" }
                     val j = try { G.ai.venueResearch(page) } catch (e: Exception) { null }
-                    val id = if (j == null) dao.put(Starter.venue(u, page, now())) else dao.put(Contact(
-                        venue = j.optString("venue"), name = j.optString("contact_name"), email = j.optString("email"), website = u,
+                    // What the helper leaves blank, the plain reader fills: the page's own email address and name.
+                    val plain = Starter.venue(u, page, now())
+                    val id = if (j == null) dao.put(plain) else dao.put(Contact(
+                        venue = j.optString("venue").ifBlank { plain.venue }, name = j.optString("contact_name"), email = j.optString("email").ifBlank { plain.email }, website = u,
                         kind = j.optString("kind").takeIf { it in contactKinds } ?: "community", acceptsSubmissions = j.optBoolean("accepts_submissions", true),
                         submissionNotes = j.optString("submission_notes"), notes = j.optString("notes"), createdAt = now()
                     ))
@@ -215,8 +217,9 @@ fun ContactScreen(nav: NavController, id: Long) {
         Toggle("They accept submissions from artists", c.acceptsSubmissions) { save(c.copy(acceptsSubmissions = it)) }
         Field("Their submission instructions", c.submissionNotes, { save(c.copy(submissionNotes = it)) }, lines = 2)
         Field("Notes (what they show, who you met, openings you went to)", c.notes, { save(c.copy(notes = it)) }, lines = 3)
-        if (c.website.isNotBlank()) TextButton(onClick = { Share.open(ctx, c.website) }) { Text("Open their site") }
         }
+        // Their site is the usual next look, so it stays outside the folded details.
+        if (c.website.isNotBlank()) TextButton(onClick = { Share.open(ctx, c.website.let { if (it.startsWith("http")) it else "https://$it" }) }) { Text("Open their site") }
         SavedLine()
         Status(status)
 

@@ -27,6 +27,8 @@ val letters = listOf(
         "Hello [THEM],\n\nI work at the university and I am also an artist. Does [PLACE] ever show work by staff, or is there a staff or community exhibition I could enter? If there is someone else I should ask, I would be grateful for their name.\n\nThank you,\n\n[ME]"),
     Letter("Ask a library or cafe about showing work", "Community spaces often have a wall and a simple sign-up.", "Displaying artwork at [PLACE]",
         "Hello [THEM],\n\nI am a local artist. Does [PLACE] display work by local artists, and if so how do you choose it and how far ahead do you book? I can send a few images or a link.\n\nThank you,\n\n[ME]"),
+    Letter("Ask a question about a call", "When a flyer or call page leaves out the deadline, the fee or how to enter.", "A question about your call for artists",
+        "Hello [THEM],\n\nI saw your call for artists at [PLACE] and would like to enter. Could you tell me the deadline, whether there is an entry fee, and how work should be submitted?\n\nThank you,\n\n[ME]"),
     Letter("Say yes after being accepted", "Reply within a couple of days of an acceptance.", "Confirming my participation",
         "Hello [THEM],\n\nThank you. I am glad to confirm that I will take part. Could you confirm the delivery dates and times, and whether work needs to be wired for hanging?\n\nKind regards,\n\n[ME]"),
     Letter("Ask about delivery details", "When the acceptance email leaves something unclear.", "Delivery details",
