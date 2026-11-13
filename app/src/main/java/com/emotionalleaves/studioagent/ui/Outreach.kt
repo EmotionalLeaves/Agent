@@ -171,6 +171,7 @@ fun Outreach(nav: NavController) {
             }
         }
         TextButton(onClick = { val f = java.io.File(ctx.cacheDir, "poster_${now()}.jpg"); posterFile = f; try { poster.launch(Share.uri(ctx, f)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Photograph a poster for an opening") }
+        TextButton(onClick = { nav.navigate("people") }) { Text("Find other artists: life drawing, sketch groups") }
         TextButton(onClick = { nav.navigate("check") }) { Text("Got an offer or a buyer that seems too good? Check it") }
         H("Add a venue or person")
         // A list from anywhere (a friend's note, a spreadsheet, an arts council page): pasted once, each line a place.
