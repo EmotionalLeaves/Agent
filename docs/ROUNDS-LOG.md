@@ -319,3 +319,4 @@ One real change per round. Pushed and built every ten rounds.
 312. The tour says the app reads eight listing sites and finds real places near you.
 313. Applying for a grant, residency or commission starts with the questions those always ask (project and budget; what you will work on and why this residency; your idea for the site), each with Draft an answer.
 315. The plan learns your real week: when a planned studio time has never been used but you keep working at another time (three times or more in four weeks), the weekly look ahead offers to move it there, in one tap.
+316. Flyers carry a QR code to your portfolio page, and the sign-up sheet a QR code that opens an email to you asking to be added, for people who would rather not write on paper. Drawn on the phone, nothing fetched.

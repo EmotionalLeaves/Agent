@@ -448,4 +448,14 @@ class PartsTest {
         } finally { server.shutdown() }
     }
 
+
+    @Test fun qrCodesAreDrawn() {
+        ctx
+        val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!
+        assertEquals(300, b.width)
+        // A QR code is black and white, with plenty of each.
+        val dark = (0 until 300 step 5).sumOf { y -> (0 until 300 step 5).count { x -> android.graphics.Color.red(b.getPixel(x, y)) < 50 } }
+        assertTrue(dark in 400..3200)
+    }
+
 }

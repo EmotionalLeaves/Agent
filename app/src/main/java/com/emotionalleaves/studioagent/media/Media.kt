@@ -20,6 +20,17 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
+/** QR codes: a phone camera pointed at one opens the link. Drawn here, nothing fetched. */
+object Qr {
+    fun bitmap(text: String, px: Int = 600): Bitmap? = try {
+        val m = com.google.zxing.qrcode.QRCodeWriter().encode(text, com.google.zxing.BarcodeFormat.QR_CODE, px, px, mapOf(com.google.zxing.EncodeHintType.MARGIN to 1))
+        val b = Bitmap.createBitmap(m.width, m.height, Bitmap.Config.ARGB_8888)
+        val row = IntArray(m.width)
+        for (y in 0 until m.height) { for (x in 0 until m.width) row[x] = if (m.get(x, y)) Color.BLACK else Color.WHITE; b.setPixels(row, 0, m.width, 0, y, m.width, 1) }
+        b
+    } catch (e: Exception) { null }
+}
+
 object ImageTools {
     fun mediaDir(ctx: Context): File = File(ctx.filesDir, "media").apply { mkdirs() }
     fun exportDir(ctx: Context): File = File(ctx.filesDir, "exports").apply { mkdirs() }
@@ -335,6 +346,14 @@ class Pdf(ctx: Context? = null, private val owner: String = "", private val docT
         cv().drawBitmap(b, null, RectF(left, y, left + dw, y + dh), Paint(Paint.FILTER_BITMAP_FLAG))
         y += dh + 10
         return true
+    }
+
+    /** A square picture drawn at [size] points, centered, or at the left when [left] is set. */
+    fun bitmap(b: Bitmap, size: Float, left: Boolean = false) {
+        room(size + 8)
+        val x = if (left) margin.toFloat() else margin + (width - size) / 2
+        cv().drawBitmap(b, null, RectF(x, y, x + size, y + size), Paint())
+        y += size + 8
     }
 
     fun rule(dark: Boolean = false) {

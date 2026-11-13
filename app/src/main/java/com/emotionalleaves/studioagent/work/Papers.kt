@@ -314,6 +314,8 @@ object Papers {
         if (opening.isNotBlank()) pdf.text("Opening: $opening. Free, all welcome.", 13f, gap = 10f)
         image?.let { pdf.text(caption(it), 9f, grey = true, gap = 4f) }
         listOf(s.website, s.email).filter { it.isNotBlank() }.forEach { pdf.text(it, 10f, grey = true, gap = 2f) }
+        // A phone pointed at it opens your page: the work, the dates, how to reach you.
+        if (s.website.isNotBlank()) com.emotionalleaves.studioagent.media.Qr.bitmap(s.website.let { if (it.startsWith("http")) it else "https://$it" })?.let { pdf.space(6f); pdf.bitmap(it, 84f, left = true) }
         return pdf.save(out(ctx, docName(s, "Flyer_" + title.filter { it.isLetterOrDigit() }.take(30))))
     }
 
@@ -322,7 +324,11 @@ object Papers {
         val pdf = pdf(ctx, s, "Studio news", footer = false)
         pdf.text("Studio news from " + name(s).ifBlank { "the artist" }, 22f, face = Pdf.Face.DISPLAY, gap = 6f)
         pdf.text("Leave your name and email to hear about new work and shows, a few times a year. Nothing else, and never shared.", 12f, gap = 4f)
-        if (s.website.isNotBlank()) pdf.text(s.website, 11f, grey = true, gap = 18f) else pdf.space(14f)
+        if (s.website.isNotBlank()) pdf.text(s.website, 11f, grey = true, gap = 8f) else pdf.space(14f)
+        // Or scan to write by email instead of on paper.
+        if (s.email.isNotBlank()) com.emotionalleaves.studioagent.media.Qr.bitmap("mailto:${s.email}?subject=" + java.net.URLEncoder.encode("Please add me to your studio news", "UTF-8").replace("+", "%20"))?.let {
+            pdf.bitmap(it, 72f, left = true); pdf.text("Or scan to send me an email and be added.", 9f, grey = true, gap = 12f)
+        }
         pdf.text("Name                                                          Email", 10f, grey = true, gap = 4f)
         pdf.rule(dark = true)
         repeat(17) { pdf.space(20f); pdf.rule() }
