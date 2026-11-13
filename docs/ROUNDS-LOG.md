@@ -548,3 +548,4 @@ One real change per round. Pushed and built every ten rounds.
 541. Supplies, after "Bought them all": one number for what it cost, and "Put it in Records" files it as art supplies for the year (and taxes); Skip is fine too. "Clear all but the low ones" now has Undo, like everything else that removes things.
 542. "New in this version" on Today now lists what rounds 521 to 541 added, in seven lines.
 543. Find anything finds tools and to-dos too: type "postcards", "teach" or "prices" and the tool comes up by name, first; open to-dos (yours and the app's) are listed with their dates.
+544. Ideas offers "Lots on your mind? Empty your head" beside "Park a picture", for when it is more than one idea.

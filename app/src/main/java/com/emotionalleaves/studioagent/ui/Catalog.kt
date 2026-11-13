@@ -765,6 +765,7 @@ fun IdeasBody(nav: NavController) {
                 scope.io { val f = File(ImageTools.mediaDir(ctx), "idea_${now()}.jpg"); if (ImageTools.copyUri(ctx, uri, f)) dao.put(Idea(text = t, photoPath = f.absolutePath, createdAt = now())) } }
         }
         TextButton(onClick = { pic.launch("image/*") }) { Text("Park a picture") }
+        TextButton(onClick = { nav.navigate("dump") }) { Text("Lots on your mind? Empty your head") }
         val allOpen = ideas.filter { !it.done }
         // Ideas parked long ago: look through them now and then, keep the ones that still pull, let the rest go.
         val old = allOpen.filter { it.createdAt in 1 until now() - 120 * 86_400_000L }
