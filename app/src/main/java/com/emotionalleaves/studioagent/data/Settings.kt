@@ -205,6 +205,8 @@ class Settings(ctx: Context) {
     var mileRate by D("mileRate", 0.70)
     /** The newest app activity you have seen on Today. */
     var activitySeen by L("activitySeen", 0)
+    /** The day Today suggested practice, so the session opens on it. */
+    var suggestPractice by S("suggestPractice")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

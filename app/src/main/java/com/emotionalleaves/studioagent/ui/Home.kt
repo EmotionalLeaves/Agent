@@ -407,7 +407,8 @@ fun SessionScreen(nav: NavController) {
     val active = works.filter { it.status == "in_progress" || it.status == "idea" }
 
     if (start == 0L) {
-        var kind by rememberSaveable { mutableStateOf(if (st.energyDay == LocalDate.now().toString() && st.energy == "wiped") "light" else "make") }
+        // Today's step can ask for practice ("session?practice"); a wiped day is always light.
+        var kind by rememberSaveable { mutableStateOf(if (st.energyDay == LocalDate.now().toString() && st.energy == "wiped") "light" else if (st.suggestPractice == LocalDate.now().toString()) "skill" else "make") }
         // Set once the pieces have loaded; a piece just started here stays chosen when the list grows.
         var workId by rememberSaveable { mutableStateOf(0L) }
         if (workId == 0L) (Engine.currentPiece(works) ?: active.firstOrNull())?.id?.let { workId = it }

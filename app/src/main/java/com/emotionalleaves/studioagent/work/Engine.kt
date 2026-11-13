@@ -1523,6 +1523,12 @@ object Engine {
             val fit = shortlist(dao.oppsNow(), profile(), now, stretchOk(now), st.shortlistSize)
             if (fit.isNotEmpty()) return NextStep(if (fit.size == 1) "A call fits you this week" else "${fit.size} calls fit you this week", "Yes or No on each takes a minute.", "calls")
         }
+        // A weeknight with nothing else: the next foundations exercise, twenty-odd minutes, the session opens on it.
+        if (today.dayOfWeek.value in 1..5) com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone)?.let { e ->
+            st.suggestPractice = today.toString()
+            val wk = com.emotionalleaves.studioagent.domain.Foundations.current(st.foundationsDone)
+            return NextStep("Practice: " + e.text.substringBefore(". ").take(70), "Foundations week ${wk?.n ?: 1}, about ${e.minutes} minutes. Doing it badly is the point.", "session")
+        }
         return NextStep("Start a session", "Nothing else needs you today.", "session")
     }
 
