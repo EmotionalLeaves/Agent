@@ -741,7 +741,7 @@ class PartsTest {
         ctx
         val M = com.emotionalleaves.studioagent.domain.Market
         val wid = G.dao.put(Artwork(title = "Cooler", status = "documented", editionSize = 10, editionUsed = 7, price = 300.0))
-        G.settings.marketItems = M.itemsText(listOf(M.Item("Prints of Cooler", 40.0, 5, wid)))
+        G.settings.marketItems = M.itemsText(listOf(com.emotionalleaves.studioagent.domain.Market.Item("Prints of Cooler", 40.0, 5, wid)))
         assertEquals(wid, M.items(G.settings.marketItems).single().pieceId)
         G.settings.marketTally = M.bump(M.bump(M.bump("", "m:Prints of Cooler", 1), "m:Prints of Cooler", 1), "m:Prints of Cooler", 1)
         com.emotionalleaves.studioagent.work.Engine.closeMarket("Fair")
