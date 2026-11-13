@@ -55,6 +55,18 @@ fun PricingScreen(nav: NavController) {
             val old = unpriced
             scope.undoable("Prices set for ${Texts.count(old.size, "piece")}", { old.forEach { dao.put(it.copy(price = Texts.price(it.widthIn, it.heightIn, st.pricePerSqIn))) } }, { old.forEach { dao.put(it) } })
         }) { Text("Price the ${Texts.count(unpriced.size, "piece")} with no price, from the rule") }
+        // Below cost after a gallery's share: the prints and frames already paid for, against 60 percent of the price.
+        val underCost = works.filter { it.price > 0 && it.status != "sold" }.mapNotNull { w -> (-ledger.filter { it.artworkId == w.id && it.amount < 0 }.sumOf { it.amount }).takeIf { it > 0 && w.price * 0.6 < it }?.let { w to it } }
+        if (underCost.isNotEmpty()) {
+            Section("Below cost after a gallery's share")
+            underCost.forEach { (w, spent) -> key("c" + w.id) {
+                val fair = (kotlin.math.ceil(spent / 0.6 / 5.0) * 5.0)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) { Text(w.title.ifBlank { "Untitled" }); Small("${money(spent)} spent on it; at ${money(w.price)} a 40 percent commission leaves ${money(w.price * 0.6)}.") }
+                    TextButton(onClick = { val old = w; scope.undoable("Price changed", { dao.put(w.copy(price = fair)) }, { dao.put(old) }) }) { Text("Use ${money(fair)}") }
+                }
+            } }
+        }
         // What your hours earn at these prices: not a rule for pricing art, but worth knowing.
         val sessions by dao.sessions().collectAsState(emptyList())
         val timed = works.filter { it.price > 0 && !it.nfs }.mapNotNull { w -> sessions.filter { it.artworkId == w.id && it.end > it.start }.sumOf { (it.end - it.start) / 3_600_000.0 }.takeIf { it >= 1 }?.let { h -> w to h } }
