@@ -907,11 +907,11 @@ val lightPrompts = listOf(
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
 val whatsNew = listOf(
-    "People: Find places near me shows real galleries, libraries, print labs and framers, and a walk past the ones you have not seen.",
-    "Calls come from eight sites, including CaFÉ. Photograph a flyer in Calls to add one; calls open only to other states are held back.",
-    "A venue said yes? Plan the show (or a one-day open studio): dated steps, flyer with a QR code, labels, an agreement, and a code to scan at the opening.",
-    "Your week has a month calendar that learns when you really work, and a Next step widget for your home screen.",
-    "Find anything, on You, finds a piece, a call, a person or a document by any word. Type a question and tap Ask for a plain answer about your own situation.",
-    "Not chosen for a call? One tap sends the same pieces to the next call that fits.",
-    "A piece can be posted online: the picture and the words are made for you."
+    "Foundations: twelve weeks of short exercises, a practice session picks the next one, and a master to study from a museum's open collection.",
+    "Fresh eyes on any piece: flipped, no color, squinted, three or two values, thirds, its colors, and questions to look again with.",
+    "Selling: your prices in one place, commissions from quote to hand-over, selling at an opening, and Market day for a fair table.",
+    "Shows: group shows with other artists, an announcement for local listings, shipping help, back labels, and studio visits.",
+    "Calls say how far away they are; an entry can be split into 15-minute evenings; after a no, the same pieces go to the next call.",
+    "Being seen: post a piece, a series or how it was made; what people find when they look you up; and a check for offers that are too good to be true.",
+    "On You: Everything the app can do, in one list. Find anything takes a spoken question."
 )

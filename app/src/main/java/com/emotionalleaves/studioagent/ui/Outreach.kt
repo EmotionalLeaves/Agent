@@ -614,6 +614,10 @@ fun AtTheOpening(nav: NavController) {
         }) { Text("Add to my list") }
         if (added > 0) Small("${Texts.count(added, "person", "people")} added tonight.")
         SellingTonight()
+        Expand("Bring with you") {
+            listOf("The sign-up sheet and two pens", "The price list (and a few copies)", "Cards or small flyers with your name and page", "Red dot stickers for sold work",
+                "Your phone, charged, for the code and for photos", "Water, and something to eat before").forEach { Text("• $it") }
+        }
     }
 }
 
