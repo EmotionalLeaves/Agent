@@ -873,8 +873,11 @@ object VenueList {
     data class Row(val name: String, val email: String, val website: String)
 
     fun read(text: String): List<Row> = text.lines().map { it.trim().trimStart('-', '*', '•', ' ') }.filter { it.length > 2 }.mapNotNull { l ->
-        val email = Regex("[\\w.+-]+@[\\w-]+\\.[\\w.-]+").find(l)?.value.orEmpty().trimEnd('.')
-        val web = Regex("(https?://\\S+|www\\.\\S+|\\b[\\w-]+\\.(?:org|com|net|edu|gallery|art|us)(?:/\\S*)?)").findAll(l).map { it.value.trimEnd('.', ',', ';', ')') }.firstOrNull { !it.contains("@") && !email.endsWith(it) }.orEmpty()
+        val em = Regex("[\\w.+-]+@[\\w-]+\\.[\\w.-]+").find(l)
+        val email = em?.value.orEmpty().trimEnd('.')
+        // A website anywhere on the line, but not the part of the email after the @.
+        val web = Regex("(https?://\\S+|www\\.\\S+|\\b[\\w-]+(?:\\.[\\w-]+)*\\.(?:org|com|net|edu|gallery|art|us)(?:/\\S*)?)").findAll(l)
+            .filter { m -> em == null || m.range.first > em.range.last || m.range.last < em.range.first }.map { it.value.trimEnd('.', ',', ';', ')') }.firstOrNull().orEmpty()
         val name = l.replace(email, "").replace(web, "").split(Regex("[,;|\\t]| - | – ")).map { it.trim() }.firstOrNull { it.length > 1 && it.any { c -> c.isLetter() } }.orEmpty()
         if (name.isBlank() && email.isBlank()) null else Row(name.ifBlank { email.substringBefore("@") }, email, web)
     }
