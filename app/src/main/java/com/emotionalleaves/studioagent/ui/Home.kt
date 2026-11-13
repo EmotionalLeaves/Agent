@@ -101,6 +101,7 @@ import com.emotionalleaves.studioagent.work.Engine
 import com.emotionalleaves.studioagent.work.NextStep
 import com.emotionalleaves.studioagent.work.Pending
 import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.produceState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -201,6 +202,28 @@ fun Home(nav: NavController) {
             }
             fresh.take(3).forEach { Small("• " + it.second) }
             if (fresh.size > 3) Small("and ${fresh.size - 3} more, in Records.")
+        }
+        // A first, on the day it happens: a sentence to let it land, then "Lovely" puts it away.
+        // Read from the database itself, so a screen still loading never looks like a studio with nothing in it.
+        val reachedNow by produceState<List<com.emotionalleaves.studioagent.domain.Firsts.First>?>(null, works.size, sessions.size, appls.size, ledger.size, facts.size, tick) {
+            value = withContext(Dispatchers.IO) { try { Engine.firstsReached() } catch (e: Exception) { null } }
+        }
+        val reached = reachedNow
+        if (st.onboarded && !calm && reached != null) {
+            // The first time this runs, firsts from before are taken as seen, so nothing old is celebrated.
+            if (!st.firstsInit) { st.firstsSeen = com.emotionalleaves.studioagent.domain.Firsts.markAll(reached, "before"); st.firstsInit = true }
+            val todayS = LocalDate.now().toString()
+            com.emotionalleaves.studioagent.domain.Firsts.toShow(reached, st.firstsSeen, todayS)?.let { f ->
+                LaunchedEffect(f.key) { st.firstsSeen = com.emotionalleaves.studioagent.domain.Firsts.mark(st.firstsSeen, f.key, todayS) }
+                Panel(strong = true) {
+                    Text(f.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(f.line)
+                    Row {
+                        TextButton(onClick = { st.firstsSeen = com.emotionalleaves.studioagent.domain.Firsts.mark(st.firstsSeen, f.key, "done") }) { Text("Lovely") }
+                        if (st.buddy.isNotBlank()) TextButton(onClick = { Share.text(ctx, f.title + "!") }) { Text("Tell ${st.buddy}") }
+                    }
+                }
+            }
         }
         // The one next step, pinned to the wall.
         val n = next

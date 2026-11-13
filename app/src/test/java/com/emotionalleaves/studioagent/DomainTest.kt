@@ -708,4 +708,21 @@ class DomainTest {
         assertEquals("A year ago today was your first session. Since then: 80 sessions, 52 hours of making, 9 pieces, 6 entries sent. Every one of them was you showing up.", A.line(1, 80, 52, 9, 6))
         assertTrue(A.line(1, 1, 0, 0, 0).contains("Since then: 1 session. Every"))
     }
+
+    @Test fun firstsAreNoticedOnceOnTheDay() {
+        val F = com.emotionalleaves.studioagent.domain.Firsts
+        val none = F.reached(com.emotionalleaves.studioagent.domain.Firsts.Counts(0, 0, 0, 0, false, 0, 0, 0, 0))
+        assertTrue(none.isEmpty())
+        val some = F.reached(com.emotionalleaves.studioagent.domain.Firsts.Counts(2, 1, 0, 3, false, 0, 0, 0, 0))
+        assertEquals(listOf("piece", "picture"), some.map { it.key })
+        var seen = F.markAll(some, "before")
+        assertEquals(null, F.toShow(some, seen, "2026-11-13"))
+        val more = F.reached(com.emotionalleaves.studioagent.domain.Firsts.Counts(2, 1, 0, 3, false, 1, 0, 0, 0))
+        val f = F.toShow(more, seen, "2026-11-13")!!
+        assertEquals("sent", f.key)
+        seen = F.mark(seen, f.key, "2026-11-13")
+        assertEquals("sent", F.toShow(more, seen, "2026-11-13")?.key) // all that day
+        assertEquals(null, F.toShow(more, seen, "2026-11-14")) // not the next
+        assertEquals(null, F.toShow(more, F.mark(seen, "sent", "done"), "2026-11-13")) // put away
+    }
 }

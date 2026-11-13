@@ -1183,6 +1183,15 @@ object Engine {
     /** Days (1 = Monday) from a "weekId:1,3" setting, when it is about this week; otherwise none. */
     fun thisWeek(v: String): Set<Int> = if (v.substringBefore(":") == weekId()) v.substringAfter(":").split(",").mapNotNull { it.trim().toIntOrNull() }.toSet() else emptySet()
 
+    /** The firsts reached so far, counted from the database. */
+    suspend fun firstsReached(): List<com.emotionalleaves.studioagent.domain.Firsts.First> {
+        val works = dao.artworksNow(); val sessions = dao.sessionsNow().filter { it.end > it.start }; val appls = dao.applsNow()
+        return com.emotionalleaves.studioagent.domain.Firsts.reached(com.emotionalleaves.studioagent.domain.Firsts.Counts(
+            works.count { it.status != "idea" }, works.count { it.imagePath.isNotBlank() }, works.count { it.status !in setOf("idea", "in_progress") },
+            sessions.size, sessions.any { it.end - it.start >= 55 * 60_000L }, appls.count { it.submittedAt > 0 }, appls.count { it.status == "accepted" },
+            dao.ledgerNow().count { it.kind == "sale" }, dao.factsNow().count { it.category == "teaching" }))
+    }
+
     fun cancelGoal(ctx: Context) { try { listOf("goal", "goal-warn", "goal-bed").forEach { WorkManager.getInstance(ctx).cancelUniqueWork(it) } } catch (e: Exception) { } }
 
     fun queueSend(ctx: Context, applId: Long) {

@@ -1547,3 +1547,46 @@ object Anniversary {
                 if (pieces > 0) Texts.count(pieces, "piece") else null, if (sends > 0) Texts.count(sends, "entry", "entries") + " sent" else null).joinToString(", ") +
             ". Every one of them was you showing up."
 }
+
+// ---------------------------------------------------------------- firsts
+/**
+ * The firsts on the way: noticed once, on the day they happen, in a sentence. Not a badge or a streak; a moment
+ * to let land before the next thing.
+ */
+object Firsts {
+    data class First(val key: String, val title: String, val line: String)
+
+    data class Counts(val pieces: Int, val pictured: Int, val finished: Int, val sessions: Int, val hourSession: Boolean,
+                      val sent: Int, val yes: Int, val sales: Int, val taught: Int)
+
+    private val all = listOf(
+        First("piece", "Your first piece", "It is in the studio now, which is where every body of work starts."),
+        First("picture", "Your first piece photographed", "A good picture is what a juror actually sees. That part is done for this one."),
+        First("hour", "A whole hour of making", "An hour in one sitting. That is real studio time, on a working day."),
+        First("finished", "Your first finished piece", "Finished is a decision, and you made it."),
+        First("ten", "Ten sessions", "Ten times you sat down and started. That habit is the hard part, and you have it."),
+        First("sent", "Your first entry sent", "It is out in the world now. Whatever the answer, it counts toward the year."),
+        First("yes", "Your first yes", "A juror chose your work for a wall. Take a moment with that one."),
+        First("sale", "Your first sale", "Someone wanted to live with your work enough to pay for it."),
+        First("taught", "Your first class taught", "A room of people learned something from you."))
+
+    fun reached(c: Counts): List<First> = all.filter {
+        when (it.key) {
+            "piece" -> c.pieces > 0; "picture" -> c.pictured > 0; "hour" -> c.hourSession; "finished" -> c.finished > 0
+            "ten" -> c.sessions >= 10; "sent" -> c.sent > 0; "yes" -> c.yes > 0; "sale" -> c.sales > 0; "taught" -> c.taught > 0
+            else -> false
+        }
+    }
+
+    /** The newest first not yet seen ("key:date" entries in [seen]), shown all of the day it is first noticed. */
+    fun toShow(reached: List<First>, seen: String, today: String): First? {
+        val m = seen.split(",").filter { it.contains(":") }.associate { it.substringBefore(":") to it.substringAfter(":") }
+        return reached.lastOrNull { it.key !in m } ?: reached.lastOrNull { m[it.key] == today }
+    }
+
+    fun mark(seen: String, key: String, today: String): String =
+        (seen.split(",").filter { it.isNotBlank() && it.substringBefore(":") != key } + "$key:$today").joinToString(",")
+
+    /** On a fresh install with history (a restore), every first already reached is marked seen, so nothing old is celebrated. */
+    fun markAll(reached: List<First>, day: String): String = reached.joinToString(",") { "${it.key}:$day" }
+}
