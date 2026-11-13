@@ -86,12 +86,14 @@ fun Easel(
 /** A white pill with the play mark: the one big action. */
 @Composable
 private fun Pill(label: String, modifier: Modifier, onClick: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
+    val f = FloatArray(3); val p = MaterialTheme.colorScheme.primary
+    androidx.core.graphics.ColorUtils.colorToHSL(android.graphics.Color.rgb((p.red * 255).toInt(), (p.green * 255).toInt(), (p.blue * 255).toInt()), f)
+    val ink = hsl(f[0], f[1].coerceAtLeast(0.4f), 0.26f)
     Row(modifier.heightIn(min = 56.dp).clip(RoundedCornerShape(28.dp)).background(Color.White).clickable(role = Role.Button) { onClick() }.padding(horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-        Icon(Icons.Default.PlayArrow, null, tint = cs.primary)
+        Icon(Icons.Default.PlayArrow, null, tint = ink)
         Spacer(Modifier.size(6.dp))
-        Text(label, color = cs.primary, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text(label, color = ink, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -100,11 +102,11 @@ private fun Pill(label: String, modifier: Modifier, onClick: () -> Unit) {
  * with a little grain. Different every day, the same all of one day.
  */
 @Composable
-fun ColorField(base: Color, modifier: Modifier = Modifier) {
-    val day = remember { java.time.LocalDate.now().toEpochDay() }
+fun ColorField(base: Color, modifier: Modifier = Modifier, key: Long = -1L, shift: Float = 0f) {
+    val day = remember(key) { if (key >= 0) key else java.time.LocalDate.now().toEpochDay() }
     val f = FloatArray(3)
     androidx.core.graphics.ColorUtils.colorToHSL(android.graphics.Color.argb((base.alpha * 255).toInt(), (base.red * 255).toInt(), (base.green * 255).toInt(), (base.blue * 255).toInt()), f)
-    val h = f[0]
+    val h = f[0] + shift
     Canvas(modifier) {
         val r = Random(day)
         drawRect(hsl(h, 0.45f, 0.18f))

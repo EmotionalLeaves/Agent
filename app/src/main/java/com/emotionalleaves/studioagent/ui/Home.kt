@@ -300,7 +300,7 @@ fun Home(nav: NavController) {
             // The week as seven marks: filled for a day you made something, a ring for a block still ahead.
             val hours = Engine.hoursThisWeek(sessions)
             val cs = MaterialTheme.colorScheme
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cs.surfaceContainerLowest).clickable { nav.navigate("week") }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(cs.surfaceContainerLowest).clickable { nav.navigate("week") }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text("Your week", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
                     Text("%.1f of %d hours".format(hours, st.weeklyHours), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
@@ -657,14 +657,22 @@ fun SessionScreen(nav: NavController) {
                 val shown by animateFloatAsState(part, tween(900), label = "ring")
                 // Smaller when the phone is sideways, so the step under it stays in view.
                 val ringSize = minOf(250, (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.55f).toInt()).dp
+                // The piece itself, seen through a round window inside the ring: the clock sits on your own work.
+                val inner = ringSize - 34.dp
+                Box(Modifier.size(inner).clip(androidx.compose.foundation.shape.CircleShape)) {
+                    if (work != null && work.imagePath.isNotBlank()) PathImage(work.imagePath, Modifier.matchParentSize(), 700, androidx.compose.ui.layout.ContentScale.Crop)
+                    else ColorField(fill, Modifier.matchParentSize(), key = work?.id ?: 7L)
+                    Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.42f)))
+                }
+                val second = MaterialTheme.colorScheme.secondary
                 Canvas(Modifier.size(ringSize)) {
-                    val w = 10.dp.toPx()
+                    val w = 12.dp.toPx()
                     drawArc(track, -90f, 360f, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
-                    if (shown > 0f) drawArc(fill, -90f, 360f * shown, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
+                    if (shown > 0f) drawArc(androidx.compose.ui.graphics.Brush.sweepGradient(listOf(fill, second, fill)), -90f, 360f * shown, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text((if (secs >= 3600) "%d:%02d:%02d".format(secs / 3600, (secs / 60) % 60, secs % 60) else "%d:%02d".format(secs / 60, secs % 60)), style = MaterialTheme.typography.displayMedium)
-                    if (goal > 0) Small(if (secs >= goal * 60L) "$goal minutes done" else "${Math.ceil((goal * 60L - secs) / 60.0).toInt()} min to go")
+                    Text((if (secs >= 3600) "%d:%02d:%02d".format(secs / 3600, (secs / 60) % 60, secs % 60) else "%d:%02d".format(secs / 60, secs % 60)), style = MaterialTheme.typography.displayMedium, color = androidx.compose.ui.graphics.Color.White)
+                    if (goal > 0) Text(if (secs >= goal * 60L) "$goal minutes done" else "${Math.ceil((goal * 60L - secs) / 60.0).toInt()} min to go", style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
                 }
             }
             if (goal > 0 && secs >= goal * 60L) Panel(strong = true) { Text("That is your $goal minutes. Stopping now is a complete session. Keep going only if you want to.") }

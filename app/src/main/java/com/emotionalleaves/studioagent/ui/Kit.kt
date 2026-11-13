@@ -294,7 +294,7 @@ fun Panel(onClick: (() -> Unit)? = null, strong: Boolean = false, content: @Comp
         }
         return
     }
-    val shape = if (strong) RoundedCornerShape(3.dp) else RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(20.dp)
     Column(
         Modifier.fillMaxWidth().clip(shape).background(if (strong) cs.primaryContainer else cs.surfaceContainerLowest)
             .let { if (onClick != null) it.clickable(role = Role.Button) { onClick() } else it }.padding(16.dp),
@@ -318,7 +318,7 @@ fun WallLabel(onClick: (() -> Unit)?, modifier: Modifier = Modifier, content: @C
     val cs = MaterialTheme.colorScheme
     Box(modifier.fillMaxWidth().padding(top = 12.dp)) {
         Column(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(3.dp)).background(cs.surfaceContainerLowest)
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(cs.surfaceContainerLowest)
                 .let { if (onClick != null) it.clickable(role = Role.Button) { onClick() } else it }
                 .padding(start = 22.dp, end = 22.dp, top = 30.dp, bottom = 22.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp), content = content

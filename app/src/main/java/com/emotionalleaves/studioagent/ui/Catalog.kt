@@ -910,18 +910,25 @@ fun IdeasBody(nav: NavController) {
 fun WorkTile(w: Artwork, seriesName: String, focus: Boolean, compact: Boolean = false, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Box(Modifier.fillMaxWidth().aspectRatio(0.8f).clip(RoundedCornerShape(3.dp)).background(cs.surfaceContainerLowest), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth().aspectRatio(0.8f).clip(RoundedCornerShape(18.dp)).background(cs.surfaceContainerLowest), contentAlignment = Alignment.Center) {
             // The whole picture, never cropped, on a white mat: artists need to see their edges.
             if (w.imagePath.isNotBlank() && File(w.imagePath).exists()) PathImage(w.imagePath, Modifier.fillMaxSize().padding(10.dp), 500, ContentScale.Fit)
-            else Text(w.title.trim().take(1).uppercase().ifBlank { "?" }, style = if (compact) MaterialTheme.typography.displaySmall else MaterialTheme.typography.displayLarge, color = cs.outlineVariant)
+            else {
+                // No picture yet: a canvas blocked in with color, its title on it, waiting to be photographed.
+                ColorField(cs.primary, Modifier.fillMaxSize(), key = w.id, shift = ((w.id * 47) % 90 - 45).toFloat())
+                Text(w.title.ifBlank { "Untitled" }, Modifier.align(Alignment.BottomStart).padding(14.dp), color = androidx.compose.ui.graphics.Color.White,
+                    style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall, maxLines = 3)
+            }
+            // What state it is in, at a glance, on the picture itself.
+            Text(statusWords(w.status), Modifier.align(Alignment.TopStart).padding(10.dp).clip(RoundedCornerShape(50)).background(if (w.status == "in_progress") cs.primary else cs.surface.copy(alpha = 0.92f))
+                .padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelMedium, color = if (w.status == "in_progress") cs.onPrimary else cs.onSurface)
             if (focus) TapeStrip(Modifier.align(Alignment.TopCenter).offset(y = (-6).dp), 2f)
         }
         Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(w.title.ifBlank { "Untitled" }, style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            if (w.imagePath.isNotBlank()) Text(w.title.ifBlank { "Untitled" }, style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             val facts = listOfNotNull(w.year.takeIf { it > 0 }?.toString(), if (w.widthIn > 0 && w.heightIn > 0) Texts.dims(w.widthIn, w.heightIn) else null)
             if (facts.isNotEmpty() && !compact) Small(facts.joinToString(", "))
-            Text(statusWords(w.status) + (if (seriesName.isNotBlank() && !compact) ", $seriesName" else ""), style = MaterialTheme.typography.labelMedium,
-                color = if (w.status == "in_progress") cs.primary else cs.onSurfaceVariant, maxLines = 2)
+            if (seriesName.isNotBlank() && !compact) Text(seriesName, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 2)
         }
     }
 }
