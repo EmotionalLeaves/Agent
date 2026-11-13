@@ -431,6 +431,19 @@ val sectionNames = listOf(
     Triple("writing", "Writing help", ""), Triple("github", "Backup and web page", "")
 )
 
+/** Single settings by the words people search with, and the page each lives on, so Find anything finds them. */
+val settingIndex = listOf(
+    "Your name, email, phone, website" to "you", "City and state" to "you", "Mediums, what your work is about" to "you", "Goals for the year" to "you", "Currency" to "you",
+    "Days you work, work hours" to "hours", "Rest after work before studio time" to "hours", "Bedtime" to "hours", "Notifications a day" to "hours",
+    "Studio time in my calendar" to "hours", "Silence my phone during sessions (do not disturb)" to "hours", "A studio friend to text" to "hours",
+    "Calm Today" to "calm", "Days off from the app" to "calm", "Wi-Fi only, while charging" to "calm", "Social media help" to "calm", "Session length" to "calm",
+    "Keep the screen on" to "calm", "Hide the gray explanations" to "calm",
+    "Level and gates" to "rules", "Fee caps and monthly budget" to "rules", "Calls to send this year" to "rules", "Farthest distance for calls" to "rules",
+    "Blocked organizers" to "rules", "Outreach emails a week" to "rules", "Prepare a free entry each week (autopilot)" to "rules",
+    "Words never to use, writing notes" to "writing", "Free writing help, AI key" to "ai", "Email address and app password" to "email",
+    "Backup folder" to "backup", "GitHub backup and portfolio page" to "github", "Phone permissions" to "permissions"
+)
+
 /** Settings pages that were merged: each old section now shows inside its new page. */
 private fun settingsParts(section: String): List<String> = when (section) {
     "hours", "calm", "permissions" -> listOf("hours", "calm", "permissions")

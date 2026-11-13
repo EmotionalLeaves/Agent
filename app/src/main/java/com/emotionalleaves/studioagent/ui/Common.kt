@@ -4,6 +4,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenuItem
 
 import androidx.compose.material3.MenuAnchorType
@@ -526,7 +527,9 @@ fun SearchScreen(nav: NavController) {
         val todo = eventsAll.filter { it.type == "task" && !it.done && hit(it.title) }.take(5)
         val tl = toolGroups.flatMap { it.second }.filter { hit(it.first, it.second) }.take(4)
         if (tl.isNotEmpty()) { Section("Tools"); tl.forEach { (t, why, r) -> IconRow(Icons.Default.Menu, t, why) { nav.navigate(r) } } }
-        if (!question && words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty() && i.isEmpty() && sn.isEmpty() && todo.isEmpty() && tl.isEmpty()) Small("Nothing matches that.")
+        val setHits = settingIndex.filter { hit(it.first) }.take(4)
+        if (setHits.isNotEmpty()) { Section("Settings"); setHits.forEach { (label, id) -> IconRow(Icons.Default.Settings, label, "Settings, " + (sectionNames.firstOrNull { it.first == id }?.second ?: "")) { nav.navigate("settings/$id") } } }
+        if (!question && words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty() && i.isEmpty() && sn.isEmpty() && todo.isEmpty() && tl.isEmpty() && setHits.isEmpty()) Small("Nothing matches that.")
         if (todo.isNotEmpty()) { Section("To do"); todo.forEach { x -> IconRow(Icons.Default.DateRange, x.title, fmtDate(x.date)) { nav.navigate("records") } } }
         if (w.isNotEmpty()) { Section("Pieces"); w.forEach { x -> IconRow(Icons.Default.Edit, x.title.ifBlank { "Untitled" }, statusWords(x.status)) { nav.navigate("work/${x.id}") } } }
         if (c.isNotEmpty()) { Section("Calls"); c.forEach { x -> IconRow(Icons.Default.DateRange, x.title, listOf(x.organiser, x.city).filter { it.isNotBlank() }.joinToString(", ")) { nav.navigate("call/${x.id}") } } }

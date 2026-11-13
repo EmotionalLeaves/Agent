@@ -561,3 +561,4 @@ One real change per round. Pushed and built every ten rounds.
 554. A call with an entry fee and an email address offers "Ask about a fee waiver": the short email, addressed and filled in, in your mail app.
 555. "Done this week" on Today counts the quieter work too: emails to venues sent, and ideas parked, beside sessions, pieces and applications.
 556. Step back. In a long session, every 45 minutes and for a couple of minutes, the session screen suggests standing up and looking at the piece from across the room for a minute: a rest for a back that stood all shift, and fresh eyes on the work. No sound, no notification; it is there if you glance.
+557. Find anything finds settings: "bedtime", "notifications", "do not disturb", "currency" or "studio friend" opens the settings page it lives on.
