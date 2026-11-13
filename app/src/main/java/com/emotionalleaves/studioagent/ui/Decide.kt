@@ -38,6 +38,7 @@ fun DecideScreen(nav: NavController) {
     val opps by dao.opps().collectAsState(emptyList())
     var skipped by remember { mutableStateOf(setOf<Long>()) }
     var decided by remember { mutableStateOf(0) }
+    var askWhy by remember { mutableStateOf(0L) }
     val p by androidx.compose.runtime.produceState<com.emotionalleaves.studioagent.domain.Profile?>(null, opps.size) { value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { try { Engine.profile() } catch (e: Exception) { null } } }
     val prof = p
     val list = if (prof == null) emptyList() else Engine.shortlist(opps, prof, now(), Engine.stretchOk(now()), 20).filter { it.id !in skipped }
@@ -59,9 +60,15 @@ fun DecideScreen(nav: NavController) {
         }
         Button(onClick = { val x = o; decided++; scope.io { val id = Engine.createApplication(ctx, x); kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { skipped = skipped + x.id } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Yes: start the entry") }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { val x = o; decided++; skipped = skipped + x.id; scope.undoable("Said no to ${x.title}", { dao.put(x.copy(status = "no")) }, { dao.put(x) }) }) { Text("No") }
+            OutlinedButton(onClick = { askWhy = o.id }) { Text("No") }
             OutlinedButton(onClick = { val x = o; decided++; skipped = skipped + x.id; scope.undoable("Not this year: ${x.title}", { dao.put(x.copy(status = "later")) }, { dao.put(x) }) }) { Text("Not this year") }
             TextButton(onClick = { skipped = skipped + o.id }) { Text("Skip") }
+        }
+        // Why not, in one tap: it teaches the ranking what to bring forward.
+        if (askWhy == o.id) Choice("Why not? (one tap, it teaches the ranking)", listOf("too far", "fee", "wrong vibe", "no reason"), "", names = { mapOf("too far" to "Too far", "fee" to "The fee", "wrong vibe" to "Not my kind of show", "no reason" to "No reason")[it] ?: it }) { r ->
+            val x = o; askWhy = 0L; decided++; skipped = skipped + x.id
+            if (r != "no reason") st.addNoReason(r)
+            scope.undoable("Said no to ${x.title}", { dao.put(x.copy(status = "no", noReason = r)); Engine.rescore() }, { dao.put(x); Engine.rescore() })
         }
         TextButton(onClick = { nav.navigate("call/${o.id}") }) { Text("See the whole call") }
     }
