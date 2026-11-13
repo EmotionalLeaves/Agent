@@ -193,6 +193,7 @@ class ScreensTest {
         shot("67k_tools", "tools", "Making the work")
         shot("67l_health", "health", "Daily check")
         shot("67m_photoshoot", "photoshoot", "Photograph")
+        shot("67n_supplies", "supplies", "Add a supply")
         shot("68_web", "web/${ids["draft"]}", "Fill")
         shot("69_basics", "basics", "What is an open call?")
     }

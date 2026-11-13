@@ -749,6 +749,11 @@ class PartsTest {
         assertEquals(10, w.editionUsed); assertEquals("sold", w.status)
     }
 
+    @Test fun suppliesRoundTrip() {
+        val l = listOf("White paint" to true, "Paper | 9x12" to false)
+        assertEquals(listOf("White paint" to true, "Paper / 9x12" to false), com.emotionalleaves.studioagent.ui.supplies(com.emotionalleaves.studioagent.ui.suppliesText(l)))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

@@ -463,6 +463,7 @@ fun SessionScreen(nav: NavController) {
                 }
             }
             val left = work?.let { Engine.firstStep(it) }.orEmpty().ifBlank { sessions.firstOrNull { it.artworkId == workId && it.nextStep.isNotBlank() }?.nextStep.orEmpty() }
+            supplies(st.supplies).filter { it.second }.takeIf { it.isNotEmpty() }?.let { low -> Small("Running low: " + low.joinToString(", ") { it.first } + ". Supplies has the shopping list.") }
             Panel(strong = true) {
                 Text("Two-minute start", fontWeight = FontWeight.SemiBold)
                 Text(when {

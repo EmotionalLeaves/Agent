@@ -224,6 +224,8 @@ class Settings(ctx: Context) {
     /** The latest "no" a run of three was already talked about for, and the day it was. */
     var noStreakTold by L("noStreakTold", 0)
     var noStreakDay by S("noStreakDay")
+    /** Your supplies, "name|1" per line when running low. */
+    var supplies by S("supplies")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */
