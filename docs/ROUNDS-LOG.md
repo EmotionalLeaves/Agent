@@ -654,3 +654,4 @@ One real change per round. Pushed and built every ten rounds.
 647. After closing a market day, "Another market coming up?" takes its date: the market and a packing evening two days before go on your to-dos, and both open Market day when they come up.
 648. The test of where to-dos open covers market days and packing evenings.
 649. Asking "what's on this week?" or "what's coming up?" lists the next seven days on the phone (studio times, to-dos, deadlines, by day), with a button to Your week.
+650. A test for "what's on this week?": the next seven days only, finished to-dos left out. Six hundred and fifty rounds.

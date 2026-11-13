@@ -275,4 +275,15 @@ class AppTest {
         val a = Engine.answerLocally("How many entries have I sent this year?")!!
         assertTrue(a, a.startsWith("This year: 3 entries sent of the 24 you aimed for; 1 yes, 1 no, 1 still to hear."))
     }
+
+    @Test fun theNextSevenDaysAreAnsweredOnThePhone() = runBlocking {
+        ctx
+        val dao = G.dao; val day = 86_400_000L; val now = System.currentTimeMillis()
+        dao.put(Evt(type = "task", title = "Buy titanium white", date = now + day))
+        dao.put(Evt(type = "studio", title = "Studio time", date = now + 2 * day))
+        dao.put(Evt(type = "task", title = "Far away", date = now + 20 * day))
+        dao.put(Evt(type = "task", title = "Already done", date = now + day, done = true))
+        val a = Engine.answerLocally("What's on this week?")!!
+        assertTrue(a, a.startsWith("The next seven days:") && a.contains("Buy titanium white") && a.contains("Studio time") && !a.contains("Far away") && !a.contains("Already done"))
+    }
 }
