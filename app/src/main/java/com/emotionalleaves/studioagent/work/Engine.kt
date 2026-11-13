@@ -1068,7 +1068,7 @@ object Engine {
         val works = dao.artworksNow(); val docs = dao.docsNow(); val series = dao.seriesNow()
         // Back after a gap: no catching up, no list. Five minutes on the piece you were on is the whole step.
         val lastSession = dao.sessionsNow().filter { it.end > it.start }.maxOfOrNull { it.end } ?: 0L
-        if (lastSession in 1..(now - 10 * DAY) && st.welcomedBack < lastSession) {
+        if (lastSession in 1..(now - 10 * DAY) && st.welcomedBack < lastSession && dao.eventsNow().none { it.type == "submit" && !it.done && it.date in (now - DAY)..(now + 4 * DAY) }) {
             val piece = currentPiece(works)
             return NextStep("Welcome back", "Nothing was missed and nothing needs catching up. " + (piece?.let { "Five minutes on ${it.title.ifBlank { "your piece" }} is the whole step." } ?: "Five minutes of anything is the whole step."), "session")
         }
