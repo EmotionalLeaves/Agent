@@ -557,7 +557,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Count("Notifications a day, at most", st.notifCap, 0, 10) { st.notifCap = it }
                 Expand("Which notifications") {
                     listOf("studio" to "Studio time is coming up", "session" to "Time is up in a session", "tasks" to "Deadlines and show days this week",
-                        "calls" to "A call that fits you", "waiting" to "Something waiting for your yes", "week" to "Your week ahead, on Sunday").forEach { (k, label) ->
+                        "calls" to "A call that fits you", "waiting" to "Something waiting for your yes", "week" to "Your week ahead").forEach { (k, label) ->
                         val muted = st.mutedNotifs.split(",").filter { it.isNotBlank() }.toSet()
                         Toggle(label, k !in muted) { on -> st.mutedNotifs = (if (on) muted - k else muted + k).joinToString(",") }
                     }
