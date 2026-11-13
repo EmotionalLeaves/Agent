@@ -110,18 +110,22 @@ fun ColorField(base: Color, modifier: Modifier = Modifier, key: Long = -1L, shif
     Canvas(modifier) {
         val r = Random(day)
         drawRect(hsl(h, 0.45f, 0.18f))
-        val blocks = listOf(hsl(h - 28f, 0.55f, 0.42f), hsl(h + 18f, 0.50f, 0.58f), hsl(h + 160f, 0.35f, 0.62f), hsl(h, 0.60f, 0.32f))
-        var y = size.height * 0.06f
-        blocks.forEachIndexed { i, c ->
-            val bh = size.height * (0.16f + r.nextFloat() * 0.14f)
-            val inset = size.width * (0.07f + r.nextFloat() * 0.05f)
+        // Two or three soft blocks in the color's near neighbors, stacked like a painting blocked in, never the same twice.
+        val all = listOf(hsl(h - 22f, 0.48f, 0.40f), hsl(h + 14f, 0.42f, 0.56f), hsl(h + 4f, 0.55f, 0.30f), hsl(h - 8f, 0.30f, 0.66f))
+        val n = 2 + r.nextInt(2)
+        val blocks = all.shuffled(r).take(n)
+        var y = size.height * (0.05f + r.nextFloat() * 0.05f)
+        val gap = size.height * 0.035f
+        val each = (size.height * 0.9f - gap * (n - 1)) / n
+        blocks.forEach { c ->
+            val bh = each * (0.8f + r.nextFloat() * 0.35f)
+            val inset = size.width * (0.06f + r.nextFloat() * 0.05f)
             // Feathered edges: the same block a few times, each a little larger and fainter.
             for (k in 6 downTo 0) {
                 val grow = k * 5f
-                drawRoundRect(c.copy(alpha = if (k == 0) 0.92f else 0.05f), Offset(inset - grow, y - grow), Size(size.width - 2 * inset + 2 * grow, bh + 2 * grow), CornerRadius(18f + grow))
+                drawRoundRect(c.copy(alpha = if (k == 0) 0.9f else 0.05f), Offset(inset - grow, y - grow), Size(size.width - 2 * inset + 2 * grow, bh + 2 * grow), CornerRadius(14f + grow))
             }
-            y += bh + size.height * (0.04f + r.nextFloat() * 0.03f)
-            if (i == 2 && y > size.height * 0.8f) return@forEachIndexed
+            y += bh + gap
         }
         repeat(900) { drawCircle(Color.White.copy(alpha = 0.035f), 1.2f, Offset(r.nextFloat() * size.width, r.nextFloat() * size.height)) }
     }
