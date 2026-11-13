@@ -1092,6 +1092,11 @@ object Engine {
         dao.contactsNow().filter { it.status in setOf("followed_up", "not_now") && it.revisitAt in 1..now }.minByOrNull { it.revisitAt }?.let { c ->
             return NextStep("Write to ${c.venue.ifBlank { c.name }} again", "It has been months. A short note with what is new (a finished series, a show) is how most yeses happen.", "contact/${c.id}")
         }
+        // An opening in the next few days at a place in People: go, look, say hello. That is the networking.
+        dao.eventsNow().filter { it.type == "invite" && !it.done && it.date in now..(now + 3 * DAY) }.minByOrNull { it.date }?.let { e ->
+            val d = date(e.date); val word = when (d) { today -> "tonight"; today.plusDays(1) -> "tomorrow"; else -> "on " + d.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) }
+            return NextStep("${e.title} $word", "Openings are free and open to anyone. Look at the work, and say hello to whoever runs the place. Half an hour is plenty.", "outreach")
+        }
         // A weekend with nothing pressing: one real place near you to go and look at. Looking is the whole step.
         if (today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY)
             dao.contactsNow().filter { it.status == "research" && it.revisitAt < now && it.kind != "subscriber" && it.notes.contains("OpenStreetMap") }
@@ -1222,6 +1227,29 @@ object Engine {
         found
     }
 
+    /**
+     * Openings at the places in People: each day a few venues' own pages are read for an opening or reception in the
+     * next month. Each one found becomes an invitation on your calendar and Today: going and looking is how people come to know you.
+     */
+    suspend fun findOpenings(perDay: Int = 3): Int = withContext(Dispatchers.IO) {
+        val venues = dao.contactsNow().filter { it.kind != "subscriber" && it.website.isNotBlank() && it.status != "no" }
+        if (venues.isEmpty()) return@withContext 0
+        val start = ((System.currentTimeMillis() / DAY) * perDay % venues.size).toInt()
+        val today = LocalDate.now()
+        val known = dao.eventsNow().filter { it.type == "invite" }.map { it.title + "|" + date(it.date) }.toSet()
+        var n = 0
+        (0 until minOf(perDay, venues.size)).map { venues[(start + it) % venues.size] }.forEach { c ->
+            val text = try { Fetch.pageText(c.website) } catch (e: Exception) { return@forEach }
+            val d = CallReader.dateAfter(text, "opening reception|artist reception|opening night|reception:|first friday|art walk", today) ?: return@forEach
+            if (d.isBefore(today) || d.isAfter(today.plusDays(35))) return@forEach
+            val title = "Opening at ${c.venue}"
+            if ("$title|$d" in known) return@forEach
+            dao.put(Evt(type = "invite", title = title, date = millis(d.atTime(18, 0))))
+            n++
+        }
+        n
+    }
+
     // ------------------------------------------------------------ the daily run
 
     suspend fun runDaily(ctx: Context): String {
@@ -1242,6 +1270,7 @@ object Engine {
         step("outreach") { withContext(Dispatchers.IO) { sendOutreach(now) } }
         step("rescore") { rescore() }
         step("venues") { researchVenues() }
+        step("openings") { findOpenings() }
         step("backup") { backupToGitHub(ctx) }
         step("folder backup") {
             if (st.backupFolder.isNotBlank()) withContext(Dispatchers.IO) { val name = com.emotionalleaves.studioagent.sys.Backup.toFolder(ctx, st); st.log("Backup saved to your folder: $name") }

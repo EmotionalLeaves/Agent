@@ -96,6 +96,16 @@ fun Outreach(nav: NavController) {
                 Text("of 1 opening this month", Modifier.padding(bottom = 10.dp), style = MaterialTheme.typography.titleMedium)
             }
             Small("An opening is the free first evening of a show. Going and just looking is how people slowly come to know your face.")
+            // Openings the daily check found at your venues: one tap when you went.
+            events.filter { it.type == "invite" && !it.done && it.date > now() - DAY }.sortedBy { it.date }.take(4).forEach { e ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) { Text(e.title); Small(fmtDate(e.date)) }
+                    TextButton(onClick = { scope.io {
+                        dao.put(e.copy(done = true))
+                        dao.put(Evt(type = "opening", title = e.title.removePrefix("Opening at "), date = now(), done = true))
+                    } }) { Text("I went") }
+                }
+            }
             Explain("How do I find one, and what do I do there?", "Look at your university art gallery's page or events calendar, your library's site, or any local gallery's mailing list. Openings are free and usually on a weekday evening. Walk round, look at the work, and leave when you like; ten minutes counts. Nobody expects you to talk to anyone. If you do talk to someone, note their name here afterwards.")
             Expand("I went to one") {
                 Field("Where", openingPlace)

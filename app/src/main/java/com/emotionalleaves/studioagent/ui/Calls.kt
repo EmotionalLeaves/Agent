@@ -528,6 +528,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                                     t.contains("label") -> "Make the labels" to { scope.io({ status = it }) { val f = Papers.labels(ctx, st, chosen); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }
                                     t.contains("flyer") -> "Make the flyer" to { scope.io({ status = it }) { val f = Papers.flyer(ctx, st, o.title, listOf(o.venue, o.city).filter { it.isNotBlank() }.joinToString(", "), o.exhibitionDates, "", chosen.firstOrNull()); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }
                                     t.contains("prints and frames") || t.startsWith("order print") -> "Find a lab" to { nav.navigate("nearby/labs") }
+                                    t.contains("hanging kit") -> "See the list" to { nav.navigate("basics") }
                                     t.contains("deliver") || t.contains("ask about delivery") -> "Ask about delivery" to { letter("Ask about delivery details") }
                                     else -> null
                                 }

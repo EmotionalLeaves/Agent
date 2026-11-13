@@ -203,7 +203,7 @@ fun SessionsScreen(nav: NavController) {
 }
 
 /** What a dated thing is, as a mark color and a word: making time, a deadline, or something for a show. */
-private fun evtKind(type: String): Int = when (type) { "studio" -> 0; "deadline", "submit", "pack" -> 1; else -> 2 }
+private fun evtKind(type: String): Int = when (type) { "studio" -> 0; "deadline", "submit", "pack" -> 1; else -> 2 }  // shows and openings share a mark
 
 /**
  * The month at a glance: every studio time, deadline and show step as a small mark on its day.
