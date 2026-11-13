@@ -52,7 +52,7 @@ fun HealthScreen(nav: NavController) {
         val media = remember { size(com.emotionalleaves.studioagent.media.ImageTools.mediaDir(ctx)) }
         var exports by remember { mutableStateOf(size(com.emotionalleaves.studioagent.media.ImageTools.exportDir(ctx))) }
         Small("Your pictures use ${com.emotionalleaves.studioagent.domain.Texts.fileSize(media)}. Files made for sending use ${com.emotionalleaves.studioagent.domain.Texts.fileSize(exports)}.")
-        if (exports > 5_000_000) TextButton(onClick = { com.emotionalleaves.studioagent.media.ImageTools.exportDir(ctx).listFiles()?.forEach { it.deleteRecursively() }; exports = 0 }) { Text("Clear the files made for sending (they are made again when needed)") }
+        if (exports > 5_000_000) TextButton(onClick = { com.emotionalleaves.studioagent.media.ImageTools.exportDir(ctx).listFiles()?.filter { !it.name.startsWith("pack_") }?.forEach { it.deleteRecursively() }; exports = size(com.emotionalleaves.studioagent.media.ImageTools.exportDir(ctx)) }) { Text("Clear the files made for sending (they are made again when needed)") }
         Button(onClick = { nav.navigate("receipts") }) { Text("What the app did on its own") }
     }
 }
