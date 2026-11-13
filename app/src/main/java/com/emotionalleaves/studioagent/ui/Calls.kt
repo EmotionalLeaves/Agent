@@ -342,6 +342,12 @@ fun CallDetail(nav: NavController, id: Long) {
                 .takeIf { it.isNotEmpty() }?.let { signs -> signs.take(2).forEach { Text("Worth checking: " + it.what, color = MaterialTheme.colorScheme.secondary) } }
             // What this kind of call is, and what usually decides it.
             callKindTip(o.kind).takeIf { it.isNotBlank() }?.let { Small(it) }
+            // Who chooses, and what they have chosen before: ten minutes of looking says what to send.
+            if (o.jurors.isNotBlank() || o.title.length > 4) Row {
+                if (o.jurors.isNotBlank()) TextButton(onClick = { Share.open(ctx, "https://www.google.com/search?q=" + java.net.URLEncoder.encode(o.jurors.substringBefore(",").trim() + " artist curator", "UTF-8")) }, modifier = Modifier.offset(x = (-12).dp)) { Text("Look up the juror") }
+                TextButton(onClick = { Share.open(ctx, "https://www.google.com/search?q=" + java.net.URLEncoder.encode(o.title.replace(Regex("\\b(19|20)\\d\\d\\b"), "").trim() + " " + o.organiser + " past exhibition", "UTF-8")) }) { Text("See past years") }
+            }
+            if (o.jurors.isNotBlank()) Small("Look at the kind of work the juror shows or makes. Send the pieces of yours that would sit well beside it.")
             // Call pages are long and full of jargon: the writing help says what it is and what they want, in three plain lines.
             var plain by remember(o.id) { mutableStateOf(Engine.plainWordsCached(o)) }
             LaunchedEffect(o.id) { if (plain.isEmpty()) plain = try { Engine.plainWords(o) } catch (e: Exception) { emptyList() } }
