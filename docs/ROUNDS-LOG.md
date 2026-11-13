@@ -42,3 +42,13 @@ One real change per round. Pushed and built every ten rounds.
 38. A picture that is still over the size limit gets slightly smaller instead of blotchy (never under 800 pixels).
 39. The checklist confirms every picture in the pack is within the call's file size.
 40. README lists the writing-help features and the email set-up as they now work.
+41. Your week: "Skip this one" instead of a bare Skip on each coming studio time.
+42. Logging a past session: the button says "Log this session".
+43. To-do dates are picked on the phone's calendar instead of typed as YYYY-MM-DD.
+44. A call's deadline is picked on the calendar too; an empty date box says "Choose a date" instead of pretending it is today.
+45. Writing buttons say what they produce: "Open my CV as a PDF", "Portfolio PDF, 10 works".
+46. "Create and open it" for a new document, and "Approve this text" on a draft.
+47. People buttons say what they do: "Log the opening", "Save their reply", "Approve the email and follow-up".
+48. Your email list only adds complete addresses; the button says "Add to my email list".
+49. Ready-made emails: "Choose another letter".
+50. Studio buttons say what they do: "Export pictures", "Certificate of authenticity", "Ask a print lab for a quote", "Save the straightened picture"; the print steps use the same names.

@@ -186,7 +186,7 @@ fun Works(nav: NavController) {
                 }
             } }
             Field("New series name", newSeries)
-            if (newSeries.value.isNotBlank()) Button(onClick = { val n = newSeries.value.trim(); newSeries.value = ""; scope.io { dao.put(Series(name = n, createdAt = now())) } }) { Text("Add series") }
+            if (newSeries.value.isNotBlank()) Button(onClick = { val n = newSeries.value.trim(); newSeries.value = ""; scope.io { dao.put(Series(name = n, createdAt = now())) } }) { Text("Add this series") }
         }
     }
 }
@@ -422,9 +422,9 @@ fun WorkDetail(nav: NavController, id: Long) {
                     status = "Exported: jury size (1920 px), web size (under 2 MB) and the untouched original."
                     withContext(Dispatchers.Main) { Share.files(ctx, files, "image/jpeg") }
                 }
-            }) { Text("Export images") }
-            OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.certificate(ctx, st, w, (w.editionUsed + 1).coerceAtLeast(1)); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Certificate") }
-            OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, listOf(w))) }) { Text("Print order") }
+            }) { Text("Export pictures") }
+            OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.certificate(ctx, st, w, (w.editionUsed + 1).coerceAtLeast(1)); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Certificate of authenticity") }
+            OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, listOf(w))) }) { Text("Ask a print lab for a quote") }
         }
         TextButton(onClick = {
             scope.io { val copy = dao.put(w.copy(id = 0, title = (w.title + " (copy)").trim(), imagePath = "", originalPath = "", detailPath = "", extraImages = "", pixelW = 0, pixelH = 0, status = "in_progress", steps = "", nextStep = "", createdAt = now())); withContext(Dispatchers.Main) { nav.navigate("work/$copy") } }
@@ -498,7 +498,7 @@ fun CropScreen(nav: NavController, id: Long) {
                     dao.put(w.copy(imagePath = main.absolutePath))
                     withContext(Dispatchers.Main) { nav.popBackStack() }
                 }
-            }) { Text("Apply") }
+            }) { Text("Save the straightened picture") }
             Note("Your original file is kept untouched, so you can redo this any time.")
         } else if (tried) Empty("This picture could not be opened. It may have been moved or deleted. Add it again from the piece's page.", "Back to the piece") { nav.popBackStack() }
         else Note("Loading the image")

@@ -147,13 +147,13 @@ fun Materials(nav: NavController) {
                 val d = Doc(type = "custom", variant = "c${now()}", title = newTitle.value.trim(), brief = newBrief.value.trim(), target = newTarget.coerceAtLeast(20), updatedAt = now())
                 newTitle.value = ""; newBrief.value = ""
                 scope.io { val id = dao.put(d); withContext(Dispatchers.Main) { nav.navigate("doc/$id") } }
-            }) { Text("Create") }
+            }) { Text("Create and open it") }
         }
 
         H("CV and portfolio")
         Status(status)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.cv(ctx, st, facts); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("CV PDF") }
+            OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.cv(ctx, st, facts); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Open my CV as a PDF") }
             listOf(10, 15, 20).forEach { n ->
                 OutlinedButton(onClick = {
                     scope.io({ status = it }) {
@@ -161,7 +161,7 @@ fun Materials(nav: NavController) {
                         val f = Papers.portfolio(ctx, st, works.filter { Engine.documented(it) }, statement, n)
                         withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
                     }
-                }) { Text("Portfolio $n") }
+                }) { Text("Portfolio PDF, $n works") }
             }
         }
         Panel {
@@ -311,7 +311,7 @@ fun DocScreen(nav: NavController, id: Long) {
                     dao.put((voice ?: Doc(type = "voice", variant = "samples")).copy(text = (x.text.take(400) + "\n" + voice?.text.orEmpty()).take(2500), updatedAt = now()))
                 }
                 nav.popBackStack()
-            }) { Text("Approve") }
+            }) { Text("Approve this text") }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(enabled = !busy, onClick = { save(d.copy(parkedUntil = now() + 7 * DAY)); nav.popBackStack() }) { Text("Park for a week") }
                 TextButton(enabled = !busy, onClick = { generate() }) { Text(if (d.revisions >= limit) "One more pass anyway" else "Rewrite") }

@@ -316,7 +316,7 @@ fun CallDetail(nav: NavController, id: Long) {
         Expand("Details", startOpen = o.title.isBlank() || o.title == "New call" || o.deadline <= 0) {
         Field("Title", o.title, { save(o.copy(title = it)) })
         Choice("Kind of call", Ai.callKinds, o.kind) { save(o.copy(kind = it)) }
-        Field("Deadline (YYYY-MM-DD)", deadlineText, { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0 || it.isBlank()) save(o.copy(deadline = ms)) })
+        DateField("Deadline", deadlineText) { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0) save(o.copy(deadline = ms)) }
         Num("Entry fee, " + st.currency, o.fee) { save(o.copy(fee = it)) }
         Choice("Who can enter", listOf("campus", "local", "online", "regional", "national", "international"), o.scope, names = { mapOf("campus" to "My campus", "local" to "My city", "online" to "Online", "regional" to "My region", "national" to "The whole country", "international" to "Anywhere")[it] ?: it }) { save(o.copy(scope = it)) }
         Field("Link", o.url, { save(o.copy(url = it.trim())) })

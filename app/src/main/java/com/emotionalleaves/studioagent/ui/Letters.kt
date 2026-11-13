@@ -62,7 +62,7 @@ fun Letters(nav: NavController) {
             Panel { Text(fillLetter(l.subject, them.value, place.value), fontWeight = FontWeight.SemiBold); Text(fillLetter(l.body, them.value, place.value)) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { Share.email(ctx, to.value.trim(), fillLetter(l.subject, them.value, place.value), fillLetter(l.body, them.value, place.value)) }) { Text("Open in my mail app") }
-                OutlinedButton(onClick = { picked = -1 }) { Text("Pick another") }
+                OutlinedButton(onClick = { picked = -1 }) { Text("Choose another letter") }
             }
         }
     }

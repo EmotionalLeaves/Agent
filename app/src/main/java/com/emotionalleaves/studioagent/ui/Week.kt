@@ -124,7 +124,7 @@ fun WeekScreen(nav: NavController) {
             coming.forEach { e ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(fmtDate(e.date) + ", " + clock(e.date) + ", ${(e.endDate - e.date) / 60000} min", Modifier.weight(1f))
-                    TextButton(onClick = { scope.remove("the studio time", { Cal.remove(ctx, e.calendarId); dao.del(e) }, { dao.put(e) }) }) { Text("Skip") }
+                    TextButton(onClick = { scope.remove("the studio time", { Cal.remove(ctx, e.calendarId); dao.del(e) }, { dao.put(e) }) }) { Text("Skip this one") }
                 }
             }
         }
@@ -167,7 +167,7 @@ fun SessionsScreen(nav: NavController) {
                 val s = Sess(artworkId = if (kind == "make") workId else 0L, kind = kind, start = start, end = start + mins * 60_000L, note = note.value.trim())
                 note.value = ""
                 scope.io { dao.put(s) }
-            }) { Text("Add it") }
+            }) { Text("Log this session") }
         }
     }
 }

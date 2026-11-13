@@ -112,7 +112,7 @@ fun Records(nav: NavController) {
 
         Expand("Add your own to-do") {
             Field("What needs doing", todo)
-            Field("Date, if it has one (YYYY-MM-DD)", todoDate)
+            DateField("Date, if it has one", todoDate.value) { todoDate.value = it }
             if (todo.value.isNotBlank()) Button(onClick = {
                 val e = Evt(type = "todo", title = todo.value.trim(), date = Ai.parseDate(todoDate.value)); todo.value = ""; todoDate.value = ""
                 scope.io { dao.put(e) }

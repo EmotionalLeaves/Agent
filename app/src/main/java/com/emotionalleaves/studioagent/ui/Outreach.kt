@@ -100,7 +100,7 @@ fun Outreach(nav: NavController) {
                         val line = "Went to an opening on ${fmtDate(now())}." + (if (note.isNotBlank()) " $note" else "")
                         if (known != null) dao.put(known.copy(notes = (known.notes + "\n" + line).trim())) else dao.put(Contact(venue = place, kind = "community", notes = line, createdAt = now()))
                     }
-                }) { Text("Log it") }
+                }) { Text("Log the opening") }
             }
             events.filter { it.type == "opening" }.sortedByDescending { it.date }.take(3).forEach { Check(true, fmtDate(it.date) + ": " + it.title, small = true) }
         }
@@ -161,10 +161,10 @@ fun Outreach(nav: NavController) {
         Field("Name", subName)
         Field("Email", subEmail)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(enabled = subEmail.value.contains("@"), onClick = {
+            Button(enabled = Texts.looksLikeEmail(subEmail.value), onClick = {
                 val c = Contact(name = subName.value.trim(), email = subEmail.value.trim(), kind = "subscriber", status = "subscriber", createdAt = now())
                 subName.value = ""; subEmail.value = ""; scope.io { dao.put(c) }
-            }) { Text("Add to list") }
+            }) { Text("Add to my email list") }
             if (subs.isNotEmpty()) OutlinedButton(onClick = { Share.text(ctx, subs.joinToString(", ") { it.email }) }) { Text("Copy all addresses") }
         }
     }
@@ -248,7 +248,7 @@ fun ContactScreen(nav: NavController, id: Long) {
                     if (c.draftBody.isNotBlank()) {
                         if (c.revisions >= limit) Note("That is ${c.revisions} rewrites. It is short and specific: it is ready.")
                         if (('[' in c.draftBody) || ('[' in c.followUpBody)) Small("Fill in the [square brackets] first.")
-                        Button(enabled = c.email.contains("@") && c.draftSubject.isNotBlank() && '[' !in c.draftBody && '[' !in c.followUpBody, modifier = Modifier.fillMaxWidth(), onClick = { save(c.copy(status = "approved")) }) { Text("Approve both") }
+                        Button(enabled = c.email.contains("@") && c.draftSubject.isNotBlank() && '[' !in c.draftBody && '[' !in c.followUpBody, modifier = Modifier.fillMaxWidth(), onClick = { save(c.copy(status = "approved")) }) { Text("Approve the email and follow-up") }
                         if (G.ai.ready) TextButton(enabled = !busy, onClick = {
                             busy = true; status = "Rewriting…"
                             scope.io({ status = it; busy = false }) {
@@ -281,7 +281,7 @@ fun ContactScreen(nav: NavController, id: Long) {
             H("Their reply")
             if (c.lastReply.isNotBlank()) Panel { Text(c.lastReply.take(600)) }
             Field("Paste their reply" + (if (st.mailReady) " (replies to your email are picked up automatically)" else ""), reply, lines = 3)
-            if (reply.value.isNotBlank()) OutlinedButton(onClick = { val t = reply.value; reply.value = ""; scope.io({ status = it }) { Engine.applyReply(c, t) } }) { Text("Log reply") }
+            if (reply.value.isNotBlank()) OutlinedButton(onClick = { val t = reply.value; reply.value = ""; scope.io({ status = it }) { Engine.applyReply(c, t) } }) { Text("Save their reply") }
         }
         if (c.status == "interested" || c.status == "more") {
             Button(modifier = Modifier.fillMaxWidth(), onClick = {
