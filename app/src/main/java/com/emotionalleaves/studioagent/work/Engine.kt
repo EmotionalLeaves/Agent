@@ -1129,7 +1129,7 @@ object Engine {
                     if (day != null) today.isAfter(day.plusDays(3)) else a.submittedAt < now - 42 * DAY
                 } }.minByOrNull { it.submittedAt }?.let { a ->
                 val t = dao.oppsNow().firstOrNull { it.id == a.oppId }?.title.orEmpty().ifBlank { "an entry" }
-                return NextStep("Heard back from $t?", "Six weeks since you sent it. If a result came, one tap records it. If not, there is nothing to do; this stops asking after three months.", "appl/${a.id}")
+                return NextStep("Heard back from $t?", "Results should be out by now. If one came, one tap records it. If not, there is nothing to do; this stops asking after three months.", "appl/${a.id}")
             }
         // An opening coming up and people who asked to hear: tell them, once, about three weeks ahead.
         dao.eventsNow().filter { it.type == "task" && !it.done && it.title.contains("opening", true) && it.date in now..(now + 24 * DAY) }.minByOrNull { it.date }?.let { e ->
