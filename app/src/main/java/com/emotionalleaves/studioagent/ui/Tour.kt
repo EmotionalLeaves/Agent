@@ -68,7 +68,7 @@ fun Tour(nav: NavController) {
         TourPage("Your work, on a wall", "Each piece gets a picture and a short label. When it is finished, the app fills in sizes and file details for you.") { PicTiles() },
         TourPage("Shows come to you", "Every day the app reads eight listing sites for open calls, explains each in plain words, and shows only the ones right for where you are. It also finds the real galleries, libraries and art centers near you.") { PicCall() },
         TourPage("Nothing happens without your yes", "Every application and email waits for you to approve it. Then it is done, with a receipt, so there is nothing to check twice.") { PicCalm() },
-        TourPage("Ready", "That is all you need. There is nothing to set up first.") { PicReady() }
+        TourPage("Ready", "That is all you need. There is nothing to set up first. Everything else the app can do is in one list on You, when you want it.") { PicReady() }
     )
     val pager = rememberPagerState { pages.size }
     val notify = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { finishTour(nav) }

@@ -19,14 +19,16 @@ val toolGroups: List<Pair<String, List<Triple<String, String, String>>>> = listO
         Triple("Start a session", "A timer, where you left off, and nothing else", "session"),
         Triple("Foundations", "Twelve weeks of short exercises, and a master to study", "foundations"),
         Triple("Your pieces and series", "Fresh eyes, planning a series, is it done", "works"),
-        Triple("Your week", "Studio times that fit your shifts, and the year ahead", "week")
+        Triple("Your week", "Studio times that fit your shifts", "week"),
+        Triple("The year ahead", "Where steady work leads, month by month", "year")
     ),
     "Showing it" to listOf(
         Triple("Open calls", "The ones that fit you this week; one tap to apply", "calls"),
         Triple("Places near you", "Galleries, libraries and cafes that show work", "nearby"),
         Triple("People and venues", "Emails written for you, visits, studio visits", "outreach"),
         Triple("Statement, bio and CV", "Written from your own answers", "materials"),
-        Triple("Ask for feedback", "Which piece is strongest, from people you trust", "feedback")
+        Triple("Ask for feedback", "Which piece is strongest, from people you trust", "feedback"),
+        Triple("Ready-made emails", "Short letters for galleries, labs, buyers, a yes", "letters")
     ),
     "Selling it" to listOf(
         Triple("Your prices", "A rule, the strays, and raising them", "pricing"),
