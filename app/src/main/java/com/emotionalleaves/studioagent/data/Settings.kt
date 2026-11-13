@@ -171,6 +171,10 @@ class Settings(ctx: Context) {
     var lastStretch by L("lastStretch", 0)
     /** When the last studio update went to your email list. */
     var lastNewsletter by L("lastNewsletter", 0)
+    /** The next step as the home-screen widget shows it. */
+    var widgetTitle by S("widgetTitle")
+    var widgetDetail by S("widgetDetail")
+    var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")
     var lastDaily by L("lastDaily", 0)
     var lastDailyStatus by S("lastDailyStatus")

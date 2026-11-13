@@ -1197,6 +1197,8 @@ object Engine {
                 Notifier.post(ctx, st, 103, "$day: ${e.title}", show.ifBlank { "Your show" } + ". Tick it off on the show's page when it is done.", "appl/${e.applId}")
             }
         }
+        // The home-screen widget starts the day on the day's step.
+        try { nextStep().let { n -> st.widgetTitle = n.title; st.widgetDetail = n.detail; st.widgetRoute = n.route }; com.emotionalleaves.studioagent.sys.NextWidget.refresh(ctx) } catch (e: Exception) { }
         // Have the flyer reader ready before the first flyer photo, not after.
         com.emotionalleaves.studioagent.media.Ocr.warmUp()
         st.lastDaily = now

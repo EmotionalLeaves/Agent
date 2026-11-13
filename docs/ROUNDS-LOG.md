@@ -305,3 +305,5 @@ One real change per round. Pushed and built every ten rounds.
 298. Starting a piece from a parked picture idea keeps the picture as its reference, shown at the top of the piece until the work's own picture replaces it.
 299. On any call, "Ask about this call" answers a question (can I send prints, is it only for Texas) from the call's own words, quoting them, or says the call does not say and to ask the organizer.
 300. Places near you keeps its last results while the app is open, so going into a place and back does not mean waiting for the map again.
+301. New home-screen widget: Next step. It shows today's one step with its line of detail (tap to open it) and Start now beneath, kept up to date by the app and the daily check. The one-button Start widget is still there.
+302. Help's quick-start answer mentions the Next step widget.

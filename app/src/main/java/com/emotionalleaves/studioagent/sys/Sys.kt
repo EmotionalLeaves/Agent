@@ -332,3 +332,31 @@ class SessionWidget : AppWidgetProvider() {
         }
     }
 }
+
+/** Home-screen widget: today's one next step, tap to open it, and Start now beneath. Refreshed whenever the step changes. */
+class NextWidget : AppWidgetProvider() {
+    override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) = render(context, manager, ids)
+
+    companion object {
+        fun refresh(ctx: Context) {
+            val m = AppWidgetManager.getInstance(ctx) ?: return
+            val ids = m.getAppWidgetIds(android.content.ComponentName(ctx, NextWidget::class.java))
+            if (ids.isNotEmpty()) render(ctx, m, ids)
+        }
+
+        private fun render(ctx: Context, m: AppWidgetManager, ids: IntArray) {
+            val s = com.emotionalleaves.studioagent.G.settings
+            fun open(route: String, code: Int) = PendingIntent.getActivity(ctx, code,
+                Intent(ctx, MainActivity::class.java).putExtra("route", route).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            for (id in ids) {
+                val v = RemoteViews(ctx.packageName, R.layout.widget_next)
+                if (s.widgetTitle.isNotBlank()) v.setTextViewText(R.id.widget_next_title, s.widgetTitle)
+                v.setTextViewText(R.id.widget_next_detail, s.widgetDetail)
+                v.setOnClickPendingIntent(R.id.widget_next_root, open(s.widgetRoute.ifBlank { "home" }, 9))
+                v.setOnClickPendingIntent(R.id.widget_next_start, open("startnow", 10))
+                m.updateAppWidget(id, v)
+            }
+        }
+    }
+}

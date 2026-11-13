@@ -131,6 +131,8 @@ fun Home(nav: NavController) {
     LaunchedEffect(works, docs, sessions, events, appls, tick) {
         withContext(Dispatchers.IO) {
             try { next = Engine.nextStep(); pendingCount = Engine.pending().size; guide = guideSteps(ctx) } catch (e: Exception) { }
+            // The home-screen widget shows the same one step.
+            next?.let { n -> if (n.title != st.widgetTitle || n.detail != st.widgetDetail) { st.widgetTitle = n.title; st.widgetDetail = n.detail; st.widgetRoute = n.route; com.emotionalleaves.studioagent.sys.NextWidget.refresh(ctx) } }
         }
     }
     val rules = Engine.rules()
