@@ -41,7 +41,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /** The views a painter uses to see a picture fresh, in the order they are usually tried. */
-val lookViews = listOf("As it is", "Flipped", "No color", "Squint", "Three values", "Two values", "Thirds")
+val lookViews = listOf("As it is", "Flipped", "No color", "Squint", "Three values", "Two values", "Thirds", "On matte paper")
 
 /**
  * Fresh eyes on a piece: flipped, without color, squinted, cut to a few values, with thirds lines,
@@ -64,12 +64,12 @@ fun LookScreen(nav: NavController, id: Long) {
     var compare by rememberSaveable(id) { mutableStateOf(false) }
     val before by produceState<Bitmap?>(null, earlier?.photoPath, view, compare) {
         val p = earlier?.photoPath
-        value = if (!compare || p == null) null else withContext(Dispatchers.Default) { ImageTools.decode(p, 900)?.let { b -> when (view) { "Flipped" -> Look.flip(b); "No color" -> Look.gray(b); "Squint" -> Look.squint(b); "Three values" -> Look.values(b, 3); "Two values" -> Look.values(b, 2); "Thirds" -> Look.thirds(b); else -> b } } }
+        value = if (!compare || p == null) null else withContext(Dispatchers.Default) { ImageTools.decode(p, 900)?.let { b -> when (view) { "Flipped" -> Look.flip(b); "No color" -> Look.gray(b); "Squint" -> Look.squint(b); "Three values" -> Look.values(b, 3); "Two values" -> Look.values(b, 2); "Thirds" -> Look.thirds(b); "On matte paper" -> Look.matte(b); else -> b } } }
     }
     val base by produceState<Bitmap?>(null, path) { value = withContext(Dispatchers.IO) { if (path.isBlank()) null else ImageTools.decode(path, 1200) } }
     val shown by produceState<Bitmap?>(null, base, view) {
         val b = base; value = if (b == null) null else withContext(Dispatchers.Default) {
-            when (view) { "Flipped" -> Look.flip(b); "No color" -> Look.gray(b); "Squint" -> Look.squint(b); "Three values" -> Look.values(b, 3); "Two values" -> Look.values(b, 2); "Thirds" -> Look.thirds(b); else -> b }
+            when (view) { "Flipped" -> Look.flip(b); "No color" -> Look.gray(b); "Squint" -> Look.squint(b); "Three values" -> Look.values(b, 3); "Two values" -> Look.values(b, 2); "Thirds" -> Look.thirds(b); "On matte paper" -> Look.matte(b); else -> b }
         }
     }
     val palette by produceState<List<Pair<Int, Double>>>(emptyList(), base) { val b = base; value = if (b == null) emptyList() else withContext(Dispatchers.Default) { Look.palette(b) } }
@@ -98,6 +98,7 @@ fun LookScreen(nav: NavController, id: Long) {
             "Three values" -> "Dark, middle, light, split where your picture divides most evenly. Strong pictures usually have a simple, clear plan here."
             "Two values" -> "Just dark and light. The shape this makes is what people see from across a room."
             "Thirds" -> "Where the lines cross is where the eye tends to rest. A center of interest near one often feels settled; dead center can feel still, which may be what you want."
+            "On matte paper" -> "Roughly how it prints on matte paper: the darkest darks lift and colors soften. If the shadows lose their detail here, ask the lab for a proof or lighten them a little. Not exact; a lab's proof is."
             else -> "Tap a view above to look again."
         })
         if (notes.isNotEmpty()) { Section("What the values say"); notes.forEach { Text(it) } }

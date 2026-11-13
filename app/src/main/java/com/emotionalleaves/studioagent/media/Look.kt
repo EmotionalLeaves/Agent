@@ -57,6 +57,22 @@ object Look {
         return Bitmap.createBitmap(px, b.width, b.height, Bitmap.Config.ARGB_8888)
     }
 
+    /**
+     * A rough idea of the piece printed on matte paper: paper is never as white, or ink as black, as a screen, and colors
+     * soften. The darkest shadows lift and blend first, which is where detail is most often lost in a print.
+     * Not a calibrated proof; a lab's own proof is the real thing.
+     */
+    fun matte(b: Bitmap, black: Int = 34, white: Int = 244): Bitmap {
+        val px = pixels(b)
+        for (i in px.indices) {
+            val c = px[i]; val l = lum(c)
+            fun ch(v: Int): Int { val desat = l + (v - l) * 0.85; return (black + desat * (white - black) / 255.0).roundToInt().coerceIn(0, 255) }
+            // Paper is a touch warm.
+            px[i] = Color.rgb(ch(Color.red(c)), ch(Color.green(c)), (ch(Color.blue(c)) - 3).coerceAtLeast(0))
+        }
+        return Bitmap.createBitmap(px, b.width, b.height, Bitmap.Config.ARGB_8888)
+    }
+
     /** Squinting: the detail goes and the big shapes stay. Down to a few dozen pixels and back up, smoothly. */
     fun squint(b: Bitmap): Bitmap {
         val k = max(1, min(b.width, b.height) / 28)

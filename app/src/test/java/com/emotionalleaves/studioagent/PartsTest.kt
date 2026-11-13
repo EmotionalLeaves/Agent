@@ -835,4 +835,13 @@ class PartsTest {
         val all = f.readBytes()
         assertEquals(0x33.toByte(), all[h.size]); assertEquals(0x66.toByte(), all[h.size + 1]); assertEquals(0x99.toByte(), all[h.size + 2])
     }
+
+    @Test fun mattePaperLiftsTheDarks() {
+        ctx
+        val b = android.graphics.Bitmap.createBitmap(2, 1, android.graphics.Bitmap.Config.ARGB_8888)
+        b.setPixel(0, 0, android.graphics.Color.BLACK); b.setPixel(1, 0, android.graphics.Color.WHITE)
+        val m = com.emotionalleaves.studioagent.media.Look.matte(b)
+        assertEquals(34, android.graphics.Color.red(m.getPixel(0, 0)))
+        assertEquals(244, android.graphics.Color.red(m.getPixel(1, 0)))
+    }
 }
