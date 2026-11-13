@@ -717,7 +717,7 @@ fun Review(nav: NavController) {
         val applsAll by dao.appls().collectAsState(emptyList())
         val monthLine = listOfNotNull(
             works.count { it.imagePath.isNotBlank() && it.createdAt >= monthStart }.takeIf { it > 0 }?.let { Texts.count(it, "piece") + " added with a picture" },
-            applsAll.count { it.submittedAt >= monthStart && it.status != "accepted" || (it.status == "accepted" && it.submittedAt >= monthStart) }.takeIf { it > 0 }?.let { Texts.count(it, "application") + " sent" },
+            applsAll.count { it.submittedAt >= monthStart }.takeIf { it > 0 }?.let { Texts.count(it, "application") + " sent" },
             sessions.filter { it.start >= monthStart && it.end > it.start }.let { l -> if (l.isEmpty()) null else "${l.sumOf { (it.end - it.start) / 60000 } / 60} hours of making" }
         )
         if (monthLine.isNotEmpty()) Small("This month: " + monthLine.joinToString(", ") + ".")
