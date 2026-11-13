@@ -400,3 +400,4 @@ One real change per round. Pushed and built every ten rounds.
 394. Venues from the map show how far away they are in the People list.
 395. People lists nearer places first within each group.
 396. The weekend suggestion to go and look picks the nearest place you have not visited, the easiest to actually go to.
+397. Find anything also takes a question ("what should I do this weekend?", "which piece should I send to the spring show?"): the writing helper answers in a few plain sentences from a summary of where things stand (today's step, the next two weeks, calls closing, entries, pieces, people), and offers a button to the one place in the app that helps next.

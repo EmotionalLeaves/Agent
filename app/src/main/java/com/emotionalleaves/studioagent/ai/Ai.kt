@@ -280,6 +280,19 @@ class Ai(private val settings: Settings) {
         return clean(complete(sys, "<data>\n${callText.take(14000)}\n</data>\n\nQuestion: ${question.take(500)}", fast = true, maxTokens = 400))
     }
 
+    /**
+     * A question about the artist's own situation, answered from a summary of it and plain art-career sense,
+     * in at most four short sentences. May end with "GO: <place>" naming one place in the app to go next.
+     */
+    suspend fun askAnything(snapshot: String, question: String): String {
+        val sys = "You help an artist who is starting out and wants their work in exhibitions. They have little time and find long lists hard. " +
+            "You answer their question using the summary of their situation inside <data> and plain, practical art-career sense. $dataRule " +
+            "Never invent calls, venues, dates or facts that are not in the summary; say so if you do not know. " +
+            "Answer in at most four short plain sentences, one clear suggestion first. No lists, no headings. " +
+            "If one place in the app would help next, end with a last line exactly like GO: calls  (choose one of: calls, week, works, materials, outreach, nearby, records, guide, session)."
+        return complete(sys, "<data>\n$snapshot\n</data>\n\nQuestion: ${question.take(600)}", fast = true, maxTokens = 500).replace(Regex("\\*\\*|__|`"), "").trim()
+    }
+
     private fun writerSystem(voice: String) =
         "You write short professional texts for a working artist, in the artist's own plain voice. " +
             "Rules: use only facts given to you; never invent exhibitions, awards, education, dates or claims. " +

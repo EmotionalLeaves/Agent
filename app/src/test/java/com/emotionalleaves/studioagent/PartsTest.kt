@@ -449,6 +449,17 @@ class PartsTest {
     }
 
 
+    @Test fun theSnapshotForQuestionsNamesPiecesAndCalls() = kotlinx.coroutines.runBlocking {
+        ctx
+        G.dao.put(Artwork(title = "Walk-in Cooler", medium = "gouache", widthIn = 9.0, heightIn = 12.0, status = "ready"))
+        G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Spring Small Works", deadline = System.currentTimeMillis() + 9 * 86_400_000L, fitScore = 80))
+        val s = com.emotionalleaves.studioagent.work.Engine.snapshot()
+        assertTrue(s.contains("Walk-in Cooler (gouache, 9x12 in), ready to show"))
+        assertTrue(s.contains("Spring Small Works, closes"))
+        assertTrue(s.contains("Today's step in the app:"))
+        assertTrue(!s.contains("@"))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

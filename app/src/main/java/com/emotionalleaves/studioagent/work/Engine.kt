@@ -1066,6 +1066,34 @@ object Engine {
         return out.sortedBy { !it.route.startsWith("appl") }
     }
 
+    /**
+     * A plain summary of where things stand, for answering a question about them: today's step, the next
+     * two weeks, calls closing, entries waiting, the pieces and the people. Titles and dates only, no emails.
+     */
+    suspend fun snapshot(): String {
+        val now = System.currentTimeMillis()
+        val works = dao.artworksNow(); val opps = dao.oppsNow(); val appls = dao.applsNow(); val evts = dao.eventsNow(); val people = dao.contactsNow()
+        val b = StringBuilder()
+        b.appendLine("Today: " + LocalDate.now() + " (" + LocalDate.now().dayOfWeek.toString().lowercase() + ")")
+        if (st.firstName.isNotBlank()) b.appendLine("Artist: " + st.firstName + (if (st.city.isNotBlank()) ", " + st.city else ""))
+        if (st.mediums.isNotBlank()) b.appendLine("Works in: " + st.mediums)
+        if (st.goals.isNotBlank()) b.appendLine("Goal: " + st.goals)
+        b.appendLine("Free time: weekday evenings and weekends (day job Monday to Friday)")
+        nextStep().let { b.appendLine("Today's step in the app: " + it.title + ". " + it.detail) }
+        b.appendLine("Pieces: " + works.size + " (" + works.groupBy { it.status }.entries.joinToString(", ") { it.value.size.toString() + " " + statusWord(it.key) } + ")")
+        works.take(12).forEach { w -> b.appendLine("- piece: " + w.title.ifBlank { "Untitled" } + listOf(w.medium, if (w.widthIn > 0) "${w.widthIn.toInt()}x${w.heightIn.toInt()} in" else "").filter { it.isNotBlank() }.joinToString(", ", " (", ")") + ", " + statusWord(w.status)) }
+        val open = opps.filter { it.status != "no" && it.deadline > now }.sortedBy { it.deadline }
+        b.appendLine("Calls still open: " + open.size)
+        open.sortedByDescending { it.fitScore }.take(8).sortedBy { it.deadline }.forEach { o -> b.appendLine("- call: " + o.title + ", closes " + date(o.deadline) + (if (o.fee > 0) ", fee " + o.fee.toInt() else ", free") + ", fit " + o.fitScore + "/100" + (if (o.city.isNotBlank()) ", " + o.city else if (o.online) ", online" else "")) }
+        appls.filter { it.status != "withdrawn" }.take(10).forEach { a -> val o = opps.firstOrNull { it.id == a.oppId }; b.appendLine("- entry: " + (o?.title ?: "a call") + ", " + when (a.status) { "submitted", "sending" -> "submitted, waiting to hear"; "accepted" -> "accepted"; "declined" -> "not chosen"; else -> "being prepared" }) }
+        evts.filter { !it.done && it.date in now..(now + 14 * DAY) }.take(12).forEach { e -> b.appendLine("- coming up " + date(e.date) + ": " + e.title) }
+        val venues = people.filter { it.kind != "subscriber" }
+        b.appendLine("Venues and people saved: " + venues.size + " (" + venues.count { it.status == "sent" } + " written to, " + venues.count { it.status == "interested" || it.status == "more" } + " interested); email list: " + people.count { it.kind == "subscriber" })
+        return b.toString().take(6000)
+    }
+
+    private fun statusWord(s: String) = when (s) { "in_progress" -> "in progress"; "ready" -> "ready to show"; "shown" -> "out at a show"; "sold" -> "sold"; else -> s.replace('_', ' ') }
+
     /** The single thing shown on the home screen. */
     suspend fun nextStep(): NextStep {
         val now = System.currentTimeMillis(); val today = LocalDate.now()

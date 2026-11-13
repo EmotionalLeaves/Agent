@@ -481,15 +481,33 @@ fun SearchScreen(nav: NavController) {
     val opps by dao.opps().collectAsState(emptyList())
     val contacts by dao.contacts().collectAsState(emptyList())
     val docs by dao.docs().collectAsState(emptyList())
+    val scope = rememberCoroutineScope()
+    var answer by remember { mutableStateOf("") }
+    var asking by remember { mutableStateOf(false) }
     Screen("Find anything", nav) {
-        Field("A title, a venue, a person, a word", q)
+        Field("A title, a venue, a person, a word, or a question", q)
+        // A question gets an answer about your own situation, not a list of matches.
+        val question = q.value.trim().let { t -> t.length > 8 && (t.endsWith("?") || Regex("^(how|what|when|where|which|who|why|should|can|could|do|does|is|am|are|will|would)\\b", RegexOption.IGNORE_CASE).containsMatchIn(t)) }
+        if (question) androidx.compose.material3.Button(enabled = !asking, onClick = {
+            asking = true; answer = "Thinking it over…"
+            scope.io({ answer = it; asking = false }) { val a = G.ai.askAnything(com.emotionalleaves.studioagent.work.Engine.snapshot(), q.value.trim()); answer = a; asking = false }
+        }) { Text("Ask") }
+        if (answer.isNotBlank()) {
+            val go = Regex("(?m)^\\s*GO:\\s*(\\w+)\\s*$").find(answer)?.groupValues?.get(1)?.lowercase()
+            val places = mapOf("calls" to "Open Calls", "week" to "This week", "works" to "Your pieces", "materials" to "Your materials", "outreach" to "People and venues", "nearby" to "Places near you", "records" to "Records", "guide" to "Help", "session" to "Start a session")
+            Panel {
+                Text(answer.replace(Regex("(?m)^\\s*GO:.*$"), "").trim())
+                if (go != null && go in places) androidx.compose.material3.TextButton(onClick = { nav.navigate(go) }) { Text("Go to " + places[go]) }
+            }
+            if (!asking && answer != "Thinking it over…") Small("A suggestion from the writing helper, from what is in the app. You know your situation best.")
+        }
         val words = q.value.trim().lowercase().split(Regex("\\s+")).filter { it.length > 1 }
         fun hit(vararg parts: String) = words.isNotEmpty() && words.all { w -> parts.any { it.lowercase().contains(w) } }
         val w = works.filter { hit(it.title, it.medium, it.tags, it.notes) }.take(8)
         val c = opps.filter { hit(it.title, it.organiser, it.venue, it.city, it.theme) }.take(8)
         val p = contacts.filter { hit(it.venue, it.name, it.email, it.notes) }.take(8)
         val d = docs.filter { it.type != "interview" && hit(it.title, it.text) }.take(5)
-        if (words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty()) Small("Nothing matches that.")
+        if (!question && words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty()) Small("Nothing matches that.")
         if (w.isNotEmpty()) { Section("Pieces"); w.forEach { x -> IconRow(Icons.Default.Edit, x.title.ifBlank { "Untitled" }, statusWords(x.status)) { nav.navigate("work/${x.id}") } } }
         if (c.isNotEmpty()) { Section("Calls"); c.forEach { x -> IconRow(Icons.Default.DateRange, x.title, listOf(x.organiser, x.city).filter { it.isNotBlank() }.joinToString(", ")) { nav.navigate("call/${x.id}") } } }
         if (p.isNotEmpty()) { Section("People and venues"); p.forEach { x -> IconRow(Icons.Default.Person, x.venue.ifBlank { x.name.ifBlank { x.email } }, if (x.kind == "subscriber") "On your email list" else kindWords(x.kind)) { nav.navigate("contact/${x.id}") } } }
