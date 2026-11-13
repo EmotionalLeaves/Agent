@@ -169,6 +169,8 @@ class Settings(ctx: Context) {
     var notifDay by S("notifDay")
     var notifCount by I("notifCount", 0)
     var lastStretch by L("lastStretch", 0)
+    /** When the last studio update went to your email list. */
+    var lastNewsletter by L("lastNewsletter", 0)
     var noReasons by S("noReasons")
     var lastDaily by L("lastDaily", 0)
     var lastDailyStatus by S("lastDailyStatus")

@@ -279,6 +279,18 @@ object Papers {
         return pdf.save(File(dir, file))
     }
 
+    /** A sheet for a clipboard at an opening or a table: name and email lines, and the one promise that makes people sign. */
+    fun signupSheet(ctx: Context, s: Settings): File {
+        val pdf = pdf(ctx, s, "Studio news", footer = false)
+        pdf.text("Studio news from " + name(s).ifBlank { "the artist" }, 22f, face = Pdf.Face.DISPLAY, gap = 6f)
+        pdf.text("Leave your name and email to hear about new work and shows, a few times a year. Nothing else, and never shared.", 12f, gap = 4f)
+        if (s.website.isNotBlank()) pdf.text(s.website, 11f, grey = true, gap = 18f) else pdf.space(14f)
+        pdf.text("Name                                                          Email", 10f, grey = true, gap = 4f)
+        pdf.rule(dark = true)
+        repeat(17) { pdf.space(20f); pdf.rule() }
+        return pdf.save(out(ctx, docName(s, "Signup_sheet")))
+    }
+
     // ------------------------------------------------------------ texts for other people
 
     /** Ready-to-send request to a fine-art print lab or framer. */

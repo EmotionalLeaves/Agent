@@ -177,6 +177,9 @@ fun Outreach(nav: NavController) {
             }) { Text("Add to my email list") }
             if (subs.isNotEmpty()) OutlinedButton(onClick = { Share.text(ctx, subs.joinToString(", ") { it.email }) }) { Text("Copy all addresses") }
         }
+        if (subs.isNotEmpty()) Button(onClick = { nav.navigate("update") }, modifier = Modifier.fillMaxWidth()) { Text("Write a studio update to them") }
+        // The list grows in person: a sheet on a clipboard at an opening, a table, a studio visit.
+        OutlinedButton(onClick = { scope.io { val f = Papers.signupSheet(ctx, st); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Print a sign-up sheet") }
     }
 }
 
@@ -313,5 +316,68 @@ fun ContactScreen(nav: NavController, id: Long) {
             }) { Text("Build an exhibition proposal PDF") }
         }
         DangerButton(onClick = { scope.remove(c.venue.ifBlank { c.name.ifBlank { "the contact" } }, { dao.del(c) }, { dao.put(c) }); nav.popBackStack() }) { Text("Delete this contact") }
+    }
+}
+
+/** What is worth telling the list: new finished work and shows coming up. Plain facts only, nothing invented. */
+fun studioUpdate(newWorks: List<com.emotionalleaves.studioagent.data.Artwork>, shows: List<com.emotionalleaves.studioagent.data.Opp>): Pair<String, String> {
+    val subject = when {
+        shows.isNotEmpty() -> "Coming up: " + shows.first().title
+        newWorks.isNotEmpty() -> "New work from the studio"
+        else -> "News from the studio"
+    }
+    val body = buildString {
+        appendLine("Hello,"); appendLine()
+        appendLine("A short note from the studio, since you asked to hear about my shows.")
+        if (shows.isNotEmpty()) {
+            appendLine(); appendLine(if (shows.size == 1) "Coming up" else "Coming up:")
+            shows.forEach { o -> appendLine("- " + o.title + listOf(o.venue, o.city).filter { it.isNotBlank() }.joinToString(", ").let { if (it.isBlank()) "" else ", $it" } +
+                (if (o.exhibitionDates.isNotBlank()) ". ${o.exhibitionDates}" else "") + ".") }
+            appendLine("The opening is free and open to anyone. I would be glad to see you there.")
+        }
+        if (newWorks.isNotEmpty()) {
+            appendLine(); appendLine("New work" + (if (newWorks.size > 1) ", attached:" else ", attached:"))
+            newWorks.forEach { appendLine("- " + Papers.caption(it)) }
+        }
+        appendLine(); appendLine("Thank you for following along. To stop these notes, just reply and say so.")
+        appendLine(); append(Papers.signature(st))
+    }
+    return subject to body
+}
+
+@Composable
+fun UpdateScreen(nav: NavController) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val contacts by dao.contacts().collectAsState(emptyList())
+    val works by dao.artworks().collectAsState(emptyList())
+    val opps by dao.opps().collectAsState(emptyList())
+    val appls by dao.appls().collectAsState(emptyList())
+    val subs = contacts.filter { it.kind == "subscriber" && Texts.looksLikeEmail(it.email) }
+    val since = if (st.lastNewsletter > 0) st.lastNewsletter else now() - 90 * DAY
+    val fresh = works.filter { Engine.documented(it) && it.createdAt >= since }.sortedByDescending { it.createdAt }.take(3)
+    val shows = appls.filter { it.status == "accepted" }.mapNotNull { a -> opps.firstOrNull { it.id == a.oppId } }.filter { it.deadline == 0L || it.deadline > now() - 120 * DAY }
+    val draft = remember(fresh.size, shows.size) { studioUpdate(fresh, shows) }
+    val subject = rememberSaveable(draft.first) { mutableStateOf(draft.first) }
+    val body = rememberSaveable(draft.second) { mutableStateOf(draft.second) }
+    Screen("Studio update", nav) {
+        Intro("update", "A short email to the people on your list: new work and where to see it. A few times a year is plenty.")
+        if (st.lastNewsletter > 0) Small("Last one went out ${fmtDate(st.lastNewsletter)}.")
+        if (fresh.isEmpty() && shows.isEmpty()) Panel(strong = true) { Text("There is nothing new to tell yet. It is fine to wait until there is a show or a finished piece; that is what people signed up for.") }
+        Field("Subject", subject)
+        Field("Message", body, lines = 12)
+        if (fresh.isNotEmpty()) Small("${Texts.count(fresh.size, "picture")} attached, made small for email: " + fresh.joinToString(", ") { it.title.ifBlank { "Untitled" } } + ".")
+        Button(enabled = subs.isNotEmpty() && body.value.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = {
+            scope.io({ }) {
+                val dir = java.io.File(ctx.cacheDir, "update").apply { deleteRecursively(); mkdirs() }
+                val files = fresh.mapIndexedNotNull { i, w -> java.io.File(dir, Texts.fileName(st.lastName.ifBlank { st.firstName }, w.title, w.year, "", 0.0, 0.0, number = i + 1))
+                    .takeIf { com.emotionalleaves.studioagent.media.ImageTools.export(w.imagePath, 1600, 900_000, it, st.fullName, Papers.caption(w)) } }
+                withContext(Dispatchers.Main) {
+                    // To yourself, with the list as blind copies: nobody sees anyone else's address.
+                    Share.email(ctx, st.email, subject.value.trim(), body.value.trim(), files, subs.map { it.email })
+                }
+            }
+        }) { Text("Open it in my mail app (${Texts.count(subs.size, "person", "people")}, blind copied)") }
+        OutlinedButton(onClick = { st.lastNewsletter = now(); nav.popBackStack() }) { Text("I sent it") }
     }
 }

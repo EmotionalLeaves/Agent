@@ -197,11 +197,13 @@ object Share {
     }
 
     /** Opens the phone's mail app with everything filled in; you press Send. */
-    fun email(ctx: Context, to: String, subject: String, body: String, files: List<File> = emptyList()) {
+    fun email(ctx: Context, to: String, subject: String, body: String, files: List<File> = emptyList(), bcc: List<String> = emptyList()) {
         val existing = files.filter { it.exists() }
         val i = if (existing.isEmpty()) Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
         else Intent(Intent.ACTION_SEND_MULTIPLE).setType("message/rfc822").putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(existing.map { uri(ctx, it) }))
         i.putExtra(Intent.EXTRA_EMAIL, arrayOf(to)).putExtra(Intent.EXTRA_SUBJECT, subject).putExtra(Intent.EXTRA_TEXT, body)
+        // A list goes out as blind copies, so nobody sees anyone else's address.
+        if (bcc.isNotEmpty()) i.putExtra(Intent.EXTRA_BCC, bcc.toTypedArray())
         i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         // Some mail apps only receive read access to attachments when it is carried as clip data on both intents.
         if (existing.isNotEmpty()) {

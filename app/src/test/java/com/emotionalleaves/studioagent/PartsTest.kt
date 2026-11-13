@@ -108,7 +108,7 @@ class PartsTest {
         com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
         val files = try {
             listOf(Papers.cv(ctx, s, facts), Papers.portfolio(ctx, s, works, "A statement about the work, long enough to wrap onto a second line so the measure can be judged properly.", 5), Papers.imageList(ctx, s, works, true),
-                Papers.labels(ctx, s, works), Papers.certificate(ctx, s, works[0], 2), Papers.billOfSale(ctx, s, works[0], "Sam Buyer", 1300.0, 1),
+                Papers.labels(ctx, s, works), Papers.signupSheet(ctx, s), Papers.certificate(ctx, s, works[0], 2), Papers.billOfSale(ctx, s, works[0], "Sam Buyer", 1300.0, 1),
                 Papers.proposal(ctx, s, "Riverside Gallery", "Night", "A statement.", "A bio.", works))
         } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
         assertEquals(listOf("Leaves_CV.pdf", "Leaves_Portfolio.pdf", "Leaves_Price_list.pdf", "Leaves_Wall_labels.pdf", "Leaves_Certificate_Piece1_2.pdf", "Leaves_Bill_of_sale_Piece1.pdf", "Leaves_Proposal_RiversideGallery.pdf"), files.map { it.name })
@@ -341,6 +341,20 @@ class PartsTest {
         assertEquals("https://library.austintexas.gov", c.website)
         assertTrue(c.notes.contains("710 Cesar Chavez St, Austin"))
         assertEquals("info@bigmedium.org", com.emotionalleaves.studioagent.ui.placeToContact(list[1], 1L).email)
+    }
+
+
+    @Test fun aStudioUpdateTellsOnlyWhatIsTrue() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"
+        val w = com.emotionalleaves.studioagent.data.Artwork(id = 5, title = "Blue Hour", year = 2026, medium = "Archival pigment print", widthIn = 16.0, heightIn = 20.0)
+        val show = com.emotionalleaves.studioagent.data.Opp(title = "Winter Open 2027", venue = "Riverside Arts", city = "Austin", exhibitionDates = "February 19 to March 28")
+        val (subject, body) = com.emotionalleaves.studioagent.ui.studioUpdate(listOf(w), listOf(show))
+        assertEquals("Coming up: Winter Open 2027", subject)
+        assertTrue(body.contains("Winter Open 2027, Riverside Arts, Austin. February 19 to March 28."))
+        assertTrue(body.contains("Blue Hour"))
+        assertTrue(body.contains("To stop these notes"))
+        assertEquals("News from the studio", com.emotionalleaves.studioagent.ui.studioUpdate(emptyList(), emptyList()).first)
     }
 
 }

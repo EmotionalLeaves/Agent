@@ -213,6 +213,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("sources") { Sources(nav) }
             composable("outreach") { Outreach(nav) }
             composable("nearby") { Nearby(nav) }
+            composable("update") { UpdateScreen(nav) }
             composable("jury/{id}") { JuryView(nav, it.id()) }
             composable("contact/{id}") { ContactScreen(nav, it.id()) }
             composable("records") { Records(nav) }
