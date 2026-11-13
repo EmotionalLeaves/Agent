@@ -1123,6 +1123,13 @@ object Engine {
         dao.contactsNow().filter { it.status in setOf("followed_up", "not_now") && it.revisitAt in 1..now }.minByOrNull { it.revisitAt }?.let { c ->
             return NextStep("Write to ${c.venue.ifBlank { c.name }} again", "It has been months. A short note with what is new (a finished series, a show) is how most yeses happen.", "contact/${c.id}")
         }
+        // You went and looked; now a short note is natural. Only for places your level is ready for, and only with an address.
+        run {
+            val lvl = Levels.level(statsOf(works, docs, dao.factsNow()), rules())
+            dao.contactsNow().firstOrNull { it.status == "research" && it.notes.contains("Visited on") && Texts.looksLikeEmail(it.email) && Levels.outreachAllowed(lvl, it.kind, rules()) }?.let { c ->
+                return NextStep("Write to ${c.venue.ifBlank { c.name }}", "You have been there, so you can say so. Four or five sentences and three pictures; the app drafts it from your own words.", "contact/${c.id}")
+            }
+        }
         // Five or more pieces and no backup anywhere: one phone lost would take them all. Saturdays only, until it is on.
         if (today.dayOfWeek == DayOfWeek.SATURDAY && st.backupFolder.isBlank() && !(st.ghReady && st.ghBackupRepo.isNotBlank()) && works.count { it.imagePath.isNotBlank() } >= 5)
             return NextStep("Turn on backups", "Your catalog lives only on this phone. Two taps pick a folder, and it is saved there every day.", "settings/backup")
