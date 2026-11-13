@@ -372,3 +372,4 @@ One real change per round. Pushed and built every ten rounds.
 366. Today's step for an application close to its deadline names what is still to fix ("Still to fix: statement within 150 words; submission email address known") instead of a general reminder.
 367. Planning a show of your own can be a one-day event instead (an open studio, a pop-up, a table): eight dated steps including inviting your list and coworkers, the sign-up sheet out, and adding the new names after.
 368. Your email list: "Add from a photo of the sign-up sheet". The paper sheet from an opening is photographed, the email addresses on it are read on the phone, and each new one is added with the name beside it, ready to check.
+369. Your email list can be seen and checked: each person with a Fix (spelling) and a remove with undo, for someone who asked to be taken off.

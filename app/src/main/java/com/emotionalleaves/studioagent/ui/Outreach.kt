@@ -240,6 +240,16 @@ fun Outreach(nav: NavController) {
         val sheetShot = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.TakePicture()) { ok -> if (ok) readSheet(sheetFile.absolutePath) }
         OutlinedButton(onClick = { try { sheetShot.launch(Share.uri(ctx, sheetFile)) } catch (e: Exception) { sheetStatus = "The camera did not open." } }) { Text("Add from a photo of the sign-up sheet") }
         if (sheetStatus.isNotBlank()) Small(sheetStatus)
+        // The list itself, to check a spelling or remove someone who asked.
+        if (subs.isNotEmpty()) Expand("See the list (${subs.size})", startOpen = sheetStatus.startsWith("Added")) {
+            subs.sortedByDescending { it.createdAt }.forEach { c ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) { Text(c.name.ifBlank { c.email }); if (c.name.isNotBlank()) Small(c.email) }
+                    TextButton(onClick = { nav.navigate("contact/${c.id}") }) { Text("Fix") }
+                    RemoveButton("${c.email} from your list") { scope.remove("${c.email} from your list", { dao.del(c) }, { dao.put(c) }) }
+                }
+            }
+        }
         if (subs.isNotEmpty()) Button(onClick = { nav.navigate("update") }, modifier = Modifier.fillMaxWidth()) { Text("Write a studio update to them") }
         // The list grows in person: a sheet on a clipboard at an opening, a table, a studio visit.
         OutlinedButton(onClick = { scope.io { val f = Papers.signupSheet(ctx, st); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Print a sign-up sheet") }
