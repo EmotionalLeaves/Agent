@@ -436,7 +436,7 @@ val settingIndex = listOf(
     "Your name, email, phone, website" to "you", "City and state" to "you", "Mediums, what your work is about" to "you", "Goals for the year" to "you", "Currency" to "you",
     "Days you work, work hours" to "hours", "Rest after work before studio time" to "hours", "Bedtime" to "hours", "Notifications a day" to "hours",
     "Studio time in my calendar" to "hours", "Silence my phone during sessions (do not disturb)" to "hours", "A studio friend to text" to "hours", "Studio playlist, music" to "hours", "Focus or blocker app (Honest Lockout)" to "hours",
-    "Calm Today" to "calm", "Days off from the app" to "calm", "Wi-Fi only, while charging" to "calm", "Social media help" to "calm", "Session length" to "calm",
+    "Calm Today" to "calm", "What Today shows (cards)" to "calm", "Days off from the app" to "calm", "Wi-Fi only, while charging" to "calm", "Social media help" to "calm", "Session length" to "calm",
     "Keep the screen on" to "calm", "Hide the gray explanations" to "calm",
     "Level and gates" to "rules", "Fee caps and monthly budget" to "rules", "Calls to send this year" to "rules", "Farthest distance for calls" to "rules",
     "Blocked organizers" to "rules", "Outreach emails a week" to "rules", "Prepare a free entry each week (autopilot)" to "rules",
@@ -611,6 +611,13 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Text("Each of these is a default you can switch. None of them is a rule about you.")
                 H("Today")
                 Toggle("Calm Today: show only the next step and Start", st.calmToday) { st.calmToday = it }
+                // Today, your way: each card can be switched off on its own.
+                Expand("What Today shows") {
+                    listOf("jobs" to "Five-minute jobs on a break at work", "fresh" to "What the app did while you were away", "road" to "The road to your first show", "wins" to "Done this week").forEach { (k, label) ->
+                        val hidden = st.todayHidden.split(",").filter { it.isNotBlank() }.toSet()
+                        Toggle(label, k !in hidden) { on -> st.todayHidden = (if (on) hidden - k else hidden + k).joinToString(",") }
+                    }
+                }
                 Toggle("Daily check only on Wi-Fi and while charging (saves data and battery)", st.wifiOnly) { st.wifiOnly = it; Engine.schedule(ctx, changed = true) }
                 DaysField("Days off from the app (no notifications, nothing asked of you)", st.daysOff) { st.daysOff = it }
                 H("Social media")
