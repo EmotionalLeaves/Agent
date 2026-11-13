@@ -208,6 +208,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("check") { OfferCheck(nav) }
             composable("dump") { DumpScreen(nav) }
             composable("teach") { TeachScreen(nav) }
+            composable("people") { PeopleScreen(nav) }
             composable("foundations") { FoundationsScreen(nav) }
             composable("market") { MarketDay(nav) }
             composable("pricing") { PricingScreen(nav) }

@@ -667,4 +667,13 @@ class DomainTest {
         assertTrue(A.afterNo(30, 11, 4, 24).startsWith("Your 11th no") && A.afterNo(30, 11, 4, 24).contains("already sent all 24"))
         assertEquals("sent this year, aiming for 24", A.tile(3, 24))
     }
+
+    @Test fun findingYourPeople() {
+        val P = com.emotionalleaves.studioagent.domain.People
+        assertEquals(5, P.places.map { it.key }.toSet().size)
+        assertEquals("drop-in life drawing Austin", P.query(P.places.first(), "Austin"))
+        val h = P.hello("Ana", "Tuesday's life drawing", "Jade")
+        assertTrue(h.startsWith("Hi Ana, it was good to draw next to you at Tuesday's life drawing.") && h.endsWith("Jade"))
+        assertTrue(P.hello("", "", "Jade").startsWith("Hi there, it was good to draw next to you."))
+    }
 }

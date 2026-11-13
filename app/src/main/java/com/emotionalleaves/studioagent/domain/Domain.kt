@@ -1458,3 +1458,27 @@ object Attempts {
 
     fun tile(sent: Int, aim: Int): String = if (sent >= aim) "sent this year; aim of $aim met" else "sent this year, aiming for $aim"
 }
+
+// ---------------------------------------------------------------- your people
+/**
+ * Other artists, in person: they pass on calls, swap honest feedback, and a room of people drawing makes starting easy.
+ * The usual places to find them, what each is like for a beginner, and the search that finds the local one.
+ */
+object People {
+    data class Place(val key: String, val name: String, val what: String, val search: String)
+
+    val places = listOf(
+        Place("life", "A drop-in life drawing session", "Usually a small fee at the door; bring a pad and a pencil. Nobody looks at your drawings, and two hours of drawing goes by fast.", "drop-in life drawing"),
+        Place("sketch", "Urban Sketchers", "Free, any level, meets outdoors at a different spot each time and shares drawings at the end. Local groups are called chapters.", "Urban Sketchers"),
+        Place("league", "Your local art league or association", "Members' shows are often open to every member, beginners included: a first show without a jury.", "art league OR art association"),
+        Place("crit", "A critique group or open studio night", "A few artists showing work in progress and saying what they see. Kind ones exist; it is fine to leave one that is not.", "artist critique group OR open studio night"),
+        Place("library", "An art club at a library or community center", "Free or nearly, often in the evening, and a quiet way in.", "art club library OR community center")
+    )
+
+    fun query(p: Place, city: String): String = (p.search + " " + city).trim()
+
+    /** A short hello to an artist you met, so one meeting turns into knowing someone. */
+    fun hello(them: String, where: String, me: String): String =
+        "Hi ${them.ifBlank { "there" }}, it was good to draw next to you${if (where.isNotBlank()) " at $where" else ""}. " +
+            "I'm trying to go most weeks. If you hear of any open calls or shows for people starting out, I'd love to know, and I'll pass on any I find. $me"
+}

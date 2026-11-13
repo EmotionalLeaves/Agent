@@ -31,6 +31,7 @@ val toolGroups: List<Pair<String, List<Triple<String, String, String>>>> = listO
         Triple("People and venues", "Emails written for you, visits, studio visits", "outreach"),
         Triple("Statement, bio and CV", "Written from your own answers", "materials"),
         Triple("Ask for feedback", "Which piece is strongest, from people you trust", "feedback"),
+        Triple("Your people", "Life drawing, sketch groups, art leagues near you", "people"),
         Triple("Ready-made emails", "Short letters for galleries, labs, buyers, a yes", "letters")
     ),
     "Selling it" to listOf(
