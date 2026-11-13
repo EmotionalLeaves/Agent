@@ -281,3 +281,14 @@ Simplicity
 - The You page shows the next set-up step with its own button; the Guide row appears once set-up is done.
 - Today: one Start now button, plus "Tired? Just 5 minutes" instead of an energy question first.
 - Finished Guide groups fold to one line; the sources list is one switch per site; the duplicate next-step box on a piece is gone.
+
+## Left for later, since closed
+
+| First-build note | Closed in |
+| --- | --- |
+| Corners are placed by hand (no automatic edge detection) | Round 571: flat pieces can be scanned with the phone's own scanner, which finds the edges and squares the picture up (hand cropping stays for canvases and framed work) |
+| Size is typed in, not measured | Round 573: a squared-up picture's shape is matched to standard paper and canvas sizes, offered with one tap |
+| "Odds" uses call tier, not yet your own history | Round 574: odds move toward your own yeses and no's at each kind of call |
+| Studio playlist not built | Round 575: a playlist link, opened from the session screen |
+| Shipping help is a packing note, not carrier quotes | Box size, packed weight and billable weight per piece, and the shipping steps counted back from delivery (carrier quotes still need the carrier's own site) |
+| No calendar feed of openings | Openings are read from a photographed poster or a venue's site and put on your calendar |
