@@ -162,9 +162,17 @@ fun Works(nav: NavController) {
             val q = search.value.trim().lowercase()
             // Long walls are drawn 40 at a time, so Studio opens quickly however much work there is.
             var limit by rememberSaveable { mutableStateOf(40) }
+            // In the order you need: newest first, by title, by series, or what is ready to send first.
+            var sortBy by rememberSaveable { mutableStateOf("newest") }
+            if (works.size > 5) Choice("", listOf("newest", "title", "series", "ready"), sortBy, names = { mapOf("newest" to "Newest", "title" to "A to Z", "series" to "By series", "ready" to "Ready first")[it] ?: it }) { sortBy = it }
             val shownWorks = works.filter { w ->
                 (show == "all" || w.status == show) && (q.isBlank() || listOf(w.title, w.tags, w.medium, w.status, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).any { it.lowercase().contains(q) })
-            }
+            }.let { list -> when (sortBy) {
+                "title" -> list.sortedBy { it.title.lowercase() }
+                "series" -> list.sortedWith(compareBy({ series.firstOrNull { s -> s.id == it.seriesId }?.name?.lowercase() ?: "~" }, { -it.createdAt }))
+                "ready" -> list.sortedWith(compareBy({ if (Engine.available(it)) 0 else if (it.status == "in_progress") 1 else 2 }, { -it.createdAt }))
+                else -> list
+            } }
             if (works.isNotEmpty() && shownWorks.isEmpty()) Empty("Nothing matches that.", "Show everything") { search.value = ""; show = "all" }
             // A few pieces hang large; a growing body of work hangs three across, so more of it is seen at once.
             val across = if (shownWorks.size > 6) 3 else 2
