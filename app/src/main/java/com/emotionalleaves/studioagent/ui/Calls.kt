@@ -424,6 +424,9 @@ fun ApplScreen(nav: NavController, id: Long) {
     Screen(o.title, nav) {
         Note((if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.")
         StageHead(1, "Choose the works", chosenIds.isNotEmpty())
+        val ready = works.filter { Engine.available(it) || it.id in chosenIds }
+        if (ready.isEmpty()) Empty("No pieces are ready to send yet. A piece is ready once it has a picture and is marked Ready to send in Studio.", "Open Studio") { nav.navigate("works") }
+        else if (o.maxWorks > 0 && chosenIds.isEmpty()) Small("This call takes up to ${Texts.count(o.maxWorks, "work")}. Tap to choose.")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             works.filter { Engine.available(it) || it.id in chosenIds }.forEach { w ->
                 FilterChip(selected = w.id in chosenIds, onClick = {
@@ -559,6 +562,10 @@ private const val FILL_JS = """
    v={title:w.title,medium:w.medium,materials:w.medium,dimension:w.dims,size:w.dims,year:w.year,price:w.price,value:w.price}[piece[j]]; } } }
   if(!v && k.indexOf('name')>=0 && k.indexOf('title')<0){ v=d.name; }
   if(v){ setv(el,v); n++; } });
+ document.querySelectorAll('select').forEach(function(el){ if(el.selectedIndex>0){return;} var k=key(el); var want='';
+  if(k.indexOf('state')>=0||k.indexOf('province')>=0||k.indexOf('region')>=0){want=d.region;}
+  if(!want){return;} var w=want.toLowerCase();
+  for(var i=0;i<el.options.length;i++){var o=el.options[i]; if(o.text.toLowerCase()===w||o.value.toLowerCase()===w){el.selectedIndex=i; el.dispatchEvent(new Event('change',{bubbles:true})); n++; break;}} });
  return n;
 })
 """
@@ -597,7 +604,7 @@ fun WebFill(nav: NavController, id: Long) {
                                     .put("year", w.year.takeIf { it > 0 }?.toString().orEmpty()).put("price", if (w.nfs) "NFS" else w.price.takeIf { it > 0 }?.let { "%.0f".format(it) }.orEmpty()))
                             }
                             val d = JSONObject().put("first", st.firstName).put("last", st.lastName).put("name", st.fullName).put("email", st.email)
-                                .put("phone", st.phone).put("website", st.website).put("city", st.city).put("statement", a.statement).put("bio", bio)
+                                .put("phone", st.phone).put("website", st.website).put("city", st.city).put("region", st.region).put("statement", a.statement).put("bio", bio)
                                 .put("works", list)
                             web?.evaluateJavascript(FILL_JS + "(" + d.toString() + ")") { r -> status = "Filled ${r ?: "0"} fields. Read each one, then press the site's own submit button." }
                         }

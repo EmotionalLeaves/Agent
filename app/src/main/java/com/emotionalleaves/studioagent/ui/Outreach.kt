@@ -40,7 +40,7 @@ import kotlinx.coroutines.withContext
 val contactKinds = listOf("campus", "community", "artist_run", "juror", "nonprofit", "university", "curator", "commercial")
 
 fun statusWords(c: Contact): String = when (c.status) {
-    "research" -> "Researched, no email yet"
+    "research" -> if (c.email.isBlank()) "Researched, no email address yet" else "Researched, no email written yet"
     "drafted" -> "Draft waiting for your yes"
     "approved" -> "Approved, waiting to send"
     "sent" -> "Sent ${fmtDate(c.sentAt)}"
@@ -48,8 +48,9 @@ fun statusWords(c: Contact): String = when (c.status) {
     "interested" -> "Interested"
     "more" -> "Asked for more"
     "not_now" -> "Not now"
-    "no" -> "No"
-    else -> c.status
+    "no" -> "Said no"
+    "subscriber" -> "On your email list"
+    else -> c.status.replace('_', ' ').replaceFirstChar { it.uppercase() }
 }
 
 @Composable

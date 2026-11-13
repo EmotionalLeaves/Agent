@@ -62,3 +62,13 @@ One real change per round. Pushed and built every ten rounds.
 58. Each listing site reports what the daily check did there ("Read 8 new calls; none still open and new", "Added 3 calls").
 59. A call says where the app found it and when ("Found on ArtCall, Thu, Nov 12, 2026").
 60. The where line reads "Online" with a capital, and a placeholder date is never shown as 1970.
+61. A result goes under the right CV heading: residencies under Residencies, grants under Grants, publications under Publications.
+62. An application with no pieces ready says why and opens Studio; otherwise it says how many works the call takes.
+63. Logging a past session uses the same kind names as starting one (Make, Practise, Light).
+64. The session Start button says how long: "Start, 15 minutes".
+65. The saved-session screen says "1 minute" or "Under a minute" instead of "1 minutes" or "0 minutes".
+66. Session history shows the kind by name (Practise) instead of the stored key (skill).
+67. A picture shared into the app can become a piece of your work, with the picture already on it.
+68. Sharing a flyer picture says plainly that the free helper cannot read pictures, and what to type instead.
+69. A contact's status distinguishes "no email address yet" from "no email written yet"; "Said no" and "On your email list" read as words.
+70. Entry forms: a State or Region drop-down is set to yours when it matches.

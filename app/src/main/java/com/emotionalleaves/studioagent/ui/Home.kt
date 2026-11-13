@@ -287,7 +287,7 @@ fun DoneScreen(nav: NavController) {
         Text("Saved.", Modifier.graphicsLayer { translationY = lift * 40f; alpha = 1f - lift }, style = MaterialTheme.typography.displayLarge)
         if (s != null) {
             val mins = ((s.end - s.start) / 60000).coerceAtLeast(0)
-            Text("$mins minutes" + (works.firstOrNull { it.id == s.artworkId }?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".", style = MaterialTheme.typography.headlineSmall)
+            Text((if (mins < 1) "Under a minute" else Texts.count(mins.toInt(), "minute")) + (works.firstOrNull { it.id == s.artworkId }?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".", style = MaterialTheme.typography.headlineSmall)
             Text(if (mins < 10) "Short sessions count. You showed up." else "That counts toward your week.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (s.nextStep.isNotBlank()) WallLabel(onClick = null) {
                 Small("Next time starts with")
@@ -357,7 +357,7 @@ fun SessionScreen(nav: NavController) {
                 st.sessionGoalMin = length.substringBefore(" ").toIntOrNull() ?: st.defaultSessionMin
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
                 if (st.dndInSession) Notifier.dnd(ctx, true)
-            }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start") }
+            }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start, " + length.replace(" min", " minutes")) }
             if (st.dndInSession && !Notifier.dndGranted(ctx)) Small("Want the phone silenced during sessions? Allow it in You, Settings, Hours and calm.")
         }
     } else {
@@ -493,7 +493,10 @@ fun ShareScreen(nav: NavController) {
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     Screen("Shared with Studio Agent", nav) {
-        if (image != null) Note("A picture was shared (a flyer or poster).")
+        if (image != null) {
+            Note("A picture was shared.")
+            if (G.ai.free) Small("The free writing help cannot read pictures. For a flyer, type the call's name and deadline below; the app keeps the rest for you to fill in.")
+        }
         Field("Text or link", text, lines = 4)
         Status(status)
         Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
@@ -524,6 +527,14 @@ fun ShareScreen(nav: NavController) {
                 status = "Parked in Ideas."
             }
         }) { Text("Park as an idea") }
+        // A picture of your own work becomes a piece, with the picture already on it.
+        if (image != null) OutlinedButton(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
+            busy = true
+            scope.io({ status = it; busy = false }) {
+                val id = Engine.importFile(ctx, image, text.value.trim().ifBlank { "Untitled" })
+                withContext(Dispatchers.Main) { nav.navigate("work/$id") { popUpTo("home") } }
+            }
+        }) { Text("Add as a piece of my work") }
     }
 }
 

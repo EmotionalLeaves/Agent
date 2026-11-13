@@ -148,7 +148,7 @@ fun SessionsScreen(nav: NavController) {
         if (sessions.isEmpty()) Empty("No sessions yet. Each one you finish is listed here.")
         sessions.take(60).forEach { s ->
             Panel {
-                Text(fmtDate(s.start) + ", ${((s.end - s.start) / 60000).coerceAtLeast(0)} min, ${s.kind}" + name(s.artworkId).let { if (it.isNotBlank()) ", $it" else "" }, fontWeight = FontWeight.SemiBold)
+                Text(fmtDate(s.start) + ", ${((s.end - s.start) / 60000).coerceAtLeast(0)} min, ${mapOf("make" to "Make", "skill" to "Practise", "light" to "Light")[s.kind] ?: s.kind}" + name(s.artworkId).let { if (it.isNotBlank()) ", $it" else "" }, fontWeight = FontWeight.SemiBold)
                 if (s.nextStep.isNotBlank()) Note("Next time: ${s.nextStep}")
                 if (s.note.isNotBlank()) Note(s.note)
                 if (s.photoPath.isNotBlank()) PathImage(s.photoPath, Modifier.fillMaxWidth(), 500)
@@ -158,7 +158,7 @@ fun SessionsScreen(nav: NavController) {
         Expand("Log one you did away from the app") {
             DateField("Day", date.value) { date.value = it }
             Count("Minutes", minutes.value.toIntOrNull() ?: 30, 5, 600, 5, "min") { minutes.value = it.toString() }
-            Choice("Kind", listOf("make", "practise", "light"), if (kind == "skill") "practise" else kind, names = { mapOf("make" to "Making", "practise" to "Practice", "light" to "Light admin")[it] ?: it }) { kind = if (it == "practise") "skill" else it }
+            Choice("Kind", listOf("make", "practise", "light"), if (kind == "skill") "practise" else kind, names = { mapOf("make" to "Make", "practise" to "Practise", "light" to "Light")[it] ?: it }) { kind = if (it == "practise") "skill" else it }
             if (kind == "make" && active.isNotEmpty()) Choice("Piece (optional)", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, name(workId)) { t -> workId = active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == t }?.id ?: 0L }
             Field("Note (optional)", note)
             Button(enabled = (minutes.value.trim().toIntOrNull() ?: 0) > 0, onClick = {

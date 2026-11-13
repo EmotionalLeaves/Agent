@@ -620,7 +620,9 @@ object Engine {
         works.forEach { dao.put(it.copy(status = "shown", location = opp?.venue?.ifBlank { opp.organiser } ?: it.location)) }
         if (opp != null) {
             val line = listOf(opp.title, opp.venue.ifBlank { opp.organiser }, opp.city).filter { it.isNotBlank() }.joinToString(", ")
-            dao.put(Fact(category = "group", year = LocalDate.now().year, text = line))
+            // The CV heading follows the kind of call: a residency is listed under Residencies, a grant under Grants.
+            val cat = when (opp.kind) { "residency" -> "residency"; "grant" -> "grant"; "publication" -> "publication"; else -> "group" }
+            dao.put(Fact(category = cat, year = LocalDate.now().year, text = line))
         }
         val tasks: List<Pair<String, Long>> = (if (ai.ready && text.isNotBlank()) (try { ai.logistics(text) } catch (e: Exception) { emptyList<Pair<String, Long>>() }) else emptyList()).ifEmpty {
             listOf("Confirm you are taking part", "Sign and return the agreement", "Frame or prepare hanging hardware", "Print wall labels and price list",
