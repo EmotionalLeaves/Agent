@@ -636,3 +636,4 @@ One real change per round. Pushed and built every ten rounds.
 629. "How many pieces do I need for a show?" now gets the plain answer, not a count of your own pieces; "how many pieces do I have?" still gets the count.
 630. Find anything shows plain answers too: type "consignment", "opening" or "website" and the matching Basics answer or glossary word is right there, under the tools.
 631. A ready-made gift-season note to people you know: a private, no-pressure email to friends, family and coworkers who like your work, saying a few small prints and pieces are available as gifts, with your link, sent with everyone in BCC.
+632. November's market-season step mentions the gift-season note in Ready-made emails.
