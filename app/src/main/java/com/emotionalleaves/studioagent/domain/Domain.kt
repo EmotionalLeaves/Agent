@@ -855,7 +855,7 @@ object CallReader {
 object MoneyByMonth {
     fun of(year: Int, entries: List<Pair<LocalDate, Double>>): List<Pair<Double, Double>> = (1..12).map { m ->
         val inMonth = entries.filter { it.first.year == year && it.first.monthValue == m }
-        inMonth.filter { it.second > 0 }.sumOf { it.second } to -inMonth.filter { it.second < 0 }.sumOf { it.second }
+        inMonth.filter { it.second > 0 }.sumOf { it.second } to inMonth.filter { it.second < 0 }.sumOf { -it.second }
     }
 }
 
