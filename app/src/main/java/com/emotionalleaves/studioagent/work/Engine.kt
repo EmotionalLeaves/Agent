@@ -1580,6 +1580,10 @@ object Engine {
             val t = dao.oppsNow().firstOrNull { it.id == a.oppId }?.title.orEmpty()
             return NextStep("An entry is ready for your look", "$t: free and a strong fit. The app chose the pieces and wrote it; look it over, then send it or say no.", "appl/${a.id}")
         }
+        // The first weekend of a month: one goal for it, set in a minute, told to one friend.
+        if (today.dayOfMonth <= 7 && today.dayOfWeek in setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) && st.monthGoalMonth != java.time.YearMonth.now().toString()) {
+            return NextStep("One goal for this month", "A minute: say it in your own words, and tell one friend. Telling someone makes it far likelier.", "year")
+        }
         // A weeknight with nothing else: the next foundations exercise, twenty-odd minutes, the session opens on it.
         if (today.dayOfWeek.value in 1..5) com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone)?.let { e ->
             st.suggestPractice = today.toString()

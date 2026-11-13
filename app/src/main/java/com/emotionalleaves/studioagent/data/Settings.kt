@@ -213,6 +213,9 @@ class Settings(ctx: Context) {
     var suggestPractice by S("suggestPractice")
     /** The daily check waits for Wi-Fi and charging, to save mobile data and battery. */
     var wifiOnly by B("wifiOnly", false)
+    /** This month's one goal, in your words, and the month it is for ("2027-03"). */
+    var monthGoal by S("monthGoal")
+    var monthGoalMonth by S("monthGoalMonth")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

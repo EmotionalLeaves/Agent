@@ -5,6 +5,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
 import com.emotionalleaves.studioagent.work.Engine
@@ -24,6 +25,15 @@ fun YearScreen(nav: NavController) {
             pace >= 0.75 -> "At your recent pace, about one piece a week."
             else -> "At your recent pace, about one piece every ${Math.round(1 / pace)} weeks."
         })
+        // One goal for this month, in your words; telling one friend makes it far likelier to happen.
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        val thisMonth = java.time.YearMonth.now().toString()
+        var goal by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(if (st.monthGoalMonth == thisMonth) st.monthGoal else "") }
+        Panel {
+            Text("This month's one goal", fontWeight = FontWeight.SemiBold)
+            Field("For example: finish two pieces, or enter one call", goal, { goal = it; st.monthGoal = it; st.monthGoalMonth = thisMonth }, mic = true)
+            if (goal.isNotBlank()) androidx.compose.material3.TextButton(onClick = { com.emotionalleaves.studioagent.sys.Share.text(ctx, "My art goal for " + java.time.LocalDate.now().month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.US) + ": " + goal.trim() + ". Ask me how it went at the end of the month?") }) { Text("Tell a friend") }
+        }
         val p = plan
         if (p == null) { Loading(); return@Screen }
         p.forEachIndexed { i, (ym, lines) ->
