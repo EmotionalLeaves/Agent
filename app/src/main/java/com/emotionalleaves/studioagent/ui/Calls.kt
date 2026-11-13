@@ -299,6 +299,7 @@ fun CallDetail(nav: NavController, id: Long) {
         Status(status)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (o.status in setOf("new", "later", "no")) Button(onClick = { scope.io({ status = it }) { val aid = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Yes, apply") }
+            else if (o.status in setOf("yes", "applied", "accepted", "declined")) Button(onClick = { scope.io { val aid = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Open the application") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, o.url) }) { Text("Open the call's page") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = {
                 status = "Reading the page…"
@@ -507,7 +508,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             }) { Text("Add question") }
         }
 
-        StageHead(3, "Check", allGreen)
+        StageHead(3, "Checks before sending", allGreen)
         Panel(strong = allGreen) {
             Text(if (allGreen) "Every check passes. This is ready." else "Ready when these are all true", fontWeight = FontWeight.SemiBold)
             checks.forEach { (label, ok) -> Check(ok, label) }
@@ -526,7 +527,8 @@ fun ApplScreen(nav: NavController, id: Long) {
         }
         if (files.isEmpty() && !allGreen) Small("The pictures, CV, image list and statement are made here as soon as every check above passes.")
         if (files.isNotEmpty()) {
-            files.forEach { Note("${it.name}  (${it.length() / 1024} KB)") }
+            files.forEach { Note("${it.name}  (${Texts.fileSize(it.length())})") }
+            Small("${Texts.count(files.size, "file")}, ${Texts.fileSize(files.sumOf { it.length() })} in all.")
             OutlinedButton(onClick = { Share.files(ctx, files) }) { Text("Share or save the files") }
         }
 

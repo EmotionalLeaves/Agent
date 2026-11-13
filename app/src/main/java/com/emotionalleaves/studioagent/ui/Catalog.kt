@@ -34,6 +34,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -169,7 +170,7 @@ fun Works(nav: NavController) {
                 var notes by remember(s.id) { mutableStateOf(s.notes) }
                 var name by remember(s.id) { mutableStateOf(s.name) }
                 Panel {
-                    Field("Series name", name, { name = it; if (it.isNotBlank()) scope.io { dao.put(s.copy(name = it.trim(), notes = notes)) } })
+                    Text(name.ifBlank { "Untitled series" }, style = MaterialTheme.typography.titleMedium)
                     LinearProgressIndicator(progress = { (done.toFloat() / s.targetCount.coerceAtLeast(1)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                     Note("$done of ${s.targetCount} documented, ${works.count { it.seriesId == s.id }} started")
                     Small(Engine.forecast(s.id, s.targetCount, works, sessions))
@@ -180,9 +181,13 @@ fun Works(nav: NavController) {
                         checks.forEach { (label, ok) -> Check(ok, label) }
                         Small(if (checks.all { it.second }) "Every check passes. It is ready; there is nothing left to perfect." else "When every line is ticked, it is ready. Nothing else is needed.")
                     }
+                    // Renaming and the rest are rare, so they sit together behind one fold.
+                    Expand("Change this series") {
+                    Field("Series name", name, { name = it; if (it.isNotBlank()) scope.io { dao.put(s.copy(name = it.trim(), notes = notes)) } })
                     Field("What ties these works together? (used for the series statement)", notes, { notes = it; scope.io { dao.put(s.copy(notes = it, name = name.trim().ifBlank { s.name })) } }, lines = 2, mic = true)
                     Whole("How many works you are aiming for", s.targetCount) { n -> if (n > 0) scope.io { dao.put(s.copy(targetCount = n, notes = notes, name = name.trim().ifBlank { s.name })) } }
                     DangerButton(onClick = { val members = works.filter { it.seriesId == s.id }; scope.remove("the series", { members.forEach { dao.put(it.copy(seriesId = 0)) }; dao.del(s) }, { dao.put(s); members.forEach { dao.put(it) } }) }) { Text("Delete this series (its works are kept)") }
+                    }
                 }
             } }
             Field("New series name", newSeries)
@@ -330,7 +335,13 @@ fun WorkDetail(nav: NavController, id: Long) {
         // Four you set; the rest (out on a call, shown, sold) the app sets when they happen.
         val manual = listOf("idea", "in_progress", "finished", "documented")
         if (w.status in manual || w.status == "available") Choice("Status", manual, if (w.status == "available") "documented" else w.status, names = ::statusWords) { save(w.copy(status = it)) }
-        else Row { Tag(statusWords(w.status), strong = true) }
+        else {
+            Row { Tag(statusWords(w.status), strong = true) }
+            // Which call it is out on, one tap away.
+            val appl = remember(w.id, w.status) { mutableStateOf<com.emotionalleaves.studioagent.data.Appl?>(null) }
+            LaunchedEffect(w.id, w.status) { appl.value = withContext(Dispatchers.IO) { dao.applsNow().lastOrNull { w.id in Engine.workIds(it) } } }
+            appl.value?.let { a -> TextButton(onClick = { nav.navigate("appl/${a.id}") }) { Text("Open the application it is part of") } }
+        }
         Explain("What do these mean?", "Idea: not started. In progress: still making it. Finished: done, not photographed yet. Ready to send: has its picture and details and can go to calls. Out on a call, Shown and Sold are set by the app when they happen.")
         // The rest only matters once a piece is heading out, so it stays folded until then.
         Expand("Size, year, medium, series", startOpen = w.widthIn <= 0 && w.status in setOf("finished", "documented")) {

@@ -341,7 +341,6 @@ object Engine {
         return "At your real pace (about ${"%.1f".format(recent)} hours a week, ${"%.1f".format(perPiece.average())} a piece): about $weeks weekend" + (if (weeks == 1) "" else "s") + " to reach $target. A forecast, not a deadline."
     }
 
-    /** What to do first on a piece: its next open small step, or the line left at the end of the last session. */
     /**
      * A plain answer to a question about the art world or the app. The writing help answers briefly and honestly;
      * without it, the closest of the app's own plain answers.
@@ -424,6 +423,7 @@ object Engine {
         } catch (e: Exception) { plain }
     }
 
+    /** What to do first on a piece: its next open small step, or the line left at the end of the last session. */
     fun firstStep(a: Artwork): String = Texts.firstOpenStep(a.steps).ifBlank { a.nextStep }
 
     /** Starts a session straight away with sensible choices, so starting is one tap. */

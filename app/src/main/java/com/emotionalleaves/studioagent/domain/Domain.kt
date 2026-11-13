@@ -458,6 +458,9 @@ object Texts {
     /** A quick check that an address could be an email: something@somewhere.tld, no spaces. */
     fun looksLikeEmail(e: String): Boolean = Regex("^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$").matches(e.trim())
 
+    /** 850 KB, 1.4 MB: a file size the way people read it. */
+    fun fileSize(bytes: Long): String = if (bytes >= 1_000_000) "%.1f MB".format(bytes / 1_000_000.0) else "${(bytes / 1000).coerceAtLeast(1)} KB"
+
     /** "1 file", "3 files": a count with the right form of the word. */
     fun count(n: Int, one: String, many: String = one + "s"): String = "$n " + if (n == 1) one else many
 

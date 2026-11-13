@@ -153,7 +153,7 @@ fun Records(nav: NavController) {
                 scope.io {
                     dao.put(Ledger(kind = "sale", amount = price, date = now(), note = w?.title.orEmpty() + (if (who.isNotBlank()) ", to $who" else ""), artworkId = w?.id ?: 0))
                     if (pct > 0) dao.put(Ledger(kind = "commission", amount = -price * pct / 100, date = now(), note = "Commission on ${w?.title.orEmpty()}", artworkId = w?.id ?: 0))
-                    if (w != null) dao.put(if (w.editionSize > 1) w.copy(editionUsed = w.editionUsed + 1) else w.copy(status = "sold", location = "Sold"))
+                    if (w != null) dao.put(if (w.editionSize > 1) w.copy(editionUsed = w.editionUsed + 1).let { x -> if (x.editionUsed >= x.editionSize) x.copy(status = "sold", location = "Edition sold out") else x } else w.copy(status = "sold", location = "Sold"))
                     status = "Sale recorded. You keep ${money(price * (1 - pct / 100))}."
                 }
             }) { Text("Record sale") }
@@ -169,6 +169,14 @@ fun Records(nav: NavController) {
                     withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
                 }
             }) { Text("Make the bill of sale") }
+            // A certificate usually goes to the buyer with the work.
+            OutlinedButton(onClick = {
+                scope.io({ status = it }) {
+                    val w = dao.artworksNow().firstOrNull { it.id == id } ?: return@io
+                    val f = com.emotionalleaves.studioagent.work.Papers.certificate(ctx, st, w, w.editionUsed.coerceAtLeast(1))
+                    withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
+                }
+            }) { Text("Make its certificate of authenticity") }
         }
 
         }

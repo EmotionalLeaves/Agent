@@ -233,7 +233,7 @@ object Papers {
         pdf.space(10f)
         pdf.rule(dark = true)
         pdf.amount(caption(pdf, a), money(s, price))
-        pdf.text(inventoryNo(s, a), 8.5f, grey = true)
+        pdf.text(inventoryNo(s, a) + (if (a.editionSize > 0 && a.editionUsed > 0) ", print ${a.editionUsed} of ${a.editionSize}" else ""), 8.5f, grey = true)
         pdf.rule()
         pdf.amount("Total", money(s, price), 12f, Pdf.Face.BOLD)
         pdf.space(6f)

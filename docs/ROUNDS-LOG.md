@@ -122,3 +122,13 @@ One real change per round. Pushed and built every ten rounds.
 118. Applications come first in Waiting for your yes, because they have deadlines.
 119. A test for how drafts are named.
 120. This week says how many calls fit and that a Yes or No takes a minute.
+121. Each series shows its name and progress; renaming, notes, target and delete fold under "Change this series".
+122. Code tidy: a doc comment that had been separated from its function is back in place, and no other comment is orphaned.
+123. Stage 3 of an application is called "Checks before sending".
+124. Pack file sizes read as people read them: "850 KB", "1.4 MB".
+125. The pack shows how many files and their total size.
+126. A call you already said yes to has an "Open the application" button instead of nothing.
+127. A piece that is out on a call links to that application.
+128. Selling the last print of an edition marks the piece sold out.
+129. A bill of sale for a print names which print it is ("print 3 of 10").
+130. After recording a sale, the certificate of authenticity for the buyer is one tap away, numbered for the print sold.
