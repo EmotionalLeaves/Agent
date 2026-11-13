@@ -135,6 +135,12 @@ fun Works(nav: NavController) {
                 OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Add from my files") }
             }
             Status(importStatus)
+            // Where the work is right now: pieces out at shows, by place, so nothing is forgotten on a wall.
+            val out = works.filter { it.status in setOf("shown", "pending") && it.location.isNotBlank() && it.location != "Studio" }.groupBy { it.location }
+            if (out.isNotEmpty()) Panel {
+                Text("Out of the studio", fontWeight = FontWeight.SemiBold)
+                out.forEach { (place, list) -> Small("$place: " + list.joinToString(", ") { it.title.ifBlank { "Untitled" } }) }
+            }
             // Finished pieces with pictures are one tap from going out: all of them at once.
             val almost = works.filter { it.status == "finished" && it.imagePath.isNotBlank() }
             if (almost.isNotEmpty()) Panel {

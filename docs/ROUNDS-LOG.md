@@ -365,3 +365,4 @@ One real change per round. Pushed and built every ten rounds.
 359. Settings, Focus and calm: Calm Today shows only the next step and Start on Today, for days when anything more is too much; everything else waits in the tabs.
 360. Calm Today can be switched from Today's own menu (the three dots on the step), in one tap either way.
 361. An application names any chosen photo of physical work that looks dark, washed out, glary or soft, while there is still time to reshoot; a better photo often changes the result more than anything else.
+362. Studio shows where work is right now: pieces out at shows grouped by venue, so nothing is forgotten on a wall; pieces in a show of your own carry that venue as their location.

@@ -472,7 +472,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                     Small(if (chosen.isEmpty()) "Choose the pieces for this show:" else "Add a piece to the show:")
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         more.forEach { w -> FilterChip(selected = false, onClick = { scope.io {
-                            dao.put(loaded.copy(workIds = (Engine.workIds(loaded) + w.id).joinToString(","))); dao.put(w.copy(status = "shown"))
+                            dao.put(loaded.copy(workIds = (Engine.workIds(loaded) + w.id).joinToString(","))); dao.put(w.copy(status = "shown", location = o.venue.ifBlank { w.location }))
                         } }, label = { Text(w.title.ifBlank { "Untitled #${w.id}" }) }) }
                     }
                 }
