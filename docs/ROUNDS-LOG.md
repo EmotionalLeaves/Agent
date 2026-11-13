@@ -275,3 +275,8 @@ One real change per round. Pushed and built every ten rounds.
 268. The map finder is checked live in CI (a real town, real places), and its reading of map data is tested.
 269. Calls, Applied is now a board: shows you got into, applications to finish, ones waiting to hear, and finished ones folded away, each with a five-step track (chosen, sent, heard back, shown, home again) and a one-line summary at the top.
 270. The live check now tries fifteen more listing sites (robots rules, how many calls, how many read as open calls), to pick which to add next.
+271. Weekends with nothing pressing suggest one real place from the map to go and look at; on its page, "I went and looked" logs the visit and "Not this weekend" moves it on.
+272. New: "See them as a juror will". The chosen works one at a time, full screen on a dark wall, with only their label, as a jury meets them.
+273. In that view the order can be set (Move earlier, Move later, Make this one first); the numbered files, image list and covering email follow it.
+274. Four more listing sites are read every day, chosen because the live check read them cleanly: CaFÉ (CallForEntry, where most US juried shows take entries), Art Deadline, ArtConnect and ArtRabbit. That doubles where calls come from, to eight.
+275. New listing sites reach existing installs on their own, and a site you removed is never put back.

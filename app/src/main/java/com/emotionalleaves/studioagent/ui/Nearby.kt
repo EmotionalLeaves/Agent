@@ -69,7 +69,7 @@ fun Nearby(nav: NavController) {
         Field("Town or city", town)
         Choice("How far", listOf("10", "25", "50"), reach, names = { distanceWords(it.toDouble()) }) { reach = it }
         Button(enabled = !busy && town.value.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = {
-            busy = true; status = "Looking on the map…"
+            busy = true; status = "Looking on the map… this can take up to a minute."
             scope.io({ status = it; busy = false }) {
                 val at = Places.locate(town.value.trim()) ?: throw Exception("That town was not found on the map. Try adding the state, like \"Springfield, Illinois\".")
                 val list = Places.near(at.first, at.second, reach.toInt())

@@ -963,6 +963,13 @@ object Engine {
                 val t = dao.oppsNow().firstOrNull { it.id == a.oppId }?.title.orEmpty().ifBlank { "an entry" }
                 return NextStep("Heard back from $t?", "Six weeks since you sent it. If a result came, one tap records it. If not, there is nothing to do; this stops asking after three months.", "appl/${a.id}")
             }
+        // A weekend with nothing pressing: one real place near you to go and look at. Looking is the whole step.
+        if (today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY)
+            dao.contactsNow().filter { it.status == "research" && it.revisitAt < now && it.kind != "subscriber" && it.notes.contains("OpenStreetMap") }
+                .maxByOrNull { it.createdAt }?.let { c ->
+                    val what = c.notes.substringBefore(".").ifBlank { "A place near you" }
+                    return NextStep("Go and look at ${c.venue}", "$what. Look at the walls, pick up a card, ask who books shows if it feels easy. That is the whole step.", "contact/${c.id}")
+                }
         // Calls that fit, once a week at most, and only when you have not looked already.
         if (now - st.lastCallsLook > 6 * DAY) {
             val fit = shortlist(dao.oppsNow(), profile(), now, stretchOk(now), st.shortlistSize)
@@ -979,13 +986,23 @@ object Engine {
         "Artwork Archive" to "https://www.artworkarchive.com/call-for-entry",
         "ArtJobs" to "https://www.artjobs.com/open-calls",
         "Artshow" to "https://www.artshow.com/juriedshows/index.html",
+        // Added after the live check read them cleanly: CaFÉ is where most US juried shows take entries.
+        "CaFÉ (CallForEntry)" to "https://artist.callforentry.org/festivals.php",
+        "Art Deadline" to "https://artdeadline.com/",
+        "ArtConnect" to "https://www.artconnect.com/opportunities",
+        "ArtRabbit" to "https://www.artrabbit.com/artist-opportunities",
     )
 
-    /** On a new install the listing sites are already there, so calls arrive with nothing to set up. */
+    /**
+     * The listing sites are already there, so calls arrive with nothing to set up. Sites added in a later version
+     * arrive on their own too; one you removed is never put back.
+     */
     suspend fun seedSources() {
-        if (st.sourcesSeeded) return
+        val seeded = st.seededUrls.split("\n").filter { it.isNotBlank() }.toMutableSet()
+        if (seeded.isEmpty() && st.sourcesSeeded) seeded += starterSources.take(4).map { it.second }
         val have = dao.sourcesNow().map { it.url }.toSet()
-        starterSources.filter { it.second !in have }.forEach { (name, url) -> dao.put(com.emotionalleaves.studioagent.data.Source(name = name, kind = "url", url = url)) }
+        starterSources.filter { it.second !in have && it.second !in seeded }.forEach { (name, url) -> dao.put(com.emotionalleaves.studioagent.data.Source(name = name, kind = "url", url = url)) }
+        st.seededUrls = (seeded + starterSources.map { it.second }).joinToString("\n")
         st.sourcesSeeded = true
     }
 

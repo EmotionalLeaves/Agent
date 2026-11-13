@@ -220,6 +220,11 @@ fun ContactScreen(nav: NavController, id: Long) {
         Field("Their submission instructions", c.submissionNotes, { save(c.copy(submissionNotes = it)) }, lines = 2)
         Field("Notes (what they show, who you met, openings you went to)", c.notes, { save(c.copy(notes = it)) }, lines = 3)
         }
+        // A visit is real progress: log it in one tap, and the weekend suggestion moves on to the next place.
+        if (c.status == "research") Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { save(c.copy(notes = (c.notes + "\nVisited on ${fmtDate(now())}.").trim(), revisitAt = now() + 120 * DAY)) }) { Text("I went and looked") }
+            TextButton(onClick = { save(c.copy(revisitAt = now() + 21 * DAY)) }) { Text("Not this weekend") }
+        }
         // Their site is the usual next look, so it stays outside the folded details.
         if (c.website.isNotBlank()) TextButton(onClick = { Share.open(ctx, c.website.let { if (it.startsWith("http")) it else "https://$it" }) }) { Text("Open their site") }
         SavedLine()

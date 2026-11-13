@@ -125,7 +125,7 @@ class PartsTest {
         ctx
         val s = G.settings
         s.firstName = "Jade"; s.lastName = "Leaves"; s.email = "jade@example.com"; s.city = "Austin"
-        s.freeAi = false; s.aiKey = ""; s.useCalendar = false; s.sourcesSeeded = true
+        s.freeAi = false; s.aiKey = ""; s.useCalendar = false; s.sourcesSeeded = true; s.seededUrls = Engine.starterSources.joinToString("\n") { it.second }
         val server = MockWebServer()
         server.dispatcher = object : okhttp3.mockwebserver.Dispatcher() {
             override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest): MockResponse = when (request.path) {

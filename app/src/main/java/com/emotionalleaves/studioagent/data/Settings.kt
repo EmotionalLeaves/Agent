@@ -152,6 +152,8 @@ class Settings(ctx: Context) {
     var ghUploaded by S("ghUploaded")
     /** Listing links already opened and turned down (closed, or not a call), newest last, so each day reaches new ones. */
     var seenLinks by S("seenLinks")
+    /** Listing sites the app has put in at some point, so one you removed is not added back. */
+    var seededUrls by S("seededUrls")
     var focusWork by L("focusWork", 0)
     var keepAwake by B("keepAwake", true)
     var lastReviewWeek by S("lastReviewWeek")

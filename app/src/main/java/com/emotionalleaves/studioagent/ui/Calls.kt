@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.semantics.contentDescription
@@ -512,6 +514,8 @@ fun ApplScreen(nav: NavController, id: Long) {
                 }, label = { Text(w.title.ifBlank { "Untitled #${w.id}" }) })
             }
         }
+        // Jurors see the works one at a time, in order; the order is part of the application.
+        if (chosenIds.size > 1) OutlinedButton(onClick = { nav.navigate("jury/${a.id}") }, modifier = Modifier.fillMaxWidth()) { Text("See them as a juror will, and set the order") }
         StageHead(2, "Statement and fit", a.statement.isNotBlank() && a.themeText.isNotBlank())
         Field((if (o.statementLimit > 0) "Limit ${o.statementLimit} words. " else "") + "Edit only if this call needs it", a.statement, { t ->
             val chosen = works.filter { it.id in chosenIds }.sortedBy { chosenIds.indexOf(it.id) }
@@ -802,7 +806,7 @@ fun Sources(nav: NavController) {
     var status by remember { mutableStateOf(if (st.lastDaily > 0) "Last daily check ${fmtDate(st.lastDaily)}: ${st.lastDailyStatus}" else "") }
     var busy by remember { mutableStateOf(false) }
     Screen("Where calls come from", nav) {
-        Intro("sources", "Four big listing sites are already here and are read once a day. You can add more: a listing page, or the sender of email alerts you get.")
+        Intro("sources", "Eight big listing sites are already here and are read once a day. You can add more: a listing page, or the sender of email alerts you get.")
         LaunchedEffect(Unit) { Engine.seedSources() }
         if (sources.isEmpty()) Empty("No sources yet. Calls you share or paste still arrive without one.")
         Explain("What can I add here?", "Email source: the sender's address or domain (for example callforentry.org). Needs email set up in You, Settings, Email. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
@@ -914,5 +918,51 @@ fun StageTrack(stage: Int, stopped: Boolean = false) {
             }
         }
         Text(names[stage.coerceIn(0, 4)], style = MaterialTheme.typography.labelMedium, color = if (stopped) cs.onSurfaceVariant else cs.primary, modifier = Modifier.padding(top = 3.dp))
+    }
+}
+
+/**
+ * The works as a juror meets them: one at a time, full screen, with only the label beside them.
+ * Order matters (open strong, close strong), so each can be moved earlier or later right here.
+ */
+@Composable
+fun JuryView(nav: NavController, id: Long) {
+    val scope = rememberCoroutineScope()
+    val appls by dao.appls().collectAsState(emptyList())
+    val opps by dao.opps().collectAsState(emptyList())
+    val works by dao.artworks().collectAsState(emptyList())
+    val a = appls.firstOrNull { it.id == id }
+    if (a == null) { Screen("As a juror sees it", nav) { Loading() }; return }
+    val o = opps.firstOrNull { it.id == a.oppId }
+    val ids = Engine.workIds(a)
+    val chosen = ids.mapNotNull { i -> works.firstOrNull { it.id == i } }
+    val pager = androidx.compose.foundation.pager.rememberPagerState { chosen.size }
+    fun move(from: Int, to: Int) {
+        if (to !in ids.indices) return
+        val next = ids.toMutableList().also { val x = it.removeAt(from); it.add(to, x) }
+        val byId = works.associateBy { it.id }
+        val auto = Engine.applicationEmail(o ?: return, ids.mapNotNull { byId[it] }, a.statement)
+        val body = if (a.emailBody.isBlank() || a.emailBody == auto) Engine.applicationEmail(o, next.mapNotNull { byId[it] }, a.statement) else a.emailBody
+        // The pack is numbered in this order, so it is made again.
+        scope.io { dao.put(a.copy(workIds = next.joinToString(","), packDir = "", emailBody = body)) }
+        scope.launch { pager.scrollToPage(to) }
+    }
+    Screen("As a juror sees it", nav) {
+        Small("Jurors often look at each image for only a few seconds. Put the strongest first, and end on one that stays with them.")
+        androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.fillMaxWidth().height(420.dp)) { i ->
+            val w = chosen[i]
+            Column(Modifier.fillMaxSize().clip(RoundedCornerShape(3.dp)).background(Color(0xFF1C1C1C)).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (w.imagePath.isNotBlank()) PathImage(w.imagePath, Modifier.fillMaxWidth().weight(1f), 1400, androidx.compose.ui.layout.ContentScale.Fit, "Image ${i + 1}: " + w.title)
+                Text("${i + 1}. " + Papers.caption(w), color = Color(0xFFEDEDED), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        val i = pager.currentPage.coerceIn(0, (chosen.size - 1).coerceAtLeast(0))
+        Text("Image ${i + 1} of ${chosen.size}", style = MaterialTheme.typography.titleMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(enabled = i > 0, onClick = { move(i, i - 1) }) { Text("Move earlier") }
+            OutlinedButton(enabled = i < chosen.lastIndex, onClick = { move(i, i + 1) }) { Text("Move later") }
+        }
+        if (i > 0) TextButton(onClick = { move(i, 0) }) { Text("Make this one first") }
+        Small("The image list, file names and covering email all follow this order.")
     }
 }
