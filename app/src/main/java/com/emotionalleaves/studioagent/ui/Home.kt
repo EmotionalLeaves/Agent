@@ -170,6 +170,17 @@ fun Home(nav: NavController) {
             }
             if (openNew) whatsNew.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
         }
+        // What the app did while you were away, in a few lines: the work done for you, seen without hunting.
+        val tickA by st.changed.collectAsState()
+        val fresh = remember(tickA) { st.activityLines().filter { it.first > st.activitySeen && !it.second.startsWith("Daily check finished") && !it.second.startsWith("Checked your inbox") } }
+        if (st.onboarded && fresh.isNotEmpty() && !st.calmToday) Panel {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("While you were away", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                TextButton(onClick = { st.activitySeen = fresh.maxOf { it.first } }) { Text("Got it") }
+            }
+            fresh.take(3).forEach { Small("• " + it.second) }
+            if (fresh.size > 3) Small("and ${fresh.size - 3} more, in Records.")
+        }
         // The one next step, pinned to the wall.
         val n = next
         WallLabel(onClick = { n?.let { if (it.route != "home") nav.navigate(it.route) } }) {

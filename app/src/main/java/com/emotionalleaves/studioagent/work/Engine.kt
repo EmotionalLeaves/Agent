@@ -1693,9 +1693,9 @@ object Engine {
         // The quick steps run before the long read of the listing sites, so a slow site can never crowd them out.
         step("email") { withContext(Dispatchers.IO) { checkMail(ctx) } }
         step("outreach") { withContext(Dispatchers.IO) { sendOutreach(now) } }
-        step("venues") { researchVenues() }
-        step("openings") { findOpenings() }
-        step("sources") { scanSources(now) }
+        step("venues") { researchVenues().let { if (it > 0) st.log("Read ${Texts.count(it, "venue")}'s own site for how they take work.") } }
+        step("openings") { findOpenings().let { if (it > 0) st.log("Found ${Texts.count(it, "opening")} at places you know; on your calendar.") } }
+        step("sources") { scanSources(now).let { if (it > 0) st.log("Found ${Texts.count(it, "new call")} on the listing sites.") } }
         // A few towns found on the map each day, so calls can say how far away they are.
         step("towns") { locateTowns() }
         step("rescore") { rescore() }
