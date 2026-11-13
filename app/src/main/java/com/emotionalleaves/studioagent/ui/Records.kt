@@ -532,6 +532,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 SText("Website or portfolio page", st.website) { st.website = it }
                 SText("City", st.city) { st.city = it }
                 SText("University or college you work or study at (optional: its own calls are kept for you)", st.school) { st.school = it }
+                SText("Your day job, in a few words (optional: \"cook in the dining hall\")", st.job) { st.job = it }
                 SText("State or region", st.region) { st.region = it }
                 SText("Born (optional, for your CV, like \"b. 1998, Chicago\")", st.born) { st.born = it }
                 Section("Your work")

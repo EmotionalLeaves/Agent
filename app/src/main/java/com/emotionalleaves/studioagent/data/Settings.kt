@@ -60,6 +60,8 @@ class Settings(ctx: Context) {
     var lastName by S("lastName")
     var email by S("email")
     var phone by S("phone")
+    /** Your day job in a few words ("cook in the dining hall"), for the few letters where it helps. */
+    var job by S("job")
     var website by S("website")
     var city by S("city")
     /** A university or college you work or study at: its campus calls are open to you, so they are kept. */

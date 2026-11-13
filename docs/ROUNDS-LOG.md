@@ -642,3 +642,4 @@ One real change per round. Pushed and built every ten rounds.
 635. Business cards, ten to a sheet, from Market day: the standard 3.5 by 2 inches with cut marks, one of your pieces small on the left, your name and what you make, your website, email and phone, and a code to scan. For openings, markets and anyone who asks.
 636. Business cards stay in one place, Market day, keeping to one way into each thing (a second button in Statement, bio and CV was taken back out).
 637. Market day tidied: the things to print (price tags, postcards, the table sign, business cards, the zine) had piled up inside "What you are bringing". They now have their own folded line, "Things to print".
+638. The email offering a staff class no longer assumes your job: About you takes your day job in a few words (optional), and the email says "I work here as a cook in the dining hall" only if you have written it.
