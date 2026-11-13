@@ -907,4 +907,15 @@ class PartsTest {
         assertEquals("Leaves_Zine.pdf", f.name)
         assertTrue(File(docs, "Leaves_Zine_p1.png").length() > 1000 && File(docs, "Leaves_Zine_p2.png").length() > 1000)
     }
+
+    @Test fun businessCardsTenToASheet() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"; G.settings.website = "jadeleaves.art"; G.settings.email = "jade@example.com"
+        val img = picture("card2.jpg")
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
+        val f = try { com.emotionalleaves.studioagent.work.Papers.businessCards(ctx, G.settings, Artwork(id = 1, title = "Piece", imagePath = img.absolutePath)) } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
+        assertEquals("Leaves_Business_cards.pdf", f.name)
+        assertTrue(File(docs, "Leaves_Business_cards_p1.png").length() > 1000)
+    }
 }

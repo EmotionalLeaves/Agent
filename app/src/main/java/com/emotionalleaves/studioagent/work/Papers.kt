@@ -347,6 +347,36 @@ object Papers {
     }
 
     /**
+     * Ten business cards to a sheet, the standard 3.5 by 2 inches, with cut marks: one of your pieces small on the left,
+     * your name, what you make, your website and email, and a code to scan. For openings, markets and anyone who asks.
+     */
+    fun businessCards(ctx: Context, s: Settings, work: Artwork?): File {
+        val pdf = Pdf(ctx, "", "", 612, 792, 54)
+        pdf.newPage(); val c = pdf.canvas()
+        val cw = 252f; val ch = 144f; val left0 = 54f; val top0 = 36f
+        val guide = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFBDBEBA.toInt(); strokeWidth = 0.5f }
+        val thumb = work?.imagePath?.takeIf { it.isNotBlank() }?.let { ImageTools.decode(it, 500) }
+        val qr = s.website.takeIf { it.isNotBlank() }?.let { com.emotionalleaves.studioagent.media.Qr.bitmap(if (it.startsWith("http")) it else "https://$it", 200) }
+        val what = s.mediums.split(",").firstOrNull { it.isNotBlank() }?.trim()?.replaceFirstChar { it.uppercase() }?.let { "Artist, $it" } ?: "Artist"
+        for (i in 0 until 10) {
+            val x = left0 + (i % 2) * cw; val y = top0 + (i / 2) * ch
+            listOf(x to y, x + cw to y, x to y + ch, x + cw to y + ch).forEach { (px, py) -> c.drawLine(px - 6f, py, px + 6f, py, guide); c.drawLine(px, py - 6f, px, py + 6f, guide) }
+            var tx = x + 14f
+            thumb?.let { b ->
+                val side = ch - 28f; val k = minOf(side / b.width, side / b.height); val dw = b.width * k; val dh = b.height * k
+                c.drawBitmap(b, null, android.graphics.RectF(x + 14f, y + (ch - dh) / 2, x + 14f + dw, y + (ch + dh) / 2), Paint(Paint.FILTER_BITMAP_FLAG)); tx = x + 14f + dw + 12f
+            }
+            val textW = (x + cw - 14f - (if (qr != null) 52f else 0f) - tx).toInt()
+            var ty = y + 22f
+            fun put(t: String, size: Float, face: Pdf.Face = Pdf.Face.BODY, grey: Boolean = false) { val l = pdf.layout(t, textW, size, face, grey); c.save(); c.translate(tx, ty); l.draw(c); c.restore(); ty += l.height + 3f }
+            put(name(s), 12f, Pdf.Face.BOLD); put(what, 8.5f, grey = true); ty += 8f
+            listOf(s.website, s.email, s.phone).filter { it.isNotBlank() }.forEach { put(it, 8f) }
+            qr?.let { q -> val side = 44f; c.drawBitmap(q, null, android.graphics.RectF(x + cw - 14f - side, y + ch - 14f - side, x + cw - 14f, y + ch - 14f), Paint()) }
+        }
+        return pdf.save(out(ctx, docName(s, "Business_cards")))
+    }
+
+    /**
      * A sign for the market table: your name big enough to read from the aisle, what is for sale, how people can pay,
      * and codes to scan for paying (your payment link) and for your website.
      */
