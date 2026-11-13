@@ -890,5 +890,6 @@ class PartsTest {
         assertEquals("outreach", E.taskRoute("Follow up with Gallery 4"))
         assertEquals("letters", E.taskRoute("Email the library about the wall"))
         assertEquals("records", E.taskRoute("Call the framer"))
+        assertEquals("people", E.taskRoute("Go again: Drop-in life drawing session"))
     }
 }

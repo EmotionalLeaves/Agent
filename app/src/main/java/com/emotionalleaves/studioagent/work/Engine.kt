@@ -1195,6 +1195,7 @@ object Engine {
         return when {
             t.startsWith("follow up with") -> "outreach"
             t.startsWith("teach:") -> "teach"
+            t.startsWith("go again:") -> "people"
             t.startsWith("buy ") || t.contains("supplies") -> "supplies"
             t.startsWith("email ") || t.startsWith("write to") || t.startsWith("reply ") -> "letters"
             t.startsWith("photograph") -> "photoshoot"
