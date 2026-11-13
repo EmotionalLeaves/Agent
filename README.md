@@ -36,17 +36,17 @@ Four tabs, the same every time. Each thing has one place.
 
 On You, **Everything the app can do** lists every tool, grouped by what you want to get done:
 
-- **Making the work**: sessions, Foundations (twelve weeks of basics, six on building a body of work, and a master to study from a museum's open collection), Fresh eyes (flip, no color, squint, values, thirds, colors, compare with the photo before, questions to look again with), planning a series, photographing every piece in one go, supplies.
-- **Showing it**: open calls with distance and your themes in the ranking, an entry prepared ahead for strong free calls (never sent without you), entries in 15-minute evenings, places near you, venue history, studio visits, group shows, announcements for local listings, shipping, labels, slides for a talk, an online show in one file.
-- **Selling it**: prices and raising them, commissions from quote to hand-over, selling at an opening, Market day with price tags, buyers thanked and kept in touch with.
+- **Making the work**: sessions (with a studio friend to text when you start), Empty your head (everything at once, sorted into jobs, things to buy and ideas), Foundations (twelve weeks of basics, six on building a body of work, and a master to study from a museum's open collection), Fresh eyes (flip, no color, squint, values, thirds, colors, compare with the photo before, questions to look again with), planning a series, photographing every piece in one go, supplies (with what they cost, into Records).
+- **Showing it**: open calls with distance and your themes in the ranking, past answers offered again on new entry forms, no's that count toward the year's sends, calls you entered remembered for next year, packing for drop-off day, Your people (life drawing, sketch groups, art leagues), an entry prepared ahead for strong free calls (never sent without you), entries in 15-minute evenings, places near you, venue history, studio visits, group shows, announcements for local listings, shipping, labels, slides for a talk, an online show in one file.
+- **Selling it**: prices and raising them, commissions from quote to hand-over, selling at an opening, Market day with price tags and postcards to print, teaching a beginner class (outline, supplies, fee, the email, and a CV line after), buyers thanked and kept in touch with.
 - **Being seen**: what jurors find when they search your name. Social media help is off unless you turn it on.
 - **Money and records**: receipts by photo, art trips by the mile, the year month by month and in one picture, insurance values, a tax page.
 
-Settings, Hours and calm has days off from the app, Calm Today, Wi-Fi-only checks, and the social media switch.
+Settings, Hours and calm has days off from the app, Calm Today, Wi-Fi-only checks, and the social media switch. In the menu on Today's step: "It is all too much" (three quiet days: one five-minute step, no notifications), "Remind me this evening", and "Empty my head first". Your week takes an off day or an extra shift for just this week. Firsts (first piece, first yes, first sale) are noticed once, on the day.
 
 ## Quick ways in
 
-- Long-press the icon: Start now, Calls, Park an idea.
+- Long-press the icon: Start now, Calls, Park an idea, Empty your head.
 - The Start now widget and quick-settings tile start a session in one tap. The Next step widget shows today's step on the home screen.
 - Share a link, text or flyer into the app to add a call, or photograph a flyer from Calls: its words are read on the phone (offline, no key). Share several pictures from the gallery to add them as pieces.
 
