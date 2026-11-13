@@ -456,9 +456,11 @@ fun PlanShow(nav: NavController, contactId: Long) {
     val ready = works.filter { Engine.available(it) }
     Screen("Plan the show", nav) {
         Intro("planshow", "A show of your own at ${c.venue.ifBlank { "this venue" }}. Give it a name and an opening date; every step is dated back from there and lands on Today when it is due.")
-        Field("Show title (for example: Before the First Shift)", title)
-        DateField("Opening day", opening) { opening = it }
-        Count("How long it hangs", weeks, 1, 16, 1, "weeks") { weeks = it }
+        var oneDay by rememberSaveable { mutableStateOf(false) }
+        Choice("What kind", listOf("show", "day"), if (oneDay) "day" else "show", names = { if (it == "show") "A show that hangs for weeks" else "One day: open studio or pop-up" }) { oneDay = it == "day" }
+        Field("Title (for example: Before the First Shift)", title)
+        DateField(if (oneDay) "The day" else "Opening day", opening) { opening = it }
+        if (!oneDay) Count("How long it hangs", weeks, 1, 16, 1, "weeks") { weeks = it }
         Section("Which pieces")
         if (ready.isEmpty()) Small("No pieces are marked Ready to send yet. You can plan now and choose them later on the show's page.")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -467,13 +469,13 @@ fun PlanShow(nav: NavController, contactId: Long) {
         val day = try { java.time.LocalDate.parse(opening) } catch (e: Exception) { null }
         if (day != null) {
             Section("The plan")
-            Engine.ownShowSteps(day, weeks).forEach { (t, d) -> Row { Text(fmtDate(Engine.millis(d.atTime(12, 0))), Modifier.width(96.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(t, Modifier.weight(1f)) } }
+            (if (oneDay) Engine.openStudioSteps(day) else Engine.ownShowSteps(day, weeks)).forEach { (t, d) -> Row { Text(fmtDate(Engine.millis(d.atTime(12, 0))), Modifier.width(96.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(t, Modifier.weight(1f)) } }
             if (day.isBefore(java.time.LocalDate.now().plusDays(21))) Small("That is soon. The early steps are already due; do them in order and skip what does not apply.")
         }
         Status(status)
         Button(enabled = title.value.isNotBlank() && day != null, modifier = Modifier.fillMaxWidth(), onClick = {
             scope.io({ status = it }) {
-                val id = Engine.planOwnShow(c, title.value.trim(), day!!, weeks, picked.toList())
+                val id = Engine.planOwnShow(c, title.value.trim(), day!!, weeks, picked.toList(), oneDay)
                 withContext(Dispatchers.Main) { nav.navigate("appl/$id") { popUpTo("outreach") } }
             }
         }) { Text("Make the plan") }

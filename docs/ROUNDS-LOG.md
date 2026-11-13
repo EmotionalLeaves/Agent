@@ -370,3 +370,4 @@ One real change per round. Pushed and built every ten rounds.
 364. A call open only to artists in other states ("open to artists living in Ohio", "California residents only") is held back as "Open only to artists in Ohio" when your state is set; a venue's address alone never counts.
 365. Finding places near you also fills in your state when it is not set, from the map, so state-limited calls are judged correctly.
 366. Today's step for an application close to its deadline names what is still to fix ("Still to fix: statement within 150 words; submission email address known") instead of a general reminder.
+367. Planning a show of your own can be a one-day event instead (an open studio, a pop-up, a table): eight dated steps including inviting your list and coworkers, the sign-up sheet out, and adding the new names after.

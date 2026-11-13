@@ -662,6 +662,18 @@ object Engine {
     fun workIds(a: Appl): List<Long> = a.workIds.split(",").mapNotNull { it.trim().toLongOrNull() }
 
     /** The steps of putting up your own show, counted back from the opening (days before it), then the show and the take-down. */
+    /** A one-day open studio (or a table at a fair, a pop-up): fewer steps, the list invited, the sign-up sheet out. */
+    fun openStudioSteps(day: LocalDate): List<Pair<String, LocalDate>> = listOf(
+        "Choose the works to show and set their prices" to day.minusDays(21),
+        "Tell your email list (and invite friends and coworkers)" to day.minusDays(18),
+        "Print the flyer and put it up where people will see it" to day.minusDays(14),
+        "Print labels, the price list and the sign-up sheet" to day.minusDays(4),
+        "Set up the space and hang the work" to day.minusDays(1),
+        "Go to the opening" to day,
+        "Add the new names from the sign-up sheet to your email list" to day.plusDays(2),
+        "Thank the people who came" to day.plusDays(3)
+    )
+
     fun ownShowSteps(opening: LocalDate, weeks: Int): List<Pair<String, LocalDate>> = listOf(
         "Confirm the dates, wall space and hanging method with the venue in writing" to opening.minusDays(42),
         "Choose the works and the order they hang in" to opening.minusDays(35),
@@ -682,14 +694,15 @@ object Engine {
      * A venue said yes to a show of your own. It becomes a show you got into, like any accepted call,
      * with every step dated back from the opening, so the board, Today and the calendar carry it from here.
      */
-    suspend fun planOwnShow(c: com.emotionalleaves.studioagent.data.Contact, title: String, opening: LocalDate, weeks: Int, workIds: List<Long>): Long {
-        val dates = "${com.emotionalleaves.studioagent.ui.fmtDate(millis(opening.atTime(12, 0)))} to ${com.emotionalleaves.studioagent.ui.fmtDate(millis(opening.plusWeeks(weeks.toLong()).atTime(12, 0)))}"
+    suspend fun planOwnShow(c: com.emotionalleaves.studioagent.data.Contact, title: String, opening: LocalDate, weeks: Int, workIds: List<Long>, oneDay: Boolean = false): Long {
+        val dates = if (oneDay) com.emotionalleaves.studioagent.ui.fmtDate(millis(opening.atTime(12, 0)))
+            else "${com.emotionalleaves.studioagent.ui.fmtDate(millis(opening.atTime(12, 0)))} to ${com.emotionalleaves.studioagent.ui.fmtDate(millis(opening.plusWeeks(weeks.toLong()).atTime(12, 0)))}"
         val oppId = dao.put(Opp(title = title.ifBlank { "Show at ${c.venue}" }, kind = "exhibition", venue = c.venue, city = st.city, email = c.email, url = c.website,
             scope = if (c.kind == "campus") "campus" else "local", exhibitionDates = dates, status = "applied", sourceName = "Your own show", createdAt = System.currentTimeMillis()))
         val now = System.currentTimeMillis()
         val applId = dao.put(Appl(oppId = oppId, workIds = workIds.joinToString(","), status = "accepted", submittedAt = now, method = "email", emailTo = c.email, statement = pickStatement(150),
             proofText = "Agreed with ${c.venue}${if (c.name.isNotBlank()) " (" + c.name + ")" else ""} on ${com.emotionalleaves.studioagent.ui.fmtDate(now)}.", createdAt = now))
-        ownShowSteps(opening, weeks).forEach { (t, d) -> dao.put(Evt(type = "task", title = t, date = millis(d.atTime(if (t.startsWith("Go to")) 18 else 12, 0)), oppId = oppId, applId = applId)) }
+        (if (oneDay) openStudioSteps(opening) else ownShowSteps(opening, weeks)).forEach { (t, d) -> dao.put(Evt(type = "task", title = t, date = millis(d.atTime(if (t.startsWith("Go to")) 18 else 12, 0)), oppId = oppId, applId = applId)) }
         dao.artworksNow().filter { it.id in workIds && available(it) }.forEach { dao.put(it.copy(status = "shown", location = c.venue.ifBlank { it.location })) }
         dao.put(c.copy(status = "interested", notes = (c.notes + "\nShow agreed: $title, $dates.").trim()))
         rememberFriend(c.venue)
