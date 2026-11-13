@@ -48,7 +48,7 @@ import kotlin.random.Random
  */
 @Composable
 fun Easel(
-    title: String, detail: String, piece: Artwork?, dateLine: String, minutes: Int, inSession: Boolean,
+    title: String, detail: String, piece: Artwork?, dateLine: String, minutes: Int, inSession: Boolean, startLabel: String? = null,
     onOpen: () -> Unit, onStart: () -> Unit, onTired: () -> Unit, onSession: () -> Unit, menu: @Composable () -> Unit
 ) {
     val cs = MaterialTheme.colorScheme
@@ -73,9 +73,9 @@ fun Easel(
             Spacer(Modifier.height(10.dp))
             if (inSession) Pill("Back to your session", Modifier.fillMaxWidth(), onSession)
             else Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Pill("Start, $minutes minutes", Modifier.weight(1f), onStart)
+                Pill(startLabel ?: "Start, $minutes minutes", Modifier.weight(1f), onStart)
                 // The tired-day door, the same size of target but quieter.
-                Box(Modifier.size(56.dp).clip(CircleShape).border(1.5.dp, Color.White.copy(alpha = 0.7f), CircleShape)
+                if (startLabel == null) Box(Modifier.size(56.dp).clip(CircleShape).border(1.5.dp, Color.White.copy(alpha = 0.7f), CircleShape)
                     .clickable(role = Role.Button, onClickLabel = "Just 5 minutes") { onTired() }.semantics { contentDescription = "Tired? Just 5 minutes" },
                     contentAlignment = Alignment.Center) { Text("5", color = Color.White, style = MaterialTheme.typography.titleMedium) }
             }

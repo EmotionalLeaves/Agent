@@ -172,7 +172,7 @@ fun Home(nav: NavController) {
         Easel(
             title = n?.title ?: "Finding your next step", detail = n?.detail.orEmpty(), piece = Engine.heroPiece(works),
             dateLine = "Your next step",
-            minutes = st.defaultSessionMin, inSession = st.sessionStart > 0,
+            minutes = st.defaultSessionMin, inSession = st.sessionStart > 0, startLabel = if (st.onboarded) null else "Take the two-minute tour",
             onOpen = { n?.let { if (it.route != "home") nav.navigate(it.route) } },
             onStart = { if (st.onboarded) go(st.defaultSessionMin, false) else nav.navigate("tour") },
             onTired = { if (st.onboarded) go(5, true) else nav.navigate("tour") },

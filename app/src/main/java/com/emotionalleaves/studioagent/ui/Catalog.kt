@@ -382,26 +382,36 @@ fun WorkDetail(nav: NavController, id: Long) {
                 TextButton(onClick = { st.stuckTold = st.stuckTold + ",w${w.id}"; save(w.copy(status = "idea")) }) { Text("Park it for later") }
             }
         }
-        // The picture comes first, on a white sheet, the way it will be seen.
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(3.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(if (w.imagePath.isNotBlank()) 12.dp else 22.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (w.imagePath.isNotBlank()) {
-                PathImage(w.imagePath, Modifier.fillMaxWidth().height(300.dp), 1000, description = "Picture of " + w.title.ifBlank { "this piece" })
-                // Its wall label, as it would hang in a show.
-                Column(Modifier.padding(top = 4.dp)) {
-                    Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleMedium)
-                    val facts = listOfNotNull(w.year.takeIf { it > 0 }?.toString(), w.medium.ifBlank { null }, if (w.widthIn > 0 && w.heightIn > 0) Texts.dims(w.widthIn, w.heightIn) else null)
-                    if (facts.isNotEmpty()) Small(facts.joinToString(", "))
-                }
+        // The picture comes first, in a viewing room: lit on a deep wall in the app's color, its wall label beneath.
+        val roomF = FloatArray(3); val pc = MaterialTheme.colorScheme.primary
+        androidx.core.graphics.ColorUtils.colorToHSL(android.graphics.Color.rgb((pc.red * 255).toInt(), (pc.green * 255).toInt(), (pc.blue * 255).toInt()), roomF)
+        val room = hsl(roomF[0], 0.22f, 0.13f)
+        if (w.imagePath.isNotBlank()) Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
+            .background(androidx.compose.ui.graphics.Brush.radialGradient(listOf(hsl(roomF[0], 0.18f, 0.30f), room), radius = 900f)).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            PathImage(w.imagePath, Modifier.fillMaxWidth().height(340.dp), 1200, description = "Picture of " + w.title.ifBlank { "this piece" })
+            // Its wall label, as it would hang in a show.
+            Column {
+                Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleLarge, color = androidx.compose.ui.graphics.Color.White)
+                val facts = listOfNotNull(w.year.takeIf { it > 0 }?.toString(), w.medium.ifBlank { null }, if (w.widthIn > 0 && w.heightIn > 0) Texts.dims(w.widthIn, w.heightIn) else null)
+                if (facts.isNotEmpty()) Text(facts.joinToString(", "), style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.75f))
             }
+        } else Box(Modifier.fillMaxWidth().height(220.dp).clip(RoundedCornerShape(24.dp))) {
+            // No picture yet: the canvas, blocked in with color, waiting.
+            ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = w.id, shift = ((w.id * 47) % 90 - 45).toFloat())
+            Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Transparent, 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f))))
+            Column(Modifier.align(Alignment.BottomStart).padding(18.dp)) {
+                Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.headlineMedium, color = androidx.compose.ui.graphics.Color.White)
+                Text("No picture yet. Photograph it, scan it, or bring in the file; everything else can come later.", style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
+            }
+        }
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (w.imagePath.isNotBlank()) { }
             else {
                 // A piece started from a parked picture keeps that picture in view while it is being made.
                 w.extraImages.split("|").firstOrNull { it.isNotBlank() && File(it).exists() }?.let { ref ->
                     PathImage(ref, Modifier.fillMaxWidth().height(180.dp), 700, description = "Your reference picture")
                     Small("Your reference. The piece's own picture goes here once it is made.")
                 }
-                Text("No picture yet", style = MaterialTheme.typography.titleLarge)
-                Small("Photograph the work, or bring in the file. Everything else can come later.")
             }
             if (w.imagePath.isBlank()) Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }, modifier = Modifier.fillMaxWidth()) { Text("Take a photo") }
