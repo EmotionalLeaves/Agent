@@ -255,7 +255,7 @@ fun Works(nav: NavController) {
                     }
                     // The series as one post: each piece in the feed shape, in order, with the series' own words.
                     val postable = works.filter { it.seriesId == s.id && it.imagePath.isNotBlank() && it.status !in setOf("idea", "in_progress") }
-                    if (postable.size >= 2) TextButton(onClick = { scope.io {
+                    if (st.socialOn && postable.size >= 2) TextButton(onClick = { scope.io {
                         val dir = File(ImageTools.exportDir(ctx), "series_post").apply { deleteRecursively(); mkdirs() }
                         com.emotionalleaves.studioagent.media.Post.watermark = st.watermark
                         val files = postable.take(10).mapIndexedNotNull { i, w -> com.emotionalleaves.studioagent.media.Post.render(w.imagePath, st.fullName, File(dir, "${i + 1}_" + w.title.filter { it.isLetterOrDigit() }.take(20) + ".jpg")) }
@@ -596,7 +596,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             shots.chunked(3).forEach { row -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { row.forEach { x -> Column(Modifier.weight(1f)) { PathImage(x.photoPath, Modifier.fillMaxWidth().height(96.dp), 400, ContentScale.Crop); Small(fmtDate(x.start)) } }; repeat(3 - row.size) { Spacer(Modifier.weight(1f)) } } }
             mine.filter { it.note.isNotBlank() }.sortedBy { it.start }.takeLast(5).forEach { Small(fmtDate(it.start) + ": " + it.note) }
             // The making, in one picture to post: progress photos in order, and the finished piece last.
-            if (shots.size >= 2) TextButton(onClick = { scope.io({ status = it }) {
+            if (st.socialOn && shots.size >= 2) TextButton(onClick = { scope.io({ status = it }) {
                 val bms = (shots.map { it.photoPath } + listOfNotNull(w.imagePath.takeIf { p -> p.isNotBlank() })).mapNotNull { ImageTools.decode(it, 700) }
                 val f = File(ImageTools.exportDir(ctx), Papers.docName(st, "Process_" + w.title.filter { it.isLetterOrDigit() }.take(24), "jpg"))
                 ImageTools.saveJpeg(com.emotionalleaves.studioagent.media.Post.process(bms, st.fullName), f, 90)
@@ -606,7 +606,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             } }) { Text("Post how it was made") }
         }
         Expand("Pictures and papers") {
-        Toggle("Put a faint © and my name on pictures I post", st.watermark) { st.watermark = it }
+        if (st.socialOn) Toggle("Put a faint © and my name on pictures I post", st.watermark) { st.watermark = it }
         Note("More pictures of this piece: a detail, the back, the piece on a wall. Kept with it and backed up.")
         w.extraImages.split("|").filter { it.isNotBlank() }.let { extras ->
             extras.forEach { path ->
@@ -639,7 +639,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             }) { Text("Export pictures") }
             OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.certificate(ctx, st, w, (w.editionUsed + 1).coerceAtLeast(1)); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Certificate of authenticity") }
             OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, listOf(w))) }) { Text("Ask a print lab for a quote") }
-            OutlinedButton(enabled = w.imagePath.isNotBlank(), onClick = {
+            if (st.socialOn) OutlinedButton(enabled = w.imagePath.isNotBlank(), onClick = {
                 scope.io({ status = it }) {
                     com.emotionalleaves.studioagent.media.Post.watermark = st.watermark
                     val f = com.emotionalleaves.studioagent.media.Post.render(w.imagePath, st.fullName, File(ImageTools.exportDir(ctx), Papers.docName(st, "Post_" + w.title.filter { it.isLetterOrDigit() }.take(24), "jpg")))

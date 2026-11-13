@@ -1196,6 +1196,15 @@ object Drafts {
         return if (line.length <= 150) line else line.take(147).trimEnd() + "..."
     }
 
+    /** The same, without social media: a page of your own and an email address do the job quietly. */
+    val findableQuiet = listOf(
+        "Your name, spelled the same way everywhere (CV, labels, online)",
+        "A page with your name that shows your work (your web page, or a portfolio site)",
+        "Your email address on that page",
+        "Your CV and statement on that page, or ready to send",
+        "Your newest strong pieces on it"
+    )
+
     /** What someone finds when they look you up before choosing your work: the checks, in the order that matters. */
     val findable = listOf(
         "Your name, spelled the same way everywhere (CV, labels, online)",

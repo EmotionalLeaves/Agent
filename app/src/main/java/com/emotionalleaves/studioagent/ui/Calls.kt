@@ -567,7 +567,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                     if (shots.isNotEmpty()) TextButton(onClick = { Share.files(ctx, shots, "image/jpeg") }) { Text("Share them") }
                 }
                 // The show as one post: the room and the work in a grid, and a thank-you to everyone who came.
-                if (shots.size >= 2) TextButton(onClick = { scope.io({ status = it }) {
+                if (st.socialOn && shots.size >= 2) TextButton(onClick = { scope.io({ status = it }) {
                     val bms = shots.takeLast(9).mapNotNull { ImageTools.decode(it.absolutePath, 700) }
                     val f = java.io.File(ImageTools.exportDir(ctx), Papers.docName(st, "Show_post_$id", "jpg"))
                     ImageTools.saveJpeg(com.emotionalleaves.studioagent.media.Post.process(bms, st.fullName), f, 90)

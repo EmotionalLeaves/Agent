@@ -226,6 +226,8 @@ class Settings(ctx: Context) {
     var noStreakDay by S("noStreakDay")
     /** Your supplies, "name|1" per line when running low. */
     var supplies by S("supplies")
+    /** Posting to social media is off unless you turn it on: no posting suggestions, no post buttons. */
+    var socialOn by B("socialOn", false)
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

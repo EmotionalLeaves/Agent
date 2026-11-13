@@ -39,7 +39,7 @@ val toolGroups: List<Pair<String, List<Triple<String, String, String>>>> = listO
         Triple("At the opening", "A code to scan, and selling a piece tonight", "opening")
     ),
     "Being seen" to listOf(
-        Triple("When someone looks you up", "What jurors find online, and a profile line", "findable"),
+        Triple("When someone looks you up", "What jurors find when they search your name", "findable"),
         Triple("Studio news", "A short update to your email list", "update"),
         Triple("Is this offer real?", "Check a message for the usual schemes", "check")
     ),

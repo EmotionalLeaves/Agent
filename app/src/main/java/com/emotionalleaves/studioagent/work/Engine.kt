@@ -1565,7 +1565,7 @@ object Engine {
                     return NextStep("Go and look at ${c.venue}", "$what. Look at the walls, pick up a card, ask who books shows if it feels easy. That is the whole step.", "contact/${c.id}")
                 }
         // Once a week, on a Sunday: put one finished piece where people who look you up will find it.
-        if (today.dayOfWeek == DayOfWeek.SUNDAY && now - st.lastPosted > 6 * DAY) {
+        if (st.socialOn && today.dayOfWeek == DayOfWeek.SUNDAY && now - st.lastPosted > 6 * DAY) {
             val posted = st.postedIds.split(",").toSet()
             // Every third week, something other than a finished piece: how one was made, then a whole series. Variety keeps a feed alive.
             val week = (now / (7 * DAY)).toInt() % 3
