@@ -244,6 +244,15 @@ class Ai(private val settings: Settings) {
         return try { val a = JSONArray(jsonSlice(out, '[', ']')); (0 until a.length()).map { a.optLong(it) }.filter { it in known }.distinct().take(count) } catch (e: Exception) { emptyList() }
     }
 
+    /**
+     * What to say at an opening, in the artist's own words: three things to say aloud about the work,
+     * and the two questions people nearly always ask, each with a short answer. Spoken English, nothing to memorize.
+     */
+    suspend fun talkingPoints(statement: String, facts: String, voice: String): String =
+        clean(complete(writerSystem(voice), "Write, as plain spoken lines for an artist to glance at before an opening:\n" +
+            "Three short things to say about the work (one sentence each).\nThen: \"If they ask how you make it:\" and a one-sentence answer.\n" +
+            "Then: \"If they ask what it is about:\" and a one-sentence answer.\nUse only these facts and the statement. No headings, no markdown.\n\nStatement:\n$statement\n\nFacts:\n$facts", maxTokens = 500))
+
     /** A question about one call, answered only from that call's own words; "the call does not say" when it does not. */
     suspend fun askCall(callText: String, question: String): String {
         val sys = "You answer an artist's question about one open call, using only the call's text inside <data>. $dataRule " +

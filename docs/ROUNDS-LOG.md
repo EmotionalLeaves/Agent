@@ -330,3 +330,4 @@ One real change per round. Pushed and built every ten rounds.
 324. The portfolio web page shows up to six installation views from your shows, captioned with the show and venue.
 325. A print's printing steps say which ready-made frame fits it (standard store sizes, with at least two inches of mat) and the mat opening to ask for, so a first show does not need custom framing.
 326. A show of your own has "Agreement to sign": a plain one-page loan and consignment agreement with the venue (dates, each work and its price, the venue's share of sales, care, insurance, copyright, hanging and pick-up, two signature lines), putting in writing what was agreed by email.
+327. Before an opening, a show's page offers "What to say at the opening": three short things to say about the work and answers to the two questions people nearly always ask, written from your own statement, to glance at on the way in.

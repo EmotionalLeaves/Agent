@@ -679,7 +679,7 @@ object Engine {
         val oppId = dao.put(Opp(title = title.ifBlank { "Show at ${c.venue}" }, kind = "exhibition", venue = c.venue, city = st.city, email = c.email, url = c.website,
             scope = if (c.kind == "campus") "campus" else "local", exhibitionDates = dates, status = "applied", sourceName = "Your own show", createdAt = System.currentTimeMillis()))
         val now = System.currentTimeMillis()
-        val applId = dao.put(Appl(oppId = oppId, workIds = workIds.joinToString(","), status = "accepted", submittedAt = now, method = "email", emailTo = c.email,
+        val applId = dao.put(Appl(oppId = oppId, workIds = workIds.joinToString(","), status = "accepted", submittedAt = now, method = "email", emailTo = c.email, statement = pickStatement(150),
             proofText = "Agreed with ${c.venue}${if (c.name.isNotBlank()) " (" + c.name + ")" else ""} on ${com.emotionalleaves.studioagent.ui.fmtDate(now)}.", createdAt = now))
         ownShowSteps(opening, weeks).forEach { (t, d) -> dao.put(Evt(type = "task", title = t, date = millis(d.atTime(if (t.startsWith("Go to")) 18 else 12, 0)), oppId = oppId, applId = applId)) }
         dao.artworksNow().filter { it.id in workIds && available(it) }.forEach { dao.put(it.copy(status = "shown")) }

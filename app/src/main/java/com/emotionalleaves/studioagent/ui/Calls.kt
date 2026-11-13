@@ -485,6 +485,12 @@ fun ApplScreen(nav: NavController, id: Long) {
                 }
             }
             if (loaded.status == "accepted") {
+                // Before the opening: what to say, in your own words, for a glance on the way in.
+                var talk by remember(id) { mutableStateOf("") }
+                if (G.ai.ready && loaded.statement.isNotBlank()) {
+                    TextButton(onClick = { talk = "Writing…"; scope.io({ talk = it }) { talk = G.ai.talkingPoints(loaded.statement, Engine.factsText(Engine.workIds(loaded)), Engine.voice()) } }) { Text(if (talk.isBlank()) "What to say at the opening" else "Write it again") }
+                    if (talk.isNotBlank()) Panel { Text(talk); Small("Glance at it on the way in. Saying less is fine; most people ask one question and listen.") }
+                }
                 // Photos of the work on the wall: the record of the show, for your portfolio and your next proposal.
                 val showDir = ImageTools.mediaDir(ctx)
                 var shots by remember(id) { mutableStateOf(showDir.listFiles { f -> f.name.startsWith("show_${id}_") }?.sortedBy { it.name }.orEmpty()) }
