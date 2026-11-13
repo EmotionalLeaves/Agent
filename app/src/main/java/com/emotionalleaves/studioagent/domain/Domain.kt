@@ -436,6 +436,24 @@ object Planner {
         }
     }
 
+    /** The kinds of work a page mentions showing, in plain words, most mentioned first. */
+    fun mediaShown(text: String): List<String> {
+        val l = text.lowercase()
+        val kinds = listOf("painting" to "paint", "drawing" to "drawing|drawings|graphite|charcoal", "photography" to "photograph", "printmaking" to "printmak|prints\\b|linocut|etching|screen ?print",
+            "ceramics" to "ceramic|pottery|clay", "sculpture" to "sculpt", "textiles" to "textile|fiber art|fibre|quilt|weav", "digital art" to "digital art|new media|video art", "illustration" to "illustrat", "mixed media" to "mixed media|collage")
+        return kinds.map { (name, re) -> name to Regex(re).findAll(l).count() }.filter { it.second >= 2 }.sortedByDescending { it.second }.map { it.first }.take(4)
+    }
+
+    /** Whether what a venue shows meets what you make, from your mediums ("acrylic, digital" meets "painting, digital art"). */
+    fun mediaMatch(shown: List<String>, mine: String): Boolean {
+        val m = mine.lowercase()
+        val mineKinds = mediaShown("$m $m").toMutableSet()
+        if (Regex("acrylic|oil|gouache|watercolou?r|tempera").containsMatchIn(m)) mineKinds += "painting"
+        if (Regex("pencil|ink|pastel|charcoal|graphite").containsMatchIn(m)) mineKinds += "drawing"
+        if (Regex("archival print|giclee|digital").containsMatchIn(m)) mineKinds += "digital art"
+        return shown.any { it in mineKinds }
+    }
+
     /** "Title | what to make" lines, numbered or bulleted or not, into pairs. */
     fun pieceLines(text: String): List<Pair<String, String>> = text.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "") }
         .mapNotNull { l -> val parts = l.split(Regex("\\s*[|]\\s*|\\s+[-–—]\\s+|:\\s+"), limit = 2); if (parts.size == 2 && parts[0].length in 2..50 && parts[1].length > 8) parts[0].trim('"', ' ') to parts[1].trim() else null }

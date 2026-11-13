@@ -447,4 +447,13 @@ class DomainTest {
         assertEquals(5, H.bits(s, 5)); assertEquals(2, H.bits(s, 9)); assertEquals(0, H.bits(s, 50))
         s = H.set(s, 5, 0, false); assertEquals(4, H.bits(s, 5))
     }
+
+    @Test fun whatAVenueShows() {
+        val P = com.emotionalleaves.studioagent.domain.Planner
+        val shown = P.mediaShown("Our gallery shows painting and drawing by local artists. Past shows: paintings of the river; charcoal drawings; a painting class. Photography night once.")
+        assertEquals(listOf("painting", "drawing"), shown)
+        assertTrue(P.mediaMatch(shown, "gouache, pencil"))
+        assertFalse(P.mediaMatch(listOf("ceramics", "sculpture"), "acrylic, digital"))
+        assertTrue(P.mediaMatch(listOf("digital art"), "digital, archival print"))
+    }
 }

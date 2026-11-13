@@ -193,6 +193,8 @@ fun Outreach(nav: NavController) {
 
         // Places you can write to now come first; within them, the ones waiting on you.
         val people = contacts.filter { it.kind != "subscriber" }.sortedWith(compareBy<Contact>({ !Levels.outreachAllowed(level, it.kind, Engine.rules()) }, { it.status !in setOf("research", "drafted", "interested", "more") },
+            // Then places that show work like yours.
+            { !it.submissionNotes.contains("Work like yours.") },
             // Then nearest first, for places from the map.
             { Regex("""(\d+) (mi|km) away""").find(it.notes)?.groupValues?.get(1)?.toIntOrNull() ?: (if (it.notes.contains("under 1")) 0 else 999) }))
         if (people.isNotEmpty()) H("Venues and people")
@@ -214,6 +216,7 @@ fun Outreach(nav: NavController) {
                 // Places from the map say how far they are.
                 val far = Regex("""(\d+ (mi|km)|under 1 (mi|km)) away""").find(c.notes)?.value
                 Small(kindWords(c.kind) + (if (far != null) ", $far" else "") + ", " + statusWords(c).replaceFirstChar { it.lowercase() })
+                if (c.submissionNotes.contains("Work like yours.")) Tag("Shows work like yours", strong = true)
                 if (!Levels.outreachAllowed(level, c.kind, Engine.rules())) Note("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}.")
             }
         }

@@ -1491,9 +1491,12 @@ object Engine {
                 val t = a.text().trim(); val href = a.absUrl("href")
                 if (t.length in 4..80 && words.containsMatchIn(t + " " + href) && (host.isBlank() || href.contains(host.removePrefix("www.")))) t to href else null
             }.distinctBy { it.second }.take(4)
-            if (links.isNotEmpty()) {
-                found++
-                val note = "Their site has: " + links.joinToString("; ") { "${it.first} (${it.second})" }
+            // What they show, against what you make: writing to a place that shows work like yours is the best use of an email.
+            val shown = Planner.mediaShown(doc.text())
+            val fit = if (shown.isEmpty()) "" else "They show: " + shown.joinToString(", ") + "." + (if (Planner.mediaMatch(shown, st.mediums)) " Work like yours." else " Different from yours; look at their walls before writing.")
+            if (links.isNotEmpty() || fit.isNotBlank()) {
+                if (links.isNotEmpty()) found++
+                val note = listOf(if (links.isNotEmpty()) "Their site has: " + links.joinToString("; ") { "${it.first} (${it.second})" } else "", fit).filter { it.isNotBlank() }.joinToString("\n")
                 val fresh = dao.contactsNow().firstOrNull { it.id == c.id } ?: continue
                 dao.put(fresh.copy(submissionNotes = (fresh.submissionNotes + "\n" + note).trim(), notes = (fresh.notes + "\nRead their site on ${com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis())}.").trim()))
             }
