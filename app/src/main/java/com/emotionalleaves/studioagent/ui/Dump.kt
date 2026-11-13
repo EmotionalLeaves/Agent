@@ -12,6 +12,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.emotionalleaves.studioagent.domain.Texts
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -34,11 +37,20 @@ fun DumpScreen(nav: NavController) {
     val dao = G.dao; val scope = rememberCoroutineScope()
     val text = rememberSaveable { mutableStateOf("") }
     val moved = remember { mutableStateListOf<Pair<Int, Dump.Kind>>() }
+    var putAway by rememberSaveable { mutableStateOf("") }
     val lines = Dump.sort(text.value).mapIndexed { i, l -> moved.lastOrNull { it.first == i }?.let { l.copy(kind = it.second) } ?: l }
     Screen("Empty your head", nav) {
         Intro("dump", "Everything that is buzzing around, one line each, in any order. Nothing needs deciding: the app sorts it into jobs (with their day when you name one), things to buy, and ideas, and puts each away.")
         Field("One thing per line", text, lines = 8, mic = true)
-        if (lines.isEmpty()) Small("For example:\nemail the library about the wall\nbuy titanium white\nfinish the heron by Friday\na fox in the snow, all blue")
+        if (putAway.isNotBlank() && lines.isEmpty()) Panel {
+            Text("Put away: $putAway.", fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+            Row {
+                androidx.compose.material3.TextButton(onClick = { nav.navigate("records") }) { Text("To-dos") }
+                androidx.compose.material3.TextButton(onClick = { nav.navigate("supplies") }) { Text("Supplies") }
+                androidx.compose.material3.TextButton(onClick = { nav.navigate("ideas") }) { Text("Ideas") }
+            }
+        }
+        if (lines.isEmpty() && putAway.isBlank()) Small("For example:\nemail the library about the wall\nbuy titanium white\nfinish the heron by Friday\na fox in the snow, all blue")
         if (lines.isNotEmpty()) {
             Panel {
                 lines.forEachIndexed { i, l ->
@@ -72,6 +84,11 @@ fun DumpScreen(nav: NavController) {
                     dao.ideasNow().filter { i: Idea -> i.id in ideas }.forEach { i: Idea -> dao.del(i) }
                     st.supplies = before
                 })
+                // Where each kind went, so nothing feels lost.
+                putAway = listOfNotNull(
+                    keep.count { it.kind == Dump.Kind.TASK }.takeIf { it > 0 }?.let { Texts.count(it, "to-do") + " in Records" },
+                    keep.count { it.kind == Dump.Kind.SUPPLY }.takeIf { it > 0 }?.let { Texts.count(it, "thing") + " to buy in Supplies" },
+                    keep.count { it.kind == Dump.Kind.IDEA }.takeIf { it > 0 }?.let { Texts.count(it, "idea") + " in Ideas" }).joinToString(", ")
                 text.value = ""; moved.clear()
             }, Modifier.fillMaxWidth()) { Text("Put them away") }
         }
