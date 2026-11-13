@@ -805,6 +805,19 @@ object Engine {
             works.mapNotNull { it.medium.ifBlank { null } }.distinct().take(2).joinToString(" and "), works.size, st.email, st.website)
     }
 
+    /** A visit planned: its steps on your week, tied to the person, each once. The contact notes say when. */
+    suspend fun planVisit(c: Contact, visit: LocalDate): Int {
+        val title = c.venue.ifBlank { c.name }
+        val have = dao.eventsNow().filter { it.type == "task" && it.title.endsWith(" ($title)") }.map { it.title }.toSet()
+        var n = 0
+        com.emotionalleaves.studioagent.domain.StudioVisit.steps(visit, LocalDate.now()).forEach { (t, d) ->
+            val full = "$t ($title)"
+            if (full !in have) { dao.put(Evt(type = "task", title = full, date = millis(d.atTime(if (t == "The visit") 17 else 18, 0)))); n++ }
+        }
+        dao.contactsNow().firstOrNull { it.id == c.id }?.let { dao.put(it.copy(notes = (it.notes + "\nStudio visit planned for $visit.").trim())) }
+        return n
+    }
+
     // ------------------------------------------------------------ commissions
 
     /** The steps of a piece made for someone, in order, with the day each falls on, counted from today to the promised day. */

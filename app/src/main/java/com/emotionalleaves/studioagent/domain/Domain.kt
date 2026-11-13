@@ -840,6 +840,34 @@ object CallReader {
 }
 
 
+/** Someone wants to see your work in person: what to do before, what to have out, what to ask, and the thank-you after. */
+object StudioVisit {
+    fun steps(visit: LocalDate, today: LocalDate): List<Pair<String, LocalDate>> = listOf(
+        "Confirm the visit by email: day, time, address, how long (an hour is usual)" to today,
+        "Choose 6 to 10 of your strongest pieces and the order to show them" to visit.minusDays(5),
+        "Print your CV, statement and price list; have the portfolio on your phone" to visit.minusDays(2),
+        "Clear a wall or a table so the work can be seen one piece at a time" to visit.minusDays(1),
+        "The visit" to visit,
+        "Send a short thank-you, with anything they asked for" to visit.plusDays(1)
+    ).map { (t, d) -> t to (if (d.isBefore(today)) today else d) }
+
+    val questions = listOf(
+        "What drew you to the work?",
+        "Which pieces would you choose, and why?",
+        "What kind of shows or projects are you planning?",
+        "Is there anyone else you think should see this work?",
+        "What would be a good next step from here?"
+    )
+
+    val tips = listOf(
+        "Show the pieces one at a time, strongest first. Let them look before you speak.",
+        "Say what you made and why in a sentence or two; then ask what they see.",
+        "It is fine not to know where the work is going. 'I am finding out' is an honest answer.",
+        "If they ask about prices, say them plainly from your price list.",
+        "Offer water or coffee. Keep it to about an hour."
+    )
+}
+
 /** A day at a market or fair: prints and cards in multiples, originals one each, a tally, and the day's total. */
 object Market {
     data class Item(val name: String, val price: Double, val qty: Int)

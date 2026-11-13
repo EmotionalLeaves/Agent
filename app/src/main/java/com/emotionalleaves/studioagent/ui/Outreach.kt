@@ -325,6 +325,21 @@ fun ContactScreen(nav: NavController, id: Long) {
             pages.forEach { (t, u) -> TextButton(onClick = { Share.open(ctx, u) }, modifier = Modifier.offset(x = (-12).dp)) { Text(t) } }
         }
         kindTip(c.kind).takeIf { it.isNotBlank() }?.let { Small(it) }
+        // They want to see the work in person: the visit planned, what to have out, and what to ask.
+        if (c.status in setOf("more", "interested") || c.notes.contains("Studio visit")) Expand("They want to see the work in person") {
+            var day by rememberSaveable(c.id) { mutableStateOf(java.time.LocalDate.now().plusDays(7).toString()) }
+            var planned by remember(c.id) { mutableStateOf("") }
+            DateField("The visit", day) { day = it }
+            if (planned.isBlank()) TextButton(onClick = { scope.io({ planned = it }) {
+                val n = Engine.planVisit(c, try { java.time.LocalDate.parse(day) } catch (e: Exception) { java.time.LocalDate.now().plusDays(7) })
+                planned = if (n == 0) "Already on your week." else "${Texts.count(n, "step")} on your week, from confirming it to the thank-you."
+            } }) { Text("Put the visit on my week") } else Small(planned)
+            OutlinedButton(onClick = { nav.navigate("order") }) { Text("Choose what to show (portfolio order)") }
+            Section("While they are there")
+            com.emotionalleaves.studioagent.domain.StudioVisit.tips.forEach { Text("• $it") }
+            Section("Good questions to ask them")
+            com.emotionalleaves.studioagent.domain.StudioVisit.questions.forEach { Text("• $it") }
+        }
         // They asked for more: everything they could want in one attachment, with a short note.
         if (c.status in setOf("more", "interested") && Texts.looksLikeEmail(c.email)) OutlinedButton(onClick = {
             scope.io {

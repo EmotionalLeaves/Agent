@@ -604,6 +604,18 @@ class PartsTest {
         assertEquals("", G.settings.marketTally)
     }
 
+    @Test fun aStudioVisitIsPlanned() = kotlinx.coroutines.runBlocking {
+        ctx
+        val cid = G.dao.put(com.emotionalleaves.studioagent.data.Contact(venue = "Gallery 4", status = "interested"))
+        val c = G.dao.contactsNow().single { it.id == cid }
+        val day = java.time.LocalDate.now().plusDays(10)
+        assertEquals(6, com.emotionalleaves.studioagent.work.Engine.planVisit(c, day))
+        assertEquals(0, com.emotionalleaves.studioagent.work.Engine.planVisit(c, day))
+        val visit = G.dao.eventsNow().single { it.title == "The visit (Gallery 4)" }
+        assertEquals(day, com.emotionalleaves.studioagent.work.Engine.date(visit.date))
+        assertTrue(G.dao.contactsNow().single { it.id == cid }.notes.contains("Studio visit planned"))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!
