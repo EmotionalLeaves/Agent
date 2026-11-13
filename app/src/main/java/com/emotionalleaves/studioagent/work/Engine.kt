@@ -1101,7 +1101,7 @@ object Engine {
         }
         // Five or more pieces and no backup anywhere: one phone lost would take them all. Saturdays only, until it is on.
         if (today.dayOfWeek == DayOfWeek.SATURDAY && st.backupFolder.isBlank() && !(st.ghReady && st.ghBackupRepo.isNotBlank()) && works.count { it.imagePath.isNotBlank() } >= 5)
-            return NextStep("Turn on backups", "Your catalog lives only on this phone. Two taps pick a folder (Google Drive works), and it is saved there every day.", "settings/backup")
+            return NextStep("Turn on backups", "Your catalog lives only on this phone. Two taps pick a folder, and it is saved there every day.", "settings/backup")
         // An opening in the next few days at a place in People: go, look, say hello. That is the networking.
         dao.eventsNow().filter { it.type == "invite" && !it.done && it.date in now..(now + 3 * DAY) }.minByOrNull { it.date }?.let { e ->
             val d = date(e.date); val word = when (d) { today -> "tonight"; today.plusDays(1) -> "tomorrow"; else -> "on " + d.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) }
