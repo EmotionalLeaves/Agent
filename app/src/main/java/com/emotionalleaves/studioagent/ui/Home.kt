@@ -119,6 +119,9 @@ fun Home(nav: NavController) {
     val events by dao.events().collectAsState(emptyList())
     val ledger by dao.ledger().collectAsState(emptyList())
     val tick by st.changed.collectAsState()
+    // Calm: for today only, or for the quiet days after "It is all too much".
+    val quietDays = tick >= 0 && st.calmUntil > System.currentTimeMillis()
+    val calm = st.calmToday || quietDays
     var next by remember { mutableStateOf<NextStep?>(null) }
     var pendingCount by remember { mutableStateOf(0) }
     var guide by remember { mutableStateOf<List<GuideStep>>(emptyList()) }
@@ -173,7 +176,7 @@ fun Home(nav: NavController) {
         // On a break at work: small jobs that fit in five minutes on the phone, so the evening is for making.
         val atWork = remember { val n0 = java.time.LocalDateTime.now(); n0.dayOfWeek.value in com.emotionalleaves.studioagent.domain.Planner.days(st.workDays) &&
             !n0.toLocalTime().isBefore(com.emotionalleaves.studioagent.domain.Planner.time(st.workStart, java.time.LocalTime.of(7, 0))) && n0.toLocalTime().isBefore(com.emotionalleaves.studioagent.domain.Planner.time(st.workEnd, java.time.LocalTime.of(15, 30))) }
-        if (st.onboarded && atWork && !(st.calmToday || st.calmUntil > System.currentTimeMillis())) {
+        if (st.onboarded && atWork && !calm) {
             val opps0 by dao.opps().collectAsState(emptyList())
             val toDecide = opps0.count { it.status == "new" && it.fitScore >= 60 && it.deadline > now() }
             val jobs = listOfNotNull(
@@ -191,7 +194,7 @@ fun Home(nav: NavController) {
         // What the app did while you were away, in a few lines: the work done for you, seen without hunting.
         val tickA by st.changed.collectAsState()
         val fresh = remember(tickA) { st.activityLines().filter { it.first > st.activitySeen && !it.second.startsWith("Daily check finished") && !it.second.startsWith("Checked your inbox") } }
-        if (st.onboarded && fresh.isNotEmpty() && !(st.calmToday || st.calmUntil > System.currentTimeMillis())) Panel {
+        if (st.onboarded && fresh.isNotEmpty() && !calm) Panel {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("While you were away", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
                 TextButton(onClick = { st.activitySeen = fresh.maxOf { it.first } }) { Text("Got it") }
@@ -216,7 +219,7 @@ fun Home(nav: NavController) {
                             // When it is all too much: three quiet days, the step shrinks to five minutes, everything else waits.
                             DropdownMenuItem(text = { Text("It is all too much") }, onClick = { st.calmUntil = System.currentTimeMillis() + 3 * 86_400_000L; menu = false })
                             DropdownMenuItem(text = { Text("Pin my own step") }, onClick = { pinning = true; menu = false })
-                            DropdownMenuItem(text = { Text(if ((st.calmToday || st.calmUntil > System.currentTimeMillis())) "Show everything on Today" else "Calm Today: just this step") }, onClick = { if (st.calmToday || st.calmUntil > System.currentTimeMillis()) { st.calmToday = false; st.calmUntil = 0 } else st.calmToday = true; menu = false })
+                            DropdownMenuItem(text = { Text(if (calm) "Show everything on Today" else "Calm Today: just this step") }, onClick = { if calm { st.calmToday = false; st.calmUntil = 0 } else st.calmToday = true; menu = false })
                         }
                     }
                 }
@@ -249,7 +252,7 @@ fun Home(nav: NavController) {
             }
         }
 
-        if (st.onboarded && !(st.calmToday || st.calmUntil > System.currentTimeMillis())) {
+        if (st.onboarded && !calm) {
             // The week as seven marks: filled for a day you made something, a ring for a block still ahead.
             val hours = Engine.hoursThisWeek(sessions)
             val cs = MaterialTheme.colorScheme
@@ -312,7 +315,7 @@ fun Home(nav: NavController) {
         }
 
         // Until the first show: the road there, as seven milestones with the next one named. It disappears once you are in a show.
-        if (st.onboarded && !(st.calmToday || st.calmUntil > System.currentTimeMillis()) && appls.none { it.status == "accepted" }) {
+        if (st.onboarded && !calm && appls.none { it.status == "accepted" }) {
             val contacts by dao.contacts().collectAsState(emptyList())
             val venues = contacts.filter { it.kind != "subscriber" }
             val stones = listOf(
@@ -344,14 +347,17 @@ fun Home(nav: NavController) {
         if (weekSessions.isNotEmpty()) wins += "${weekSessions.size} session" + (if (weekSessions.size > 1) "s" else "") + ", ${weekSessions.sumOf { (it.end - it.start) / 60000 }} minutes of making"
         works.count { it.createdAt >= weekStart && it.imagePath.isNotBlank() }.let { if (it > 0) wins += "$it piece" + (if (it > 1) "s" else "") + " with an image added" }
         appls.count { it.submittedAt >= weekStart }.let { if (it > 0) wins += "$it application" + (if (it > 1) "s" else "") + " sent" }
-        if (wins.isNotEmpty() && !(st.calmToday || st.calmUntil > System.currentTimeMillis())) {
+        if (wins.isNotEmpty() && !calm) {
             Section("Done this week")
             wins.forEach { Check(true, it) }
         }
 
         // Calm Today: only the step and Start. Everything else waits in the tabs.
-        if (st.onboarded && (st.calmToday || st.calmUntil > System.currentTimeMillis())) Small("Calm Today is on: just the next step. Everything else is in the tabs below.")
-        if (st.onboarded && !(st.calmToday || st.calmUntil > System.currentTimeMillis())) {
+        if (st.onboarded && quietDays) {
+            Small("Quiet days until " + Engine.date(st.calmUntil).dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.US) + ": one small step, no notifications, nothing else asked of you.")
+            TextButton(onClick = { st.calmUntil = 0; st.calmToday = false }) { Text("I'm ready for more") }
+        } else if (st.onboarded && calm) Small("Calm Today is on: just the next step. Everything else is in the tabs below.")
+        if (st.onboarded && !calm) {
             if (pendingCount > 0) Section("Waiting for you")
             if (pendingCount > 0) IconRow(Icons.Default.Done, "$pendingCount waiting for your yes", "One tap each") { nav.navigate("admin") }
 
