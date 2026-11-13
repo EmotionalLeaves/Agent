@@ -201,6 +201,8 @@ class Settings(ctx: Context) {
     /** The daily check may prepare an entry by itself for a strong, free call (never sends it). At most one a week. */
     var autopilot by B("autopilot", true)
     var lastAutopilot by L("lastAutopilot", 0)
+    /** Rate per mile for art trips, as your tax office sets it each year. */
+    var mileRate by D("mileRate", 0.70)
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

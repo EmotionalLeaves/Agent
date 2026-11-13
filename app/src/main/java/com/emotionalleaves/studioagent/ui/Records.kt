@@ -192,6 +192,22 @@ fun Records(nav: NavController) {
                 Small("Sold $pct% of the ${shownIds.size} works you showed this year." + if (pct > 50) " Above half is when raising prices by 10 to 20 percent is usual." else "")
             }
         }
+        // Trips for your art (delivering work, a pick-up, supplies, an opening) are a cost too, counted by the mile.
+        Expand("Add an art trip") {
+            var miles by remember { mutableStateOf(0.0) }
+            val why = rememberSaveable { mutableStateOf("") }
+            var round by remember { mutableStateOf(true) }
+            Num("Miles, one way", miles) { miles = it }
+            Toggle("There and back", round) { round = it }
+            Field("What for (delivering work to Gallery 4, supplies)", why)
+            Num("Rate per mile, " + st.currency, st.mileRate) { st.mileRate = it }
+            Small("Check this year's rate with your tax office; it changes most years. Keep trips that were for your art only.")
+            val total = miles * (if (round) 2 else 1)
+            if (total > 0) Button(onClick = {
+                val l = Ledger(kind = "travel", amount = -Math.round(total * st.mileRate * 100) / 100.0, date = now(), note = "${"%.0f".format(total)} miles: " + why.value.trim().ifBlank { "art trip" })
+                miles = 0.0; why.value = ""; scope.io { dao.put(l) }
+            }) { Text("Add ${"%.0f".format(total)} miles (${money(total * st.mileRate)})") }
+        }
         Expand("Add a cost") {
             // A receipt photographed and read on the phone: the total, the shop and the kind, filled in to check. The photo is kept with your backup.
             var receiptNote by remember { mutableStateOf("") }
@@ -287,7 +303,7 @@ fun Records(nav: NavController) {
         ledger.take(40).forEach { l ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text((mapOf("fee" to "Entry fee", "sale" to "Sale", "commission" to "Commission", "shipping" to "Shipping", "print" to "Printing", "framing" to "Framing", "materials" to "Art supplies")[l.kind] ?: l.kind.replaceFirstChar { it.uppercase() }) +
+                    Text((mapOf("fee" to "Entry fee", "sale" to "Sale", "commission" to "Commission", "shipping" to "Shipping", "print" to "Printing", "framing" to "Framing", "materials" to "Art supplies", "travel" to "Art trip")[l.kind] ?: l.kind.replaceFirstChar { it.uppercase() }) +
                         (if (l.note.isNotBlank()) ": ${l.note}" else ""))
                     Small(fmtDate(l.date))
                 }
@@ -310,7 +326,7 @@ fun Records(nav: NavController) {
         // The page a tax preparer asks for: money in and out by kind for the year, and the difference.
         if (thisYear.isNotEmpty()) OutlinedButton(onClick = {
             scope.io({ status = it }) {
-                val names = mapOf("sale" to "Sales", "commission" to "Commissions paid to venues", "fee" to "Entry fees", "print" to "Printing", "framing" to "Framing", "shipping" to "Shipping and delivery", "materials" to "Art supplies and materials", "other" to "Other costs")
+                val names = mapOf("sale" to "Sales", "commission" to "Commissions paid to venues", "fee" to "Entry fees", "print" to "Printing", "framing" to "Framing", "shipping" to "Shipping and delivery", "materials" to "Art supplies and materials", "travel" to "Art trips (miles)", "other" to "Other costs")
                 val byKind = thisYear.groupBy { it.kind }.mapValues { (_, l) -> l.sumOf { it.amount } }
                 val lines = byKind.entries.sortedByDescending { it.value }.joinToString("\n") { (k, v) -> (names[k] ?: k.replaceFirstChar { it.uppercase() }) + ": " + money(kotlin.math.abs(v)) + if (v < 0) " (cost)" else " (income)" }
                 val net = thisYear.sumOf { it.amount }
