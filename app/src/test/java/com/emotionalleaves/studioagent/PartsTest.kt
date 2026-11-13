@@ -496,15 +496,18 @@ class PartsTest {
         val b = android.graphics.Bitmap.createBitmap(200, 100, android.graphics.Bitmap.Config.ARGB_8888)
         for (x in 0 until 200) for (y in 0 until 100) b.setPixel(x, y, if (x < 100) android.graphics.Color.rgb(20, 30, 120) else android.graphics.Color.rgb(250, 240, 150))
         val L = com.emotionalleaves.studioagent.media.Look
-        assertTrue(L.lum(L.flip(b).getPixel(10, 50)) > 200)
+        assertTrue("flip", L.lum(L.flip(b).getPixel(10, 50)) > 200)
         val g = L.gray(b).getPixel(150, 50); assertEquals(android.graphics.Color.red(g), android.graphics.Color.blue(g))
-        val two = L.values(b, 2); assertTrue(L.lum(two.getPixel(10, 50)) < 60 && L.lum(two.getPixel(190, 50)) > 200)
+        val two = L.values(b, 2); assertTrue("two values " + L.lum(two.getPixel(10, 50)) + " " + L.lum(two.getPixel(190, 50)), L.lum(two.getPixel(10, 50)) < 60 && L.lum(two.getPixel(190, 50)) > 200)
+        val sq = L.squint(b); assertEquals(200, sq.width); assertTrue("squint", L.lum(sq.getPixel(5, 50)) < 80)
         val pal = L.palette(b)
-        assertTrue(pal.take(2).sumOf { it.second } > 0.8)
-        assertTrue(pal.take(2).map { L.name(it.first) }.any { it.contains("blue") } && pal.take(2).map { L.name(it.first) }.any { it.contains("yellow") })
-        assertTrue(L.valueNotes(b).first().startsWith("A full range") || L.valueNotes(b).first().startsWith("A fair range"))
+        assertTrue("palette share " + pal, pal.take(2).sumOf { it.second } > 0.8)
+        val names = pal.take(2).map { L.name(it.first) }
+        assertTrue("names $names", names.any { it.contains("blue") } && names.any { it.contains("yellow") })
+        val notes = L.valueNotes(b)
+        assertTrue("notes $notes", notes.first().startsWith("A full range") || notes.first().startsWith("A fair range"))
         val flat = android.graphics.Bitmap.createBitmap(50, 50, android.graphics.Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.rgb(120, 120, 120)) }
-        assertTrue(L.valueNotes(flat).first().startsWith("The values sit close together"))
+        assertTrue("flat", L.valueNotes(flat).first().startsWith("The values sit close together"))
     }
 
     @Test fun missingPiecesGetASaturdayEach() = kotlinx.coroutines.runBlocking {

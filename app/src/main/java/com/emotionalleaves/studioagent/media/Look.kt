@@ -3,7 +3,6 @@ package com.emotionalleaves.studioagent.media
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Matrix
 import android.graphics.Paint
 import kotlin.math.abs
 import kotlin.math.max
@@ -17,7 +16,36 @@ import kotlin.math.sqrt
  * no account, nothing sent anywhere.
  */
 object Look {
-    fun flip(b: Bitmap): Bitmap = Bitmap.createBitmap(b, 0, 0, b.width, b.height, Matrix().apply { preScale(-1f, 1f) }, true)
+    fun flip(b: Bitmap): Bitmap {
+        val px = pixels(b); val w = b.width; val out = IntArray(px.size)
+        for (y in 0 until b.height) for (x in 0 until w) out[y * w + x] = px[y * w + (w - 1 - x)]
+        return Bitmap.createBitmap(out, w, b.height, Bitmap.Config.ARGB_8888)
+    }
+
+    /** Smaller by averaging blocks of pixels: the same on every phone, and what squinting does. */
+    fun shrink(b: Bitmap, nw: Int, nh: Int): Bitmap {
+        val w = b.width; val h = b.height; val px = pixels(b); val out = IntArray(nw * nh)
+        for (j in 0 until nh) for (i in 0 until nw) {
+            val x0 = i * w / nw; val x1 = max(x0 + 1, (i + 1) * w / nw); val y0 = j * h / nh; val y1 = max(y0 + 1, (j + 1) * h / nh)
+            var r = 0L; var g = 0L; var bl = 0L; var n = 0
+            for (y in y0 until y1) for (x in x0 until x1) { val c = px[y * w + x]; r += Color.red(c); g += Color.green(c); bl += Color.blue(c); n++ }
+            out[j * nw + i] = Color.rgb((r / n).toInt(), (g / n).toInt(), (bl / n).toInt())
+        }
+        return Bitmap.createBitmap(out, nw, nh, Bitmap.Config.ARGB_8888)
+    }
+
+    /** Larger, smoothly (bilinear), so a squinted picture looks soft rather than blocky. */
+    fun grow(b: Bitmap, nw: Int, nh: Int): Bitmap {
+        val w = b.width; val h = b.height; val px = pixels(b); val out = IntArray(nw * nh)
+        for (j in 0 until nh) { val fy = ((j + 0.5f) * h / nh - 0.5f).coerceIn(0f, (h - 1).toFloat()); val y0 = fy.toInt(); val y1 = min(y0 + 1, h - 1); val ty = fy - y0
+            for (i in 0 until nw) { val fx = ((i + 0.5f) * w / nw - 0.5f).coerceIn(0f, (w - 1).toFloat()); val x0 = fx.toInt(); val x1 = min(x0 + 1, w - 1); val tx = fx - x0
+                val a = px[y0 * w + x0]; val bb = px[y0 * w + x1]; val c = px[y1 * w + x0]; val d = px[y1 * w + x1]
+                fun mix(f: (Int) -> Int) = ((f(a) * (1 - tx) + f(bb) * tx) * (1 - ty) + (f(c) * (1 - tx) + f(d) * tx) * ty).roundToInt().coerceIn(0, 255)
+                out[j * nw + i] = Color.rgb(mix(Color::red), mix(Color::green), mix(Color::blue)) } }
+        return Bitmap.createBitmap(out, nw, nh, Bitmap.Config.ARGB_8888)
+    }
+
+    private fun small(b: Bitmap, side: Int): Bitmap { val k = max(1, max(b.width, b.height) / side); return shrink(b, max(1, b.width / k), max(1, b.height / k)) }
 
     /** Lightness 0..255 of a color, as the eye weighs it. */
     fun lum(c: Int): Int = ((0.299 * Color.red(c) + 0.587 * Color.green(c) + 0.114 * Color.blue(c))).roundToInt().coerceIn(0, 255)
@@ -31,10 +59,8 @@ object Look {
 
     /** Squinting: the detail goes and the big shapes stay. Down to a few dozen pixels and back up, smoothly. */
     fun squint(b: Bitmap): Bitmap {
-        val small = max(1, min(b.width, b.height) / 28)
-        val sw = max(1, b.width / small); val sh = max(1, b.height / small)
-        val tiny = Bitmap.createScaledBitmap(b, sw, sh, true)
-        return Bitmap.createScaledBitmap(Bitmap.createScaledBitmap(tiny, sw * 4, sh * 4, true), b.width, b.height, true)
+        val k = max(1, min(b.width, b.height) / 28)
+        return grow(shrink(b, max(1, b.width / k), max(1, b.height / k)), b.width, b.height)
     }
 
     /**
@@ -52,8 +78,8 @@ object Look {
     /** A light blur so value groups come out as shapes, not speckle. */
     private fun squint2(b: Bitmap): Bitmap {
         val f = max(1, min(b.width, b.height) / 90)
-        val sw = max(1, b.width / f); val sh = max(1, b.height / f)
-        return Bitmap.createScaledBitmap(Bitmap.createScaledBitmap(b, sw, sh, true), b.width, b.height, true)
+        if (f == 1) return b
+        return grow(shrink(b, max(1, b.width / f), max(1, b.height / f)), b.width, b.height)
     }
 
     /** Thirds lines over the picture, where the eye tends to land. */
@@ -69,8 +95,7 @@ object Look {
 
     /** The main colors used, most to least, by a simple grouping of a small copy of the picture. */
     fun palette(b: Bitmap, k: Int = 6): List<Pair<Int, Double>> {
-        val s = Bitmap.createScaledBitmap(b, 64, max(1, 64 * b.height / max(1, b.width)), true)
-        val px = pixels(s)
+        val px = pixels(small(b, 64))
         // Start from colors spread through the picture's lightness, then settle (k-means, a few passes).
         val byL = px.sortedBy { lum(it) }
         var centers = (0 until k).map { byL[(byL.size * (2 * it + 1) / (2 * k)).coerceIn(0, byL.size - 1)] }.map { floatArrayOf(Color.red(it).toFloat(), Color.green(it).toFloat(), Color.blue(it).toFloat()) }
@@ -103,7 +128,7 @@ object Look {
 
     /** What the values say, in plain words: how much of the range is used, and whether the picture has a clear dark and light. */
     fun valueNotes(b: Bitmap): List<String> {
-        val s = Bitmap.createScaledBitmap(b, 80, max(1, 80 * b.height / max(1, b.width)), true)
+        val s = small(b, 80)
         val ls = pixels(s).map { lum(it) }.sorted()
         val dark = ls[ls.size * 3 / 100]; val light = ls[ls.size * 97 / 100]; val span = light - dark
         val mid = ls.count { it in 85..170 }.toDouble() / ls.size
