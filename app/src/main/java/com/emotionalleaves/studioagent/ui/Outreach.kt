@@ -273,6 +273,13 @@ fun Outreach(nav: NavController) {
                 Share.email(ctx, "", "New work", fillLetter(letters.first { it.title == "New work, for someone who bought before" }.body, "", "the piece"), bcc = mails)
             }) { Text("Tell them about new work (${mails.size})") }
         }
+        // Everyone in People as a spreadsheet file, to keep or open anywhere.
+        if (contacts.isNotEmpty()) TextButton(onClick = {
+            fun q(t: String) = "\"" + t.replace("\"", "\"\"") + "\""
+            val rows = listOf("Name,Venue,Email,Website,Kind,Status,Notes") + contacts.map { c -> listOf(c.name, c.venue, c.email, c.website, kindWords(c.kind), statusWords(c), c.notes.replace("\n", " ")).joinToString(",") { q(it) } }
+            val f = java.io.File(com.emotionalleaves.studioagent.media.ImageTools.exportDir(ctx), "People.csv").apply { writeText(rows.joinToString("\n")) }
+            Share.files(ctx, listOf(f), "text/csv")
+        }) { Text("Everyone in People as a spreadsheet file") }
         H("Your email list")
         val subs = contacts.filter { it.kind == "subscriber" }
         Note("${subs.size} people who asked to hear about your shows. Collected in person, never bought, never from social media.")
