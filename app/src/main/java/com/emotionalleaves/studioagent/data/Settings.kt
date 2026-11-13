@@ -255,6 +255,7 @@ class Settings(ctx: Context) {
     /** Firsts already noticed: "key:date" (or "key:before" / "key:done"). */
     var firstsSeen by S("firstsSeen")
     var firstsInit by B("firstsInit", false)
+    var firstsVer by I("firstsVer", 1)
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

@@ -211,7 +211,9 @@ fun Home(nav: NavController) {
         val reached = reachedNow
         if (st.onboarded && !calm && reached != null) {
             // The first time this runs, firsts from before are taken as seen, so nothing old is celebrated.
-            if (!st.firstsInit) { st.firstsSeen = com.emotionalleaves.studioagent.domain.Firsts.markAll(reached, "before"); st.firstsInit = true }
+            if (!st.firstsInit) { st.firstsSeen = com.emotionalleaves.studioagent.domain.Firsts.markAll(reached, "before"); st.firstsInit = true; st.firstsVer = 2 }
+            // Firsts added in a later version: whatever was already reached before then is taken as seen too.
+            if (st.firstsVer < 2) { reached.filter { it.key in setOf("opening", "venue") }.forEach { st.firstsSeen = com.emotionalleaves.studioagent.domain.Firsts.mark(st.firstsSeen, it.key, "before") }; st.firstsVer = 2 }
             val todayS = LocalDate.now().toString()
             com.emotionalleaves.studioagent.domain.Firsts.toShow(reached, st.firstsSeen, todayS)?.let { f ->
                 LaunchedEffect(f.key) { st.firstsSeen = com.emotionalleaves.studioagent.domain.Firsts.mark(st.firstsSeen, f.key, todayS) }
