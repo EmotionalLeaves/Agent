@@ -573,13 +573,13 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
         // Money on this piece, once any has moved: what it sold for, what went out, and what you kept.
         val pieceLedger by dao.ledger().collectAsState(emptyList())
-        val mine = pieceLedger.filter { it.artworkId == w.id }.map { it.kind to it.amount }
-        if (mine.any { it.first == "sale" }) Panel {
+        val moneyOn = pieceLedger.filter { it.artworkId == w.id }.map { it.kind to it.amount }
+        if (moneyOn.any { it.first == "sale" }) Panel {
             Text("Money on this piece", fontWeight = FontWeight.SemiBold)
-            com.emotionalleaves.studioagent.domain.PieceMoney.lines(mine).forEach { (label, amt) ->
+            com.emotionalleaves.studioagent.domain.PieceMoney.lines(moneyOn).forEach { (label, amt) ->
                 Row { Text(label, Modifier.weight(1f)); Text(money(amt)) }
             }
-            val kept = com.emotionalleaves.studioagent.domain.PieceMoney.kept(mine)
+            val kept = com.emotionalleaves.studioagent.domain.PieceMoney.kept(moneyOn)
             Row { Text("You kept", Modifier.weight(1f), fontWeight = FontWeight.SemiBold); Text(money(kept), fontWeight = FontWeight.SemiBold) }
         }
         Expand("Price, edition and where it is") {
