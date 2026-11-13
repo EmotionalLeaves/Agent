@@ -55,6 +55,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
@@ -468,6 +469,16 @@ fun ApplScreen(nav: NavController, id: Long) {
             }
             if (loaded.proofPath.isNotBlank()) PathImage(loaded.proofPath, Modifier.fillMaxWidth())
             chosen.forEach { Note(Papers.caption(it)) }
+            // A no is one juror's view on one day. The same pieces go straight to the next call that fits.
+            if (loaded.status == "declined") {
+                val next by produceState<Opp?>(null, loaded.id) { value = Engine.nextCallFor(loaded) }
+                next?.let { n -> Panel(strong = true) {
+                    Text("Try these pieces again", fontWeight = FontWeight.SemiBold)
+                    Text(n.title + ", closes " + fmtDate(n.deadline) + (if (n.fee > 0) ", fee " + money(n.fee) else ", free to enter") + ".")
+                    Small("Most work is turned down many times before it is chosen. Sending it on right away is what working artists do.")
+                    Button(onClick = { scope.io { val aid = Engine.createApplication(ctx, n, Engine.workIds(loaded)); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Start the entry with the same pieces") }
+                } }
+            }
             // A show planned before the pieces were ready: choose them here when they are.
             if (loaded.status == "accepted" && o.sourceName == "Your own show") {
                 val more = works.filter { Engine.available(it) && it.id !in Engine.workIds(loaded) }

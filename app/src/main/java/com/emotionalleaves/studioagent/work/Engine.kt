@@ -615,7 +615,7 @@ object Engine {
         append(Papers.signature(st))
     }
 
-    suspend fun createApplication(ctx: Context, opp: Opp): Long {
+    suspend fun createApplication(ctx: Context, opp: Opp, prefer: List<Long> = emptyList()): Long {
         dao.applsNow().firstOrNull { it.oppId == opp.id }?.let { return it.id }
         val works = dao.artworksNow().filter { available(it) }
         val bySeries = works.groupBy { it.seriesId }.values.maxByOrNull { it.size }.orEmpty()
@@ -626,6 +626,8 @@ object Engine {
             val ids = ai.pickWorks(opp, works, dao.seriesNow().associate { it.id to it.name }, want)
             if (ids.size >= minOf(want, works.size).coerceAtLeast(1)) chosen = ids.mapNotNull { i -> works.firstOrNull { it.id == i } }
         } catch (e: Exception) { }
+        // Trying again with the same pieces: they go first, as they were.
+        if (prefer.isNotEmpty()) { val p = prefer.mapNotNull { i -> works.firstOrNull { it.id == i } }; if (p.isNotEmpty()) chosen = (p + chosen.filter { it !in p }).take(maxOf(want, p.size).let { if (opp.maxWorks > 0) minOf(it, opp.maxWorks) else it }) }
         val statement = pickStatement(opp.statementLimit)
         val list = chosen.mapIndexed { i, a -> "${i + 1}. ${Papers.caption(a)}" }.joinToString("\n")
         val body = applicationEmail(opp, chosen, statement)
@@ -666,6 +668,13 @@ object Engine {
                 val calId = if (at > now && st.useCalendar && type != "pack") Cal.add(ctx, title, at - 3_600_000, at) else 0L
                 dao.put(Evt(type = type, title = title, date = at, oppId = opp.id, applId = applId, calendarId = calId))
             }
+    }
+
+    /** After a no: the best call still open (a few days left at least) that you have not entered, to send the same pieces to. */
+    suspend fun nextCallFor(after: Appl): Opp? {
+        val now = System.currentTimeMillis(); val entered = dao.applsNow().map { it.oppId }.toSet()
+        return dao.oppsNow().filter { it.id != after.oppId && it.id !in entered && it.status != "no" && it.deadline > now + 3 * DAY && it.sourceName != "Your own show" }
+            .maxByOrNull { it.fitScore * 10 - (if (it.fee > 0) it.fee.toInt() else 0) }
     }
 
     fun workIds(a: Appl): List<Long> = a.workIds.split(",").mapNotNull { it.trim().toLongOrNull() }

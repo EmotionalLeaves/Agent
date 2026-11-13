@@ -460,6 +460,21 @@ class PartsTest {
         assertTrue(!s.contains("@"))
     }
 
+    @Test fun afterANoTheSamePiecesGoToTheNextCall() = kotlinx.coroutines.runBlocking {
+        ctx
+        val day = 86_400_000L; val now = System.currentTimeMillis()
+        val a = G.dao.put(Artwork(title = "First", status = "ready")); val b = G.dao.put(Artwork(title = "Second", status = "ready")); G.dao.put(Artwork(title = "Third", status = "ready"))
+        val old = G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Old", deadline = now - day))
+        val no = com.emotionalleaves.studioagent.data.Appl(id = G.dao.put(com.emotionalleaves.studioagent.data.Appl(oppId = old, workIds = "$b,$a", status = "declined")), oppId = old, workIds = "$b,$a", status = "declined")
+        G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Too soon", deadline = now + day, fitScore = 99))
+        G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Good fit", deadline = now + 20 * day, fitScore = 70))
+        G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Weak fit", deadline = now + 20 * day, fitScore = 20))
+        val next = com.emotionalleaves.studioagent.work.Engine.nextCallFor(no)!!
+        assertEquals("Good fit", next.title)
+        val id = com.emotionalleaves.studioagent.work.Engine.createApplication(ctx, next, listOf(b, a))
+        assertTrue(G.dao.applsNow().single { it.id == id }.workIds.startsWith("$b,$a"))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!
