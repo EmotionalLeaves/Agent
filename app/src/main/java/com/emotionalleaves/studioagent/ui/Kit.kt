@@ -1,5 +1,8 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
@@ -339,12 +342,12 @@ private fun StepButton(sign: String, spoken: String, enabled: Boolean, onClick: 
     // Hold to keep counting, so 120 minutes is one press, not twenty-three taps.
     Box(Modifier.size(44.dp).clip(RoundedCornerShape(22.dp)).background(if (enabled) cs.surfaceContainerLowest else cs.surfaceContainer)
         .pointerInput(Unit) {
-            androidx.compose.foundation.gestures.awaitEachGesture {
-                androidx.compose.foundation.gestures.awaitFirstDown()
+            awaitEachGesture {
+                awaitFirstDown()
                 if (on) {
                     tap()
                     val repeat = scope.launch { kotlinx.coroutines.delay(450); while (on) { tap(); kotlinx.coroutines.delay(90) } }
-                    androidx.compose.foundation.gestures.waitForUpOrCancellation()
+                    waitForUpOrCancellation()
                     repeat.cancel()
                 }
             }

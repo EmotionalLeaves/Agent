@@ -159,6 +159,7 @@ fun SessionsScreen(nav: NavController) {
     var kind by rememberSaveable { mutableStateOf("make") }
     var workId by remember { mutableStateOf(0L) }
     val active = works.filter { it.status != "sold" }.take(12)
+    fun name(id: Long) = works.firstOrNull { it.id == id }?.let { it.title.ifBlank { "Untitled #${it.id}" } }.orEmpty()
     Screen("Session history", nav) {
         if (sessions.isEmpty()) Empty("No sessions yet. Each one you finish is listed here.")
         sessions.take(60).forEach { s ->
