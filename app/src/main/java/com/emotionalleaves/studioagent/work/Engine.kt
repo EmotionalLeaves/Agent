@@ -789,7 +789,7 @@ object Engine {
             .filter { it.status == "new" && it.id !in entered && it.fee <= 0.0 && Texts.feeStated(it) && it.fitScore >= 80 && it.deadline > now + 10 * DAY && !it.guaranteed && !it.rightsGrab && ready >= maxOf(1, it.minWorks) }
             .maxByOrNull { it.fitScore } ?: return 0
         val id = createApplication(ctx, o)
-        st.lastAutopilot = now
+        st.lastAutopilot = now; st.autopilotAppl = id
         st.log("Prepared an entry for ${o.title} (free, strong fit). Nothing was sent.")
         Notifier.post(ctx, st, 120, "An entry is ready for your look", "${o.title}: free, a strong fit, closes ${com.emotionalleaves.studioagent.ui.fmtDate(o.deadline)}. Look it over and send, or say no.", "appl/$id")
         return id
@@ -1527,6 +1527,11 @@ object Engine {
         if (now - st.lastCallsLook > 6 * DAY) {
             val fit = shortlist(dao.oppsNow(), profile(), now, stretchOk(now), st.shortlistSize)
             if (fit.isNotEmpty()) return NextStep(if (fit.size == 1) "A call fits you this week" else "${fit.size} calls fit you this week", "Yes or No on each takes a minute.", "calls")
+        }
+        // An entry the app prepared, not yet looked at: one look, then send or say no.
+        if (st.autopilotAppl > 0) dao.applsNow().firstOrNull { it.id == st.autopilotAppl && it.submittedAt == 0L && it.status == "draft" }?.let { a ->
+            val t = dao.oppsNow().firstOrNull { it.id == a.oppId }?.title.orEmpty()
+            return NextStep("An entry is ready for your look", "$t: free and a strong fit. The app chose the pieces and wrote it; look it over, then send it or say no.", "appl/${a.id}")
         }
         // A weeknight with nothing else: the next foundations exercise, twenty-odd minutes, the session opens on it.
         if (today.dayOfWeek.value in 1..5) com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone)?.let { e ->

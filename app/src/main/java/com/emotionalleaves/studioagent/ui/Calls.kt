@@ -656,6 +656,8 @@ fun ApplScreen(nav: NavController, id: Long) {
     }
 
     var a by remember(id) { mutableStateOf(loaded) }
+    // Opened: the "ready for your look" step has done its job.
+    LaunchedEffect(id) { if (st.autopilotAppl == id) st.autopilotAppl = 0 }
     fun save(x: com.emotionalleaves.studioagent.data.Appl) { a = x; scope.io { dao.put(x); markSaved() } }
     val checks = Engine.checklist(a, o, works, feeLeft, now())
     val allGreen = checks.all { it.second }

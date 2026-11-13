@@ -457,3 +457,4 @@ One real change per round. Pushed and built every ten rounds.
 451. A weeknight with nothing else on Today now suggests the next foundations exercise ("Practice: draw a chair by drawing only the spaces between its legs"), about twenty minutes, and the session opens ready for practice instead of a big piece.
 452. Sessions of fifteen minutes or more get a quiet nudge five minutes before the end: jot where you stopped, so the next session starts from that line instead of from scratch.
 453. A series can become an online show in one file: a web page with the pictures inside it (no hosting, no account), the series title, what ties it together, each piece large with its label and price, and how to reach you. It opens in any browser; send it to a curator or put it in Drive.
+454. An entry the app prepared shows up on Today ("An entry is ready for your look") until you open it, rather than waiting for its deadline to come near; opening it is enough to clear the step.
