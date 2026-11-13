@@ -195,6 +195,8 @@ class ScreensTest {
         shot("67m_photoshoot", "photoshoot", "Photograph")
         shot("67n_supplies", "supplies", "Add a supply")
         shot("67o_decide", "decide", "to go")
+        shot("67p_dump", "dump", "One thing per line")
+        shot("67q_teach", "teach", "What to bring")
         shot("68_web", "web/${ids["draft"]}", "Fill")
         shot("69_basics", "basics", "What is an open call?")
     }
@@ -209,7 +211,9 @@ class ScreensTest {
             "materials", "interview", "facts", "letters", "sources", "admin", "review", "tour", "startnow",
             "work/${ids["wip"]}", "call/${ids["opp"]}", "appl/${ids["draft"]}", "doc/${ids["doc"]}", "contact/${ids["contact"]}",
             "nearby", "update", "plan/${ids["contact"]}", "jury/${ids["draft"]}", "search", "order",
-            "settings/you", "settings/hours", "settings/rules", "settings/calm", "settings/writing", "settings/ai", "settings/email", "settings/backup", "settings/permissions")
+            "settings/you", "settings/hours", "settings/rules", "settings/calm", "settings/writing", "settings/ai", "settings/email", "settings/backup", "settings/permissions",
+            "tools", "look/${ids["work"]}", "feedback", "commission", "year", "check", "foundations", "market", "pricing", "findable", "health",
+            "photoshoot", "supplies", "decide", "glossary", "dump", "teach")
         val out = StringBuilder()
         routes.forEach { r ->
             ActivityScenario.launch<MainActivity>(Intent(ctx, MainActivity::class.java).putExtra("route", r)).use {
