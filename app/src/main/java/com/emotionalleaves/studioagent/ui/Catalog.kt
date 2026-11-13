@@ -309,7 +309,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             } }) { Text(if (wall.isBlank()) "See it on a wall at its real size" else "Make it again") }
             if (wall.isNotBlank()) key(stamp) {
                 PathImage(wall, Modifier.fillMaxWidth().height(240.dp), 1400, description = "The piece on a gallery wall at ${Texts.dims(w.widthIn, w.heightIn)}")
-                Small("At ${Texts.dims(w.widthIn, w.heightIn)}" + (if (w.framed || w.format == "print") ", framed with a mat" else "") + ". The bench is 4 feet wide. Change the size under "Size, year, medium" to compare.")
+                Small("At ${Texts.dims(w.widthIn, w.heightIn)}" + (if (w.framed || w.format == "print") ", framed with a mat" else "") + ". The bench is 4 feet wide. Change the size under Size, year, medium to compare.")
                 TextButton(onClick = { Share.files(ctx, listOf(File(wall)), "image/jpeg") }) { Text("Share this picture") }
             }
         }
