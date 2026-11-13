@@ -38,6 +38,7 @@ fun DumpScreen(nav: NavController) {
     Screen("Empty your head", nav) {
         Intro("dump", "Everything that is buzzing around, one line each, in any order. Nothing needs deciding: the app sorts it into jobs (with their day when you name one), things to buy, and ideas, and puts each away.")
         Field("One thing per line", text, lines = 8, mic = true)
+        if (lines.isEmpty()) Small("For example:\nemail the library about the wall\nbuy titanium white\nfinish the heron by Friday\na fox in the snow, all blue")
         if (lines.isNotEmpty()) {
             Panel {
                 lines.forEachIndexed { i, l ->

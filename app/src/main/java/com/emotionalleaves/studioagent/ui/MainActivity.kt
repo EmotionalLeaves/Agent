@@ -124,7 +124,7 @@ class MainActivity : ComponentActivity() {
 fun tabFor(route: String, tabs: List<String>): String {
     val head = route.substringBefore('/')
     val home = when (head) {
-        "home", "session", "done", "admin", "week", "sessions", "review", "share" -> "home"
+        "home", "session", "done", "admin", "week", "sessions", "review", "share", "dump" -> "home"
         "works", "work", "crop", "ideas" -> "works"
         "calls", "call", "appl", "web", "sources" -> "calls"
         "outreach", "contact", "letters" -> "more"
