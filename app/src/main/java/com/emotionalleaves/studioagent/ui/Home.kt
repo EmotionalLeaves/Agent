@@ -387,6 +387,7 @@ fun Home(nav: NavController) {
         if (wins.isNotEmpty() && !calm) {
             Section("Done this week")
             wins.forEach { Check(true, it) }
+            if (st.buddy.isNotBlank() && today.dayOfWeek.value >= 5) TextButton(onClick = { Share.text(ctx, "My art this week: " + wins.joinToString("; ") + ". How was yours?") }, modifier = Modifier.offset(x = (-12).dp)) { Text("Tell ${st.buddy} about your week") }
         }
 
         // Calm Today: only the step and Start. Everything else waits in the tabs.
