@@ -260,6 +260,13 @@ class DomainTest {
         assertEquals(a, b)
     }
 
+    @Test fun timesReadTheWayPeopleTypeThem() {
+        val t = { x: String -> Planner.timeOrNull(x)?.toString() }
+        assertEquals("17:30", t("5:30 pm")); assertEquals("17:00", t("5pm")); assertEquals("17:30", t("1730"))
+        assertEquals("09:05", t("9:05")); assertEquals("17:30", t("17.30")); assertEquals("00:00", t("12am")); assertEquals("12:00", t("12 pm"))
+        assertEquals(null, t("25:00")); assertEquals(null, t("soon")); assertEquals(null, t("13pm"))
+    }
+
     @Test fun errorsReadAsPlainWords() {
         val off = com.emotionalleaves.studioagent.ui.plainError(java.net.UnknownHostException("Unable to resolve host \"api.anthropic.com\""))
         assertTrue(off.startsWith("No internet connection"))

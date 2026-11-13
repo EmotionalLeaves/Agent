@@ -39,6 +39,10 @@ import kotlinx.coroutines.withContext
 
 val contactKinds = listOf("campus", "community", "artist_run", "juror", "nonprofit", "university", "curator", "commercial")
 
+/** A kind of venue in plain words. */
+fun kindWords(k: String): String = mapOf("campus" to "On your campus", "community" to "Community space", "artist_run" to "Artist-run space", "juror" to "Juror",
+    "nonprofit" to "Nonprofit art center", "university" to "University gallery", "curator" to "Curator", "commercial" to "Commercial gallery")[k] ?: k.replace('_', ' ').replaceFirstChar { it.uppercase() }
+
 fun statusWords(c: Contact): String = when (c.status) {
     "research" -> if (c.email.isBlank()) "Researched, no email address yet" else "Researched, no email written yet"
     "drafted" -> "Draft waiting for your yes"
@@ -143,12 +147,13 @@ fun Outreach(nav: NavController) {
             OutlinedButton(onClick = { scope.io { val id = dao.put(Contact(website = url.value.trim(), createdAt = now())); withContext(Dispatchers.Main) { nav.navigate("contact/$id") } } }) { Text("Add by hand") }
         }
 
-        val people = contacts.filter { it.kind != "subscriber" }
+        // Places you can write to now come first; within them, the ones waiting on you.
+        val people = contacts.filter { it.kind != "subscriber" }.sortedWith(compareBy<Contact>({ !Levels.outreachAllowed(level, it.kind, Engine.rules()) }, { it.status !in setOf("research", "drafted", "interested", "more") }))
         if (people.isNotEmpty()) H("Venues and people")
         people.forEach { c ->
             Panel(onClick = { nav.navigate("contact/${c.id}") }) {
                 Text(c.venue.ifBlank { c.name.ifBlank { "New contact" } }, fontWeight = FontWeight.SemiBold)
-                Small(c.kind.replace('_', ' ').replaceFirstChar { it.uppercase() } + ", " + statusWords(c).replaceFirstChar { it.lowercase() })
+                Small(kindWords(c.kind) + ", " + statusWords(c).replaceFirstChar { it.lowercase() })
                 if (!Levels.outreachAllowed(level, c.kind, Engine.rules())) Note("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}.")
             }
         }
@@ -205,7 +210,7 @@ fun ContactScreen(nav: NavController, id: Long) {
         Field("Email", c.email, { save(c.copy(email = it.trim())) })
         if (c.email.isNotBlank() && !Texts.looksLikeEmail(c.email)) Small("That does not look like a full email address yet (name@place.org).")
         Field("Website", c.website, { save(c.copy(website = it.trim())) })
-        Choice("Kind", contactKinds, c.kind) { save(c.copy(kind = it)) }
+        Choice("Kind of place", contactKinds, c.kind, names = ::kindWords) { save(c.copy(kind = it)) }
         Choice("How realistic right now", listOf("now", "stretch", "long"), c.tier, names = { mapOf("now" to "Now", "stretch" to "A stretch", "long" to "Long shot")[it] ?: it }) { save(c.copy(tier = it)) }
         Toggle("They accept submissions from artists", c.acceptsSubmissions) { save(c.copy(acceptsSubmissions = it)) }
         Field("Their submission instructions", c.submissionNotes, { save(c.copy(submissionNotes = it)) }, lines = 2)
@@ -249,7 +254,9 @@ fun ContactScreen(nav: NavController, id: Long) {
                     if (c.draftBody.isNotBlank()) {
                         if (c.revisions >= limit) Note("That is ${c.revisions} rewrites. It is short and specific: it is ready.")
                         if (('[' in c.draftBody) || ('[' in c.followUpBody)) Small("Fill in the [square brackets] first.")
-                        Button(enabled = c.email.contains("@") && c.draftSubject.isNotBlank() && '[' !in c.draftBody && '[' !in c.followUpBody, modifier = Modifier.fillMaxWidth(), onClick = { save(c.copy(status = "approved")) }) { Text("Approve the email and follow-up") }
+                        if (!Texts.looksLikeEmail(c.email)) Small("Add their email address under Details first.")
+                        if (c.draftSubject.isBlank()) Small("Give it a subject line first.")
+                        Button(enabled = Texts.looksLikeEmail(c.email) && c.draftSubject.isNotBlank() && '[' !in c.draftBody && '[' !in c.followUpBody, modifier = Modifier.fillMaxWidth(), onClick = { save(c.copy(status = "approved")) }) { Text("Approve the email and follow-up") }
                         if (G.ai.ready) TextButton(enabled = !busy, onClick = {
                             busy = true; status = "Rewriting…"
                             scope.io({ status = it; busy = false }) {

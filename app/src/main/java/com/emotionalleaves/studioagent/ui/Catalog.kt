@@ -287,8 +287,8 @@ fun WorkDetail(nav: NavController, id: Long) {
             Button(onClick = {
                 val (filledWork, filled) = Engine.fillBlanks(w.copy(status = "documented"))
                 save(filledWork)
-                status = if (filled.isEmpty()) "Documented. It can now go to calls." else "Documented. Filled in for you: " + filled.joinToString(", ") + ". Change any of it whenever you like; reopen the piece to see it in the boxes."
-            }, modifier = Modifier.fillMaxWidth()) { Text("Finished and documented") }
+                status = if (filled.isEmpty()) "Ready to send. It can now go to calls." else "Ready to send. Filled in for you: " + filled.joinToString(", ") + ". Change any of it whenever you like; reopen the piece to see it in the boxes."
+            }, modifier = Modifier.fillMaxWidth()) { Text("Mark it Ready to send") }
         SavedLine()
 
         if (w.status == "in_progress") {
@@ -495,6 +495,7 @@ fun CropScreen(nav: NavController, id: Long) {
                 }
             }
             Toggle("Also neutralize the color cast (for photos of physical work)", fix) { fix = it }
+            TextButton(onClick = { pts[0] = Offset(0.06f, 0.06f); pts[1] = Offset(0.94f, 0.06f); pts[2] = Offset(0.94f, 0.94f); pts[3] = Offset(0.06f, 0.94f) }) { Text("Put the dots back to the start") }
             Status(status)
             Button(modifier = Modifier.fillMaxWidth(), onClick = {
                 status = "Working…"

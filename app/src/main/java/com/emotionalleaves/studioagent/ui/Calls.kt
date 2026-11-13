@@ -449,7 +449,7 @@ fun ApplScreen(nav: NavController, id: Long) {
         Note((if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.")
         StageHead(1, "Choose the works", chosenIds.isNotEmpty())
         val ready = works.filter { Engine.available(it) || it.id in chosenIds }
-        if (ready.isEmpty()) Empty("No pieces are ready to send yet. A piece is ready once it has a picture and is marked Ready to send in Studio.", "Open Studio") { nav.navigate("works") }
+        if (ready.isEmpty()) Empty("No pieces are ready to send yet. A piece is ready once it has a picture and you tap Mark it Ready to send on it in Studio.", "Open Studio") { nav.navigate("works") }
         else if (o.maxWorks > 0 && chosenIds.isEmpty()) Small("This call takes up to ${Texts.count(o.maxWorks, "work")}. Tap to choose.")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             works.filter { Engine.available(it) || it.id in chosenIds }.forEach { w ->
@@ -618,7 +618,7 @@ fun WebFill(nav: NavController, id: Long) {
     val picked = remember { mutableStateListOf<String>() }
     var copying by remember { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
-    var status by remember { mutableStateOf("Sign in if the site asks; it stays signed in here. Then tap Fill.") }
+    var status by remember { mutableStateOf("Sign in if the site asks; it stays signed in here. Then tap Fill in. When you have pressed the site's own submit button, tap I sent it.") }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -641,8 +641,8 @@ fun WebFill(nav: NavController, id: Long) {
                                 .put("works", list)
                             web?.evaluateJavascript(FILL_JS + "(" + d.toString() + ")") { r -> status = "Filled ${r ?: "0"} fields. Read each one, then press the site's own submit button." }
                         }
-                    }) { Text("Fill") }
-                    TextButton(onClick = { copying = !copying }) { Text(if (copying) "Hide" else "Copy") }
+                    }) { Text("Fill in") }
+                    TextButton(onClick = { copying = !copying }) { Text(if (copying) "Hide lines" else "Copy lines") }
                     TextButton(onClick = {
                         val w = web
                         if (a != null && w != null) scope.io({ status = it }) {
@@ -656,7 +656,7 @@ fun WebFill(nav: NavController, id: Long) {
                             Engine.markSubmitted(a, proof, f.absolutePath)
                             withContext(Dispatchers.Main) { nav.navigate("appl/${a.id}") { popUpTo("calls") } }
                         }
-                    }) { Text("Submitted") }
+                    }) { Text("I sent it") }
                 }
             )
         }

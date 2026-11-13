@@ -206,8 +206,17 @@ data class Slot(val start: LocalDateTime, val minutes: Int)
 data class TemplateSlot(val day: Int, val time: LocalTime, val minutes: Int)
 
 object Planner {
-    fun time(s: String, def: LocalTime): LocalTime =
-        try { LocalTime.parse(if (s.length == 4) "0$s" else s) } catch (e: Exception) { def }
+    fun time(s: String, def: LocalTime): LocalTime = timeOrNull(s) ?: def
+
+    /** Reads the ways people type a time: 17:00, 5:00, 5pm, 5:30 pm, 1730, 17.30, 17. Null when it is not a time. */
+    fun timeOrNull(raw: String): LocalTime? {
+        val s = raw.trim().lowercase().replace(" ", "").replace('.', ':')
+        val m = Regex("""^(\d{1,2})(?::?(\d{2}))?(am|pm|a|p)?$""").matchEntire(s) ?: return null
+        var h = m.groupValues[1].toInt(); val min = m.groupValues[2].ifEmpty { "0" }.toInt()
+        val half = m.groupValues[3]
+        if (half.isNotEmpty()) { if (h !in 1..12) return null; h = h % 12 + (if (half.startsWith("p")) 12 else 0) }
+        return if (h in 0..23 && min in 0..59) LocalTime.of(h, min) else null
+    }
 
     fun days(s: String): Set<Int> = s.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
 

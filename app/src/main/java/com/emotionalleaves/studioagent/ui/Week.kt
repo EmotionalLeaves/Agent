@@ -84,9 +84,11 @@ fun WeekScreen(nav: NavController) {
                 key(s.id) {
                     Panel {
                         Choice("", dayNames, dayNames[(s.day - 1).coerceIn(0, 6)]) { d -> val i = slots.indexOfFirst { it.id == s.id }; if (i >= 0) slots[i] = slots[i].copy(day = dayNames.indexOf(d) + 1) }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Column(Modifier.weight(1f)) { Field("Start (HH:MM)", s.time, { v -> val i = slots.indexOfFirst { it.id == s.id }; if (i >= 0) slots[i] = slots[i].copy(time = v) }) }
-                            Column(Modifier.weight(1f)) { Field("Minutes", s.minutes, { v -> val i = slots.indexOfFirst { it.id == s.id }; if (i >= 0) slots[i] = slots[i].copy(minutes = v) }, number = true) }
+                        // The phone's own clock face: nothing to type, nothing to get wrong.
+                        TimeField("Starts at", Planner.timeOrNull(s.time)?.toString() ?: "17:00") { v -> val i = slots.indexOfFirst { it.id == s.id }; if (i >= 0) slots[i] = slots[i].copy(time = v) }
+                        Pick("How long", listOf("20", "30", "40", "60", "90", "120", "180", "240").let { if (s.minutes in it) it else it + s.minutes }, s.minutes,
+                            names = { m -> m.toIntOrNull()?.let { if (it >= 60 && it % 60 == 0) "${it / 60} hour" + (if (it > 60) "s" else "") else if (it > 60) "${it / 60} h ${it % 60} min" else "$it min" } ?: m }) { v ->
+                            val i = slots.indexOfFirst { it.id == s.id }; if (i >= 0) slots[i] = slots[i].copy(minutes = v)
                         }
                         TextButton(onClick = { slots.removeAll { it.id == s.id } }) { Text("Remove this time") }
                     }
@@ -96,7 +98,8 @@ fun WeekScreen(nav: NavController) {
             val total = slots.sumOf { it.minutes.trim().toIntOrNull() ?: 0 }
             Note("Total: ${"%.1f".format(total / 60.0)} hours a week.")
             Button(modifier = Modifier.fillMaxWidth(), onClick = {
-                val parsed = slots.mapNotNull { e -> e.minutes.trim().toIntOrNull()?.takeIf { it > 0 }?.let { TemplateSlot(e.day, Planner.time(e.time.trim(), LocalTime.of(17, 0)), it) } }
+                // A time that cannot be read is left out rather than quietly moved to 5 pm.
+                val parsed = slots.mapNotNull { e -> val t = Planner.timeOrNull(e.time) ?: return@mapNotNull null; e.minutes.trim().toIntOrNull()?.takeIf { it > 0 }?.let { TemplateSlot(e.day, t, it) } }
                 st.weekTemplate = Planner.formatTemplate(parsed)
                 if (parsed.isNotEmpty()) st.weeklyHours = ((parsed.sumOf { it.minutes } + 30) / 60).coerceAtLeast(1)
                 custom = parsed.isNotEmpty()

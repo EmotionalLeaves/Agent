@@ -154,16 +154,19 @@ fun Materials(nav: NavController) {
         Status(status)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.cv(ctx, st, facts); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Open my CV as a PDF") }
-            listOf(10, 15, 20).forEach { n ->
+            // Only sizes you can actually fill: with 7 documented works there is one button, "7 works".
+            val documented = works.count { Engine.documented(it) }
+            (listOf(10, 15, 20).filter { it < documented } + listOf(documented.coerceAtMost(20))).distinct().filter { it > 0 }.forEach { n ->
                 OutlinedButton(onClick = {
                     scope.io({ status = it }) {
                         val statement = Engine.pickStatement(150)
                         val f = Papers.portfolio(ctx, st, works.filter { Engine.documented(it) }, statement, n)
                         withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
                     }
-                }) { Text("Portfolio PDF, $n works") }
+                }) { Text("Portfolio PDF, $n " + (if (n == 1) "work" else "works")) }
             }
         }
+        if (works.none { Engine.documented(it) }) Small("The portfolio fills in once a piece has a photo and is marked Ready to send.")
         Panel {
             Text("Portfolio web page", fontWeight = FontWeight.SemiBold)
             Note("One plain page with your documented works, approved statement, CV and email. Published to your own GitHub Pages repo. No feed, no follower counts.")

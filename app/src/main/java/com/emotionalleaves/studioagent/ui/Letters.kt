@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +58,13 @@ fun Letters(nav: NavController) {
         else {
             val l = letters[picked]
             Text(l.title, fontWeight = FontWeight.SemiBold)
+            // Someone already saved in People fills all three boxes at once.
+            val known by dao.contacts().collectAsState(emptyList())
+            val named = known.filter { it.kind != "subscriber" && (it.venue.isNotBlank() || it.name.isNotBlank()) }
+            if (named.isNotEmpty()) Pick("Fill in from People", listOf("") + named.map { it.id.toString() }, "",
+                names = { id -> named.firstOrNull { it.id.toString() == id }?.let { listOf(it.name, it.venue).filter { x -> x.isNotBlank() }.joinToString(", ") } ?: "Choose someone" }) { id ->
+                named.firstOrNull { it.id.toString() == id }?.let { them.value = it.name; place.value = it.venue; to.value = it.email }
+            }
             Field("Their name (leave empty if you do not know it)", them)
             Field("The place (gallery, library, lab)", place)
             Field("Their email (optional)", to)

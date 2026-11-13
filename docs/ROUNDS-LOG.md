@@ -172,3 +172,13 @@ One real change per round. Pushed and built every ten rounds.
 168. Recording a sale shows what you receive after the venue's commission, as you type.
 169. The quarterly report shows its date the readable way and says "accepted 2 of 5 results".
 170. What the ranking learned from your No answers reads in the same words as the No choices ("the fee (3)").
+171. The entry form toolbar reads "Fill in", "Copy lines" and "I sent it", and the first line explains the order.
+172. Straightening a picture has "Put the dots back to the start" for a fresh try.
+173. Venues read as plain kinds ("Artist-run space", "Nonprofit art center", "Commercial gallery").
+174. Places you can write to now come first in People and venues, with the ones waiting on you at the top.
+175. An email that cannot be approved yet says why: no address, or no subject.
+176. Times are read the way people type them: 5pm, 5:30 pm, 1730, 17.30.
+177. Studio times use the clock face and a list of lengths (30 min, 1 hour, 2 hours) instead of typed boxes.
+178. Ready-made emails fill name, place and address from someone in People with one pick.
+179. Portfolio PDF buttons only offer sizes you can fill; with no documented work it says what is missing.
+180. One name for a finished, photographed piece: the button says "Mark it Ready to send", matching its label everywhere else.
