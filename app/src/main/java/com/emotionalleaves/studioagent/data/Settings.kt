@@ -221,6 +221,9 @@ class Settings(ctx: Context) {
     /** The month a seasonal note was last shown ("2027-9"). */
     var seasonTold by S("seasonTold")
     var seasonDay by S("seasonDay")
+    /** The latest "no" a run of three was already talked about for, and the day it was. */
+    var noStreakTold by L("noStreakTold", 0)
+    var noStreakDay by S("noStreakDay")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

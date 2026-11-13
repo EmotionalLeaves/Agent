@@ -1455,6 +1455,11 @@ object Engine {
 
     private fun statusWord(s: String) = when (s) { "in_progress" -> "in progress"; "documented", "available" -> "ready to send"; "pending" -> "out on a call"; else -> s.replace('_', ' ') }
 
+    /** The run of no's has been seen: the step goes until a new no starts another run. */
+    suspend fun noStreakSeen() {
+        dao.applsNow().filter { it.status == "declined" && it.submittedAt > 0 }.maxByOrNull { it.submittedAt }?.let { st.noStreakTold = it.id }
+    }
+
     /** The single thing shown on the home screen. */
     suspend fun nextStep(): NextStep {
         val now = System.currentTimeMillis(); val today = LocalDate.now()
@@ -1587,6 +1592,13 @@ object Engine {
         if (st.autopilotAppl > 0) dao.applsNow().firstOrNull { it.id == st.autopilotAppl && it.submittedAt == 0L && it.status == "draft" }?.let { a ->
             val t = dao.oppsNow().firstOrNull { it.id == a.oppId }?.title.orEmpty()
             return NextStep("An entry is ready for your look", "$t: free and a strong fit. The app chose the pieces and wrote it; look it over, then send it or say no.", "appl/${a.id}")
+        }
+        // Three no's in a row is normal, and also the moment to change one thing. Said once per run of no's, kindly.
+        dao.applsNow().filter { it.status in setOf("accepted", "declined") && it.submittedAt > 0 }.sortedByDescending { it.submittedAt }.take(3).let { last ->
+            if (last.size == 3 && last.all { it.status == "declined" } && st.noStreakTold != last.first().id) {
+                if (st.noStreakDay != today.toString()) { st.noStreakDay = today.toString() }
+                return NextStep("Three no's in a row", "Every working artist has runs like this; most work is turned down many times first. One change helps most: ask three people which piece is strongest, check the photos, or try a few local calls before the bigger ones.", "feedback")
+            }
         }
         // The art year has seasons: holiday markets book their tables in early autumn, and spring calls open in January.
         // Shown all that Saturday, then not again that month.

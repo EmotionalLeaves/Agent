@@ -49,6 +49,8 @@ fun FeedbackScreen(nav: NavController) {
     val chosen = remember(tick, works) { st.feedbackIds.split(",").mapNotNull { it.toLongOrNull() }.filter { id -> pickable.any { it.id == id } } }
     val questions = remember(tick) { st.feedbackQuestions.split("\n").filter { it.isNotBlank() }.ifEmpty { Feedback.defaultQuestions } }
     var status by remember { mutableStateOf("") }
+    // Opened from "three no's in a row": that run has been talked about.
+    androidx.compose.runtime.LaunchedEffect(Unit) { com.emotionalleaves.studioagent.work.Engine.noStreakSeen() }
     Screen("Ask for feedback", nav) {
         Intro("feedback", "Three people's honest pick tells you more than a week of wondering. Choose a few pieces, send them numbered with three short questions, and note what each person says.")
         if (pickable.size < 2) { Note("Add pictures of at least two pieces in Studio, and you can ask people which is strongest."); return@Screen }
