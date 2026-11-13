@@ -290,5 +290,7 @@ Simplicity
 | Size is typed in, not measured | Round 573: a squared-up picture's shape is matched to standard paper and canvas sizes, offered with one tap |
 | "Odds" uses call tier, not yet your own history | Round 574: odds move toward your own yeses and no's at each kind of call |
 | Studio playlist not built | Round 575: a playlist link, opened from the session screen |
+| JPEG exports only, no TIFF | Round 577: an uncompressed TIFF of the original for print labs, with the print resolution written in (still no colour-profile soft proof) |
+| No in-app glare check | Photos are checked for darkness, washed-out light, softness and glare spots as they come in |
 | Shipping help is a packing note, not carrier quotes | Box size, packed weight and billable weight per piece, and the shipping steps counted back from delivery (carrier quotes still need the carrier's own site) |
 | No calendar feed of openings | Openings are read from a photographed poster or a venue's site and put on your calendar |
