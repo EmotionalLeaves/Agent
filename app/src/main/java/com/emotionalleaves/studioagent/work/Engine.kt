@@ -1518,6 +1518,12 @@ object Engine {
                 val w = dao.artworksNow()
                 "${Texts.count(w.count { available(it) }, "piece")} ready to send, ${w.count { it.status == "in_progress" }} in progress, ${w.count { it.status == "idea" }} ideas.\nGO: works"
             }
+            has("what's on", "what is on", "coming up", "my week look", "what do i have", "anything on") -> {
+                val end = now + 7 * DAY
+                val ev = dao.eventsNow().filter { !it.done && it.date in now..end && it.type in setOf("task", "studio", "submit") }.sortedBy { it.date }.take(8)
+                if (ev.isEmpty()) "Nothing on your list for the next seven days. A studio time can be added in Your week.\nGO: week"
+                else "The next seven days:\n" + ev.joinToString("\n") { "- " + date(it.date).dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.US) + ": " + it.title } + "\nGO: week"
+            }
             has("hours", "how long have i", "this week", "how much time") && !has("deadline") -> {
                 val monday = millis(LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay())
                 val h = dao.sessionsNow().filter { it.start >= monday && it.end > it.start }.sumOf { (it.end - it.start) / 3_600_000.0 }

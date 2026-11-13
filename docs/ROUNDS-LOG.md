@@ -653,3 +653,4 @@ One real change per round. Pushed and built every ten rounds.
 646. "Put away" counts those ideas where they went: "1 idea in a piece's notes" beside the ones in Ideas.
 647. After closing a market day, "Another market coming up?" takes its date: the market and a packing evening two days before go on your to-dos, and both open Market day when they come up.
 648. The test of where to-dos open covers market days and packing evenings.
+649. Asking "what's on this week?" or "what's coming up?" lists the next seven days on the phone (studio times, to-dos, deadlines, by day), with a button to Your week.
