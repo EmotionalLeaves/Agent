@@ -541,6 +541,8 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Count("Notifications a day, at most", st.notifCap, 0, 10) { st.notifCap = it }
                 Toggle("Book studio time in my calendar", useCal) { useCal = it; st.useCalendar = it }
                 Toggle("Silence my phone during sessions", dnd) { dnd = it; st.dndInSession = it }
+                // Working "alongside" someone, even by text, makes starting easier for many people with ADHD.
+                SText("A friend to text when you start (optional)", st.buddy) { st.buddy = it }
                 Small("Your studio times themselves are on Today: tap Your week.")
             }
             "rules" -> {

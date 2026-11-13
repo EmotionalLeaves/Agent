@@ -394,6 +394,7 @@ fun DoneScreen(nav: NavController) {
             val mins = ((s.end - s.start) / 60000).coerceAtLeast(0)
             Text((if (mins < 1) "Under a minute" else Texts.count(mins.toInt(), "minute")) + (works.firstOrNull { it.id == s.artworkId }?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".", style = MaterialTheme.typography.headlineSmall)
             Text(if (mins < 10) "Short sessions count. You showed up." else "That counts toward your week.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (st.buddy.isNotBlank()) { val ctx = LocalContext.current; TextButton(onClick = { Share.text(ctx, "Done: " + (if (mins < 1) "a few minutes" else Texts.count(mins.toInt(), "minute")) + " on my art. How did yours go?") }, modifier = Modifier.offset(x = (-12).dp)) { Text("Tell ${st.buddy} it's done") } }
             // The week so far, against the hours you set: progress, never a scold.
             val monday = Engine.millis(LocalDate.now().with(java.time.DayOfWeek.MONDAY).atStartOfDay())
             val weekMin = sessions.filter { it.start >= monday && it.end > it.start }.sumOf { (it.end - it.start) / 60000 }.toInt()
@@ -521,6 +522,7 @@ fun SessionScreen(nav: NavController) {
                 if (st.dndInSession) Notifier.dnd(ctx, true)
             }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start, " + length.replace(" min", " minutes")) }
             if (st.dndInSession && !Notifier.dndGranted(ctx)) Small("Want the phone silenced during sessions? Allow it in You, Settings, Hours and calm.")
+            if (st.buddy.isNotBlank()) TextButton(onClick = { Share.text(ctx, "Starting ${length.replace(" min", " minutes")} on my art now. Want to work on something of yours at the same time? I'll text you when I'm done.") }, modifier = Modifier.offset(x = (-12).dp)) { Text("Tell ${st.buddy} you're starting") }
         }
     } else {
         var nowMs by remember { mutableStateOf(now()) }
