@@ -1181,6 +1181,15 @@ object Engine {
         }
     }
 
+    /** When "Remind me this evening" will come: six, or two hours from now when it is already evening. */
+    fun laterTime(): String {
+        val now = java.time.LocalDateTime.now()
+        val at = now.toLocalDate().atTime(18, 0).let { if (it.isAfter(now.plusMinutes(30))) it else now.plusHours(2) }
+        return at.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a", java.util.Locale.US))
+    }
+
+    fun cancelLater(ctx: Context) { try { WorkManager.getInstance(ctx).cancelUniqueWork("later") } catch (e: Exception) { } }
+
     /** Remind me later: today's step comes back as a notification this evening (or in two hours when it is already evening). */
     fun remindLater(ctx: Context, title: String, route: String) {
         val now = java.time.LocalDateTime.now()

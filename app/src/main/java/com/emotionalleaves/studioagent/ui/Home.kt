@@ -261,7 +261,9 @@ fun Home(nav: NavController) {
                             if (st.snoozeDay == today.toString()) DropdownMenuItem(text = { Text("Bring today's step back") }, onClick = { st.snoozeDay = ""; menu = false })
                             else DropdownMenuItem(text = { Text("Not today") }, onClick = { st.snoozeRun = if (st.snoozeDay == today.minusDays(1).toString()) st.snoozeRun + 1 else 1; st.snoozeDay = today.toString(); menu = false })
                             DropdownMenuItem(text = { Text("Empty my head first") }, onClick = { menu = false; nav.navigate("dump") })
-                            n?.let { step -> DropdownMenuItem(text = { Text("Remind me this evening") }, onClick = { Engine.remindLater(ctx, step.title, step.route); menu = false }) }
+                            n?.let { step -> DropdownMenuItem(text = { Text("Remind me this evening") }, onClick = { menu = false
+                                // Said back plainly, so there is no need to check that it worked; Undo cancels it.
+                                scope.undoable("Reminder set for " + Engine.laterTime(), { Engine.remindLater(ctx, step.title, step.route) }, { Engine.cancelLater(ctx) }) }) }
                             // When it is all too much: three quiet days, the step shrinks to five minutes, everything else waits.
                             DropdownMenuItem(text = { Text("It is all too much") }, onClick = { st.calmUntil = System.currentTimeMillis() + 3 * 86_400_000L; menu = false })
                             DropdownMenuItem(text = { Text("Pin my own step") }, onClick = { pinning = true; menu = false })

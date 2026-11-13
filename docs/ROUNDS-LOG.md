@@ -666,3 +666,4 @@ One real change per round. Pushed and built every ten rounds.
 659. Asking "when is my next studio time?" answers on the phone: the day, date and length, and that nothing stops you starting sooner.
 660. "New in this version" and the README catch up with rounds 641 to 659.
 661. A test for "when is my next studio time?": none planned, then the next one with its length.
+662. "Remind me this evening" says back what it did ("Reminder set for 6:00 PM"), with Undo to cancel it, so there is nothing to go back and check.
