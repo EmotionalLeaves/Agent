@@ -239,6 +239,16 @@ fun Works(nav: NavController) {
                         if (plan.size > 1) Button(onClick = { val all = plan; plan = emptyList(); scope.io { all.forEach { (t, what) -> dao.put(Artwork(title = t, status = "idea", seriesId = s.id, notes = what, createdAt = now())) } } }) { Text("Add all ${plan.size} as ideas") }
                         if (plan.isNotEmpty()) TextButton(onClick = { plan = emptyList() }) { Text("Different suggestions") }
                     }
+                    // The series as one post: each piece in the feed shape, in order, with the series' own words.
+                    val postable = works.filter { it.seriesId == s.id && it.imagePath.isNotBlank() && it.status !in setOf("idea", "in_progress") }
+                    if (postable.size >= 2) TextButton(onClick = { scope.io {
+                        val dir = File(ImageTools.exportDir(ctx), "series_post").apply { deleteRecursively(); mkdirs() }
+                        val files = postable.take(10).mapIndexedNotNull { i, w -> com.emotionalleaves.studioagent.media.Post.render(w.imagePath, st.fullName, File(dir, "${i + 1}_" + w.title.filter { it.isLetterOrDigit() }.take(20) + ".jpg")) }
+                        val words = listOf(s.name, s.notes.trim(), postable.take(10).mapIndexed { i, w -> "${i + 1}. " + w.title.ifBlank { "Untitled" } + (if (w.year > 0) " (${w.year})" else "") }.joinToString("\n"),
+                            com.emotionalleaves.studioagent.media.Post.tags(postable.first().medium, st.city)).filter { it.isNotBlank() }.joinToString("\n\n")
+                        st.lastPosted = System.currentTimeMillis()
+                        withContext(Dispatchers.Main) { Share.files(ctx, files, "image/jpeg", words) }
+                    } }) { Text("Post the series (${minOf(10, postable.size)} pictures)") }
                     Expand("Is this series ready to show?") {
                         val ready = works.filter { it.seriesId == s.id && Engine.documented(it) }
                         val hasStatement = docs.any { it.type == "statement" && it.seriesId == s.id && it.approved && it.text.isNotBlank() }

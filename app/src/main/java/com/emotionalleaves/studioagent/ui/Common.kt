@@ -485,7 +485,7 @@ fun SearchScreen(nav: NavController) {
     var answer by remember { mutableStateOf("") }
     var asking by remember { mutableStateOf(false) }
     Screen("Find anything", nav) {
-        Field("A title, a venue, a person, a word, or a question", q)
+        Field("A title, a venue, a person, a word, or a question", q, mic = true)
         // A question gets an answer about your own situation, not a list of matches.
         val question = q.value.trim().let { t -> t.length > 8 && (t.endsWith("?") || Regex("^(how|what|when|where|which|who|why|should|can|could|do|does|is|am|are|will|would)\\b", RegexOption.IGNORE_CASE).containsMatchIn(t)) }
         if (question) androidx.compose.material3.Button(enabled = !asking, onClick = {
