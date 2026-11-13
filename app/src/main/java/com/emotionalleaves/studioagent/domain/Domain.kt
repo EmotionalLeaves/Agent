@@ -401,6 +401,40 @@ object Planner {
      * Weeks until a series reaches its target at the artist's real pace, or null when there is nothing to go on yet.
      * [hoursPerPiece] comes from pieces already finished; [hoursPerWeek] from the last few weeks actually worked.
      */
+    /**
+     * The year ahead, a month at a time: about how many pieces you will have at your real pace (with the milestones
+     * that open doors), calls closing, calls expected to open again, and your own dated plans. Months with nothing
+     * dated get one plain focus for your level.
+     */
+    fun yearPlan(today: LocalDate, piecesNow: Int, piecesPerWeek: Double, level: Int, calls: List<Pair<LocalDate, String>>,
+                 again: List<Pair<LocalDate, String>>, plans: List<Pair<LocalDate, String>>, months: Int = 12): List<Pair<java.time.YearMonth, List<String>>> {
+        val start = java.time.YearMonth.from(today)
+        var before = piecesNow.toDouble()
+        return (0 until months).map { k ->
+            val ym = start.plusMonths(k.toLong())
+            val end = ym.atEndOfMonth()
+            val weeks = java.time.temporal.ChronoUnit.DAYS.between(today, end).coerceAtLeast(0) / 7.0
+            val count = piecesNow + piecesPerWeek * weeks
+            val lines = mutableListOf<String>()
+            if (piecesPerWeek > 0) {
+                lines += "About ${count.toInt()} finished " + (if (count.toInt() == 1) "piece" else "pieces") + " by the end of the month."
+                listOf(10 to "Ten pieces: a full series, and local and campus calls open to you.", 15 to "Fifteen pieces: enough to fill a small room, a first solo show.", 25 to "Twenty-five pieces: choice. Send only your strongest.")
+                    .firstOrNull { (n, _) -> before < n && count >= n }?.let { lines += it.second }
+            }
+            before = count
+            fun inMonth(l: List<Pair<LocalDate, String>>) = l.filter { java.time.YearMonth.from(it.first) == ym }.sortedBy { it.first }
+            plans.let(::inMonth).let { p -> p.take(3).forEach { lines += "${it.first.dayOfMonth} ${ym.month.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.US)}: ${it.second}" }; if (p.size > 3) lines += "and ${p.size - 3} more of your own dates" }
+            calls.let(::inMonth).let { c -> if (c.isNotEmpty()) lines += "Closing: " + c.take(3).joinToString("; ") { it.second } + (if (c.size > 3) "; and ${c.size - 3} more" else "") }
+            again.let(::inMonth).let { a -> if (a.isNotEmpty()) lines += "Likely to open again: " + a.take(3).joinToString("; ") { it.second } }
+            if (inMonth(calls).isEmpty() && inMonth(plans).isEmpty()) lines += when {
+                level <= 0 -> "Focus: make, and go and look at one place near you."
+                level == 1 -> "Focus: one local or campus call, and one venue to write to."
+                else -> "Focus: one regional call that fits, and keep making."
+            }
+            ym to lines
+        }
+    }
+
     /** "Title | what to make" lines, numbered or bulleted or not, into pairs. */
     fun pieceLines(text: String): List<Pair<String, String>> = text.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "") }
         .mapNotNull { l -> val parts = l.split(Regex("\\s*[|]\\s*|\\s+[-–—]\\s+|:\\s+"), limit = 2); if (parts.size == 2 && parts[0].length in 2..50 && parts[1].length > 8) parts[0].trim('"', ' ') to parts[1].trim() else null }

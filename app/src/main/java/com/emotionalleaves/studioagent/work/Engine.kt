@@ -712,6 +712,26 @@ object Engine {
             (if (tight) " That is more than a piece a weekend. A smaller size, or a later call, may be kinder." else "")
     }
 
+    /** Pieces a week at your real pace: recent studio hours a week over the hours a finished piece has taken. 0 until there is a finished piece with sessions. */
+    suspend fun piecesPerWeek(): Double {
+        val works = dao.artworksNow(); val sessions = dao.sessionsNow().filter { it.end > it.start }
+        val doneIds = works.filter { documented(it) || it.status in setOf("finished", "shown", "sold") }.map { it.id }.toSet()
+        val perPiece = doneIds.map { id -> sessions.filter { it.artworkId == id }.sumOf { (it.end - it.start) / 3_600_000.0 } }.filter { it > 0 }
+        if (perPiece.isEmpty()) return 0.0
+        val recent = sessions.filter { it.start >= System.currentTimeMillis() - 28 * DAY }.sumOf { (it.end - it.start) / 3_600_000.0 } / 4.0
+        return recent / perPiece.average()
+    }
+
+    suspend fun yearAhead(): List<Pair<java.time.YearMonth, List<String>>> {
+        val now = System.currentTimeMillis(); val works = dao.artworksNow()
+        val have = works.count { documented(it) || it.status in setOf("finished", "shown", "sold") }
+        val calls = dao.oppsNow().filter { it.deadline > now && (it.status == "yes" || (it.status == "new" && it.fitScore >= 60)) && it.sourceName != "Your own show" }.map { date(it.deadline) to it.title }
+        val evts = dao.eventsNow().filter { !it.done && it.date > now }
+        val again = evts.filter { it.type == "watch" }.map { date(it.date) to it.title.removePrefix("Watch for: ") }
+        val plans = evts.filter { it.type == "task" || it.type == "invite" }.map { date(it.date) to it.title }
+        return Planner.yearPlan(LocalDate.now(), have, piecesPerWeek(), level(), calls, again, plans)
+    }
+
     // ------------------------------------------------------------ selling at a show
 
     /** The show a piece is in right now (an accepted entry it is part of, not yet released), or null. */

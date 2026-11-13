@@ -383,4 +383,20 @@ class DomainTest {
         val m = F.message("Jade", listOf("Cooler", "Prep"), F.defaultQuestions)
         assertTrue(m.contains("1. Cooler\n2. Prep") && m.endsWith("Jade") && m.contains("3) Does anything"))
     }
+
+    @Test fun theYearAheadCountsAndLists() {
+        val today = java.time.LocalDate.of(2027, 1, 10)
+        val plan = com.emotionalleaves.studioagent.domain.Planner.yearPlan(today, 6, 0.5, 1,
+            calls = listOf(java.time.LocalDate.of(2027, 2, 14) to "Valentine Small Works"),
+            again = listOf(java.time.LocalDate.of(2027, 3, 1) to "Spring Open"),
+            plans = listOf(java.time.LocalDate.of(2027, 4, 20) to "Opening at Gallery 4"))
+        assertEquals(12, plan.size)
+        assertEquals(java.time.YearMonth.of(2027, 1), plan[0].first)
+        // 6 now, half a piece a week: about 8 by late February, crossing ten in March.
+        assertTrue(plan[1].second.any { it == "Closing: Valentine Small Works" })
+        assertTrue(plan[2].second.any { it.startsWith("Ten pieces") } && plan[2].second.any { it == "Likely to open again: Spring Open" })
+        assertTrue(plan[3].second.any { it == "20 Apr: Opening at Gallery 4" })
+        assertTrue(plan[0].second.any { it.startsWith("Focus: one local") })
+        assertTrue(plan.drop(4).none { l -> l.second.any { it.startsWith("Ten pieces") } })
+    }
 }

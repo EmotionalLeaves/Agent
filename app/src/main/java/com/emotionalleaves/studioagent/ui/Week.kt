@@ -75,6 +75,7 @@ fun WeekScreen(nav: NavController) {
         Intro("week", "These are the times the app books for making work. They are a plan, not a test: skip one and nothing is marked missed. Change anything here to fit your real life.")
         val opps by dao.opps().collectAsState(emptyList())
         MonthView(events, nav, opps.filter { it.status in setOf("new", "later") && it.deadline > now() && it.fitScore >= 50 })
+        androidx.compose.material3.TextButton(onClick = { nav.navigate("year") }) { Text("The year ahead") }
         Status(status)
         H("Studio times")
         if (!custom) {

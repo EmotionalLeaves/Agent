@@ -204,6 +204,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("look/{id}") { LookScreen(nav, it.id()) }
             composable("feedback") { FeedbackScreen(nav) }
             composable("commission") { CommissionStart(nav) }
+            composable("year") { YearScreen(nav) }
             composable("ideas") { Ideas(nav) }
             composable("materials") { Materials(nav) }
             composable("interview") { Interview(nav) }
