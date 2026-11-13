@@ -74,7 +74,8 @@ object Engine {
 
     /** The daily check: on any connection, or only on Wi-Fi and while charging when you would rather save data and battery. */
     fun schedule(ctx: Context, changed: Boolean = false) {
-        val c = Constraints.Builder().setRequiredNetworkType(if (st.wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED).apply { if (st.wifiOnly) setRequiresCharging(true) }.build()
+        // Never on a nearly flat battery: the reading can wait for a charge.
+        val c = Constraints.Builder().setRequiredNetworkType(if (st.wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED).setRequiresBatteryNotLow(true).apply { if (st.wifiOnly) setRequiresCharging(true) }.build()
         val req = PeriodicWorkRequestBuilder<DailyWorker>(1, TimeUnit.DAYS).setConstraints(c).build()
         WorkManager.getInstance(ctx).enqueueUniquePeriodicWork("daily", if (changed) ExistingPeriodicWorkPolicy.UPDATE else ExistingPeriodicWorkPolicy.KEEP, req)
     }
