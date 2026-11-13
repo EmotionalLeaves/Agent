@@ -92,3 +92,13 @@ One real change per round. Pushed and built every ten rounds.
 88. The widget, quick tile and shortcut all say "Start now", the same as Today.
 89. Plain answers: the three quicker ways to start (icon shortcut, widget, quick-settings tile).
 90. README: a Quick ways in section.
+91. The covering email lists the works you actually chose: it follows your choice, unless you have rewritten the email yourself.
+92. It also follows the statement (whether one is attached), with the same rule.
+93. The application email boxes are labelled "To (their email address)" (with the @ keyboard) and "The covering email".
+94. An email address added to a call later reaches its application by itself.
+95. Slow sites cannot push the daily check past the phone's limit: after eight minutes the remaining calls wait for the next day.
+96. Calls says when the app last looked for new calls, so you can tell it is working.
+97. A check you start yourself counts as the last look too.
+98. The first-run "How it goes" says what the app really does: it finds calls every day.
+99. When calls fit you and you have not looked this week, Today's step says so ("3 calls fit you this week") and opens Calls.
+100. A test for "In plain words" without the writing help.

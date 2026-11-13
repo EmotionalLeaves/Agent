@@ -140,6 +140,8 @@ class Settings(ctx: Context) {
     var imapHost by S("imapHost", "imap.gmail.com")
     var lastMailCheck by L("lastMailCheck", 0)
     var lastCallsNotice by L("lastCallsNotice", 0)
+    var lastScan by L("lastScan", 0)
+    var lastCallsLook by L("lastCallsLook", 0)
 
     // GitHub
     var ghToken by S("ghToken", "", true)

@@ -173,6 +173,15 @@ class PartsTest {
         } finally { server.shutdown() }
     }
 
+    /** "In plain words" without the writing help: three lines from the call's own facts. */
+    @Test fun aCallInPlainWordsWithoutTheHelper() {
+        ctx
+        val lines = Engine.plainFacts(Opp(title = "Winter Open", kind = "exhibition", organiser = "Riverside Arts", maxWorks = 3, statementLimit = 150, commission = 30.0, rightsGrab = true))
+        assertEquals(listOf("An exhibition run by Riverside Arts.", "Send up to 3 works and a statement of up to 150 words.",
+            "Watch: the terms take broad rights to your images; 30% commission on sales."), lines)
+        assertEquals(emptyList<String>(), Engine.plainFacts(Opp(title = "Bare")))
+    }
+
     @Test fun existingFilesComeInAsFinishedPieces() = runBlocking {
         ctx
         val f = picture("blue_hour-final.jpg", 3000, 2400)

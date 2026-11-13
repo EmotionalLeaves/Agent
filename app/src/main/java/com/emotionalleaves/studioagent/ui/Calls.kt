@@ -116,6 +116,7 @@ fun Calls(nav: NavController) {
 
     Screen("Calls", nav, back = false) {
         Intro("calls", "Open calls you could apply to. The app checks each one against your level, budget and work, and shows the few worth a look. You only answer Yes or No.")
+        LaunchedEffect(Unit) { st.lastCallsLook = now() }
         Choice("", listOf("this week", "all", "applied"), tab) { tab = it }
         if (kindsPresent.size > 1 && tab != "applied") Choice("", listOf("every kind") + kindsPresent, kindFilter) { kindFilter = it }
         Status(status)
@@ -179,6 +180,9 @@ fun Calls(nav: NavController) {
                         }
                     }
                 }
+                // So you can tell the app is working without opening anything.
+                val looked = maxOf(st.lastScan, st.lastDaily)
+                if (looked > 0) Small("The app last looked for new calls on ${fmtDate(looked)}, at ${clock(looked)}.")
                 H("Add a call")
                 Field("Paste a link or the call text", paste, lines = 2)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -426,6 +430,8 @@ fun ApplScreen(nav: NavController, id: Long) {
     val checks = Engine.checklist(a, o, works, feeLeft, now())
     val allGreen = checks.all { it.second }
     val chosenIds = Engine.workIds(a)
+    // An address added to the call later reaches its application by itself.
+    LaunchedEffect(o.email) { if (a.submittedAt == 0L && a.emailTo.isBlank() && o.email.isNotBlank()) save(a.copy(emailTo = o.email, method = "email")) }
     val files = remember(a.packDir, status) { Engine.packFiles(a) }
     val newQuestion = rememberSaveable { mutableStateOf("") }
 
@@ -439,12 +445,20 @@ fun ApplScreen(nav: NavController, id: Long) {
             works.filter { Engine.available(it) || it.id in chosenIds }.forEach { w ->
                 FilterChip(selected = w.id in chosenIds, onClick = {
                     val next = if (w.id in chosenIds) chosenIds - w.id else chosenIds + w.id
-                    save(a.copy(workIds = next.joinToString(","), packDir = ""))
+                    // The covering email lists the works, so it follows the choice, unless you have rewritten it yourself.
+                    val byId = works.associateBy { it.id }
+                    val auto = Engine.applicationEmail(o, chosenIds.mapNotNull { byId[it] }, a.statement)
+                    val body = if (a.emailBody.isBlank() || a.emailBody == auto) Engine.applicationEmail(o, next.mapNotNull { byId[it] }, a.statement) else a.emailBody
+                    save(a.copy(workIds = next.joinToString(","), packDir = "", emailBody = body))
                 }, label = { Text(w.title.ifBlank { "Untitled #${w.id}" }) })
             }
         }
         StageHead(2, "Statement and fit", a.statement.isNotBlank() && a.themeText.isNotBlank())
-        Field((if (o.statementLimit > 0) "Limit ${o.statementLimit} words. " else "") + "Edit only if this call needs it", a.statement, { save(a.copy(statement = it, packDir = "")) }, lines = 5)
+        Field((if (o.statementLimit > 0) "Limit ${o.statementLimit} words. " else "") + "Edit only if this call needs it", a.statement, { t ->
+            val chosen = works.filter { it.id in chosenIds }.sortedBy { chosenIds.indexOf(it.id) }
+            val auto = Engine.applicationEmail(o, chosen, a.statement)
+            save(a.copy(statement = t, packDir = "", emailBody = if (a.emailBody == auto) Engine.applicationEmail(o, chosen, t) else a.emailBody))
+        }, lines = 5)
         Small("${Texts.words(a.statement)} words" + (if (o.statementLimit > 0) " of ${o.statementLimit} allowed" else ""))
         Field("How these works fit this call (2 to 3 sentences)", a.themeText, { save(a.copy(themeText = it, packDir = "")) }, lines = 3)
         val starterFit = { Starter.fit(works.filter { it.id in chosenIds }.map { it.title.ifBlank { "Untitled" } }, o, a.statement) }
@@ -525,9 +539,9 @@ fun ApplScreen(nav: NavController, id: Long) {
             Note("The app never pays for you. You pay on the organiser's page; it keeps the record.")
         }
         if (a.method == "email") {
-            Field("To", a.emailTo, { save(a.copy(emailTo = it.trim())) })
+            Field("To (their email address)", a.emailTo, { save(a.copy(emailTo = it.trim())) })
             Field("Subject", a.emailSubject, { save(a.copy(emailSubject = it)) })
-            Field("Email", a.emailBody, { save(a.copy(emailBody = it)) }, lines = 6)
+            Field("The covering email", a.emailBody, { save(a.copy(emailBody = it)) }, lines = 6)
             if (a.status == "sending") Panel {
                 Text("Approved. It sends in about 10 minutes.")
                 OutlinedButton(onClick = { Engine.cancelSend(ctx, a.id); save(a.copy(status = "ready")) }) { Text("Undo") }

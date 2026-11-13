@@ -841,6 +841,11 @@ object Engine {
             return NextStep("Generate your statement", "It is written from your interview. You approve it in one tap.", "materials")
         if (best < st.gateWorks) return NextStep("Start the next piece", "$best of ${st.gateWorks} in your series so far.", "works")
         if (pend.isNotEmpty()) return NextStep("${pend.size} to approve", pend.first().title, "admin")
+        // Calls that fit, once a week at most, and only when you have not looked already.
+        if (now - st.lastCallsLook > 6 * DAY) {
+            val fit = shortlist(dao.oppsNow(), profile(), now, stretchOk(now), st.shortlistSize)
+            if (fit.isNotEmpty()) return NextStep(if (fit.size == 1) "A call fits you this week" else "${fit.size} calls fit you this week", "Yes or No on each takes a minute.", "calls")
+        }
         return NextStep("Start a session", "Nothing else needs you today.", "session")
     }
 
@@ -878,6 +883,8 @@ object Engine {
                 val links = com.emotionalleaves.studioagent.net.Listing.links(doc).filter { it.url !in known }
                 var added = 0
                 for (l in links.take(perSource)) {
+                    // Slow sites cannot push the check past the phone's limit: after eight minutes the rest wait for tomorrow.
+                    if (System.currentTimeMillis() - started > 8 * 60_000) break
                     known += l.url
                     val text = try { "Link: ${l.url}\n" + Fetch.text(Fetch.html(l.url)) } catch (e: Exception) { continue }
                     added += readCall(text, s.name, l.text, l.url, now, doc.title(), useAi = System.currentTimeMillis() - started < 4 * 60_000)
@@ -888,6 +895,7 @@ object Engine {
             total += Regex("Added (\\d+)").find(status)?.groupValues?.get(1)?.toIntOrNull() ?: 0
             dao.put(s.copy(lastFetched = now, lastStatus = status))
         }
+        st.lastScan = System.currentTimeMillis()
         total
     }
 

@@ -261,7 +261,7 @@ fun Home(nav: NavController) {
             Column {
                 listOf("Look around" to "A two-minute tour. Nothing to fill in.",
                     "Make" to "Tap Start and the timer runs. The app keeps track of each piece and the next small step.",
-                    "Show" to "Once a few pieces are done, it finds open calls that fit and builds each application for your yes.").forEachIndexed { i, (t, d) ->
+                    "Show" to "Every day it finds open calls and keeps the ones right for where you are. Say yes and it builds the application for your last look.").forEachIndexed { i, (t, d) ->
                     Timeline(done = false, current = i == 0, last = i == 2) {
                         Text(t, style = MaterialTheme.typography.titleMedium)
                         Small(d)
