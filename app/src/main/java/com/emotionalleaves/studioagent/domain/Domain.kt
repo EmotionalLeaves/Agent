@@ -821,6 +821,49 @@ object CallReader {
 }
 
 
+/**
+ * "Too good to be true?" for a message, invitation or offer. Artists starting out are targeted by a few
+ * well-known schemes: the overpaying buyer, paid "features", pay-to-show dressed as an honor, and urgency.
+ * Each sign found is named in plain words with what to do. Rules only, nothing sent anywhere.
+ */
+object Offers {
+    data class Sign(val serious: Boolean, val what: String)
+
+    fun check(text: String): List<Sign> {
+        val l = text.lowercase().replace(Regex("\\s+"), " ")
+        val out = mutableListOf<Sign>()
+        fun has(vararg p: String) = p.any { Regex(it).containsMatchIn(l) }
+        if (has("(cashier'?s|certified|personal|bank) (check|cheque)", "\\b(check|cheque) (for|of) (more|the full|an extra)", "refund (the|any) (difference|balance|excess)", "send (back|the rest|the difference)", "overpa(y|id|yment)"))
+            out += Sign(true, "A check for more than the price, with the rest to be sent back, is the most common scam aimed at artists. The check bounces days later and the money you sent is gone. Only accept payment that has fully cleared, never refund an overpayment.")
+        if (has("my (shipper|mover|moving company|agent|assistant)( who)? will (pick|collect|come)", "(shipper|mover|courier).{0,40}pick ?up", "(shipping|moving) company (will|to) (pick|collect)", "arrange (the )?(pick ?up|shipping) (myself|with my)"))
+            out += Sign(true, "A buyer who insists on their own shipper or mover is a known pattern with overpayment scams. Ship it yourself once the payment has cleared, or meet in person.")
+        if (has("gift cards?", "wire (transfer|the money)", "western union", "moneygram", "crypto|bitcoin|usdt", "zelle (me|to)"))
+            out += Sign(true, "Gift cards, wires, crypto and instant transfers cannot be reversed. A real gallery or buyer will not ask for them.")
+        if (has("(feature|featured|publish|publication|interview|listing|placement|promotion) (fee|cost|price|package)", "(fee|cost|price) (for|to be) (featured|published|included)", "(magazine|catalog|book|publication).{0,60}\\$\\s?\\d", "\\$\\s?\\d.{0,60}(magazine|catalog|book|publication|feature)"))
+            out += Sign(true, "Paying to be in a magazine, book or \"feature\" is advertising, not recognition. Jurors and galleries do not count it.")
+        if (CallReader.payToShow(l) || has("exhibition (fee|package)", "participation fee", "booth (fee|rental).{0,40}(venice|paris|miami|new york|london|basel|biennale)", "(venice|florence|paris|barcelona|london|new york|miami).{0,80}(fee|package|participation)"))
+            out += Sign(true, "The fee buys the place, not a juror's choice. These shows are rarely seen by buyers or curators, and they do not count the way a juried show does.")
+        if (has("(discovered|came across|found|noticed|saw) your (work|art|profile|page|portfolio|instagram)", "we (have been|were) (following|impressed)", "selected you", "you have been (chosen|selected|nominated)"))
+            out += Sign(false, "Unasked-for praise that leads to an offer is how most of these begin. Real invitations usually come from people you have met or applied to.")
+        if (has("(only|just) \\d+ (spots|places|spaces) (left|remaining)", "limited (spots|places|time)", "within (24|48|72) hours", "(respond|reply|confirm|pay) (today|immediately|asap|right away)", "offer (expires|ends)"))
+            out += Sign(false, "Pressure to decide fast is a sales tactic. A real opportunity can wait a day while you look it up.")
+        if (has("award|prize|honou?r|certificate|diploma") && has("fee|cost|\\$\\s?\\d|payment|pay "))
+            out += Sign(false, "An award that costs money to receive is a product, not an honor.")
+        if (has("(social security|ssn|bank account number|routing number|passport|date of birth)"))
+            out += Sign(true, "Never send ID numbers or bank details to someone you do not know.")
+        if (has("@(gmail|yahoo|hotmail|outlook|aol)\\.com") && has("gallery|museum|foundation|curator|magazine"))
+            out += Sign(false, "A gallery or magazine writing from a free email address is worth a second look: check that the place exists and that the address is on its own website.")
+        return out
+    }
+
+    fun verdict(signs: List<Sign>): String = when {
+        signs.any { it.serious } -> "Be careful with this one."
+        signs.size >= 2 -> "A few things to check before you answer."
+        signs.size == 1 -> "Mostly fine. One thing to check."
+        else -> "Nothing here matches the usual schemes. Still look the place up before sending money or work."
+    }
+}
+
 // ---------------------------------------------------------------- drafts without AI
 
 /** Builds a first draft from the artist's own interview answers and CV facts. No AI, nothing invented. */

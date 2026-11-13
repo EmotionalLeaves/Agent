@@ -157,6 +157,7 @@ fun Outreach(nav: NavController) {
         }, modifier = Modifier.fillMaxWidth()) { Text("A walk past ${toVisit.size} places you have not seen yet") }
         // The quickest way to a real list: what the map knows is near you.
         Button(onClick = { nav.navigate("nearby") }, modifier = Modifier.fillMaxWidth()) { Text("Find places near me") }
+        TextButton(onClick = { nav.navigate("check") }) { Text("Got an offer or a buyer that seems too good? Check it") }
         H("Add a venue or person")
         Field("Their website", url)
         Status(status)

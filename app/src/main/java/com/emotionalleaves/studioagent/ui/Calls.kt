@@ -335,6 +335,9 @@ fun CallDetail(nav: NavController, id: Long) {
             o.fitReasons.lines().filter { it.isNotBlank() }.forEach { Text(it) }
             if (why.isNotEmpty()) Text("Held back by your rules: " + why.joinToString("; "), color = MaterialTheme.colorScheme.secondary)
             Flags(o)
+            // The signs of the usual schemes, read from the call's own words (paid features, awards that cost, urgency).
+            remember(o.id, o.rawText) { com.emotionalleaves.studioagent.domain.Offers.check(o.rawText).filter { !it.what.startsWith("The fee buys the place") } }
+                .takeIf { it.isNotEmpty() }?.let { signs -> signs.take(2).forEach { Text("Worth checking: " + it.what, color = MaterialTheme.colorScheme.secondary) } }
             // What this kind of call is, and what usually decides it.
             callKindTip(o.kind).takeIf { it.isNotBlank() }?.let { Small(it) }
             // Call pages are long and full of jargon: the writing help says what it is and what they want, in three plain lines.

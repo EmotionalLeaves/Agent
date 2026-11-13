@@ -205,6 +205,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("feedback") { FeedbackScreen(nav) }
             composable("commission") { CommissionStart(nav) }
             composable("year") { YearScreen(nav) }
+            composable("check") { OfferCheck(nav) }
             composable("ideas") { Ideas(nav) }
             composable("materials") { Materials(nav) }
             composable("interview") { Interview(nav) }

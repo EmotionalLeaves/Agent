@@ -399,4 +399,18 @@ class DomainTest {
         assertTrue(plan[0].second.any { it.startsWith("Focus: one local") })
         assertTrue(plan.drop(4).none { l -> l.second.any { it.startsWith("Ten pieces") } })
     }
+
+    @Test fun theUsualSchemesAreNamed() {
+        val O = com.emotionalleaves.studioagent.domain.Offers
+        val buyer = O.check("Hello, I came across your work and love it. I will send a cashier's check for $1,800, please refund the difference to my shipper who will pick up the painting.")
+        assertTrue(buyer.count { it.serious } >= 2)
+        assertEquals("Be careful with this one.", O.verdict(buyer))
+        val mag = O.check("Our editors noticed your portfolio! Be featured in Art Visionaries magazine, a two-page spread for just $350. Only 3 spots left, reply within 48 hours.")
+        assertTrue(mag.any { it.what.startsWith("Paying to be in a magazine") } && mag.any { it.what.startsWith("Pressure") })
+        val venice = O.check("Exhibit in Venice during the Biennale! Participation fee 900 euros includes wall space and a catalog.")
+        assertTrue(venice.any { it.serious })
+        val fine = O.check("Hi Jade, thanks for stopping by the library gallery on Saturday. Our spring community show takes work from local artists; the form is on our website. No fee.")
+        assertTrue(fine.isEmpty())
+        assertTrue(O.verdict(fine).startsWith("Nothing here"))
+    }
 }
