@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -548,6 +549,19 @@ fun ApplScreen(nav: NavController, id: Long) {
                     if (shipSaid.isBlank()) TextButton(onClick = { scope.io({ shipSaid = it }) { val n = Engine.planShipping(loaded); shipSaid = if (n == 0) "The shipping steps are already on your week." else "${Texts.count(n, "shipping step")} added to your week, counted back from delivery." } }) { Text("Put the shipping steps on my week") }
                     else Small(shipSaid)
                 }
+            }
+            // Drop-off day: everything to have with you, ticked off as it goes in the bag.
+            if (loaded.status == "accepted") Expand("Packing for drop-off day") {
+                val tick by st.changed.collectAsState()
+                val items = com.emotionalleaves.studioagent.domain.Packing.list(chosen.size.coerceAtLeast(1), chosen.any { it.framed || it.format == "print" }, o.sourceName == "Your own show")
+                val bits = if (tick >= 0) com.emotionalleaves.studioagent.domain.HangReady.bits(st.packed, loaded.id) else 0
+                items.forEachIndexed { i, t ->
+                    val on = bits and (1 shl i) != 0
+                    Row(Modifier.fillMaxWidth().toggleable(on, role = androidx.compose.ui.semantics.Role.Checkbox) { v -> st.packed = com.emotionalleaves.studioagent.domain.HangReady.set(st.packed, loaded.id, i, v) }, verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = on, onCheckedChange = null); Text(t)
+                    }
+                }
+                if (items.indices.all { bits and (1 shl it) != 0 }) Small("All packed. Drive safely.")
             }
             // A venue's own agreement: what to look for before signing, in plain words.
             if (loaded.status == "accepted" && o.sourceName != "Your own show") Expand("Before you sign their agreement") {

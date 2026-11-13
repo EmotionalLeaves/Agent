@@ -1512,3 +1512,18 @@ object AnswerBank {
         .map { it to likeness(question, it.question) }.filter { it.second >= 0.5 }
         .maxWithOrNull(compareBy({ it.second }, { it.first.answer.length }))?.first
 }
+
+// ---------------------------------------------------------------- drop-off day
+/** What to have with you when you take work to a show: the wrapping, the paperwork, and the small things that save a second trip. */
+object Packing {
+    fun list(pieces: Int, framed: Boolean, selfHang: Boolean): List<String> = buildList {
+        add(if (pieces == 1) "The piece wrapped: plastic or glassine on the face, then bubble wrap, bubbles out" else "All $pieces pieces wrapped: plastic or glassine on the face, then bubble wrap, bubbles out")
+        if (framed) add("Cardboard corners on every frame")
+        add("A blanket in the car; pieces standing upright, face to face, never flat with things on top")
+        add("Your list of the works with prices, two copies: one for them, one they sign for you")
+        add("Their agreement, signed, or a pen to sign it there")
+        add("Your phone charged: a photo of each piece as you hand it over")
+        add(if (selfHang) "Tape measure, a small level, a pencil, picture hooks and a hammer" else "Asked whether you hang it yourself; if so, a tape measure, level, pencil, hooks and hammer")
+        add("The pick-up date and time, on your calendar before you leave")
+    }
+}

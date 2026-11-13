@@ -687,4 +687,13 @@ class DomainTest {
         assertEquals("Spring Show", B.best("Who or what inspires you?", past)?.from)
         assertEquals(null, B.best("Will you need help hanging?", past))
     }
+
+    @Test fun dropOffPacking() {
+        val P = com.emotionalleaves.studioagent.domain.Packing
+        val one = P.list(1, framed = false, selfHang = true)
+        assertTrue(one.first().startsWith("The piece wrapped") && one.none { it.contains("corners") } && one.any { it.startsWith("Tape measure") })
+        val three = P.list(3, framed = true, selfHang = false)
+        assertTrue(three.first().startsWith("All 3 pieces") && three.any { it.contains("corners") } && three.any { it.startsWith("Asked whether") })
+        assertTrue(three.size <= 31) // ticks are kept as bits
+    }
 }
