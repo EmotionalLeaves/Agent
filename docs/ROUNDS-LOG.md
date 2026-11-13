@@ -350,3 +350,4 @@ One real change per round. Pushed and built every ten rounds.
 344. After four weeks well under the planned hours, the weekly look ahead offers to plan for the hours you actually work, without blame; a plan you can keep beats a bigger one.
 345. A first sale adds a CV line under Collections ("Private collection"), never with the buyer's name or a place the app cannot know.
 346. With five or more pieces and no backup turned on anywhere, Saturday's step is to turn on backups (a folder, saved daily), until one is on.
+347. Backup settings say plainly that a phone folder does not survive a lost phone, and that Save a backup can put a copy in Google Drive from the picker.

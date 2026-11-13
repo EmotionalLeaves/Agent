@@ -565,7 +565,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 H("Automatic")
                 Text(if (tick >= 0 && st.backupFolder.isBlank()) "Not on yet. Choose a folder once and the app saves a backup there every day by itself, keeping the newest five."
                 else "On. " + (if (st.lastAutoBackup > 0) "Last backup ✓ ${fmtDate(st.lastAutoBackup)}." else "The first one is made with the next daily check, or now with the button below."))
-                Small("Pick a folder that is copied off the phone if you can (for example one inside Google Drive's files), so a lost phone does not lose your catalog.")
+                Small("A folder on the phone protects against mistakes, not a lost phone. For a copy off the phone, use Save a backup below and choose Google Drive in the picker, now and then.")
                 OutlinedButton(onClick = { folder.launch(null) }) { Text(if (st.backupFolder.isBlank()) "Choose a backup folder" else "Choose a different folder") }
                 if (st.backupFolder.isNotBlank()) Button(enabled = !busy, onClick = {
                     busy = true; status = "Backing up…"
