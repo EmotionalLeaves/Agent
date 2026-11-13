@@ -1056,11 +1056,11 @@ val lightPrompts = listOf(
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
 val whatsNew = listOf(
-    "Firsts are noticed on the day: your first piece, first hour, first entry, first yes, first sale, first opening. A year of making is marked too.",
-    "Three \"Not today\"s in a row offer three quiet days; coming back, Today keeps it to one step.",
-    "Straight from work: a ten-minute reset before a session, and a nudge in 20 minutes. Every 45 minutes, a reminder to step back.",
-    "Foundations goes further: six more weeks (drawing out in the world, from memory, bigger, materials, the next idea, looking at shows).",
-    "A piece's page shows what it earned and what was spent on it; Your prices flags anything below cost after a gallery's share.",
-    "Find anything finds tools, to-dos and settings by name, and answers \"what is...\" from the glossary with no helper needed.",
-    "Market day has a packing list for the table; Teach a class can start where you work; three more ready-made emails, including a fee waiver."
+    "Scan a flat piece: the phone finds the edges and squares it up, from the piece's page or the photoshoot. Its size is then offered from its shape.",
+    "A TIFF for the print lab, and Fresh eyes \"On matte paper\" to see where shadows may lose detail in print.",
+    "The call ranking's odds learn from your own yeses and no's; your entries can be exported as a spreadsheet.",
+    "Open Honest Lockout (or any focus app) from the session screen, and put on a studio playlist.",
+    "Back after a week away: a kind welcome, and slipped to-dos spread over the coming week.",
+    "Foundations: then and now, your first practice photo beside your newest; milestones noticed on the day.",
+    "Everything the app can do is folded into groups, with the tools you used lately on top."
 )
