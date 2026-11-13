@@ -122,6 +122,8 @@ class ScreensTest {
         shot("29_jury", "jury/${ids["draft"]}", "Image 1 of")
         shot("35_update", "update", "Subject")
         shot("36_labs", "nearby/labs", "Printing and framing")
+        shot("37_search", "search", "A title")
+        shot("38_order", "order", "Blue Hour")
     }
 
     /** The same screens after dark, to check nothing turns unreadable. */
@@ -192,7 +194,7 @@ class ScreensTest {
         val routes = listOf("home", "works", "calls", "outreach", "more", "guide", "path", "basics", "week", "sessions", "records", "receipts",
             "materials", "interview", "facts", "letters", "sources", "admin", "review", "tour", "startnow",
             "work/${ids["wip"]}", "call/${ids["opp"]}", "appl/${ids["draft"]}", "doc/${ids["doc"]}", "contact/${ids["contact"]}",
-            "nearby", "update", "plan/${ids["contact"]}", "jury/${ids["draft"]}",
+            "nearby", "update", "plan/${ids["contact"]}", "jury/${ids["draft"]}", "search", "order",
             "settings/you", "settings/hours", "settings/rules", "settings/calm", "settings/writing", "settings/ai", "settings/email", "settings/backup", "settings/permissions")
         val out = StringBuilder()
         routes.forEach { r ->
