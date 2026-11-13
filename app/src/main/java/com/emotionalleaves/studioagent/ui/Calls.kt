@@ -558,6 +558,17 @@ fun ApplScreen(nav: NavController, id: Long) {
                     OutlinedButton(onClick = { val f = java.io.File(showDir, "show_${id}_${now()}.jpg"); shotFile = f; try { takeShot.launch(Share.uri(ctx, f)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Take a photo") }
                     if (shots.isNotEmpty()) TextButton(onClick = { Share.files(ctx, shots, "image/jpeg") }) { Text("Share them") }
                 }
+                // The show as one post: the room and the work in a grid, and a thank-you to everyone who came.
+                if (shots.size >= 2) TextButton(onClick = { scope.io({ status = it }) {
+                    val bms = shots.takeLast(9).mapNotNull { ImageTools.decode(it.absolutePath, 700) }
+                    val f = java.io.File(ImageTools.exportDir(ctx), Papers.docName(st, "Show_post_$id", "jpg"))
+                    ImageTools.saveJpeg(com.emotionalleaves.studioagent.media.Post.process(bms, st.fullName), f, 90)
+                    val place = o.venue.ifBlank { o.organiser }
+                    val words = "\"${o.title}\"" + (if (place.isNotBlank()) " at $place" else "") + (if (o.exhibitionDates.isNotBlank()) ", ${o.exhibitionDates}" else "") + ". Thank you to everyone who came, and to $place for having the work.".let { if (place.isBlank()) " Thank you to everyone who came." else it } +
+                        "\n\n" + com.emotionalleaves.studioagent.media.Post.tags(chosen.firstOrNull()?.medium.orEmpty(), st.city)
+                    st.lastPosted = System.currentTimeMillis()
+                    withContext(Dispatchers.Main) { Share.post(ctx, f, words) }
+                } }) { Text("Post the show") }
                 H("Checklist")
                 events.filter { it.applId == id && it.type == "task" }.sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.forEach { e ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
