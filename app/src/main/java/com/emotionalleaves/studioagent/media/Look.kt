@@ -69,7 +69,8 @@ object Look {
      */
     fun values(b: Bitmap, levels: Int = 3): Bitmap {
         val px = pixels(squint2(b)); val ls = px.map { lum(it) }.sorted()
-        val cuts = (1 until levels).map { ls[(ls.size * it / levels).coerceIn(0, ls.size - 1)] }
+        // Each cut sits halfway between the values on either side of it, so a picture split exactly in two still splits.
+        val cuts = (1 until levels).map { k -> val i = (ls.size * k / levels).coerceIn(1, ls.size - 1); (ls[i - 1] + ls[i]) / 2 }
         val tones = when (levels) { 2 -> intArrayOf(30, 235); 3 -> intArrayOf(35, 140, 240); else -> IntArray(levels) { 20 + it * 220 / (levels - 1) } }
         for (i in px.indices) { val l = lum(px[i]); val k = cuts.count { l > it }; val t = tones[k]; px[i] = Color.rgb(t, t, t) }
         return Bitmap.createBitmap(px, b.width, b.height, Bitmap.Config.ARGB_8888)
