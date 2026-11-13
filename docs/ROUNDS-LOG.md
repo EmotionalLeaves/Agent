@@ -366,3 +366,4 @@ One real change per round. Pushed and built every ten rounds.
 360. Calm Today can be switched from Today's own menu (the three dots on the step), in one tap either way.
 361. An application names any chosen photo of physical work that looks dark, washed out, glary or soft, while there is still time to reshoot; a better photo often changes the result more than anything else.
 362. Studio shows where work is right now: pieces out at shows grouped by venue, so nothing is forgotten on a wall; pieces in a show of your own carry that venue as their location.
+363. An untitled piece has "Suggest titles": five short, plain title ideas from what you have written about it (notes, medium, series, statement), one tap to use one.

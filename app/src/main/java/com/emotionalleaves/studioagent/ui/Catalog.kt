@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.emotionalleaves.studioagent.G
 import com.emotionalleaves.studioagent.data.Artwork
 import com.emotionalleaves.studioagent.data.Idea
 import com.emotionalleaves.studioagent.data.Series
@@ -341,6 +342,15 @@ fun WorkDetail(nav: NavController, id: Long) {
             }
         }
         Field("Title", w.title, { save(w.copy(title = it)) })
+        // Naming is hard: five plain ideas from what you have written about the piece, one tap to use one.
+        if (G.ai.ready && (w.title.isBlank() || w.title.startsWith("Untitled") || w.title == "New piece")) {
+            var ideas by remember(w.id) { mutableStateOf<List<String>>(emptyList()) }
+            TextButton(onClick = { scope.io({ status = it }) {
+                val sname = series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()
+                ideas = G.ai.titles(w.notes + " " + w.tags, w.medium, sname, Engine.pickStatement(150))
+            } }) { Text("Suggest titles") }
+            if (ideas.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { ideas.forEach { t -> androidx.compose.material3.SuggestionChip(onClick = { save(w.copy(title = t)); ideas = emptyList() }, label = { Text(t) }) } }
+        }
         Explain("How do I photograph work well?", "Daylight from the side, no flash. Put the work flat against a wall and hold the phone parallel to it, level with its center. A sheet of plain gray card in one corner helps the app correct the color. Then tap Straighten and crop.")
         Status(status)
         if (w.imagePath.isNotBlank() && w.status in setOf("idea", "in_progress", "finished"))

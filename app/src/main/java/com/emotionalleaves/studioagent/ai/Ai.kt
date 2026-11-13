@@ -253,6 +253,14 @@ class Ai(private val settings: Settings) {
             "Three short things to say about the work (one sentence each).\nThen: \"If they ask how you make it:\" and a one-sentence answer.\n" +
             "Then: \"If they ask what it is about:\" and a one-sentence answer.\nUse only these facts and the statement. No headings, no markdown.\n\nStatement:\n$statement\n\nFacts:\n$facts", maxTokens = 500))
 
+    /** Five plain title ideas for a piece, from what the artist has written about it. Short, concrete, no art-speak. */
+    suspend fun titles(notes: String, medium: String, series: String, statement: String): List<String> {
+        val out = clean(complete("You suggest titles for an artwork. $dataRule Give five short titles (one to four words), concrete and plain, the way a working artist titles work: " +
+            "a place, an object, a time of day, a phrase. No art jargon, no colons, no quotation marks. One per line.",
+            "<data>\nNotes about the piece: $notes\nMedium: $medium\nSeries: $series\nThe artist's statement: ${statement.take(800)}\n</data>", fast = true, maxTokens = 120))
+        return out.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "").trim('"') }.filter { it.length in 2..40 }.distinct().take(5)
+    }
+
     /** The same text cut to at most [words] words: the artist's own sentences kept, the least needed cut. Nothing added. */
     suspend fun shorten(text: String, words: Int): String =
         clean(complete("You shorten an artist's own text to at most $words words. Keep their sentences and wording wherever possible; cut whole phrases and sentences " +
