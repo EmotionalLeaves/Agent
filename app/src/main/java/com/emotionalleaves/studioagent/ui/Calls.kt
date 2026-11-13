@@ -548,6 +548,19 @@ fun ApplScreen(nav: NavController, id: Long) {
                     else Small(shipSaid)
                 }
             }
+            // A venue's own agreement: what to look for before signing, in plain words.
+            if (loaded.status == "accepted" && o.sourceName != "Your own show") Expand("Before you sign their agreement") {
+                listOf(
+                    "Their commission on a sale, and that it is only on sales made during the show",
+                    "When you are paid after a sale (within 30 days is usual)",
+                    "Who insures the work while it is there, and for how much (its price)",
+                    "Who pays to deliver and return it, and the dates",
+                    "That unsold work comes back to you by a set date",
+                    "That they may use pictures of your work only to promote the show",
+                    "No rule that you cannot show nearby for a long time afterwards"
+                ).forEach { Text("• $it") }
+                Small("If something is missing or unclear, asking is normal and polite. Ready-made emails has a note for questions about delivery and payment.")
+            }
             if (loaded.status == "accepted") {
                 // On the night: the phone becomes the sign-up sheet.
                 OutlinedButton(onClick = { nav.navigate("opening") }) { Text("At the opening: a code to scan") }
