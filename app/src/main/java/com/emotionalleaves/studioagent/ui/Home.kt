@@ -244,9 +244,9 @@ fun Home(nav: NavController) {
             val horizon = now() + 7 * com.emotionalleaves.studioagent.work.DAY
             val opps by dao.opps().collectAsState(emptyList())
             data class Ahead(val at: Long, val title: String, val detail: String, val route: String)
-            val ahead = (events.filter { !it.done && it.date in now()..horizon && it.type in setOf("deadline", "task", "invite") }.map { e ->
-                    Ahead(e.date, e.title.removePrefix("Deadline: "), when (e.type) { "deadline" -> "Deadline"; "invite" -> "Free and open to anyone; worth going"; else -> opps.firstOrNull { it.id == e.oppId }?.title ?: "Your show" },
-                        if (e.applId > 0) "appl/${e.applId}" else if (e.type == "invite") "outreach" else "calls") } +
+            val ahead = (events.filter { !it.done && it.date in now()..horizon && it.type in setOf("deadline", "task", "invite", "watch") }.map { e ->
+                    Ahead(e.date, e.title.removePrefix("Deadline: "), when (e.type) { "deadline" -> "Deadline"; "invite" -> "Free and open to anyone; worth going"; "watch" -> "It came round about now last year; look for this year's call"; else -> opps.firstOrNull { it.id == e.oppId }?.title ?: "Your show" },
+                        if (e.applId > 0) "appl/${e.applId}" else if (e.type == "invite") "outreach" else if (e.type == "watch" && e.oppId > 0) "call/${e.oppId}" else "calls") } +
                 opps.filter { it.status == "new" && it.fitScore >= 60 && it.deadline in now()..horizon }.map { o -> Ahead(o.deadline, o.title, "Call closes; you have not decided yet", "call/${o.id}") })
                 .sortedBy { it.at }.take(5)
             if (ahead.isNotEmpty()) {

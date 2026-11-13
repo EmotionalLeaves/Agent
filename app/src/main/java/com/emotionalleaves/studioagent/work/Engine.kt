@@ -1296,7 +1296,15 @@ object Engine {
             try { block() } catch (e: Exception) { log += "$name: ${com.emotionalleaves.studioagent.ui.plainError(e)}" }
         }
         step("expire") {
-            dao.oppsNow().filter { it.status in setOf("new", "later") && it.deadline in 1..now }.forEach { dao.put(it.copy(status = "expired")) }
+            dao.oppsNow().filter { it.status in setOf("new", "later") && it.deadline in 1..now }.forEach { o ->
+                dao.put(o.copy(status = "expired"))
+                // Most calls come back every year. A good one that closed is remembered: a month before it closed last year, it is on your calendar to watch for.
+                if (o.fitScore >= 60 || o.status == "later") {
+                    val title = "Watch for: " + o.title.replace(Regex("\\b(19|20)\\d\\d\\b"), "").replace(Regex("\\s{2,}"), " ").trim().trimEnd(':', '-', ',')
+                    val at = o.deadline + 335 * DAY
+                    if (dao.eventsNow().none { it.type == "watch" && it.title == title }) dao.put(Evt(type = "watch", title = title, date = at, oppId = o.id))
+                }
+            }
             // Calls you never acted on are cleared three months after closing, so the lists stay quick. Anything you applied to is kept.
             val applied = dao.applsNow().map { it.oppId }.toSet()
             dao.oppsNow().filter { it.id !in applied && it.status in setOf("expired", "no") && it.deadline in 1..(now - 90 * DAY) }.forEach { dao.del(it) }
