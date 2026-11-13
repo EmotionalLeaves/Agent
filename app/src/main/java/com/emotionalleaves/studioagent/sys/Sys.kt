@@ -84,6 +84,7 @@ object Notifier {
         if (!allowed(ctx) || quietNow(s)) return false
         // A day off from the app is a day off: only a deadline within a day still gets through.
         if (LocalDate.now().dayOfWeek.value.toString() in s.daysOff.split(",") && !title.startsWith("Deadline") && id != 54) return false
+        if (s.calmUntil > System.currentTimeMillis() && !title.startsWith("Deadline") && id != 54) return false
         val today = LocalDate.now().toString()
         if (s.notifDay != today) { s.notifDay = today; s.notifCount = 0 }
         if (s.notifCount >= s.notifCap) return false
