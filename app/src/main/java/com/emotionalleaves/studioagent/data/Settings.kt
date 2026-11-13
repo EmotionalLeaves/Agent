@@ -236,6 +236,8 @@ class Settings(ctx: Context) {
     var stuckTold by S("stuckTold")
     /** Days off work this week only: "weekId:1,3". */
     var offThisWeek by S("offThisWeek")
+    /** Quiet until then: Today shows only a five-minute step. */
+    var calmUntil by L("calmUntil", 0)
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */
