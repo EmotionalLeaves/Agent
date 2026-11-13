@@ -191,6 +191,8 @@ class Settings(ctx: Context) {
     var lastManualBackup by L("lastManualBackup", 0)
     /** The app version whose "what is new" note has been seen. */
     var seenVersion by L("seenVersion", 0)
+    /** Today shows only the next step and Start, for days when anything more is too much. */
+    var calmToday by B("calmToday", false)
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")

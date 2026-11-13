@@ -362,3 +362,4 @@ One real change per round. Pushed and built every ten rounds.
 356. Studio: finished pieces that already have pictures are offered in one tap: "Mark all 4 Ready to send", with empty details filled in.
 357. README describes the new features: the month calendar, the board, eight sources, places near you, shows of your own, the widget and the new documents.
 358. Applications whose checks all pass get their files made by the daily check, so the pack is waiting and sending is one look and one tap.
+359. Settings, Focus and calm: Calm Today shows only the next step and Start on Today, for days when anything more is too much; everything else waits in the tabs.

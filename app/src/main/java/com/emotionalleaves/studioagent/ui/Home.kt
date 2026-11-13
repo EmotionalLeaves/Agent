@@ -209,7 +209,7 @@ fun Home(nav: NavController) {
             }
         }
 
-        if (st.onboarded) {
+        if (st.onboarded && !st.calmToday) {
             // The week as seven marks: filled for a day you made something, a ring for a block still ahead.
             val hours = Engine.hoursThisWeek(sessions)
             val cs = MaterialTheme.colorScheme
@@ -264,7 +264,7 @@ fun Home(nav: NavController) {
         }
 
         // Until the first show: the road there, as seven milestones with the next one named. It disappears once you are in a show.
-        if (st.onboarded && appls.none { it.status == "accepted" }) {
+        if (st.onboarded && !st.calmToday && appls.none { it.status == "accepted" }) {
             val contacts by dao.contacts().collectAsState(emptyList())
             val venues = contacts.filter { it.kind != "subscriber" }
             val stones = listOf(
@@ -296,12 +296,14 @@ fun Home(nav: NavController) {
         if (weekSessions.isNotEmpty()) wins += "${weekSessions.size} session" + (if (weekSessions.size > 1) "s" else "") + ", ${weekSessions.sumOf { (it.end - it.start) / 60000 }} minutes of making"
         works.count { it.createdAt >= weekStart && it.imagePath.isNotBlank() }.let { if (it > 0) wins += "$it piece" + (if (it > 1) "s" else "") + " with an image added" }
         appls.count { it.submittedAt >= weekStart }.let { if (it > 0) wins += "$it application" + (if (it > 1) "s" else "") + " sent" }
-        if (wins.isNotEmpty()) {
+        if (wins.isNotEmpty() && !st.calmToday) {
             Section("Done this week")
             wins.forEach { Check(true, it) }
         }
 
-        if (st.onboarded) {
+        // Calm Today: only the step and Start. Everything else waits in the tabs.
+        if (st.onboarded && st.calmToday) Small("Calm Today is on: just the next step. Everything else is in the tabs below.")
+        if (st.onboarded && !st.calmToday) {
             if (pendingCount > 0) Section("Waiting for you")
             if (pendingCount > 0) IconRow(Icons.Default.Done, "$pendingCount waiting for your yes", "One tap each") { nav.navigate("admin") }
 

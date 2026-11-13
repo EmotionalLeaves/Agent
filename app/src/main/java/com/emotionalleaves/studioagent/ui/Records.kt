@@ -472,6 +472,8 @@ fun SettingsScreen(nav: NavController, section: String) {
             }
             "calm" -> {
                 Text("Each of these is a default you can switch. None of them is a rule about you.")
+                H("Today")
+                Toggle("Calm Today: show only the next step and Start", st.calmToday) { st.calmToday = it }
                 H("Starting")
                 Count("Usual session length", st.defaultSessionMin, 5, 180, 5, "min") { st.defaultSessionMin = it }
                 Small("Start now uses this. A shorter time is one tap away under Start now, for days when starting is the hard part.")
