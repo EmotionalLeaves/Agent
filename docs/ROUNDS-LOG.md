@@ -291,3 +291,5 @@ One real change per round. Pushed and built every ten rounds.
 284. New: "They said yes to a show: plan it", on any venue in People. Give the show a name, an opening day, how long it hangs and which pieces; the app makes twelve dated steps counted back from the opening (confirm in writing, choose and order the works, order prints and frames, flyer, tell your list, labels, condition photos, hang, opening, photograph it on the wall, pick up, thank the venue). It then runs on the Applied board, Today and the calendar like any show you got into.
 285. New: a one-page show flyer (your strongest image, title, venue, dates, opening, your site), from any show's page.
 286. A show of your own becomes a CV line when its opening happens, not before; its page lets you choose or add pieces once they are ready.
+287. The portfolio web page lists shows coming up first, and hangs the work in its series with a heading for each, the way a show groups it.
+288. The daily check sends one reminder for a show step due today or tomorrow (hanging the work, the opening, picking it up), since those are the ones that must not be missed.

@@ -390,4 +390,22 @@ class PartsTest {
         assertTrue(names.toString(), names.any { it.contains("Image_list") })
     }
 
+
+    @Test fun aVenuesYesBecomesADatedShowPlan() = kotlinx.coroutines.runBlocking {
+        ctx
+        G.settings.city = "Austin"
+        val cid = G.dao.put(com.emotionalleaves.studioagent.data.Contact(venue = "Central Library", kind = "community", email = "art@library.example.org"))
+        val c = G.dao.contactsNow().first { it.id == cid }
+        val opening = java.time.LocalDate.now().plusWeeks(8)
+        val applId = Engine.planOwnShow(c, "Before the First Shift", opening, 4, emptyList())
+        val tasks = G.dao.eventsNow().filter { it.applId == applId && it.type == "task" }
+        assertEquals(12, tasks.size)
+        assertEquals("accepted", G.dao.applsNow().first { it.id == applId }.status)
+        assertEquals(opening.minusDays(42), Engine.date(tasks.minOf { it.date }))
+        assertTrue(G.dao.factsNow().none { it.text.contains("Before the First Shift") })
+        Engine.openingHappened(applId)
+        assertTrue(G.dao.factsNow().any { it.category == "solo" && it.text == "Before the First Shift, Central Library, Austin" })
+        assertEquals("interested", G.dao.contactsNow().first { it.id == cid }.status)
+    }
+
 }

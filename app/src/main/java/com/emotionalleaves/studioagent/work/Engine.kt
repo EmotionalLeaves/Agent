@@ -950,7 +950,9 @@ object Engine {
             if (ImageTools.export(a.imagePath, 1600, 900_000, f, st.fullName, Papers.caption(a))) GitHub.putFile(st.ghPagesRepo, "img/$name", f.readBytes(), "Add ${a.title}", st.ghToken)
             a to name
         }
-        val html = Papers.portfolioHtml(st, pairs, statement, bio, dao.factsNow())
+        val upcoming = dao.applsNow().filter { it.status == "accepted" }.mapNotNull { a -> dao.oppsNow().firstOrNull { it.id == a.oppId } }
+            .filter { o -> dao.eventsNow().any { e -> e.oppId == o.id && e.type == "task" && !e.done && e.title.startsWith("Pick up", true) } }
+        val html = Papers.portfolioHtml(st, pairs, statement, bio, dao.factsNow(), upcoming, dao.seriesNow().associate { it.id to it.name })
         GitHub.putFile(st.ghPagesRepo, "index.html", html.toByteArray(), "Update portfolio", st.ghToken)
         GitHub.enablePages(st.ghPagesRepo, st.ghToken)
         val url = GitHub.pagesUrl(st.ghPagesRepo)
@@ -1181,6 +1183,13 @@ object Engine {
             }
             dao.eventsNow().firstOrNull { it.type == "submit" && !it.done && it.date in (now - DAY)..(now + 2 * DAY) }?.let {
                 Notifier.post(ctx, st, 101, it.title, "This one has a deadline this week.", "appl/${it.applId}")
+            }
+            // A show step due today or tomorrow (hang the work, the opening, pick-up): the one reminder that must not be missed.
+            dao.eventsNow().filter { it.type == "task" && !it.done && it.date in now..(now + 2 * DAY) &&
+                Regex("deliver|hang|opening|pick up|ship", RegexOption.IGNORE_CASE).containsMatchIn(it.title) }.minByOrNull { it.date }?.let { e ->
+                val show = dao.oppsNow().firstOrNull { it.id == e.oppId }?.title.orEmpty()
+                val day = if (date(e.date) == LocalDate.now()) "Today" else "Tomorrow"
+                Notifier.post(ctx, st, 103, "$day: ${e.title}", show.ifBlank { "Your show" } + ". Tick it off on the show's page when it is done.", "appl/${e.applId}")
             }
         }
         // Have the flyer reader ready before the first flyer photo, not after.

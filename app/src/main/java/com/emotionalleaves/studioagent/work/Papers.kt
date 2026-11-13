@@ -346,7 +346,8 @@ object Papers {
     fun escape(s: String): String = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
 
     /** A single static page: works, statement, CV, contact. No feeds, no trackers, no scripts. */
-    fun portfolioHtml(s: Settings, works: List<Pair<Artwork, String>>, statement: String, bio: String, facts: List<Fact>): String = buildString {
+    fun portfolioHtml(s: Settings, works: List<Pair<Artwork, String>>, statement: String, bio: String, facts: List<Fact>,
+                      upcoming: List<com.emotionalleaves.studioagent.data.Opp> = emptyList(), seriesNames: Map<Long, String> = emptyMap()): String = buildString {
         val n = escape(name(s))
         val desc = escape(bio.ifBlank { "Artworks by ${name(s)}" }.take(160))
         append("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
@@ -367,7 +368,7 @@ object Papers {
         append("figure{margin:0 0 64px}img{display:block;max-width:100%;max-height:86vh;height:auto;margin:0 auto;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.12)}")
         append("figcaption{margin-top:12px;font-size:.92rem;color:var(--pencil);text-align:center}figcaption em{color:var(--ink)}")
         append(".text{max-width:66ch}dl{display:grid;grid-template-columns:4.5em 1fr;gap:.35em 1em;margin:0 0 1.5em}dt{color:var(--pencil)}dd{margin:0}h3{font-size:1rem;margin:1.6em 0 .5em}")
-        append("footer{padding-top:48px;padding-bottom:48px;color:var(--pencil);font-size:.85rem}")
+        append("footer{padding-top:48px;padding-bottom:48px;color:var(--pencil);font-size:.85rem}h3.series{font-size:1.05rem;margin:2.5rem 0 1.5rem;color:var(--pencil);font-weight:600}ul.text{padding-left:1.1em}li{margin:.3em 0}")
         append("</style></head><body><header>")
         append("<h1>$n</h1>")
         if (bio.isNotBlank()) append("<p class=\"lede\">${escape(bio)}</p>")
@@ -375,10 +376,22 @@ object Papers {
         if (statement.isNotBlank()) append("<a href=\"#statement\">Statement</a>")
         if (facts.isNotEmpty()) append("<a href=\"#cv\">CV</a>")
         append("<a href=\"#contact\">Contact</a></nav></header><main>")
+        // Shows coming up go first: it is the first thing a curator or a friend looks for.
+        if (upcoming.isNotEmpty()) {
+            append("<h2 id=\"soon\">Coming up</h2><ul class=\"text\">")
+            upcoming.forEach { o -> append("<li><strong>${escape(o.title)}</strong>" + listOf(o.venue, o.city).filter { it.isNotBlank() }.joinToString(", ").let { if (it.isBlank()) "" else ", " + escape(it) } +
+                (if (o.exhibitionDates.isNotBlank()) ". " + escape(o.exhibitionDates) else "") + "</li>") }
+            append("</ul>")
+        }
         append("<h2 id=\"work\">Work</h2>")
-        works.forEach { (a, file) ->
-            val cap = "<em>${escape(a.title.ifBlank { "Untitled" })}</em>" + (if (a.year > 0) ", ${a.year}" else "") + details(a).joinToString("") { ", " + escape(it) }
-            append("<figure><img loading=\"lazy\" src=\"img/${escape(file)}\" alt=\"${escape(a.title.ifBlank { "Untitled" })} by $n\"><figcaption>$cap</figcaption></figure>")
+        // Works hang in their series, the way a show would group them; loose pieces after.
+        val groups = works.groupBy { it.first.seriesId }.toList().sortedBy { (id, _) -> if (id == 0L || seriesNames[id].isNullOrBlank()) 1 else 0 }
+        groups.forEach { (sid, list) ->
+            if (groups.size > 1) seriesNames[sid]?.takeIf { it.isNotBlank() }?.let { append("<h3 class=\"series\">${escape(it)}</h3>") } ?: if (sid == 0L && groups.size > 1) append("<h3 class=\"series\">Other work</h3>") else Unit
+            list.forEach { (a, file) ->
+                val cap = "<em>${escape(a.title.ifBlank { "Untitled" })}</em>" + (if (a.year > 0) ", ${a.year}" else "") + details(a).joinToString("") { ", " + escape(it) }
+                append("<figure><img loading=\"lazy\" src=\"img/${escape(file)}\" alt=\"${escape(a.title.ifBlank { "Untitled" })} by $n\"><figcaption>$cap</figcaption></figure>")
+            }
         }
         if (statement.isNotBlank()) append("<h2 id=\"statement\">Statement</h2><div class=\"text\">" + statement.split(Regex("\\n\\s*\\n")).joinToString("") { "<p>${escape(it.trim()).replace("\n", "<br>")}</p>" } + "</div>")
         val sections = Texts.cvSections(facts)
