@@ -68,7 +68,7 @@ val letters = listOf(
 
 fun fillLetter(text: String, them: String, place: String): String =
     text.replace("Hello [THEM],", if (them.isBlank()) "Hello," else "Dear ${them.trim()},").replace("[THEM]", them.trim().ifBlank { "there" }).replace("[PLACE]", place.trim().ifBlank { "your space" })
-        .replace("[ME]", if (st.fullName.isBlank()) "(your name)" else com.emotionalleaves.studioagent.work.Papers.signature(st)).replace("[LINK]", st.website.ifBlank { "(your portfolio link)" }).replace("[PRICE]", "(your lowest price)")
+        .replace("[ME]", if (st.fullName.isBlank()) "(your name)" else com.emotionalleaves.studioagent.work.Papers.signature(st)).replace("[LINK]", st.website.ifBlank { "(your portfolio link)" }).replace("[PRICE]", com.emotionalleaves.studioagent.domain.Market.items(st.marketItems).filter { it.price > 0 }.minOfOrNull { it.price }?.let { money(it) } ?: "(your lowest price)")
 
 @Composable
 fun Letters(nav: NavController) {
