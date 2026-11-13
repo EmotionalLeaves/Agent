@@ -349,3 +349,4 @@ One real change per round. Pushed and built every ten rounds.
 343. Entry-form filling covers more boxes: separate width, height and depth, edition, state and country, and long answer boxes whose label matches one of the call's questions get your answer to it.
 344. After four weeks well under the planned hours, the weekly look ahead offers to plan for the hours you actually work, without blame; a plan you can keep beats a bigger one.
 345. A first sale adds a CV line under Collections ("Private collection"), never with the buyer's name or a place the app cannot know.
+346. With five or more pieces and no backup turned on anywhere, Saturday's step is to turn on backups (a folder such as Google Drive, saved daily), until it is on.
