@@ -284,3 +284,4 @@ One real change per round. Pushed and built every ten rounds.
 277. New: a printable sign-up sheet (name and email lines, and the promise that makes people sign) for a clipboard at an opening, so the list grows in person.
 278. New: a month calendar at the top of Your week. Every studio time, deadline and show step is a colored mark on its day (making time, deadlines, shows), with a key; tap a day to see what is on it and open it.
 279. With an opening in the next three weeks and people on your email list, Today's step is to tell them, with the note already drafted.
+280. A new photo of physical work is checked like a juror would look at it: too dark, washed out, a glare spot, or soft. Any problem is said in plain words with how to fix it, while the work is still in front of you.

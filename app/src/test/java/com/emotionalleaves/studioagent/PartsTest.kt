@@ -357,4 +357,22 @@ class PartsTest {
         assertEquals("News from the studio", com.emotionalleaves.studioagent.ui.studioUpdate(emptyList(), emptyList()).first)
     }
 
+
+    @Test fun aDarkFlatPhotoIsFlaggedAndAGoodOneIsNot() {
+        ctx
+        val dir = java.io.File(ctx.cacheDir, "q").apply { mkdirs() }
+        fun save(name: String, draw: (android.graphics.Canvas) -> Unit): String {
+            val b = android.graphics.Bitmap.createBitmap(400, 300, android.graphics.Bitmap.Config.ARGB_8888)
+            draw(android.graphics.Canvas(b))
+            val f = java.io.File(dir, name); f.outputStream().use { b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }; return f.absolutePath
+        }
+        val dark = save("dark.png") { it.drawColor(0xFF141414.toInt()) }
+        val busy = save("busy.png") { c -> val p = android.graphics.Paint()
+            for (x in 0 until 400 step 4) for (y in 0 until 300 step 4) { p.color = if ((x / 4 + y / 4) % 2 == 0) 0xFF202020.toInt() else 0xFFC8C8C8.toInt(); c.drawRect(x.toFloat(), y.toFloat(), x + 4f, y + 4f, p) } }
+        val q = com.emotionalleaves.studioagent.media.ImageTools.quality(dark)
+        assertTrue(q.any { it.startsWith("It looks dark") })
+        assertTrue(q.any { it.contains("blurry") })
+        assertTrue(com.emotionalleaves.studioagent.media.ImageTools.quality(busy).isEmpty())
+    }
+
 }

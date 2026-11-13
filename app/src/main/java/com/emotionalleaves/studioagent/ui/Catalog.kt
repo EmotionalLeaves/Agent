@@ -223,7 +223,10 @@ fun WorkDetail(nav: NavController, id: Long) {
             ImageTools.saveJpeg(b, main)
             val next = w.copy(originalPath = orig.absolutePath, imagePath = main.absolutePath, pixelW = pw, pixelH = ph)
             w = next; dao.put(next)
+            // For a photo of physical work: what a juror would notice, said now while the work is still in front of you.
+            val looks = if (photo) ImageTools.quality(main.absolutePath) else emptyList()
             status = (if (photo) "Photo added and color-corrected. Straighten it next if the edges are not square." else "File imported at $pw × $ph px.") +
+                (if (looks.isNotEmpty()) " " + looks.joinToString(" ") else "") +
                 // Juries usually ask for 1920 px or more on the long side; say so now, not on the day of a deadline.
                 (if (maxOf(pw, ph) in 1..1599) " It is small for calls, which often want 1920 px on the long side. The original file or a closer photo will look better to a juror." else "")
         }

@@ -77,6 +77,34 @@ object ImageTools {
     }
 
     /** Neutral white balance (grey-world) plus a gentle levels stretch. The original file is never touched. */
+    /**
+     * What a juror would notice first about a photo of the work, in plain words: too dark, washed out, soft, or a glare spot.
+     * Empty when it looks fine. Measured on a small copy, so it is quick.
+     */
+    fun quality(path: String): List<String> {
+        val b = decode(path, 500) ?: return emptyList()
+        val w = b.width; val h = b.height
+        if (w < 8 || h < 8) return emptyList()
+        val px = IntArray(w * h); b.getPixels(px, 0, w, 0, 0, w, h)
+        val g = IntArray(px.size) { val c = px[it]; ((c shr 16 and 255) * 299 + (c shr 8 and 255) * 587 + (c and 255) * 114) / 1000 }
+        val mean = g.average()
+        val clipped = g.count { it >= 250 }.toDouble() / g.size
+        // Sharpness: how strongly neighboring pixels differ (variance of the Laplacian).
+        var sum = 0.0; var sum2 = 0.0; var n = 0
+        for (y in 1 until h - 1) for (x in 1 until w - 1) {
+            val i = y * w + x
+            val l = (4 * g[i] - g[i - 1] - g[i + 1] - g[i - w] - g[i + w]).toDouble()
+            sum += l; sum2 += l * l; n++
+        }
+        val lapVar = if (n > 0) sum2 / n - (sum / n) * (sum / n) else 0.0
+        val out = mutableListOf<String>()
+        if (mean < 60) out += "It looks dark. More daylight from the side, or the phone's exposure turned up, will show the work properly."
+        if (mean > 225 && clipped > 0.35) out += "It looks washed out. Move out of direct sun, or turn the exposure down a little."
+        else if (clipped in 0.02..0.35 && mean < 200) out += "There may be a glare spot. Turn the work or the light a little so the shine leaves the surface."
+        if (lapVar < 40) out += "It may be soft or blurry. Hold the phone steady (elbows on something), tap the work to focus, and try again."
+        return out
+    }
+
     fun autoFix(src: Bitmap): Bitmap {
         val w = src.width; val h = src.height
         val px = IntArray(w * h); src.getPixels(px, 0, w, 0, 0, w, h)
