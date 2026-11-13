@@ -1065,11 +1065,11 @@ val lightPrompts = listOf(
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
 val whatsNew = listOf(
-    "Market day: a little zine of your pieces from one sheet, business cards ten to a sheet, and all the things to print folded together.",
-    "Ask in your own words with no helper: plain answers from Basics and the glossary, and Find anything shows them too.",
-    "Eight more plain answers in Basics: meeting other artists, teaching, how many pieces a show needs, hearing back, a website, openings.",
-    "An Empty your head widget for the home screen.",
-    "Your people: a reminder to go again next week, and museum sketching days.",
-    "A gift-season note to people you know, in Ready-made emails.",
-    "Your day job, in your own words, for the letters and writing where it helps."
+    "Today, your way: switch off any card you do not want (your week, five-minute jobs, the road to a first show, the daily piece, done this week).",
+    "Which notifications: switch off any kind; results and bedtime always come through. Light or dark, whatever the phone says.",
+    "Empty your head: a job or idea that names a piece goes to that piece; its page shows its own to-dos, and sessions remind you of them.",
+    "Ask more on the phone: what's on this week, when your next studio time is. Find anything shows example questions to try.",
+    "Market day: the next market and its packing evening go on your to-dos when you close the day.",
+    "Help lists the first questions a beginner needs first again; public art calls explained.",
+    "Your day job, in your words, for the letters where it helps."
 )

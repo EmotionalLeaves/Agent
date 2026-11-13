@@ -664,3 +664,4 @@ One real change per round. Pushed and built every ten rounds.
 657. How the app looks: like the phone, light or dark, in Settings, Hours and calm (an evening studio may want dark, a bright day light), whatever the phone is set to.
 658. "Your week, as seven marks" joins the Today cards you can switch off (Your week stays one tap away in the tools).
 659. Asking "when is my next studio time?" answers on the phone: the day, date and length, and that nothing stops you starting sooner.
+660. "New in this version" and the README catch up with rounds 641 to 659.

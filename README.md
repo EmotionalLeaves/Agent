@@ -42,7 +42,7 @@ On You, **Everything the app can do** lists every tool, grouped by what you want
 - **Being seen**: what jurors find when they search your name. Social media help is off unless you turn it on.
 - **Money and records**: receipts by photo, art trips by the mile, the year month by month and in one picture, insurance values, a tax page.
 
-Settings, Hours and calm has a focus app to open as a session starts (Honest Lockout, for one), a studio playlist, days off from the app, Calm Today, Wi-Fi-only checks, and the social media switch. In the menu on Today's step: "It is all too much" (three quiet days: one five-minute step, no notifications), "Remind me this evening", and "Empty my head first". Your week takes an off day or an extra shift for just this week, or a break from work until a date. Firsts (first piece, first yes, first sale) are noticed once, on the day, and after a week or more away Today welcomes you back and spreads slipped to-dos over the coming week.
+Settings, Hours and calm has which cards Today shows, which notifications come, light or dark, a focus app to open as a session starts (Honest Lockout, for one), a studio playlist, days off from the app, Calm Today, Wi-Fi-only checks, and the social media switch. In the menu on Today's step: "It is all too much" (three quiet days: one five-minute step, no notifications), "Remind me this evening", and "Empty my head first". Your week takes an off day or an extra shift for just this week, or a break from work until a date. Firsts (first piece, first yes, first sale) are noticed once, on the day, and after a week or more away Today welcomes you back and spreads slipped to-dos over the coming week.
 
 ## Quick ways in
 
