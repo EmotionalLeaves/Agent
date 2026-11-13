@@ -1005,7 +1005,19 @@ val practicePrompts = listOf(
     "Make a small collage from a magazine page or packaging. Fifteen minutes, no undo.",
     "Trace the shadows of a plant on paper with a lamp, then fill them in.",
     "Draw the same object at three sizes: tiny, hand-sized, as big as the page.",
-    "Look at one of your finished pieces for five minutes and write three things you would keep and one you would change."
+    "Look at one of your finished pieces for five minutes and write three things you would keep and one you would change.",
+    "Draw an onion, a pepper and a lemon in a row. Make the lemon the brightest thing on the page.",
+    "Draw steam or smoke: only the edges where it meets the background.",
+    "Five two-minute drawings of a sink full of dishes. Only the big shapes.",
+    "Draw a shiny pot and its reflections: what is really in the shine, not what you expect.",
+    "Fill a page with ellipses: cups, bowls, lids, plates, seen from above and from the side.",
+    "Paint or color a small square of the light at the time you usually work. Then one in daylight, next weekend.",
+    "Draw a corner of your room in only straight lines, then the same corner in only curves.",
+    "Choose one color you never use and make a small piece where it is the star.",
+    "Draw the same object lit from the left, from above, and from behind.",
+    "Make a quick study in four values with a marker set or a pencil, from a photo of your street.",
+    "Draw your own shoes on your feet, from where you sit. Foreshortening is just drawing what is there.",
+    "Make three tiny pieces, the size of a stamp, of one idea. Pick the strongest and draw it bigger."
 )
 
 /** Small things for a tired day: real progress, little energy, nothing to decide. */
@@ -1019,7 +1031,13 @@ val lightPrompts = listOf(
     "Measure one finished piece and type its size into the app.",
     "Read one open call in Calls and say Yes or No.",
     "Prime or prepare three surfaces for later.",
-    "Put on music and look at your series side by side for ten minutes."
+    "Put on music and look at your series side by side for ten minutes.",
+    "Wash your brushes and set out tomorrow's paper. Done counts.",
+    "Write titles for two untitled pieces: a place, a time, an object.",
+    "Empty your head into the app, then close it.",
+    "Find one artist whose work you love and look at ten of their pieces. Nothing else.",
+    "Sharpen your pencils and test one new pen on scrap paper.",
+    "Take a progress photo of the piece you are on, and nothing else."
 )
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
