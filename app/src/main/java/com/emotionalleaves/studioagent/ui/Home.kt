@@ -765,6 +765,19 @@ fun Review(nav: NavController) {
                 }) { Text("Move it to ${names[to.day - 1]}") }
             }
         }
+        // A plan you keep missing is a plan that is too big: after four weeks, offer the size you actually work.
+        if (st.weekTemplate.isBlank()) {
+            val since = now() - 28 * com.emotionalleaves.studioagent.work.DAY
+            val avg = sessions.filter { it.start >= since && it.end > it.start }.sumOf { (it.end - it.start) / 3_600_000.0 } / 4
+            val firstEver = sessions.minOfOrNull { it.start } ?: now()
+            val suggest = kotlin.math.max(1, kotlin.math.round(avg).toInt())
+            var sized by remember { mutableStateOf(false) }
+            if (!sized && firstEver < since && avg > 0 && suggest < st.weeklyHours) Panel {
+                Text("The last four weeks averaged ${"%.1f".format(avg)} hours a week; the plan asks for ${st.weeklyHours}.")
+                Small("A plan you can keep beats a bigger one. You can raise it again any time.")
+                OutlinedButton(onClick = { st.weeklyHours = suggest; sized = true; scope.io { Engine.replan(ctx) } }) { Text("Plan for $suggest " + (if (suggest == 1) "hour" else "hours") + " a week") }
+            }
+        }
         StageHead(2, "One piece for next week", st.focusWork > 0)
         if (active.isEmpty()) Empty("Nothing in progress. Start a new piece from Studio when you are ready.", "Open Studio") { nav.navigate("works") }
         else {

@@ -347,3 +347,4 @@ One real change per round. Pushed and built every ten rounds.
 341. A statement over a call's word limit has "Shorten to fit": cut down from your own sentences to the limit (nothing added), or trimmed plainly without writing help.
 342. Recording a sale can take the buyer's email; with their yes, they join your email list (noted with what they bought), since people who buy once often buy again.
 343. Entry-form filling covers more boxes: separate width, height and depth, edition, state and country, and long answer boxes whose label matches one of the call's questions get your answer to it.
+344. After four weeks well under the planned hours, the weekly look ahead offers to plan for the hours you actually work, without blame; a plan you can keep beats a bigger one.
