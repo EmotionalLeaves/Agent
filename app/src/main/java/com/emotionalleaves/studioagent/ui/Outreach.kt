@@ -213,6 +213,13 @@ fun Outreach(nav: NavController) {
             // Then nearest first, for places from the map.
             { Regex("""(\d+) (mi|km) away""").find(it.notes)?.groupValues?.get(1)?.toIntOrNull() ?: (if (it.notes.contains("under 1")) 0 else 999) }))
         if (people.isNotEmpty()) H("Venues and people")
+        // Where things stand, in one line.
+        if (people.size >= 3) {
+            val toWrite = people.count { it.status in setOf("research", "drafted", "approved") && it.kind !in setOf("client", "artist") }
+            val waiting = people.count { it.status in setOf("sent", "followed_up") }
+            val warm = people.count { it.status in setOf("interested", "more") }
+            Small(listOfNotNull(toWrite.takeIf { it > 0 }?.let { "$it to write to" }, waiting.takeIf { it > 0 }?.let { "$it waiting for a reply" }, warm.takeIf { it > 0 }?.let { "$it interested" }).joinToString(", ").ifBlank { "Nothing waiting on you." })
+        }
         // A long list from the map: find by name, or show one kind at a time; long lists are drawn 25 at a time.
         val findPeople = rememberSaveable { mutableStateOf("") }
         var kindShown by rememberSaveable { mutableStateOf("all") }
