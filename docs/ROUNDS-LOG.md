@@ -324,3 +324,5 @@ One real change per round. Pushed and built every ten rounds.
 318. Practice sessions offer one exercise to do (twenty short ones, chosen for moving from screens to paper and paint: value studies, color mixing, blind contours, thumbnails), with Another one, so practice needs no deciding.
 319. A practice session keeps its exercise on screen under the timer.
 320. Light sessions (the tired-day kind) also offer one small, real thing to do (photograph a piece, sort references, write the next step, read one call), with Another one.
+321. Calls, All: a find box (a word, a city, a medium, a venue) once there are more than a dozen calls, searching each call's own words.
+322. People: with more than ten venues (easy after Places near you), a find box and a kind filter (galleries, libraries, campus…), drawn 25 at a time.

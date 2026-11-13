@@ -221,7 +221,12 @@ fun Calls(nav: NavController) {
                 IconRow(Icons.Default.Notifications, "Where calls come from", "Email alerts and pages the app checks each day") { nav.navigate("sources") }
                 var allLimit by rememberSaveable { mutableStateOf(50) }
                 // Open calls first, the soonest deadline at the top; closed ones sink to the bottom.
-                val everything = opps.filter { it.status in setOf("new", "later", "no", "expired") && kindOk(it) }
+                // With dozens of calls from eight sites: find one by a word (a city, a medium, a venue, "photography").
+                val find = rememberSaveable { mutableStateOf("") }
+                if (opps.size > 12) Field("Find a call (a word, a city, a medium)", find)
+                val words = find.value.trim().lowercase().split(Regex("\\s+")).filter { it.isNotBlank() }
+                val everything = opps.filter { it.status in setOf("new", "later", "no", "expired") && kindOk(it) &&
+                        words.all { w -> callWords(it).contains(w) } }
                     .sortedWith(compareBy<Opp>({ it.status == "expired" || (it.deadline in 1 until now()) }, { if (it.deadline > 0) it.deadline else Long.MAX_VALUE }))
                 if (everything.size > allLimit) Small("Showing the first $allLimit of ${everything.size}.")
                 everything.take(allLimit).forEach { o ->
@@ -1029,3 +1034,6 @@ fun JuryView(nav: NavController, id: Long) {
         Small("The image list, file names and covering email all follow this order.")
     }
 }
+
+/** Everything a call says about itself, in one lowercase string to search. */
+fun callWords(o: Opp): String = listOf(o.title, o.organiser, o.venue, o.city, o.theme, o.mediums, o.eligibility, o.kind, o.sourceName, o.rawText.take(3000)).joinToString(" ").lowercase()

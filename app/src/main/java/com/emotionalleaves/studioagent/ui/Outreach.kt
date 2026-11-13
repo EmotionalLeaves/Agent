@@ -157,13 +157,26 @@ fun Outreach(nav: NavController) {
         // Places you can write to now come first; within them, the ones waiting on you.
         val people = contacts.filter { it.kind != "subscriber" }.sortedWith(compareBy<Contact>({ !Levels.outreachAllowed(level, it.kind, Engine.rules()) }, { it.status !in setOf("research", "drafted", "interested", "more") }))
         if (people.isNotEmpty()) H("Venues and people")
-        people.forEach { c ->
+        // A long list from the map: find by name, or show one kind at a time; long lists are drawn 25 at a time.
+        val findPeople = rememberSaveable { mutableStateOf("") }
+        var kindShown by rememberSaveable { mutableStateOf("all") }
+        var peopleLimit by rememberSaveable { mutableStateOf(25) }
+        if (people.size > 10) {
+            Field("Find a venue or person", findPeople)
+            Choice("", listOf("all") + contactKinds.filter { k -> people.any { it.kind == k } }, kindShown, names = { if (it == "all") "All" else kindWords(it) }) { kindShown = it }
+        }
+        val q = findPeople.value.trim().lowercase()
+        val shownPeople = people.filter { c -> (kindShown == "all" || c.kind == kindShown) && (q.isBlank() || listOf(c.venue, c.name, c.notes, c.email).any { it.lowercase().contains(q) }) }
+        if (people.isNotEmpty() && shownPeople.isEmpty()) Small("No venue matches that.")
+        if (shownPeople.size > peopleLimit) Small("The ${peopleLimit} you can write to first are shown.")
+        shownPeople.take(peopleLimit).forEach { c ->
             Panel(onClick = { nav.navigate("contact/${c.id}") }) {
                 Text(c.venue.ifBlank { c.name.ifBlank { "New contact" } }, fontWeight = FontWeight.SemiBold)
                 Small(kindWords(c.kind) + ", " + statusWords(c).replaceFirstChar { it.lowercase() })
                 if (!Levels.outreachAllowed(level, c.kind, Engine.rules())) Note("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}.")
             }
         }
+        if (shownPeople.size > peopleLimit) OutlinedButton(onClick = { peopleLimit += 25 }, modifier = Modifier.fillMaxWidth()) { Text("Show ${minOf(25, shownPeople.size - peopleLimit)} more") }
 
         H("Ready-made emails")
         IconRow(Icons.Default.Email, "Print lab, gallery, library", "Short emails you can send as they are") { nav.navigate("letters") }
