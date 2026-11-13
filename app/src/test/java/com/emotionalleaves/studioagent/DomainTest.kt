@@ -459,7 +459,7 @@ class DomainTest {
 
     @Test fun foundationsMoveOn() {
         val F = com.emotionalleaves.studioagent.domain.Foundations
-        assertEquals(18, F.weeks.size); assertTrue(F.weeks.all { it.exercises.size == 3 })
+        assertEquals(24, F.weeks.size); assertTrue(F.weeks.all { it.exercises.size == 3 })
         assertEquals("1a", F.next("")!!.id)
         var s = F.mark("", "1a"); s = F.mark(s, "1b"); s = F.mark(s, "1c")
         assertEquals(2, F.current(s)!!.n); assertEquals("2a", F.next(s)!!.id)

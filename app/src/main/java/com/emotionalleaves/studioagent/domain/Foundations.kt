@@ -1,7 +1,7 @@
 package com.emotionalleaves.studioagent.domain
 
 /**
- * Twelve weeks of foundations for someone starting out, then six on building a body of work, sized for weeknights: each week one skill, why it
+ * Twelve weeks of foundations for someone starting out, six on building a body of work, then six going further, sized for weeknights: each week one skill, why it
  * matters on a gallery wall, three exercises of 20 to 30 minutes, and the Fresh eyes view that checks it.
  * Doing them badly is the point; finishing them is the whole goal.
  */
@@ -85,12 +85,37 @@ object Foundations {
         w(18, "Ready to show", "A series that is photographed, titled and priced is ready for a call or a wall of its own.", "Flipped",
             "Photograph every piece of the series in daylight, square on." to 30,
             "Fill in size, year and price for each, and mark them Ready to send." to 20,
-            "Find one call or one place that suits the series, and say yes to it." to 20)
+            "Find one call or one place that suits the series, and say yes to it." to 20),
+        // Going further: for after the first body of work, or any time the basics feel steady.
+        w(19, "Drawing out in the world", "Drawing where things happen trains speed and choice: there is no time to copy everything, so you pick what matters.", "Squint",
+            "Ten minutes in a cafe, a bus or a break room: three people, two minutes each, only the big shapes." to 15,
+            "Draw a whole street corner or a room in five minutes, then the same view again in fifteen." to 25,
+            "Go to a sketch group or a life drawing session (Your people finds one), or draw at home with a timer as if you were there." to 30),
+        w(20, "Drawing from memory", "What you remember is already chosen. Memory drawings often look more like you than anything copied.", "As it is",
+            "After a shift, draw one moment from the workday from memory: the light, where things were. No looking it up." to 20,
+            "Look hard at an object for two minutes, put it away, and draw it. Then compare and draw it again." to 20,
+            "Draw your route home from memory as a picture, not a map." to 25),
+        w(21, "Working bigger", "Size changes everything: marks, time, and how a piece holds a wall. Jurors notice a confident larger piece.", "Thirds",
+            "Take your strongest small study and redraw it twice as big, keeping only what made it strong." to 30,
+            "Fill a large sheet with big, loose shapes using the side of the pencil or a wide brush. No details allowed." to 20,
+            "Stand back across the room every five minutes while working big; fix only what reads from there." to 30),
+        w(22, "Your materials, deeper", "Knowing what your paper, paint and surfaces will do lets you choose instead of hoping.", "As it is",
+            "Make a test sheet: every color you own, full strength and watered or thinned, labeled." to 25,
+            "Try the same small study on two different surfaces. Note which one wants your kind of marks." to 30,
+            "Learn how your work is kept safe: fixative, varnish, or framing under glass. Write the steps on a card for your table." to 15),
+        w(23, "The next idea", "A second series is easier than the first: you know how. The ideas you parked are where it starts.", "Two values",
+            "Read through your parked ideas and pick three that keep coming back." to 15,
+            "Make one quick study for each of the three." to 30,
+            "Choose one, and write two sentences about why it belongs next to your first series, or why it does not." to 15),
+        w(24, "Looking at shows", "Seeing how other work is chosen, hung and lit teaches what jurors and curators look for.", "Flipped",
+            "Go to one show (an opening counts) and sketch one piece in five minutes." to 25,
+            "Write three sentences: which piece you would hang first, and why it is where it is." to 15,
+            "Pick one thing from the show to try in your next session, and try it." to 30)
     )
 
     fun done(stored: String): Set<String> = stored.split(",").filter { it.isNotBlank() }.toSet()
 
-    /** The week you are on: the first with an exercise still to do, or null when all twelve are done. */
+    /** The week you are on: the first with an exercise still to do, or null when all are done. */
     fun current(stored: String): Week? { val d = done(stored); return weeks.firstOrNull { wk -> wk.exercises.any { it.id !in d } } }
 
     fun next(stored: String): Exercise? { val d = done(stored); return current(stored)?.exercises?.firstOrNull { it.id !in d } }

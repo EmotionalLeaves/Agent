@@ -1489,7 +1489,7 @@ object Engine {
             has("next show", "my show", "opening", "am i in") -> dao.eventsNow().filter { !it.done && it.date > now && it.type == "task" && it.title.startsWith("Go to the opening") }.minByOrNull { it.date }?.let { e ->
                 val t = dao.oppsNow().firstOrNull { it.id == e.oppId }?.title.orEmpty()
                 "Your next opening: ${t.ifBlank { "your show" }}, ${com.emotionalleaves.studioagent.ui.fmtDate(e.date)}.\nGO: calls" } ?: "No opening of yours is on the calendar yet. Calls that fit you are the way in.\nGO: calls"
-            has("practice", "exercise", "foundation") -> com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone)?.let { "Next exercise: ${it.text}\nGO: session" } ?: "All twelve weeks of foundations are done. Any exercise from Practice is still there.\nGO: session"
+            has("practice", "exercise", "foundation") -> com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone)?.let { "Next exercise: ${it.text}\nGO: session" } ?: "All the weeks of foundations are done. Any exercise from Practice is still there.\nGO: session"
             has("what should i do", "what next", "what do i do", "where do i start", "this weekend", "today") -> nextStep().let { "${it.title}. ${it.detail}" }
             // "What is a juried show?", "What does consignment mean?": the glossary, in plain words.
             has("what is", "what's", "what are", "what does", "mean", "define", "meaning of") -> glossaryAnswer(q) ?: toolAnswer(q)
