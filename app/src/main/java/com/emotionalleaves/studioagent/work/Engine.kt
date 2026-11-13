@@ -617,7 +617,14 @@ object Engine {
             Appl(
                 oppId = opp.id, workIds = chosen.joinToString(",") { it.id.toString() }, statement = statement,
                 method = if (opp.email.isNotBlank()) "email" else "web", emailTo = opp.email,
-                emailSubject = "${opp.title}: submission from ${st.fullName.ifBlank { "the artist" }}", emailBody = body, createdAt = System.currentTimeMillis()
+                emailSubject = "${opp.title}: submission from ${st.fullName.ifBlank { "the artist" }}", emailBody = body, createdAt = System.currentTimeMillis(),
+                // Grants and residencies always ask these; they are there from the start, each with a Draft button.
+                answers = when (opp.kind) {
+                    "grant" -> answersJson(listOf("Project description: what you will make, and why now" to "", "Budget: what the money pays for" to "", "Timeline" to ""))
+                    "residency" -> answersJson(listOf("What you will work on during the residency" to "", "Why this residency, and why now" to ""))
+                    "commission" -> answersJson(listOf("Your idea for this site or brief" to "", "Similar work you have made" to ""))
+                    else -> ""
+                }
             )
         )
         dao.put(opp.copy(status = "yes"))

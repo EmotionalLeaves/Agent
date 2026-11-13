@@ -315,3 +315,6 @@ One real change per round. Pushed and built every ten rounds.
 308. The daily check reads up to three venues' own websites a day (each once, following robots rules) for pages about exhibitions, display walls, proposals or calls, and lists them on the venue as "On their site" with the links.
 309. Sessions can play a steady background hum (brown noise, made on the phone, fading in gently) that covers noise and helps many people with ADHD settle. One tap on or off, remembered; it pauses with the session and stops when it ends.
 310. A call from an organizer or venue that has already shown your work is brought forward, marked "has shown your work before", since a second yes is much likelier than a first.
+311. The screenshot and spoken-label checks now cover the new screens (places, plan a show, juror view, studio update), so their layout and labels are reviewed on every build.
+312. The tour says the app reads eight listing sites and finds real places near you.
+313. Applying for a grant, residency or commission starts with the questions those always ask (project and budget; what you will work on and why this residency; your idea for the site), each with Draft an answer.
