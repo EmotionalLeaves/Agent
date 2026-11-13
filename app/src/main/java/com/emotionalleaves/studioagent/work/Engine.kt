@@ -1467,6 +1467,8 @@ object Engine {
         if (!st.onboarded) return NextStep("Start with the two-minute tour", "How the app works, a page at a time. Nothing to fill in.", "tour")
         if (st.pinnedStep.isNotBlank()) return NextStep(st.pinnedStep, "Pinned by you. Clear it below when it is done.", "home")
         if (st.snoozeDay == today.toString()) return NextStep("Nothing else needs you today", "You set today's step aside. It will be back tomorrow.", "session")
+        if (today.dayOfWeek.value.toString() in st.daysOff.split(",") && dao.eventsNow().none { it.type == "submit" && !it.done && it.date in now..(now + DAY) })
+            return NextStep("A day off", "You chose this day as a day off from the app. Nothing is being counted. See you tomorrow.", "home")
         if (st.pausedUntil > now) return NextStep("Planning is paused", "Until ${date(st.pausedUntil)}. Nothing is being counted or missed. Start a session any time you feel like it.", "session")
         val works = dao.artworksNow(); val docs = dao.docsNow(); val series = dao.seriesNow()
         // Back after a gap: no catching up, no list. Five minutes on the piece you were on is the whole step.

@@ -584,6 +584,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 H("Today")
                 Toggle("Calm Today: show only the next step and Start", st.calmToday) { st.calmToday = it }
                 Toggle("Daily check only on Wi-Fi and while charging (saves data and battery)", st.wifiOnly) { st.wifiOnly = it; Engine.schedule(ctx, changed = true) }
+                DaysField("Days off from the app (no notifications, nothing asked of you)", st.daysOff) { st.daysOff = it }
                 H("Social media")
                 Toggle("Help me post my work online", st.socialOn) { st.socialOn = it }
                 Small("Off unless you want it. When on: post buttons on pieces, series and shows, and a weekly suggestion to post. When off, none of it appears; your web page, email list and openings do the same job more quietly.")

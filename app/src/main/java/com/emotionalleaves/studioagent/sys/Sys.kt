@@ -82,6 +82,8 @@ object Notifier {
     /** Returns true if it was shown. Dropped items are never lost: they wait on the home card and in the admin pass. */
     fun post(ctx: Context, s: Settings, id: Int, title: String, text: String, route: String = "home", choices: Boolean = false): Boolean {
         if (!allowed(ctx) || quietNow(s)) return false
+        // A day off from the app is a day off: only a deadline within a day still gets through.
+        if (LocalDate.now().dayOfWeek.value.toString() in s.daysOff.split(",") && !title.startsWith("Deadline") && id != 54) return false
         val today = LocalDate.now().toString()
         if (s.notifDay != today) { s.notifDay = today; s.notifCount = 0 }
         if (s.notifCount >= s.notifCap) return false
