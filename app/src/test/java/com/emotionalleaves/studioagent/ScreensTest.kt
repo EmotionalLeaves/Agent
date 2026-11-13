@@ -189,7 +189,7 @@ class ScreensTest {
         shot("67g_foundations", "foundations", "Seeing shapes")
         shot("67h_market", "market", "Today:")
         shot("67i_pricing", "pricing", "What your rule gives")
-        shot("67j_findable", "findable", "A profile line")
+        shot("67j_findable", "findable", "done")
         shot("67k_tools", "tools", "Making the work")
         shot("67l_health", "health", "Daily check")
         shot("67m_photoshoot", "photoshoot", "Photograph")
