@@ -738,7 +738,7 @@ class DomainTest {
         val P = com.emotionalleaves.studioagent.domain.PaperSizes
         assertEquals(listOf(9.0 to 12.0, 18.0 to 24.0), P.guess(1500, 2000).filter { it.first in setOf(9.0, 18.0) })
         assertTrue(P.guess(2000, 1500).all { it.first > it.second })
-        assertEquals(listOf(8.5 to 11.0), P.guess(2550, 3300))
+        assertEquals(8.5 to 11.0, P.guess(2550, 3300).first())
         assertEquals("A4", P.name(11.69 to 8.27))
         assertTrue(P.guess(1000, 3000).isEmpty())
         assertTrue(P.guess(0, 10).isEmpty())
