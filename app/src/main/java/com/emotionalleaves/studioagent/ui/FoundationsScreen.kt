@@ -21,11 +21,12 @@ fun FoundationsScreen(nav: NavController) {
     val stored = if (tick >= 0) st.foundationsDone else ""
     val done = Foundations.done(stored); val current = Foundations.current(stored)
     Screen("Foundations", nav) {
-        Intro("foundations", "Twelve weeks of the basics every exhibiting artist leans on, sized for weeknights: three short exercises a week. A practice session picks the next one by itself and ticks it when you save the session. Doing them badly is the point.")
-        Text(if (current == null) "All twelve weeks done. That is real groundwork." else "${done.size} of ${Foundations.weeks.sumOf { it.exercises.size }} exercises done. This week: ${current.skill}.", style = MaterialTheme.typography.bodyLarge)
+        Intro("foundations", "Twelve weeks of the basics every exhibiting artist leans on, then six on building a body of work, sized for weeknights: three short exercises a week. A practice session picks the next one by itself and ticks it when you save the session. Doing them badly is the point.")
+        Text(if (current == null) "All ${Foundations.weeks.size} weeks done. That is real groundwork, and a body of work." else "${done.size} of ${Foundations.weeks.sumOf { it.exercises.size }} exercises done. This week: ${current.skill}.", style = MaterialTheme.typography.bodyLarge)
         if (current != null) Button(onClick = { nav.navigate("session") }) { Text("Practice the next one") }
         StudyAMaster()
         Foundations.weeks.forEach { wk ->
+            if (wk.n == 13) Section("Building a body of work")
             val all = wk.exercises.all { it.id in done }
             if (wk == current) Panel(strong = true) {
                 Text("Week ${wk.n}: ${wk.skill}", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)

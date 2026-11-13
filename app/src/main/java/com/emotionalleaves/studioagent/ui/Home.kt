@@ -451,7 +451,7 @@ fun SessionScreen(nav: NavController) {
             if (kind == "skill") {
                 Panel {
                     if (useFoundation && foundation != null && week != null) {
-                        Small("Foundations, week ${week.n} of 12: ${week.skill}")
+                        Small("Foundations, week ${week.n} of ${com.emotionalleaves.studioagent.domain.Foundations.weeks.size}: ${week.skill}")
                         Text(foundation.text, style = MaterialTheme.typography.titleMedium)
                         Small(week.why)
                         TextButton(onClick = { useFoundation = false }, modifier = Modifier.offset(x = (-12).dp)) { Text("Something else instead") }
@@ -775,7 +775,7 @@ fun More(nav: NavController) {
         IconRow(Icons.Default.Edit, "Statement, bio and CV", (if (statementOk) "Statement approved" else "Statement not approved yet") + ", " + Texts.count(facts.size, "CV line")) { nav.navigate("materials") }
         IconRow(Icons.Default.Search, "When someone looks you up", "What jurors and venues find online") { nav.navigate("findable") }
         IconRow(Icons.Default.Person, "People and venues", if (venues == 0) "Find real places near you to show" else "Places to show, and emails to them") { nav.navigate("outreach") }
-        com.emotionalleaves.studioagent.domain.Foundations.current(st.foundationsDone).let { wk -> IconRow(Icons.Default.Star, "Foundations", if (wk == null) "All twelve weeks done" else "Week ${wk.n} of 12: ${wk.skill}") { nav.navigate("foundations") } }
+        com.emotionalleaves.studioagent.domain.Foundations.current(st.foundationsDone).let { wk -> IconRow(Icons.Default.Star, "Foundations", if (wk == null) "All weeks done" else "Week ${wk.n} of ${com.emotionalleaves.studioagent.domain.Foundations.weeks.size}: ${wk.skill}") { nav.navigate("foundations") } }
         IconRow(Icons.Default.AccountBox, "Records", "To-dos, money, sales, and proof of what was sent") { nav.navigate("records") }
         if (steps != null && next == null) IconRow(Icons.Default.CheckCircle, "Guide", "Set-up is done. The five levels, and where you are") { nav.navigate("guide") }
         IconRow(Icons.Default.Settings, "Settings", "Your details, hours, rules, writing help, email, backup") { nav.navigate("settings") }

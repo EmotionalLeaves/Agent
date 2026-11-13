@@ -17,7 +17,7 @@ import androidx.navigation.NavController
 val toolGroups: List<Pair<String, List<Triple<String, String, String>>>> = listOf(
     "Making the work" to listOf(
         Triple("Start a session", "A timer, where you left off, and nothing else", "session"),
-        Triple("Foundations", "Twelve weeks of short exercises, and a master to study", "foundations"),
+        Triple("Foundations", "Short weeknight exercises, a body of work, and a master to study", "foundations"),
         Triple("Your pieces and series", "Fresh eyes, planning a series, is it done", "works"),
         Triple("Your week", "Studio times that fit your shifts", "week"),
         Triple("The year ahead", "Where steady work leads, month by month", "year")
