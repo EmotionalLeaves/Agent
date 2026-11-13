@@ -400,7 +400,11 @@ fun DaysField(label: String, value: String, onValue: (String) -> Unit) {
 /** While something is being read from storage: a quiet bar, no words to read. */
 @Composable
 fun Loading() {
-    androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 24.dp).height(3.dp),
+    // A thing that was removed (an old call, a deleted piece) does not spin forever: after a moment it says so.
+    var gone by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { kotlinx.coroutines.delay(2500); gone = true }
+    if (gone) Text("This is no longer here. It may have been removed, or its date passed long ago. Go back to carry on.", Modifier.padding(top = 24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+    else androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 24.dp).height(3.dp),
         color = MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.surfaceContainerHigh)
 }
 

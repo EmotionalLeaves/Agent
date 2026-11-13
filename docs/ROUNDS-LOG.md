@@ -376,3 +376,4 @@ One real change per round. Pushed and built every ten rounds.
 370. Records opens with the year so far: hours of making, pieces with pictures, applications sent, shows you were in, openings visited, people on your list.
 371. CV facts: "Paste a CV you already have". Each line lands under its heading (education, solo and group shows, awards, residencies, collections…) with its year, ready to check; lines already there are skipped.
 372. Good calls come back every year: one that closed is remembered as "Watch for: Winter Open" a month before it closed last year, on your calendar and in Today's next seven days, linking to last year's call.
+373. A screen for something that no longer exists (an old call, a removed piece) says so after a moment instead of loading forever.
