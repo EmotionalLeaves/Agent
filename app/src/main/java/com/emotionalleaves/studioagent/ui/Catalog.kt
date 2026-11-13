@@ -281,9 +281,9 @@ fun WorkDetail(nav: NavController, id: Long) {
             }
         }
         Field("Title", w.title, { save(w.copy(title = it)) })
-        Explain("How do I photograph work well?", "Daylight from the side, no flash. Put the work flat against a wall and hold the phone parallel to it, level with its center. A sheet of plain grey card in one corner helps the app correct the color. Then tap Straighten and crop.")
+        Explain("How do I photograph work well?", "Daylight from the side, no flash. Put the work flat against a wall and hold the phone parallel to it, level with its center. A sheet of plain gray card in one corner helps the app correct the color. Then tap Straighten and crop.")
         Status(status)
-        if (w.imagePath.isNotBlank() && (w.status == "in_progress" || w.status == "finished"))
+        if (w.imagePath.isNotBlank() && w.status in setOf("idea", "in_progress", "finished"))
             Button(onClick = {
                 val (filledWork, filled) = Engine.fillBlanks(w.copy(status = "documented"))
                 save(filledWork)

@@ -45,6 +45,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -207,6 +209,7 @@ fun Calls(nav: NavController) {
                     }) { Text("Add this call") }
                     OutlinedButton(onClick = { scope.io { val id = dao.put(Opp(title = "New call", sourceName = "By hand", createdAt = now())); withContext(Dispatchers.Main) { nav.navigate("call/$id") } } }) { Text("By hand") }
                 }
+                FlyerButtons(nav) { status = it }
             }
             "all" -> {
                 Small("Everything found, including calls your rules hold back, and why.")
@@ -550,7 +553,11 @@ fun ApplScreen(nav: NavController, id: Long) {
             Note("The app never pays for you. You pay on the organizer's page; it keeps the record.")
         }
         if (a.method == "email") {
+            // The call may have gained its address after the application was started.
+            LaunchedEffect(o.email) { if (a.emailTo.isBlank() && o.email.isNotBlank()) save(a.copy(emailTo = o.email)) }
             Field("To (their email address)", a.emailTo, { save(a.copy(emailTo = it.trim())) })
+            if (a.emailTo.isNotBlank() && !Texts.looksLikeEmail(a.emailTo)) Small("That does not look like a full email address yet (name@place.org).")
+            else if (a.emailTo.isBlank()) Small("Their address is usually on the call's page, near \"how to apply\".")
             Field("Subject", a.emailSubject, { save(a.copy(emailSubject = it)) })
             Field("The covering email", a.emailBody, { save(a.copy(emailBody = it)) }, lines = 6)
             if (a.status == "sending") Panel {
@@ -565,6 +572,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                 Note("Add your email and an app password in You, Settings, Email and the app sends it for you instead.")
             }
         } else {
+            if (o.url.isBlank()) Small("Add the link to the call's page first: open the call, then Details.")
             Button(enabled = o.url.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = { nav.navigate("web/${a.id}") }) { Text("Fill in the entry form") }
             OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Submitted on the organizer's site on ${fmtDate(now())}.") } }) { Text("I submitted it") }
         }
@@ -790,5 +798,33 @@ fun LevelLine(nav: NavController, text: String) {
     Column {
         Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         TextButton(onClick = { nav.navigate("settings/rules") }, modifier = Modifier.offset(x = (-12).dp)) { Text("Change my rules") }
+    }
+}
+
+/**
+ * A flyer on a notice board or a poster at a show: photograph it and the call is read from the picture.
+ * When the picture cannot be read, the call is still made, with the photo's date, ready to fill in.
+ */
+@Composable
+fun FlyerButtons(nav: NavController, onStatus: (String) -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val shot = remember { File(ctx.cacheDir, "flyer.jpg") }
+    var busy by remember { mutableStateOf(false) }
+    fun read(path: String) {
+        busy = true; onStatus("Reading the flyer…")
+        scope.io({ onStatus(it); busy = false }) {
+            val (id, read) = Engine.callFromPhoto(ctx, path, "Flyer photo")
+            onStatus(if (read) "" else "No words could be read from that picture. Type the name and deadline from the flyer."); busy = false
+            withContext(Dispatchers.Main) { nav.navigate("call/$id") }
+        }
+    }
+    val take = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok -> if (ok) read(shot.absolutePath) }
+    val pick = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) { val f = File(ctx.cacheDir, "flyer_picked.jpg"); if (ImageTools.copyUri(ctx, uri, f)) read(f.absolutePath) }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(enabled = !busy, onClick = { try { take.launch(com.emotionalleaves.studioagent.sys.Share.uri(ctx, shot)) } catch (e: Exception) { onStatus("The camera did not open. Try A saved photo instead.") } }) { Text("Photo of a flyer") }
+        TextButton(enabled = !busy, onClick = { pick.launch("image/*") }) { Text("A saved photo") }
     }
 }

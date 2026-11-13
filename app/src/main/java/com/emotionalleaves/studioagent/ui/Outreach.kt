@@ -81,7 +81,7 @@ fun Outreach(nav: NavController) {
             Text(when (level) {
                 0 -> "No emails yet. Just go to one opening a month and look at the work."
                 1 -> "Campus galleries, the art department, libraries, cafés and community art centers. No cold emails to commercial galleries."
-                2 -> "Artist-run spaces, plus jurors and organisers of shows that accepted you."
+                2 -> "Artist-run spaces, plus jurors and organizers of shows that accepted you."
                 else -> "Curators, university and nonprofit galleries, then commercial galleries whose program fits your work."
             }, style = MaterialTheme.typography.titleMedium)
         }

@@ -92,6 +92,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jsoup:jsoup:1.18.3")
+    // Reads the words on a flyer photo on the phone itself: free, offline, no account.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation("com.sun.mail:android-mail:1.6.7")
     implementation("com.sun.mail:android-activation:1.6.7")
     testImplementation("junit:junit:4.13.2")

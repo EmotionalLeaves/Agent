@@ -98,7 +98,10 @@ fun Records(nav: NavController) {
             tasks.sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.forEachIndexed { i, e ->
                 if (i > 0) Hair()
                 // Tap the whole line to tick it off.
-                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = e.done, role = androidx.compose.ui.semantics.Role.Checkbox) { c -> scope.io { dao.put(e.copy(done = c)) } }.padding(vertical = 6.dp),
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = e.done, role = androidx.compose.ui.semantics.Role.Checkbox) { c ->
+                    // A ticked line leaves the list, so it can be brought back with Undo.
+                    if (c) scope.undoable("Done: ${e.title}", { dao.put(e.copy(done = true)) }, { dao.put(e.copy(done = false)) }) else scope.io { dao.put(e.copy(done = false)) }
+                }.padding(vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Mark(e.done)
                     Column(Modifier.weight(1f)) {
@@ -431,7 +434,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                     Multi("Kinds of call to show", Ai.callKinds, st.kinds, names = { mapOf("fair" to "Art fairs", "exhibition" to "Exhibitions", "residency" to "Residencies", "grant" to "Grants", "publication" to "Publications", "commission" to "Commissions", "other" to "Other")[it] ?: it }) { st.callKinds = it.joinToString(",") }
                 }
                 Count("Calls on the weekly short list", st.shortlistSize, 1, 10) { st.shortlistSize = it }
-                SText("Blocked organisers (comma separated)", st.blocked) { st.blocked = it }
+                SText("Blocked organizers (comma separated)", st.blocked) { st.blocked = it }
                 Expand("What matters most when ranking") {
                     listOf("Theme fits my work", "Good for my CV", "Costs little", "Good odds", "Little effort", "Matches my goals").forEachIndexed { i, label ->
                         Choice(label, listOf("low", "normal", "high"), listOf("low", "normal", "high")[weights[i].coerceIn(1, 3) - 1]) { pick ->
@@ -452,7 +455,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Small("Start now uses this. A shorter time is one tap away under Start now, for days when starting is the hard part.")
                 Toggle("Keep the screen on during a session", keepAwake) { keepAwake = it; st.keepAwake = it }
                 H("Less on screen")
-                Toggle("Hide the small grey explanations", shortText) { shortText = it; st.shortText = it }
+                Toggle("Hide the small gray explanations", shortText) { shortText = it; st.shortText = it }
                 Toggle("Show fit as words (Strong, Good, Fair), not a score", fitWords) { fitWords = it; st.fitWords = it }
                 H("Finished means finished")
                 Toggle("Lock texts once I approve them", lockApproved) { lockApproved = it; st.lockApproved = it }
@@ -490,7 +493,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                     }
                     SText("Paste any AI key here (Google, Claude, OpenAI, Groq, OpenRouter)", st.aiKey, secret = true) { G.ai.useKey(it) }
                     if (st.aiKey.isNotBlank()) {
-                        Small("Recognised as ${Ai.detect(st.aiKey).name}.")
+                        Small("Recognized as ${Ai.detect(st.aiKey).name}.")
                         Num("Stop at this much a month (estimate)", st.aiCapUsd) { st.aiCapUsd = it }
                         Small("Spent this month, roughly: ${money(G.ai.spentThisMonth())}.")
                         TextButton(onClick = { G.ai.useKey("") }) { Text("Remove the key and go back to the free helper") }

@@ -100,6 +100,19 @@ class LiveProbeTest {
             val t0 = System.currentTimeMillis(); val (code, body) = call()
             log("vision $name: $code in ${System.currentTimeMillis() - t0} ms: ${body.replace("\n", " ").take(300)}")
         }
+        // Which free models can see pictures at all: read each service's own list, then try the ones that say so.
+        try {
+            val pm = org.json.JSONArray(get("https://text.pollinations.ai/models").second)
+            val pv = (0 until pm.length()).mapNotNull { pm.optJSONObject(it) }.filter { o -> o.optBoolean("vision") || o.optJSONArray("input_modalities")?.toString()?.contains("image") == true }
+            log("pollinations vision models: " + pv.joinToString { it.optString("name") + "(" + it.optString("tier") + ")" })
+            pv.take(5).forEach { m -> val (code, body) = post("https://text.pollinations.ai/openai", vision(m.optString("name"))); log("  try ${m.optString("name")}: $code ${body.replace("\n", " ").take(200)}") }
+        } catch (e: Exception) { log("pollinations models failed: $e") }
+        try {
+            val lm = JSONObject(get("https://api.llm7.io/v1/models").second).optJSONArray("data") ?: org.json.JSONArray()
+            val lv = (0 until lm.length()).mapNotNull { lm.optJSONObject(it) }.filter { it.optJSONObject("modalities")?.optJSONArray("input")?.toString()?.contains("image") == true }
+            log("llm7 vision models: " + lv.joinToString { it.optString("id") + "(" + it.optString("tier") + ")" })
+            lv.filter { it.optString("tier") != "pro" }.take(5).forEach { m -> val (code, body) = post("https://api.llm7.io/v1/chat/completions", vision(m.optString("id"))); log("  try ${m.optString("id")}: $code ${body.replace("\n", " ").take(200)}") }
+        } catch (e: Exception) { log("llm7 models failed: $e") }
         try {
             val calls = kotlinx.coroutines.runBlocking { G.ai.extractCalls("A photo of a flyer for an open call.", "probe", flyer) }
             log("app extractCalls from the photo: " + calls.joinToString { "${it.title} / ${it.deadline} / ${it.fee} / ${it.scope}" })

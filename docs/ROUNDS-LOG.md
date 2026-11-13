@@ -192,3 +192,13 @@ One real change per round. Pushed and built every ten rounds.
 188. Applied: an accepted show says its next step and day ("Next: Deliver or ship the work, Feb 10").
 189. An accepted show's checklist is in date order.
 190. Today puts a show step due in the next three days (delivery, opening, pick-up) first, with Today/Tomorrow/weekday.
+191. Ticking off a to-do in Records can be undone, since the line leaves the list.
+192. US spelling sweep: Recognized, organizers, Organizer, gray.
+193. Calls, Add a call: "Photo of a flyer" (camera) and "A saved photo" read a call straight from a notice-board flyer; if it cannot be read, the call opens ready to fill in.
+194. Help's "Add your first call" mentions photographing a notice-board flyer.
+195. "Mark it Ready to send" also shows on a piece still marked Idea once it has a picture.
+196. Sending: the entry-form button says why it is off (no link), and the To box picks up the call's address when it is found later, with a check on its shape.
+197. On-phone text reading (free, offline, no key) added for photos of flyers and posters.
+198. Calls, Photo of a flyer: the words are read on the phone, then picked apart like a pasted call (name, deadline, fee, link).
+199. A picture shared into the app goes the same way, and any words typed beside it are kept with the call.
+200. The live check now lists which free services can see pictures at all, so the flyer path does not depend on them.

@@ -38,7 +38,7 @@ data class Rules(
 )
 
 object Levels {
-    val names = listOf("Foundation", "First walls", "Regional", "Recognised", "Established")
+    val names = listOf("Foundation", "First walls", "Regional", "Recognized", "Established")
 
     fun level(s: CareerStats, r: Rules = Rules()): Int = when {
         r.levelOverride in 0..4 -> r.levelOverride
@@ -148,7 +148,7 @@ object Scoring {
         if (!p.rules.showAllLevels && tier(o) > Levels.maxTier(p.level) + 1) r += "Above your current level"
         if (p.kinds.isNotEmpty() && o.kind.isNotBlank() && o.kind !in p.kinds) r += "You have ${o.kind} calls turned off"
         if (o.minWorks > p.availableWorks) r += "Needs ${o.minWorks} works, you have ${p.availableWorks} ready"
-        if (p.blocked.any { it.isNotBlank() && o.organiser.contains(it.trim(), ignoreCase = true) }) r += "Organiser is on your blocked list"
+        if (p.blocked.any { it.isNotBlank() && o.organiser.contains(it.trim(), ignoreCase = true) }) r += "Organizer is on your blocked list"
         val fits = p.routes.isEmpty() || p.routes.any { it == "physical" || (it == "print" && o.acceptsPrints) || (it == "screen" && o.acceptsNewMedia) }
         if (!fits) r += if (p.routes == listOf("screen")) "Does not accept screen-based work" else "Does not accept prints of digital work"
         if (o.guaranteed && o.fee > 0) r += "Pay-to-show"

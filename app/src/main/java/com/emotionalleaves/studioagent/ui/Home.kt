@@ -525,7 +525,7 @@ fun ShareScreen(nav: NavController) {
     Screen("Shared with Studio Agent", nav) {
         if (image != null) {
             Note("A picture was shared.")
-            Small("A photo of a flyer: tap Add as an open call and the name, deadline and fee are read from it. Anything it misses, you can fill in after.")
+            Small("A photo of a flyer: tap Add as an open call. The words are read on your phone, and the name, deadline and fee are picked out. Anything it misses, you fill in after.")
         }
         Field("Text or link", text, lines = 4)
         Status(status)
@@ -535,11 +535,17 @@ fun ShareScreen(nav: NavController) {
                 val t0 = text.value.trim()
                 val isUrl = Texts.isLink(t0)
                 val t = if (isUrl && !t0.startsWith("http")) "https://$t0" else t0
-                var bytes: ByteArray? = null
-                if (image != null) {
+                // A shared picture is read like a flyer photo: the words are read on the phone first.
+                if (image != null && !isUrl) {
                     val f = File(ctx.cacheDir, "shared.jpg")
-                    if (ImageTools.copyUri(ctx, image, f)) bytes = ImageTools.jpegBytes(f.absolutePath)
+                    if (ImageTools.copyUri(ctx, image, f)) {
+                        val (id, _) = Engine.callFromPhoto(ctx, f.absolutePath, "Shared")
+                        if (t.isNotBlank()) dao.oppsNow().firstOrNull { it.id == id }?.let { o -> dao.put(o.copy(rawText = (o.rawText + "\n" + t).trim())) }
+                        withContext(Dispatchers.Main) { nav.navigate("call/$id") { popUpTo("home") } }
+                        return@io
+                    }
                 }
+                val bytes: ByteArray? = null
                 val page = if (isUrl) (try { Fetch.pageText(t) } catch (e: Exception) { "" }) else ""
                 val before = dao.oppsNow().maxOfOrNull { it.id } ?: 0L
                 // Writing help reads it fully; if it is off or does not answer, the plain reader still picks out deadline, fee and link.

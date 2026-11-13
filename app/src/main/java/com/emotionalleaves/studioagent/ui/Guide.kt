@@ -106,7 +106,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
 
         GuideStep("call", d, "Add your first call",
             "You never need to go looking inside the app. When you see a call anywhere, hand it over.",
-            listOf("In any app or browser, tap Share and choose Studio Agent.", "Tap Add as an open call.", "Or open Calls and paste the link there.", "The app reads it, checks it and ranks it. You answer Yes or No."),
+            listOf("In any app or browser, tap Share and choose Studio Agent.", "Tap Add as an open call.", "Or open Calls and paste the link there.", "A flyer on a notice board: in Calls, tap Photo of a flyer.", "The app reads it, checks it and ranks it. You answer Yes or No."),
             "calls", "Open Calls", opps.isNotEmpty()),
         GuideStep("sources", d, "Have calls sent to you",
             "Listing sites will email you new calls. The app reads those emails so you do not have to.",
@@ -242,7 +242,7 @@ fun LevelsBody() {
         Triple("Foundation", "Make your first series, photograph or import it, write the statement.", "Opens Level 1: ${rules.gateWorks} finished pieces with images in one series, and an approved statement."),
         Triple("First walls", "Free and low-fee local shows: campus, library, cafe, community center, online.", "Opens Level 2: ${rules.gateShows1} exhibitions on your CV."),
         Triple("Regional", "Regional juried shows with named jurors, artist-run spaces, small grants.", "Opens Level 3: ${rules.gateShows2} shows, plus an award or an invited show."),
-        Triple("Recognised", "A solo show, residencies, competitive national calls, curators who know your work.", "Opens Level 4: a solo show, plus a residency or grant."),
+        Triple("Recognized", "A solo show, residencies, competitive national calls, curators who know your work.", "Opens Level 4: a solo show, plus a residency or grant."),
         Triple("Established", "Gallery representation, museum group shows, major grants.", "")
     )
     run {

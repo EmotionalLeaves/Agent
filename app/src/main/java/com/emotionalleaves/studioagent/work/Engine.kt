@@ -171,6 +171,20 @@ object Engine {
     }
 
     /** Text (or a flyer photo) in, call records out, read by the writing help and checked by the plain reader. */
+    /**
+     * A call from a photo of a flyer or poster. The words are read on the phone (no internet needed), then read like any pasted call.
+     * A key of your own also gets the picture itself. Returns the call's id, and whether any words could be read.
+     */
+    suspend fun callFromPhoto(ctx: Context, path: String, sourceName: String): Pair<Long, Boolean> {
+        val words = com.emotionalleaves.studioagent.media.Ocr.read(ctx, path).trim()
+        val bytes = if (!ai.free) ImageTools.jpegBytes(path) else null
+        val before = dao.oppsNow().maxOfOrNull { it.id } ?: 0L
+        val text = if (words.isNotBlank()) "Words read from a photo of a flyer or poster:\n$words" else "A photo of a flyer or poster for a call for artists."
+        if (ai.ready && (words.isNotBlank() || bytes != null)) try { ingest(text, sourceName, bytes) } catch (e: Exception) { }
+        dao.oppsNow().filter { it.id > before }.maxByOrNull { it.id }?.let { return it.id to true }
+        return if (words.isNotBlank()) ingestPlain(words, sourceName) to true else ingestPlain("Call from a flyer photo", sourceName) to false
+    }
+
     suspend fun ingest(text: String, sourceName: String, image: ByteArray? = null, fromListing: Boolean = false): Int {
         val raw = ai.extractCalls(text, sourceName, image).map { if (fromListing && it.scope == "campus") it.copy(scope = "") else it }
         // A free model can miss or misread a date. When the page holds one call, the plain reader checks its work and fills gaps.
@@ -354,7 +368,7 @@ object Engine {
         if (ai.ready) try {
             return@withContext ai.complete(
                 "You answer questions from an artist who is new to the art world, works a full-time day job, and has ADHD. Answer in at most five short sentences of plain words. " +
-                    "Be practical and honest; say when something depends on the call or the venue. Never invent specific organisations, prices or deadlines. " +
+                    "Be practical and honest; say when something depends on the call or the venue. Never invent specific organizations, prices or deadlines. " +
                     "The artist uses an app that finds open calls, writes statements from their own answers, builds application packs and sends them; mention it only when it helps. " +
                     "Stay consistent with the app's own plain answers below when they cover the question.\n\n" + known.joinToString("\n") { "Q: ${it.first}\nA: ${it.second}" }.take(6000),
                 q.take(800), fast = true, maxTokens = 900).let { plainText(it) }
