@@ -120,7 +120,9 @@ data class Profile(
     /** Organizers and venues that have shown your work: a second yes is far likelier than a first. */
     val friends: List<String> = emptyList(),
     /** Your state or region, as you typed it, for calls open only to artists in certain places. */
-    val region: String = ""
+    val region: String = "",
+    /** How far (miles) each call's town is from you, by town name in lower case, where the map knows it. */
+    val milesTo: Map<String, Int> = emptyMap()
 )
 
 /** An existing CV, pasted as text, read into CV lines: section headings set the kind, a year at the start of a line sets the year. */
@@ -256,6 +258,15 @@ object Scoring {
         val w = base.mapIndexed { i, b -> b * p.rules.weights.getOrElse(i) { 2 }.coerceIn(1, 3) / 2.0 }
         val parts = listOf(theme, career, money, odds, effort, goal)
         var total = parts.indices.sumOf { parts[it] * w[it] } / w.sum()
+        // Near enough to drive to and hang the work yourself: the easiest kind of first show. Far ones cost shipping.
+        if (!o.online) p.milesTo[o.city.substringBefore(",").trim().lowercase()]?.let { mi ->
+            when {
+                mi <= 30 -> { total += 8; reasons += if (mi < 2) "In your town" else "About $mi miles from you" }
+                mi <= 120 -> { total += 3; reasons += "About $mi miles from you: a day trip" }
+                mi > 400 -> { total -= if (p.level <= 1) 8 else 3; reasons += "About $mi miles away: shipping both ways" }
+                else -> reasons += "About $mi miles from you"
+            }
+        }
         val known = p.friends.firstOrNull { f -> f.length > 3 && listOf(o.organiser, o.venue, o.title).any { it.contains(f, ignoreCase = true) } }
         if (known != null) { total += 12; reasons += "$known has shown your work before" }
         return total.roundToInt().coerceIn(0, 100) to reasons

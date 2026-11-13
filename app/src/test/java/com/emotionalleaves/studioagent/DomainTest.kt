@@ -542,4 +542,16 @@ class DomainTest {
         assertEquals(12, m.size)
         assertEquals(250.0 to 35.0, m[2]); assertEquals(0.0 to 10.0, m[11]); assertEquals(0.0 to 0.0, m[0])
     }
+
+    @Test fun nearCallsComeFirst() {
+        val S = com.emotionalleaves.studioagent.domain.Scoring
+        val near = com.emotionalleaves.studioagent.data.Opp(title = "Near", city = "Round Rock, TX", scope = "local")
+        val far = com.emotionalleaves.studioagent.data.Opp(title = "Far", city = "Portland, OR", scope = "local")
+        val p = com.emotionalleaves.studioagent.domain.Profile(level = 1, milesTo = mapOf("round rock" to 20, "portland" to 1700))
+        val (a, ra) = S.score(near, p); val (b, rb) = S.score(far, p)
+        assertTrue(a > b)
+        assertTrue(ra.contains("About 20 miles from you")); assertTrue(rb.any { it.startsWith("About 1700 miles away") })
+        // Unknown towns change nothing.
+        assertEquals(S.score(near, com.emotionalleaves.studioagent.domain.Profile(level = 1)).first + 8, a)
+    }
 }

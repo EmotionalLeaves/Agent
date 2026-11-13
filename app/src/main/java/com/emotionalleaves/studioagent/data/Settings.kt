@@ -194,6 +194,8 @@ class Settings(ctx: Context) {
     var announced by S("announced")
     /** "Findable online" checks ticked, as indexes. */
     var findableDone by S("findableDone")
+    /** Towns found on the map: "town|lat|lon" per line, so each is looked up once. */
+    var geoCache by S("geoCache")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

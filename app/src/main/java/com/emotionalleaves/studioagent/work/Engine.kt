@@ -105,8 +105,37 @@ object Engine {
         currency = st.currency,
         feeBudgetLeft = feeLeft(ledger),
         goals = st.goals, blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts(),
-        friends = st.friendlyVenues.split("\n").filter { it.isNotBlank() }, region = st.region
+        friends = st.friendlyVenues.split("\n").filter { it.isNotBlank() }, region = st.region, milesTo = milesTo()
     )
+
+    private fun geo(): Map<String, Pair<Double, Double>> = st.geoCache.lines().mapNotNull { l -> l.split("|").takeIf { it.size == 3 }?.let { (t, a, b) -> a.toDoubleOrNull()?.let { la -> b.toDoubleOrNull()?.let { lo -> t to (la to lo) } } } }.toMap()
+
+    /** Miles from your town to each town on the map cache. Empty until your own town is found. */
+    fun milesTo(): Map<String, Int> {
+        val g = geo(); val home = g[st.city.substringBefore(",").trim().lowercase()] ?: return emptyMap()
+        return g.mapValues { (_, p) -> (com.emotionalleaves.studioagent.net.Places.km(home.first, home.second, p.first, p.second) * 0.621).toInt() }
+    }
+
+    /**
+     * Finds a few towns on the map each day (yours first, then the towns of calls that are open), one second apart
+     * as the map service asks, so calls can say how far they are. Each town is looked up once. Returns how many were found.
+     */
+    suspend fun locateTowns(max: Int = 6): Int = withContext(Dispatchers.IO) {
+        val known = st.geoCache.lines().map { it.substringBefore("|") }.filter { it.isNotBlank() }.toMutableSet(); var n = 0
+        // The search text is the town as written ("Austin, TX"); the key is the town alone, as calls are matched by it.
+        val wanted = (listOf(st.city) + dao.oppsNow().filter { !it.online && it.deadline > System.currentTimeMillis() && it.status != "no" }.map { it.city })
+            .filter { it.substringBefore(",").trim().length > 2 }.distinctBy { it.substringBefore(",").trim().lowercase() }
+            .filter { it.substringBefore(",").trim().lowercase() !in known }.take(max)
+        for (place in wanted) {
+            val key = place.substringBefore(",").trim().lowercase()
+            val p = try { com.emotionalleaves.studioagent.net.Places.locate(place.trim()) } catch (e: Exception) { null }
+            known += key
+            st.geoCache = (st.geoCache.lines().filter { it.isNotBlank() } + "$key|${p?.first ?: "x"}|${p?.second ?: "x"}").takeLast(500).joinToString("\n")
+            if (p != null) n++
+            kotlinx.coroutines.delay(1100)
+        }
+        n
+    }
 
     /** Remembers who said yes, so their next call is brought forward. */
     fun rememberFriend(vararg names: String) {
@@ -1639,6 +1668,8 @@ object Engine {
         step("venues") { researchVenues() }
         step("openings") { findOpenings() }
         step("sources") { scanSources(now) }
+        // A few towns found on the map each day, so calls can say how far away they are.
+        step("towns") { locateTowns() }
         step("rescore") { rescore() }
         // Applications whose checks all pass get their files made overnight, so sending is one look and one tap.
         step("packs") {
