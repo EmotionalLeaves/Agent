@@ -503,6 +503,25 @@ fun ApplScreen(nav: NavController, id: Long) {
                     OutlinedButton(enabled = !busy, onClick = { scope.io { Engine.recordResult(ctx, loaded, false, resultText.value) } }) { Text("Not this time") }
                 }
             }
+            if (loaded.status == "accepted" && o.sourceName != "Your own show") {
+                // Far away, or the call says to ship: the box, what it will cost to send, and the steps on your week.
+                val far = Regex("\\bship", RegexOption.IGNORE_CASE).containsMatchIn(o.rawText) || (o.city.isNotBlank() && st.city.isNotBlank() && !o.city.substringBefore(",").trim().equals(st.city.substringBefore(",").trim(), true))
+                if (far && chosen.isNotEmpty()) Expand("Shipping it") {
+                    chosen.forEach { w ->
+                        if (w.widthIn > 0 && w.heightIn > 0) {
+                            val framed = w.framed || w.format == "print"
+                            val b = com.emotionalleaves.studioagent.domain.Shipping.box(w.widthIn, w.heightIn, w.depthIn, framed)
+                            val lb = com.emotionalleaves.studioagent.domain.Shipping.weightLb(w.widthIn, w.heightIn, framed, w.support.contains("canvas", true))
+                            Text(w.title.ifBlank { "Untitled" }, fontWeight = FontWeight.SemiBold)
+                            Small("Box about ${b.first} x ${b.second} x ${b.third} in, about ${"%.0f".format(lb)} lb packed. Carriers charge for about ${com.emotionalleaves.studioagent.domain.Shipping.billableLb(b, lb)} lb, by size. Insure it at its price" + (if (w.price > 0) " (${money(w.price)})" else "") + ".")
+                        } else Small("${w.title.ifBlank { "Untitled" }}: add its size to work out the box.")
+                    }
+                    Small("Ground shipping takes about a week; ship ten days before it is due. A pack-and-ship store will box it for you if you would rather not.")
+                    var shipSaid by remember(id) { mutableStateOf("") }
+                    if (shipSaid.isBlank()) TextButton(onClick = { scope.io({ shipSaid = it }) { val n = Engine.planShipping(loaded); shipSaid = if (n == 0) "The shipping steps are already on your week." else "${Texts.count(n, "shipping step")} added to your week, counted back from delivery." } }) { Text("Put the shipping steps on my week") }
+                    else Small(shipSaid)
+                }
+            }
             if (loaded.status == "accepted") {
                 // On the night: the phone becomes the sign-up sheet.
                 OutlinedButton(onClick = { nav.navigate("opening") }) { Text("At the opening: a code to scan") }

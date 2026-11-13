@@ -14,6 +14,7 @@ import androidx.work.workDataOf
 import com.emotionalleaves.studioagent.G
 import com.emotionalleaves.studioagent.ai.Ai
 import com.emotionalleaves.studioagent.data.Appl
+import com.emotionalleaves.studioagent.domain.Shipping
 import com.emotionalleaves.studioagent.data.Artwork
 import com.emotionalleaves.studioagent.data.Contact
 import com.emotionalleaves.studioagent.data.Doc
@@ -760,6 +761,15 @@ object Engine {
         val day = (pickup ?: (now + 14 * DAY)).coerceAtLeast(now + DAY)
         dao.put(Evt(type = "task", title = "Get ${w.title.ifBlank { "the piece" }} to ${buyer.ifBlank { "the buyer" }}", date = day, oppId = show?.second?.id ?: 0, applId = show?.first?.id ?: 0, artworkId = w.id))
         return price * (1 - pct / 100)
+    }
+
+    /** Shipping steps for a show, counted back from its delivery step (or two weeks out), each once. Returns how many were added. */
+    suspend fun planShipping(a: Appl): Int {
+        val evts = dao.eventsNow().filter { it.applId == a.id }
+        val deliver = evts.firstOrNull { Regex("deliver|ship the work|drop", RegexOption.IGNORE_CASE).containsMatchIn(it.title) && it.date > 0 }?.date?.let { date(it) } ?: LocalDate.now().plusDays(17)
+        var n = 0
+        Shipping.steps(deliver, LocalDate.now()).forEach { (t, d) -> if (evts.none { it.title == t }) { dao.put(Evt(type = "task", title = t, date = millis(d.atTime(18, 0)), oppId = a.oppId, applId = a.id)); n++ } }
+        return n
     }
 
     // ------------------------------------------------------------ commissions

@@ -423,4 +423,19 @@ class DomainTest {
         assertEquals("framing", R.read("Main St Custom Framing\nMat board, glass\nAmount due 85.00").kind)
         assertEquals(1234.56, R.read("Print shop\nGiclee prints 1,234.56").total, 0.001)
     }
+
+    @Test fun shippingIsWorkedOut() {
+        val S = com.emotionalleaves.studioagent.domain.Shipping
+        val b = S.box(16.0, 20.0, 0.0, framed = true)
+        assertEquals(Triple(28, 24, 10), b)
+        val lb = S.weightLb(16.0, 20.0, framed = true, canvas = false)
+        assertTrue(lb in 9.0..12.0)
+        assertEquals(49, S.billableLb(b, lb))
+        val d = java.time.LocalDate.of(2027, 3, 20)
+        val steps = S.steps(d, java.time.LocalDate.of(2027, 3, 1))
+        assertEquals(d.minusDays(16), steps.first().second)
+        assertTrue(steps.any { it.first.startsWith("Ship it") && it.second == d.minusDays(10) })
+        // Already late: nothing is dated in the past.
+        assertTrue(S.steps(d, java.time.LocalDate.of(2027, 3, 15)).all { !it.second.isBefore(java.time.LocalDate.of(2027, 3, 15)) })
+    }
 }

@@ -821,6 +821,36 @@ object CallReader {
 }
 
 
+/** Sending work to a show far away: the box, the weight a carrier will charge for, and the steps, counted back from delivery. */
+object Shipping {
+    /** Outside size of a double box: 2 inches of foam around the piece, then 2 more for the outer box. */
+    fun box(wIn: Double, hIn: Double, dIn: Double, framed: Boolean): Triple<Int, Int, Int> {
+        val d = if (dIn > 0) dIn else if (framed) 1.5 else 0.5
+        fun r(x: Double) = Math.ceil(x).toInt()
+        return Triple(r(maxOf(wIn, hIn) + 8), r(minOf(wIn, hIn) + 8), r(d + 8))
+    }
+
+    /** About what it weighs packed, in pounds: framed work with glazing is heavy, paper is light. */
+    fun weightLb(wIn: Double, hIn: Double, framed: Boolean, canvas: Boolean): Double {
+        val area = wIn * hIn
+        val piece = when { framed -> 2 + area * 0.012; canvas -> 1 + area * 0.006; else -> 0.5 + area * 0.002 }
+        return Math.round((piece + 3 + area * 0.004) * 10) / 10.0
+    }
+
+    /** Carriers charge the bigger of the real weight and length x width x height / 139 (inches, pounds). */
+    fun billableLb(box: Triple<Int, Int, Int>, actual: Double): Int = Math.ceil(maxOf(actual, box.first * box.second * box.third / 139.0)).toInt()
+
+    fun steps(deliver: LocalDate, today: LocalDate): List<Pair<String, LocalDate>> = listOf(
+        "Get a box, foam and corner protectors" to deliver.minusDays(16),
+        "Swap glass for acrylic if the piece is framed (most shows ask for it when shipped)" to deliver.minusDays(14),
+        "Take condition photos, front and back" to deliver.minusDays(11),
+        "Pack it: a clean sheet over the face, corners, foam, then the box in a box" to deliver.minusDays(11),
+        "Ship it with tracking, insured at its price" to deliver.minusDays(10),
+        "Send the venue the tracking number" to deliver.minusDays(10),
+        "Check the return: a prepaid label in the box, or what the show arranges" to deliver.minusDays(10)
+    ).map { (t, d) -> t to (if (d.isBefore(today)) today else d) }
+}
+
 /** A photographed receipt, read: the total, the shop, and what kind of cost it most likely is. */
 object Receipts {
     data class Read(val total: Double, val shop: String, val kind: String)
