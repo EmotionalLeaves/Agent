@@ -203,7 +203,7 @@ object Engine {
     }
 
     suspend fun ingest(text: String, sourceName: String, image: ByteArray? = null, fromListing: Boolean = false): Int {
-        val raw = ai.extractCalls(text, sourceName, image).map { if (fromListing && it.scope == "campus") it.copy(scope = "") else it }
+        val raw = ai.extractCalls(text, sourceName, image).map { if (fromListing && it.scope == "campus" && !mySchool(text)) it.copy(scope = "") else it }
         // A free model can miss or misread a date. When the page holds one call, the plain reader checks its work and fills gaps.
         val found = if (raw.size == 1 && text.length > 40) {
             val plain = com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, System.currentTimeMillis())
@@ -228,7 +228,16 @@ object Engine {
     }
 
     /** A call that names your own city or state is local, whatever else it says. */
+    /** True when the text names your own university or college (as you typed it in Settings). */
+    fun mySchool(text: String): Boolean {
+        val name = st.school.trim()
+        if (name.length < 4) return false
+        return Regex("\\b" + Regex.escape(name) + "\\b", RegexOption.IGNORE_CASE).containsMatchIn(text.take(6000))
+    }
+
     fun local(o: Opp, text: String): Opp {
+        // A call at your own school is the nearest door there is.
+        if (mySchool(text)) return o.copy(scope = "campus", city = o.city.ifBlank { st.city })
         if (o.scope.isNotBlank() && o.scope != "regional") return o
         val head = text.take(4000)
         val near = listOf(st.city, st.region).filter { it.length > 2 }.any { Regex("\\b" + Regex.escape(it) + "\\b", RegexOption.IGNORE_CASE).containsMatchIn(head) }
@@ -726,9 +735,9 @@ object Engine {
 
     /** Four places almost every town and campus has, as blanks to fill in. Somewhere to start when you know nobody. */
     fun starterContacts(now: Long): List<Contact> = listOf(
-        Contact(venue = "Your university's art gallery", kind = "campus", tier = "now", createdAt = now,
+        Contact(venue = st.school.trim().takeIf { it.length > 3 }?.let { "$it art gallery" } ?: "Your university's art gallery", kind = "campus", tier = "now", createdAt = now,
             notes = "Find out: who runs it (look for a gallery director or coordinator on its web page), whether there is a staff or community show each year, and when the next opening is. Going to one opening is the whole first step."),
-        Contact(venue = "Your university library or student union", kind = "campus", tier = "now", createdAt = now - 1,
+        Contact(venue = st.school.trim().takeIf { it.length > 3 }?.let { "$it library or student union" } ?: "Your university library or student union", kind = "campus", tier = "now", createdAt = now - 1,
             notes = "Many have a display wall or cases and a simple request form. Ask at the front desk who books it. Staff are usually welcome."),
         Contact(venue = "Your nearest public library", kind = "community", tier = "now", createdAt = now - 2,
             notes = "Public libraries often show local artists for a month at a time. Look for 'exhibits' or 'art display' on their site, or ask at the desk."),
@@ -960,7 +969,8 @@ object Engine {
         // The phone gives a background job about ten minutes. AI reading gets the first four; after that the plain reader carries on alone.
         val started = System.currentTimeMillis()
         var total = 0
-        val known = dao.oppsNow().map { it.url }.filter { it.isNotBlank() }.toMutableSet()
+        val seen = st.seenLinks.split("\n").filter { it.isNotBlank() }.toMutableList()
+        val known = (dao.oppsNow().map { it.url }.filter { it.isNotBlank() } + seen).toMutableSet()
         for (s in dao.sourcesNow().filter { it.kind == "url" && it.enabled && it.url.isNotBlank() }) {
             val status = try {
                 val doc = Fetch.html(s.url)
@@ -971,7 +981,10 @@ object Engine {
                     if (System.currentTimeMillis() - started > 8 * 60_000) break
                     known += l.url
                     val text = try { "Link: ${l.url}\n" + Fetch.text(Fetch.html(l.url)) } catch (e: Exception) { continue }
-                    added += readCall(text, s.name, l.text, l.url, now, doc.title(), useAi = System.currentTimeMillis() - started < 4 * 60_000)
+                    val n = readCall(text, s.name, l.text, l.url, now, doc.title(), useAi = System.currentTimeMillis() - started < 4 * 60_000)
+                    // A link turned down today is not opened again tomorrow, so the daily look moves on to new calls.
+                    if (n == 0) seen += l.url
+                    added += n
                 }
                 if (links.isEmpty() && Fetch.text(doc).length < 400) "The page shows almost nothing without a browser, so it cannot be read"
                 else if (added == 0) (if (links.isEmpty()) "Looked; no new calls on the page" else "Read ${Texts.count(minOf(perSource, links.size), "new call")}; none still open and new") else "Added ${Texts.count(added, "call")}"
@@ -979,6 +992,7 @@ object Engine {
             total += Regex("Added (\\d+)").find(status)?.groupValues?.get(1)?.toIntOrNull() ?: 0
             dao.put(s.copy(lastFetched = now, lastStatus = status))
         }
+        st.seenLinks = seen.takeLast(600).joinToString("\n")
         st.lastScan = System.currentTimeMillis()
         total
     }
@@ -994,7 +1008,7 @@ object Engine {
     fun plainCall(text: String, sourceName: String, linkText: String, url: String, now: Long, siteTitle: String = ""): Opp? {
         val read = com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, now)
         // A campus call found on a public listing site is for some other school's students, unless it names your own city.
-        val o = local(if (read.scope == "campus") read.copy(scope = "") else read, text)
+        val o = local(if (read.scope == "campus" && !mySchool(text)) read.copy(scope = "") else read, text)
         // A date of today is usually the page printing today's date, and a call closing today is too late to start.
         if (o.deadline in 1 until now + DAY) return null
         val looksLikeCall = o.deadline > 0 || Regex("open call|call for|submission|apply", RegexOption.IGNORE_CASE).containsMatchIn(text.take(3000))

@@ -83,6 +83,7 @@ fun Records(nav: NavController) {
     var saleWork by remember { mutableStateOf(0L) }
     var salePrice by remember { mutableStateOf(0.0) }
     var saleCommission by remember { mutableStateOf(0.0) }
+    var cutFromShow by remember { mutableStateOf(0) }
     val buyer = rememberSaveable { mutableStateOf("") }
     var lastSale by remember { mutableStateOf<Triple<Long, Double, String>?>(null) }
     var status by remember { mutableStateOf("") }
@@ -146,10 +147,17 @@ fun Records(nav: NavController) {
         if (sellable.isEmpty()) Small("No finished works to sell yet.")
         else {
             Choice("Which work", sellable.map { it.id.toString() }, saleWork.toString(), names = { i -> sellable.firstOrNull { it.id.toString() == i }?.let { it.title.ifBlank { "Untitled #${it.id}" } } ?: i }) { i ->
-                sellable.firstOrNull { it.id.toString() == i }?.let { saleWork = it.id; if (salePrice == 0.0) salePrice = it.price }
+                sellable.firstOrNull { it.id.toString() == i }?.let { w -> saleWork = w.id; if (salePrice == 0.0) salePrice = w.price
+                    // Sold at a show it got into: that venue's cut, as the call stated it.
+                    scope.io {
+                        val shownAt = dao.applsNow().filter { it.status == "accepted" && w.id in Engine.workIds(it) }.maxByOrNull { it.submittedAt }
+                        val cut = shownAt?.let { a -> dao.oppsNow().firstOrNull { it.id == a.oppId }?.commission } ?: 0.0
+                        if (cut > 0 && saleCommission == 0.0) { saleCommission = cut; cutFromShow++ }
+                    }
+                }
             }
             key(saleWork) { Num("Sale price, " + st.currency, salePrice) { salePrice = it } }
-            Num("Venue commission, %", saleCommission) { saleCommission = it }
+            key(saleWork, cutFromShow) { Num("Venue commission, %", saleCommission) { saleCommission = it } }
             if (salePrice > 0) Small("You receive ${money(salePrice * (1 - saleCommission.coerceIn(0.0, 100.0) / 100))}" + (if (saleCommission > 0) " after the venue's ${"%.0f".format(saleCommission)}%." else "."))
             Field("Buyer's name, for the bill of sale", buyer)
             Button(enabled = saleWork != 0L && salePrice > 0, onClick = {
@@ -391,6 +399,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 SText("Phone (optional: entry forms, your email signature, receipts)", st.phone) { st.phone = it }
                 SText("Website or portfolio page", st.website) { st.website = it }
                 SText("City", st.city) { st.city = it }
+                SText("University or college you work or study at (optional: its own calls are kept for you)", st.school) { st.school = it }
                 SText("State or region", st.region) { st.region = it }
                 SText("Born (optional, for your CV, like \"b. 1998, Chicago\")", st.born) { st.born = it }
                 Section("Your work")

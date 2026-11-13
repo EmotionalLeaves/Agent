@@ -60,6 +60,7 @@ fun Tour(nav: NavController) {
     val scope = rememberCoroutineScope()
     val name = remember { mutableStateOf(st.firstName) }
     val city = remember { mutableStateOf(st.city) }
+    val school = remember { mutableStateOf(st.school) }
     val pages = listOf(
         TourPage("From the studio to a wall", "You make the art. This app does nearly everything else: time, records, writing, finding shows, applying, follow-up.") { PicWall() },
         TourPage("One step at a time", "Today shows a single next step, pinned up like a label. Tired? There is a five-minute start. Nothing is ever marked missed.") { PicLabel() },
@@ -74,6 +75,7 @@ fun Tour(nav: NavController) {
     fun start() {
         if (name.value.isNotBlank()) st.firstName = name.value.trim()
         if (city.value.isNotBlank()) st.city = city.value.trim()
+        if (school.value.isNotBlank()) st.school = school.value.trim()
         st.setupDone = true; st.tourSeen = true
         if (Build.VERSION.SDK_INT >= 33) notify.launch(Manifest.permission.POST_NOTIFICATIONS) else finishTour(nav)
     }
@@ -96,6 +98,8 @@ fun Tour(nav: NavController) {
                     Field("What should it call you? (optional)", name)
                     // The one fact that changes which calls come first: local ones are the realistic start.
                     Field("Your city (optional: local calls come first)", city)
+                    // Staff and students can usually show on their own campus: often the easiest first wall.
+                    Field("A university or college you work or study at (optional)", school)
                     Small("You can add more about yourself later, only if a feature needs it.")
                 }
             }
@@ -109,7 +113,7 @@ fun Tour(nav: NavController) {
         }
         if (last) {
             Button(onClick = { buzz(); start() }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start using it") }
-            TextButton(onClick = { st.setupDone = true; st.tourSeen = true; if (name.value.isNotBlank()) st.firstName = name.value.trim(); if (city.value.isNotBlank()) st.city = city.value.trim(); nav.navigate("settings/hours") { popUpTo("home") } }, modifier = Modifier.fillMaxWidth()) { Text("Set my week and hours first") }
+            TextButton(onClick = { st.setupDone = true; st.tourSeen = true; if (name.value.isNotBlank()) st.firstName = name.value.trim(); if (city.value.isNotBlank()) st.city = city.value.trim(); if (school.value.isNotBlank()) st.school = school.value.trim(); nav.navigate("settings/hours") { popUpTo("home") } }, modifier = Modifier.fillMaxWidth()) { Text("Set my week and hours first") }
         } else Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             if (pager.currentPage > 0) TextButton(onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } }) { Text("Back") }
             Spacer(Modifier.weight(1f))

@@ -337,7 +337,15 @@ fun DocScreen(nav: NavController, id: Long) {
             }
         }
         if (d.text.isBlank()) {
-            if (G.ai.ready) Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = { generate() }) { Text("Write it for me") }
+            // Writing needs something true to write from; with almost nothing, the interview comes first.
+            val answered = docs.count { it.type == "interview" && it.text.isNotBlank() }
+            if (answered < 3 && d.type != "custom") {
+                Panel(strong = true) {
+                    Text("Answer three interview questions first ($answered so far). Then this writes itself from your own words, not from guesses.")
+                    Button(onClick = { nav.navigate("interview") }, modifier = Modifier.fillMaxWidth()) { Text("Open the interview") }
+                }
+            }
+            if (G.ai.ready) Button(enabled = !busy && (answered >= 3 || d.type == "custom"), modifier = Modifier.fillMaxWidth(), onClick = { generate() }) { Text("Write it for me") }
             if (d.type == "statement" || d.type == "bio") {
                 OutlinedButton(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
                     scope.io({ status = it }) {

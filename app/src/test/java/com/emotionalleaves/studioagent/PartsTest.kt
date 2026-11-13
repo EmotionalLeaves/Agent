@@ -300,6 +300,7 @@ class PartsTest {
     }
 
     @Test fun anAcceptanceEmailDatesTheStepsWithoutAnyHelp() {
+        ctx
         val today = java.time.LocalDate.of(2027, 1, 20)
         val mail = "Congratulations! Please drop off your work on February 10, 2027 between 10 and 4. The opening reception is Friday, February 19, 2027 at 6pm. Unsold work can be picked up March 30, 2027."
         val steps = com.emotionalleaves.studioagent.work.Engine.fallbackLogistics(mail, today).toMap()
@@ -309,6 +310,18 @@ class PartsTest {
         assertEquals("2027-02-19", day("Go to the opening"))
         assertEquals("2027-03-30", day("Pick up unsold work"))
         assertEquals("2027-01-22", day("Confirm you are taking part"))
+    }
+
+
+    @Test fun aCallAtYourOwnSchoolIsKeptAsCampus() {
+        ctx
+        G.settings.school = "Riverside University"
+        val page = "Link: https://x.org/c\nStaff and Student Art Show\nOpen to Riverside University staff and students. Deadline: December 1, 2099."
+        val o = com.emotionalleaves.studioagent.work.Engine.plainCall(page, "ArtCall", "Staff and Student Art Show", "https://x.org/c", System.currentTimeMillis())
+        assertEquals("campus", o?.scope)
+        G.settings.school = ""
+        val other = com.emotionalleaves.studioagent.work.Engine.plainCall(page, "ArtCall", "Staff and Student Art Show", "https://x.org/c", System.currentTimeMillis())
+        assertEquals("", other?.scope)
     }
 
 }

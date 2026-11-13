@@ -274,6 +274,8 @@ class DomainTest {
         assertEquals("https://riversideprints.org/call", o.url)
         assertEquals(25.0, o.fee, 0.0)
         assertEquals("2027-03-03", java.time.Instant.ofEpochMilli(o.deadline).atZone(java.time.ZoneOffset.UTC).toLocalDate().toString())
+        // A real name that happens to start like a deadline line is kept.
+        assertEquals("Due North", com.emotionalleaves.studioagent.domain.CallReader.titleLine("Due North\nDeadline: May 1, 2027"))
         // An email address is not mistaken for a link.
         assertEquals("", com.emotionalleaves.studioagent.domain.CallReader.read("Send to entries@riverside.org", java.time.LocalDate.of(2027, 1, 10), java.time.ZoneOffset.UTC, "x", 0L).url)
     }

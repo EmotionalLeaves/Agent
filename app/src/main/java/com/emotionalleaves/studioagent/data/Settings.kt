@@ -62,6 +62,8 @@ class Settings(ctx: Context) {
     var phone by S("phone")
     var website by S("website")
     var city by S("city")
+    /** A university or college you work or study at: its campus calls are open to you, so they are kept. */
+    var school by S("school")
     var region by S("region")
     /** Optional CV line, for example "b. 1998, Chicago". */
     var born by S("born")
@@ -148,6 +150,8 @@ class Settings(ctx: Context) {
     var ghBackupRepo by S("ghBackupRepo")
     var ghPagesRepo by S("ghPagesRepo")
     var ghUploaded by S("ghUploaded")
+    /** Listing links already opened and turned down (closed, or not a call), newest last, so each day reaches new ones. */
+    var seenLinks by S("seenLinks")
     var focusWork by L("focusWork", 0)
     var keepAwake by B("keepAwake", true)
     var lastReviewWeek by S("lastReviewWeek")

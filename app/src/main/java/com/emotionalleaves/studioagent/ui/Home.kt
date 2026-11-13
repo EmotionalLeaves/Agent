@@ -127,7 +127,8 @@ fun Home(nav: NavController) {
     val appls by dao.appls().collectAsState(emptyList())
     val idea = rememberSaveable { mutableStateOf("") }
     var parked by remember { mutableStateOf(false) }
-    LaunchedEffect(works, docs, sessions, events, tick) {
+    // Applications too: sending one or getting a result changes the next step at once.
+    LaunchedEffect(works, docs, sessions, events, appls, tick) {
         withContext(Dispatchers.IO) {
             try { next = Engine.nextStep(); pendingCount = Engine.pending().size; guide = guideSteps(ctx) } catch (e: Exception) { }
         }

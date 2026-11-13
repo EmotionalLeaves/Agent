@@ -572,7 +572,7 @@ object CallReader {
     /** The line that names the call: the first real line, skipping links, "OPEN CALL" style headings, and date or fee lines. */
     fun titleLine(text: String): String {
         val lines = text.lines().map { it.trim() }.filter { it.isNotBlank() && !it.startsWith("http") && !it.startsWith("Link:") }
-        return lines.firstOrNull { l -> !genericLine.matches(l) && !Regex("^(deadline|due|entry fee|fee|apply|submit|open to|eligib)", RegexOption.IGNORE_CASE).containsMatchIn(l) }
+        return lines.firstOrNull { l -> !genericLine.matches(l) && !Regex("^((deadline|due( date)?|entry fee|fees?|apply|submit|how to apply)\\s*[:\\-–]|open to |eligib)", RegexOption.IGNORE_CASE).containsMatchIn(l) }
             ?: lines.firstOrNull().orEmpty()
     }
 

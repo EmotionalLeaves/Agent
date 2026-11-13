@@ -232,3 +232,13 @@ One real change per round. Pushed and built every ten rounds.
 228. The week's one piece is chosen by the piece itself too, so pieces with the same title cannot be mixed up.
 229. Logging a past session and recording a sale also choose the piece itself, not its title.
 230. Starting a session on a piece still marked Idea moves it to In progress.
+231. A blank statement or bio with fewer than three interview answers points to the interview first, so the writing is built from real words, not guesses.
+232. Recording a sale of a piece that got into a show fills in that venue's commission from the call.
+233. Today's next step updates the moment an application is sent or a result is recorded.
+234. Call names that start like a detail line ("Due North") are kept; only lines like "Deadline:" or "Fee -" are skipped.
+235. The daily look remembers listing links it opened and turned down (closed, or not a call), so the same ones are not reread every day and new calls are reached.
+236. Settings: your university or college. Its own campus calls are kept and marked campus, even when found on a public listing site.
+237. The starter venues name your own school when you have set it ("Your School art gallery").
+238. The tour's last page also asks (optionally) for a university or college you work or study at, since its walls are often the easiest first show.
+239. Help answers "Can I show where I work or study?"
+240. A test checks that a call naming your school is kept as campus, and that without it the same call is not.
