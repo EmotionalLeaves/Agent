@@ -98,6 +98,11 @@ fun MarketDay(nav: NavController) {
                 val f = com.emotionalleaves.studioagent.work.Papers.priceTags(ctx, st, items.map { it.name to it.price } + originals.map { it.title.ifBlank { "Untitled" } to it.price })
                 withContext(Dispatchers.Main) { com.emotionalleaves.studioagent.sys.Share.view(ctx, f, "application/pdf") }
             } }) { Text("Price tags to print") }
+            val cards = originals.filter { it.imagePath.isNotBlank() }.ifEmpty { works.filter { it.imagePath.isNotBlank() && it.status != "idea" }.take(8) }
+            if (cards.isNotEmpty()) OutlinedButton(onClick = { scope.io {
+                val f = com.emotionalleaves.studioagent.work.Papers.postcards(ctx, st, cards.take(8))
+                withContext(Dispatchers.Main) { com.emotionalleaves.studioagent.sys.Share.view(ctx, f, "application/pdf") }
+            } }) { Text("Postcards of your pieces to print") }
             Small("A mix sells best: something under 10, something under 30, and a few originals. Price everything, in plain view.")
         }
         Field("Where (for the records)", where, { where = it })

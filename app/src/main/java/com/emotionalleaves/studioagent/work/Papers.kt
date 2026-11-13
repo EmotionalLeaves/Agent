@@ -272,6 +272,60 @@ object Papers {
     }
 
     /**
+     * Postcards of your pieces, four to a sheet: the pictures on one page and, on the next, each card's back in the
+     * mirrored spot (title, size, your name, website and a code to scan), so a double-sided print flipped on the long
+     * edge lines up. Cut on the marks. For a market table, an opening, or slipping in with a sale.
+     */
+    fun postcards(ctx: Context, s: Settings, works: List<Artwork>): File {
+        val pdf = pdf(ctx, s, "", margin = 36, footer = false)
+        val cols = 2; val rows = 2; val per = cols * rows
+        val cw = pdf.width / cols.toFloat(); val ch = (pdf.pageHeight - 72) / rows.toFloat()
+        val guide = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFBDBEBA.toInt(); strokeWidth = 0.5f }
+        val qr = s.website.takeIf { it.isNotBlank() }?.let { com.emotionalleaves.studioagent.media.Qr.bitmap(if (it.startsWith("http")) it else "https://$it", 240) }
+        fun marks(c: android.graphics.Canvas, x: Float, y: Float) =
+            listOf(x to y, x + cw to y, x to y + ch, x + cw to y + ch).forEach { (px, py) -> c.drawLine(px - 6f, py, px + 6f, py, guide); c.drawLine(px, py - 6f, px, py + 6f, guide) }
+        works.chunked(per).forEach { sheet ->
+            // Fronts: the picture filling the card, centered and cropped to its shape, inside a thin white border.
+            pdf.newPage()
+            var c = pdf.canvas()
+            sheet.forEachIndexed { i, a ->
+                val x = pdf.left + (i % cols) * cw; val y = 36f + (i / cols) * ch
+                marks(c, x, y)
+                ImageTools.decode(a.imagePath, 1400)?.let { b ->
+                    val border = 10f; val dst = android.graphics.RectF(x + border, y + border, x + cw - border, y + ch - border)
+                    val want = dst.width() / dst.height(); val have = b.width.toFloat() / b.height
+                    val src = if (have > want) { val w = (b.height * want).toInt(); android.graphics.Rect((b.width - w) / 2, 0, (b.width + w) / 2, b.height) }
+                        else { val h = (b.width / want).toInt(); android.graphics.Rect(0, (b.height - h) / 2, b.width, (b.height + h) / 2) }
+                    c.drawBitmap(b, src, dst, Paint(Paint.FILTER_BITMAP_FLAG))
+                }
+            }
+            // Backs, mirrored left to right.
+            pdf.newPage()
+            c = pdf.canvas()
+            sheet.forEachIndexed { i, a ->
+                val x = pdf.left + (cols - 1 - i % cols) * cw; val y = 36f + (i / cols) * ch
+                marks(c, x, y)
+                val pad = 22f; var ty = y + pad
+                fun put(t: CharSequence, size: Float, face: Pdf.Face = Pdf.Face.BODY, grey: Boolean = false) {
+                    val l = pdf.layout(t, (cw / 2 - pad).toInt(), size, face, grey); c.save(); c.translate(x + pad, ty); l.draw(c); c.restore(); ty += l.height + 4f
+                }
+                put(SpannableStringBuilder(pdf.em(a.title.ifBlank { "Untitled" })).append(if (a.year > 0) ", ${a.year}" else ""), 11f)
+                details(a).take(2).forEach { put(it, 8.5f, grey = true) }
+                ty += 8f
+                put(name(s), 10f, Pdf.Face.BOLD)
+                listOf(s.website, s.email).filter { it.isNotBlank() }.forEach { put(it, 8.5f) }
+                // The stamp corner stays empty; the address half is ruled for writing.
+                val half = x + cw / 2
+                c.drawLine(half, y + pad, half, y + ch - pad, guide)
+                (1..4).forEach { k -> val ly = y + ch / 2 + k * 22f; c.drawLine(half + 12f, ly, x + cw - pad, ly, guide) }
+                c.drawRect(android.graphics.RectF(x + cw - pad - 40f, y + pad, x + cw - pad, y + pad + 48f), guide)
+                qr?.let { q -> val side = 46f; c.drawBitmap(q, null, android.graphics.RectF(x + pad, y + ch - pad - side, x + pad + side, y + ch - pad), Paint()) }
+            }
+        }
+        return pdf.save(out(ctx, docName(s, "Postcards")))
+    }
+
+    /**
      * Slides for a talk (a library, a class, an opening): landscape pages, one piece each, large on a quiet page with its
      * label underneath; a title page first and a last page with how to reach you. Opens on any phone, laptop or projector.
      */

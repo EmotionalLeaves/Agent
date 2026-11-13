@@ -798,4 +798,16 @@ class PartsTest {
         } finally { server.shutdown() }
     }
 
+    @Test fun postcardsFrontsAndBacks() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"; G.settings.website = "jadeleaves.art"
+        val img = picture("card.jpg")
+        val works = (1..5).map { Artwork(id = it.toLong(), title = "Piece $it", year = 2026, widthIn = 8.0, heightIn = 10.0, medium = "Ink on paper", imagePath = img.absolutePath, pixelW = 1200, pixelH = 1500) }
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
+        val f = try { com.emotionalleaves.studioagent.work.Papers.postcards(ctx, G.settings, works) } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
+        assertEquals("Leaves_Postcards.pdf", f.name)
+        // Two sheets: fronts and backs each.
+        assertTrue(File(docs, "Leaves_Postcards_p4.png").length() > 1000)
+    }
 }
