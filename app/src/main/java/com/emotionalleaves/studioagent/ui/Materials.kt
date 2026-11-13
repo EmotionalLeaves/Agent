@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
@@ -160,13 +161,14 @@ fun Materials(nav: NavController) {
                 OutlinedButton(onClick = {
                     scope.io({ status = it }) {
                         val statement = Engine.pickStatement(150)
-                        val f = Papers.portfolio(ctx, st, works.filter { Engine.documented(it) }, statement, n)
+                        val f = Papers.portfolio(ctx, st, Engine.portfolioOrdered(works), statement, n)
                         withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
                     }
                 }) { Text("Portfolio PDF, $n " + (if (n == 1) "work" else "works")) }
             }
         }
         if (works.none { Engine.documented(it) }) Small("The portfolio fills in once a piece has a photo and is marked Ready to send.")
+        if (works.count { Engine.documented(it) } > 1) TextButton(onClick = { nav.navigate("order") }) { Text("Set the order of my portfolio") }
         // When a gallery says "send me your materials": one file, ready to attach.
         if (works.any { Engine.documented(it) }) Button(modifier = Modifier.fillMaxWidth(), onClick = {
             status = "Putting your materials together…"
@@ -454,5 +456,34 @@ fun DocRow(label: String, text: String, approved: Boolean, onClick: () -> Unit) 
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = cs.outline)
         }
         Hair()
+    }
+}
+
+/** The portfolio's order, set by looking: each work full width, moved up or down. The PDF, web page and materials kit follow it. */
+@Composable
+fun PortfolioOrder(nav: NavController) {
+    val works by dao.artworks().collectAsState(emptyList())
+    val tick by st.changed.collectAsState()
+    val ordered = remember(works, tick) { Engine.portfolioOrdered(works) }
+    fun move(i: Int, to: Int) {
+        if (to !in ordered.indices) return
+        val ids = ordered.map { it.id }.toMutableList().also { val x = it.removeAt(i); it.add(to, x) }
+        st.portfolioOrder = ids.joinToString(",")
+    }
+    Screen("Portfolio order", nav) {
+        Intro("order", "Open with your strongest piece and close with one that stays with people. Works in a series sit together. This order is used for the PDF, the web page and the materials kit.")
+        ordered.forEachIndexed { i, w ->
+            Panel {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    PathImage(w.imagePath, Modifier.size(84.dp), 300, androidx.compose.ui.layout.ContentScale.Fit, w.title)
+                    Column(Modifier.weight(1f)) { Text("${i + 1}. " + w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleSmall); Small(listOf(w.year.takeIf { it > 0 }?.toString(), w.medium.ifBlank { null }).filterNotNull().joinToString(", ")) }
+                }
+                Row {
+                    TextButton(enabled = i > 0, onClick = { move(i, i - 1) }) { Text("Up") }
+                    TextButton(enabled = i < ordered.lastIndex, onClick = { move(i, i + 1) }) { Text("Down") }
+                    if (i > 0) TextButton(onClick = { move(i, 0) }) { Text("First") }
+                }
+            }
+        }
     }
 }

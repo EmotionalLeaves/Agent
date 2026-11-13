@@ -545,7 +545,7 @@ object Engine {
      * portfolio PDF, CV, statement and bio, an image list, and the pictures at 2000 px with your name in them.
      */
     suspend fun pressKit(ctx: Context): File = withContext(Dispatchers.IO) {
-        val works = dao.artworksNow().filter { documented(it) }.sortedByDescending { it.createdAt }.take(15)
+        val works = portfolioOrdered(dao.artworksNow()).take(15)
         if (works.isEmpty()) throw Exception("Mark at least one piece Ready to send first; the kit is built from those.")
         val dir = File(ctx.cacheDir, "kit").apply { deleteRecursively(); mkdirs() }
         val last = st.lastName.ifBlank { st.firstName }
@@ -696,6 +696,13 @@ object Engine {
         if (o.sourceName != "Your own show") return
         if (dao.factsNow().any { it.text.contains(o.title, true) }) return
         dao.put(com.emotionalleaves.studioagent.data.Fact(category = "solo", year = LocalDate.now().year, text = listOf(o.title, o.venue, o.city).filter { it.isNotBlank() }.joinToString(", ")))
+    }
+
+    /** Documented works in the order you set for your portfolio; any not yet placed follow, newest first. */
+    fun portfolioOrdered(works: List<Artwork>): List<Artwork> {
+        val ids = st.portfolioOrder.split(",").mapNotNull { it.trim().toLongOrNull() }
+        val docd = works.filter { documented(it) }
+        return ids.mapNotNull { i -> docd.firstOrNull { it.id == i } } + docd.filter { it.id !in ids }.sortedByDescending { it.createdAt }
     }
 
     /** The show is over and the unsold work is home: it can go out to the next call. Its CV line stays. */
@@ -977,7 +984,7 @@ object Engine {
 
     suspend fun publishPortfolio(ctx: Context): String = withContext(Dispatchers.IO) {
         if (!st.ghReady || st.ghPagesRepo.isBlank()) throw Exception("Add a GitHub token and a portfolio repo in Settings first.")
-        val works = dao.artworksNow().filter { documented(it) }
+        val works = portfolioOrdered(dao.artworksNow())
         val docs = dao.docsNow()
         val statement = docs.filter { it.type == "statement" && it.approved && it.text.isNotBlank() }.maxByOrNull { it.text.length }?.text.orEmpty()
         val bio = docs.filter { it.type == "bio" && it.approved && it.text.isNotBlank() }.minByOrNull { it.text.length }?.text.orEmpty()

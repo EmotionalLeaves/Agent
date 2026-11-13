@@ -338,3 +338,4 @@ One real change per round. Pushed and built every ten rounds.
 332. A show of your own includes "Pack the hanging kit" three days before, pointing to the kit list in Help.
 333. The daily check reads a few of your venues' own pages each day for an opening or artist reception in the next five weeks. Each one found goes on your calendar and Today's next seven days, and becomes Today's step in the days before it: go, look, say hello.
 334. People lists the openings found at your venues, each with "I went", which counts toward your openings this month.
+335. New: Portfolio order. Set the order of your works by looking at them (Up, Down, First); the portfolio PDF, the web page and the materials kit all follow it, strongest first.

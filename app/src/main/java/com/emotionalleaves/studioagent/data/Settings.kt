@@ -183,6 +183,8 @@ class Settings(ctx: Context) {
     var friendlyVenues by S("friendlyVenues")
     /** The exercise a practice session is on. */
     var practiceText by S("practiceText")
+    /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
+    var portfolioOrder by S("portfolioOrder")
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")
