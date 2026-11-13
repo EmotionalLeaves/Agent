@@ -840,6 +840,24 @@ object CallReader {
 }
 
 
+/** A day at a market or fair: prints and cards in multiples, originals one each, a tally, and the day's total. */
+object Market {
+    data class Item(val name: String, val price: Double, val qty: Int)
+
+    fun items(stored: String): List<Item> = stored.lines().mapNotNull { l -> l.split("|").takeIf { it.size == 3 }?.let { (n, p, q) -> Item(n, p.toDoubleOrNull() ?: 0.0, q.toIntOrNull() ?: 0) } }.filter { it.name.isNotBlank() }
+    fun itemsText(items: List<Item>): String = items.joinToString("\n") { "${it.name.replace("|", "/")}|${it.price}|${it.qty}" }
+
+    fun tally(stored: String): Map<String, Int> = stored.split(",").mapNotNull { p -> p.substringBeforeLast(":").takeIf { it.isNotBlank() }?.let { k -> p.substringAfterLast(":").toIntOrNull()?.let { k to it } } }.toMap()
+    fun bump(stored: String, key: String, by: Int): String = tally(stored).toMutableMap().also { val n = ((it[key] ?: 0) + by).coerceAtLeast(0); if (n == 0) it.remove(key) else it[key] = n }.entries.joinToString(",") { "${it.key}:${it.value}" }
+
+    /** The day in money: what came in, minus the booth fee. Keys are "m:<name>" for multiples and "w:<id>" for originals. */
+    fun total(tally: Map<String, Int>, items: List<Item>, originals: Map<Long, Double>): Double =
+        tally.entries.sumOf { (k, n) -> when { k.startsWith("m:") -> (items.firstOrNull { "m:" + it.name == k }?.price ?: 0.0) * n; k.startsWith("w:") -> originals[k.removePrefix("w:").toLongOrNull()] ?: 0.0; else -> 0.0 } }
+
+    /** The usual starting set for a first market: something under 10, something under 30, and the originals. */
+    val starter = listOf(Item("Cards", 5.0, 20), Item("Small prints (5 x 7)", 15.0, 15), Item("Large prints (11 x 14)", 35.0, 8))
+}
+
 /** A show with other artists: their pieces from a plain list, the costs shared, and the note that brings them in. */
 object GroupShow {
     /** "Title, medium, 12 x 16 in, $250" per line, any part left out; read into pieces for labels and the price list. */

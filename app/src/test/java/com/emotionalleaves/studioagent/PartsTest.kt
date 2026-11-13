@@ -584,6 +584,22 @@ class PartsTest {
         assertTrue(File(docs, "Leaves_Back_labels_p1.png").length() > 1000)
     }
 
+    @Test fun closingAMarketDayRecordsIt() = kotlinx.coroutines.runBlocking {
+        ctx
+        val M = com.emotionalleaves.studioagent.domain.Market
+        val wid = G.dao.put(Artwork(title = "Little Cooler", status = "documented", price = 120.0))
+        G.settings.marketItems = M.itemsText(M.starter); G.settings.marketFee = 40.0
+        G.settings.marketTally = M.bump(M.bump(M.bump("", "m:Cards", 1), "m:Cards", 1), "w:$wid", 1)
+        val total = com.emotionalleaves.studioagent.work.Engine.closeMarket("Eastside Market")
+        assertEquals(130.0, total, 0.001)
+        val l = G.dao.ledgerNow()
+        assertTrue(l.any { it.note == "2 x Cards, at Eastside Market" && it.amount == 10.0 })
+        assertTrue(l.any { it.kind == "fee" && it.amount == -40.0 })
+        assertEquals("sold", G.dao.artworksNow().single { it.id == wid }.status)
+        assertEquals(18, M.items(G.settings.marketItems).single { it.name == "Cards" }.qty)
+        assertEquals("", G.settings.marketTally)
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

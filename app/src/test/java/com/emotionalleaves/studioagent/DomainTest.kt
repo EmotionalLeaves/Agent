@@ -479,4 +479,16 @@ class DomainTest {
         assertEquals(40.0, G.share(120.0, 3), 0.001)
         assertTrue(G.invite("Jade", "Night Kitchen", "Central Library", "May 2027", 3).contains("alongside 2 other artists"))
     }
+
+    @Test fun aMarketDayAddsUp() {
+        val M = com.emotionalleaves.studioagent.domain.Market
+        val items = M.starter
+        assertEquals(items, M.items(M.itemsText(items)))
+        var t = ""
+        t = M.bump(t, "m:Cards", 1); t = M.bump(t, "m:Cards", 1); t = M.bump(t, "m:Small prints (5 x 7)", 1); t = M.bump(t, "w:12", 1)
+        t = M.bump(t, "m:Cards", -1)
+        assertEquals(mapOf("m:Cards" to 1, "m:Small prints (5 x 7)" to 1, "w:12" to 1), M.tally(t))
+        assertEquals(5.0 + 15.0 + 300.0, M.total(M.tally(t), items, mapOf(12L to 300.0)), 0.001)
+        assertTrue(M.tally(M.bump(t, "w:12", -1)).keys.none { it == "w:12" })
+    }
 }

@@ -186,6 +186,7 @@ fun Records(nav: NavController) {
             if (amount > 0) Button(onClick = { val l = Ledger(kind = kind, amount = -amount, date = now(), note = note.value.trim()); note.value = ""; amount = 0.0; scope.io { dao.put(l) } }) { Text("Add cost") }
         }
 
+        TextButton(onClick = { nav.navigate("market") }) { Text("Selling at a market or fair today? Market day") }
         Expand("Record a sale") {
         val sellable = works.filter { it.status != "sold" && it.status != "idea" && it.status != "in_progress" }
         if (sellable.isEmpty()) Small("No finished works to sell yet.")

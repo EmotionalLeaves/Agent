@@ -772,6 +772,27 @@ object Engine {
         return n
     }
 
+    /** The market day closed: each original sold is a sale and marked sold, the multiples one sale each kind, the booth fee a cost. The tally clears. */
+    suspend fun closeMarket(where: String): Double {
+        val items = com.emotionalleaves.studioagent.domain.Market.items(st.marketItems)
+        val tally = com.emotionalleaves.studioagent.domain.Market.tally(st.marketTally)
+        val now = System.currentTimeMillis(); var total = 0.0
+        val place = where.ifBlank { "a market" }
+        tally.forEach { (k, n) ->
+            if (k.startsWith("m:")) items.firstOrNull { "m:" + it.name == k }?.let { i -> if (i.price > 0) { dao.put(Ledger(kind = "sale", amount = i.price * n, date = now, note = "$n x ${i.name}, at $place")); total += i.price * n } }
+            if (k.startsWith("w:")) dao.artworksNow().firstOrNull { it.id == k.removePrefix("w:").toLongOrNull() }?.let { w ->
+                dao.put(Ledger(kind = "sale", amount = w.price, date = now, note = "${w.title}, at $place", artworkId = w.id)); total += w.price
+                dao.put(w.copy(status = "sold", location = "Sold"))
+            }
+        }
+        if (st.marketFee > 0) dao.put(Ledger(kind = "fee", amount = -st.marketFee, date = now, note = "Booth at $place"))
+        // What was left over goes back in the box for next time.
+        st.marketItems = com.emotionalleaves.studioagent.domain.Market.itemsText(items.map { i -> i.copy(qty = (i.qty - (tally["m:" + i.name] ?: 0)).coerceAtLeast(0)) })
+        st.marketTally = ""
+        if (tally.keys.any { it.startsWith("w:") } && dao.factsNow().none { it.category == "collection" && it.text == "Private collection" }) dao.put(Fact(category = "collection", year = LocalDate.now().year, text = "Private collection"))
+        return total
+    }
+
     // ------------------------------------------------------------ commissions
 
     /** The steps of a piece made for someone, in order, with the day each falls on, counted from today to the promised day. */
