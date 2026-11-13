@@ -556,3 +556,4 @@ One real change per round. Pushed and built every ten rounds.
 549. Long-press the app icon: "Empty your head" joins Start, Calls and Park an idea, so a head full of things can be emptied without opening anything first.
 550. The README catches up with rounds 521 to 549.
 551. Asking works for more questions with no helper at all. "What does consignment mean?" or "What is an open call?" is answered from the glossary, and "How do I make postcards?" or "Where can I teach a class?" names the tool that does it, with a button to go there.
+552. Straight from work. Opening a session within a couple of hours of a shift ending, the start screen suggests ten minutes to switch first (wash up and change, eat something, water, then set out the one thing you will touch first), with "Nudge me in 20 minutes" so the reset does not turn into the whole evening.

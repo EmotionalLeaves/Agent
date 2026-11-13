@@ -357,6 +357,13 @@ object Engine {
         try { WorkManager.getInstance(ctx).enqueueUniqueWork("studio-later", ExistingWorkPolicy.REPLACE, req) } catch (e: Exception) { }
     }
 
+    /** A single nudge in [minutes], replacing any other "later" nudge. */
+    fun remindIn(ctx: Context, minutes: Int, title: String, route: String) {
+        val req = OneTimeWorkRequestBuilder<ReminderWorker>().setInitialDelay(minutes.toLong(), TimeUnit.MINUTES)
+            .setInputData(workDataOf("title" to title, "route" to route)).build()
+        try { WorkManager.getInstance(ctx).enqueueUniqueWork("studio-later", ExistingWorkPolicy.REPLACE, req) } catch (e: Exception) { }
+    }
+
     private fun remind(ctx: Context, s: Long, now: Long, minutes: Int = 0) {
         val delay = s - now - 15 * 60_000
         if (delay <= 0) return

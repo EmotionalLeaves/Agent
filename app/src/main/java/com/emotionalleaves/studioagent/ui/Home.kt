@@ -536,6 +536,19 @@ fun SessionScreen(nav: NavController) {
             // How long: the usual, or something smaller for a hard day. Five minutes still counts.
             val usual = "${st.defaultSessionMin} min"
             var length by rememberSaveable { mutableStateOf(if (kind == "light") "15 min" else usual) }
+            // Straight off a shift: a short reset makes the switch from work to studio easier than pushing straight in.
+            val offShift = remember {
+                val n0 = java.time.LocalDateTime.now(); val end = com.emotionalleaves.studioagent.domain.Planner.time(st.workEnd, java.time.LocalTime.of(15, 30))
+                n0.dayOfWeek.value in (com.emotionalleaves.studioagent.domain.Planner.days(st.workDays) - Engine.thisWeek(st.offThisWeek) + Engine.thisWeek(st.extraThisWeek)) &&
+                    !n0.toLocalTime().isBefore(end) && n0.toLocalTime().isBefore(end.plusMinutes(150))
+            }
+            var resetSaid by remember { mutableStateOf("") }
+            if (offShift) Panel {
+                Text("Straight from work?", fontWeight = FontWeight.SemiBold)
+                Text("Ten minutes to switch first: wash up and change, eat something, a glass of water. Then set out the one thing you will touch first.", style = MaterialTheme.typography.bodyMedium)
+                if (resetSaid.isBlank()) TextButton(onClick = { Engine.remindIn(ctx, 20, "Reset done? Studio time", "session"); resetSaid = "A nudge in 20 minutes." }, modifier = Modifier.offset(x = (-12).dp)) { Text("Nudge me in 20 minutes") }
+                else Small(resetSaid)
+            }
             Section("How long?")
             Choice("", listOf("5 min", "15 min", usual).distinct(), length) { length = it }
             Button(onClick = {
