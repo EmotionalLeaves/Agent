@@ -27,6 +27,7 @@ import com.emotionalleaves.studioagent.data.Contact
 import com.emotionalleaves.studioagent.domain.Texts
 import com.emotionalleaves.studioagent.net.Places
 import com.emotionalleaves.studioagent.sys.Share
+import com.emotionalleaves.studioagent.work.Papers
 
 /** How far a place is, in the unit the phone's country uses. */
 fun distanceWords(km: Double): String {
@@ -58,21 +59,26 @@ fun Nearby(nav: NavController) {
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
     val contacts by dao.contacts().collectAsState(emptyList())
+    val works by dao.artworks().collectAsState(emptyList())
+    // What a lab would be asked to print: digital pieces not yet printed and framed.
+    val toPrint = works.filter { it.format == "print" && it.printStage < 5 && it.imagePath.isNotBlank() }.take(6)
     val town = rememberSaveable { mutableStateOf(listOf(st.city, st.region).filter { it.isNotBlank() }.joinToString(", ")) }
     var reach by rememberSaveable { mutableStateOf("25") }
+    var labs by rememberSaveable { mutableStateOf(false) }
     var found by remember { mutableStateOf<List<Places.Place>>(emptyList()) }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     val known = contacts.map { it.venue.lowercase().trim() }.toSet()
     Screen("Places near you", nav) {
         Intro("nearby", "Real galleries, art centers, libraries and community centers around you, from the free OpenStreetMap. Add the ones worth a visit to People; nothing is sent to anyone.")
+        Choice("Looking for", listOf("show", "labs"), if (labs) "labs" else "show", names = { if (it == "show") "Places that show art" else "Printing and framing" }) { labs = it == "labs"; found = emptyList() }
         Field("Town or city", town)
         Choice("How far", listOf("10", "25", "50"), reach, names = { distanceWords(it.toDouble()) }) { reach = it }
         Button(enabled = !busy && town.value.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = {
             busy = true; status = "Looking on the map… this can take up to a minute."
             scope.io({ status = it; busy = false }) {
                 val at = Places.locate(town.value.trim()) ?: throw Exception("That town was not found on the map. Try adding the state, like \"Springfield, Illinois\".")
-                val list = Places.near(at.first, at.second, reach.toInt())
+                val list = Places.near(at.first, at.second, reach.toInt(), labs)
                 found = list
                 if (st.city.isBlank()) st.city = town.value.substringBefore(',').trim()
                 status = if (list.isEmpty()) "Nothing marked on the map within ${distanceWords(reach.toDouble())}. Try further, or a bigger town nearby." else "${Texts.count(list.size, "place")} found, nearest first."
@@ -82,7 +88,7 @@ fun Nearby(nav: NavController) {
         Status(status)
         val fresh = found.filter { it.name.lowercase().trim() !in known }
         val shows = fresh.filter { it.what.startsWith("Gallery") || it.what.startsWith("Art center") }
-        if (shows.size > 1) OutlinedButton(modifier = Modifier.fillMaxWidth(), onClick = {
+        if (!labs && shows.size > 1) OutlinedButton(modifier = Modifier.fillMaxWidth(), onClick = {
             val now = now()
             scope.io { shows.forEachIndexed { i, p -> dao.put(placeToContact(p, now - i)) }; status = "Added ${Texts.count(shows.size, "gallery and art center", "galleries and art centers")} to People." }
         }) { Text("Add all ${shows.size} galleries and art centers") }
@@ -93,8 +99,12 @@ fun Nearby(nav: NavController) {
                 Small(p.what + ", " + distanceWords(p.km) + (if (p.address.isNotBlank()) ". " + p.address else ""))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     if (added) Text("In People", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-                    else TextButton(onClick = { scope.io { val id = dao.put(placeToContact(p, now())); status = "${p.name} added to People." } }) { Text("Add to People") }
+                    else if (!labs) TextButton(onClick = { scope.io { dao.put(placeToContact(p, now())); status = "${p.name} added to People." } }) { Text("Add to People") }
+                    // A lab is somewhere to send the print order to, not a venue: its email opens the order, ready to send.
+                    if (labs && p.email.isNotBlank()) TextButton(onClick = { Share.email(ctx, p.email, "Print quote request", Papers.printOrder(st, toPrint)) }) { Text("Email them") }
+                    if (labs && p.phone.isNotBlank()) TextButton(onClick = { Share.open(ctx, "tel:" + p.phone.filter { it.isDigit() || it == '+' }) }) { Text("Call") }
                     if (p.website.isNotBlank()) TextButton(onClick = { Share.open(ctx, p.website.let { if (it.startsWith("http")) it else "https://$it" }) }) { Text("Their site") }
+                    TextButton(onClick = { Share.open(ctx, "geo:0,0?q=" + android.net.Uri.encode(p.name + if (p.address.isNotBlank()) ", " + p.address else ", " + town.value)) }) { Text("Map") }
                 }
                 Hair()
             }

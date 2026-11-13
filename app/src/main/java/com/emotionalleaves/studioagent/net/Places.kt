@@ -42,9 +42,22 @@ object Places {
     }
 
     /** The map query: places that show or sell art, plus libraries and community centers, within [km] of a point. */
-    fun query(lat: Double, lon: Double, km: Int): String {
+    fun query(lat: Double, lon: Double, km: Int, labs: Boolean = false): String {
         val r = km * 1000
         val around = "(around:$r,$lat,$lon)"
+        // Where digital work becomes something that hangs: photo labs, printers and framers.
+        if (labs) return """
+            [out:json][timeout:40];
+            (
+              nwr["shop"="photo"]$around;
+              nwr["craft"="photographic_laboratory"]$around;
+              nwr["shop"="copyshop"]$around;
+              nwr["craft"="printer"]$around;
+              nwr["shop"="frame"]$around;
+              nwr["craft"="framing"]$around;
+            );
+            out center tags 120;
+        """.trimIndent()
         return """
             [out:json][timeout:40];
             (
@@ -61,9 +74,9 @@ object Places {
     }
 
     /** Places near a point, nearest first, with names; places without a name are left out. */
-    fun near(lat: Double, lon: Double, km: Int = 25): List<Place> {
+    fun near(lat: Double, lon: Double, km: Int = 25, labs: Boolean = false): List<Place> {
         val body = http.newCall(Request.Builder().url(overpassUrl).header("User-Agent", AGENT)
-            .post(FormBody.Builder().add("data", query(lat, lon, km)).build()).build()).execute().use { r ->
+            .post(FormBody.Builder().add("data", query(lat, lon, km, labs)).build()).build()).execute().use { r ->
             if (!r.isSuccessful) throw Exception("The map service returned ${r.code}. Try again in a few minutes.")
             r.body?.string().orEmpty()
         }
@@ -81,6 +94,9 @@ object Places {
             val plat = if (e.has("lat")) e.optDouble("lat") else e.optJSONObject("center")?.optDouble("lat") ?: continue
             val plon = if (e.has("lon")) e.optDouble("lon") else e.optJSONObject("center")?.optDouble("lon") ?: continue
             val (kind, what) = when {
+                t.optString("shop") == "photo" || t.optString("craft") == "photographic_laboratory" -> "lab" to "Photo lab"
+                t.optString("shop") == "copyshop" || t.optString("craft") == "printer" -> "lab" to "Print shop"
+                t.optString("craft") == "framing" -> "lab" to "Framer"
                 t.optString("tourism") == "gallery" -> (if (t.optString("operator:type") in setOf("public", "community") || t.has("non_profit")) "nonprofit" else "commercial") to "Gallery"
                 t.optString("tourism") == "museum" -> "nonprofit" to "Art museum"
                 t.optString("amenity") == "arts_centre" -> "nonprofit" to "Art center"

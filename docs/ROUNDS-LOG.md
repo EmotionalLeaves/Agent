@@ -293,3 +293,5 @@ One real change per round. Pushed and built every ten rounds.
 286. A show of your own becomes a CV line when its opening happens, not before; its page lets you choose or add pieces once they are ready.
 287. The portfolio web page lists shows coming up first, and hangs the work in its series with a heading for each, the way a show groups it.
 288. The daily check sends one reminder for a show step due today or tomorrow (hanging the work, the opening, picking it up), since those are the ones that must not be missed.
+289. Places near you can also look for printing and framing: photo labs, print shops and framers around you, with "Email them" opening a print quote request already listing your unprinted digital pieces (sizes, pixels, edition), and Call.
+290. Every place found has Map, which opens it in the phone's maps app for directions.

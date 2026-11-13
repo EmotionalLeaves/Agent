@@ -192,7 +192,7 @@ object Share {
         start(ctx, Intent(Intent.ACTION_VIEW).setDataAndType(uri(ctx, f), mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
 
     fun open(ctx: Context, url: String) {
-        val u = if (url.startsWith("http")) url else "https://$url"
+        val u = if (url.startsWith("http") || url.startsWith("tel:") || url.startsWith("geo:") || url.startsWith("mailto:")) url else "https://$url"
         start(ctx, Intent(Intent.ACTION_VIEW, Uri.parse(u)))
     }
 
