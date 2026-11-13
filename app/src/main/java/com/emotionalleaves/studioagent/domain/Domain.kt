@@ -174,7 +174,7 @@ object Scoring {
         var money = if (o.fee <= 0.0) 100 else (100 - o.fee * 2).roundToInt().coerceAtLeast(20)
         if (o.prizes.isNotBlank()) money = min(100, money + 10)
         if ((p.noReasons["fee"] ?: 0) >= 3 && o.fee > 0) money = (money - 20).coerceAtLeast(0)
-        reasons += if (o.fee <= 0.0) "Free to enter" else "Fee ${p.currency}${"%.0f".format(o.fee)}"
+        reasons += if (o.fee > 0.0) "Fee ${p.currency}${"%.0f".format(o.fee)}" else if (Texts.feeStated(o)) "Free to enter" else "Fee not stated: check before paying anything"
 
         val odds = when (t) { 1 -> 80; 2 -> 60; else -> 40 }
 
@@ -468,6 +468,10 @@ object Texts {
     fun isLink(t: String): Boolean = Regex("^(https?://)?([\\w-]+\\.)+[a-zA-Z]{2,}(:\\d+)?(/\\S*)?$").matches(t.trim()) && !t.trim().contains('@')
 
     /** A quick check that an address could be an email: something@somewhere.tld, no spaces. */
+    /** True when the call says outright that entry is free, or was typed in by hand; otherwise a zero fee only means none was found. */
+    fun feeStated(o: Opp): Boolean = o.fee > 0 || o.rawText.isBlank() ||
+        Regex("""\b(free (to enter|entry|of charge|submission)|no (entry |submission |application )?fees?|fee: ?(none|free|\$?0\b)|without (a|any) fee|no cost)""", RegexOption.IGNORE_CASE).containsMatchIn(o.rawText)
+
     /** True when an email domain and a web address belong to the same organization: "news.riverside.org" and "https://www.riverside.org/call". */
     fun sameSite(emailDomain: String, url: String): Boolean {
         fun base(h: String) = h.lowercase().trim().removePrefix("www.").split('.').filter { it.isNotBlank() }.takeLast(2).joinToString(".")

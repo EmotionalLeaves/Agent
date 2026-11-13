@@ -242,3 +242,13 @@ One real change per round. Pushed and built every ten rounds.
 238. The tour's last page also asks (optionally) for a university or college you work or study at, since its walls are often the easiest first show.
 239. Help answers "Can I show where I work or study?"
 240. A test checks that a call naming your school is kept as campus, and that without it the same call is not.
+241. Typing in or changing a call's deadline after saying yes moves its reminders (pack ready, submit, deadline) and calendar entries to the new date.
+242. An application not yet sent has "Not applying after all": it, its reminders and calendar entries go, the call is marked no, and Undo brings it back.
+243. A call that never mentions a fee no longer says "Free": it says "Fee?" and "Fee not stated: check before paying anything", until the call says free.
+244. "Ask them by email" also appears when the fee is not stated, and only while you are still deciding or applying.
+245. A failing send check names the pieces it means ("Every work has an image (check: Blue Hour)").
+246. The [blanks] check says where the blank is (statement, an answer, the email), and now covers the covering email too.
+247. Once an application is sent, its Submit and Deadline entries leave the phone's calendar too.
+248. Reopening a sent application makes fresh reminders and calendar entries for its deadline.
+249. The ask-a-question email names the call itself when the venue and organizer are unknown.
+250. Not applying after all marks the call "You said no" rather than "not this year", which it was not.

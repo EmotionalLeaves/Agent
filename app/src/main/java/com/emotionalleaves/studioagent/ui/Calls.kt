@@ -163,10 +163,10 @@ fun Calls(nav: NavController) {
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Tag(fitLabel(o.fitScore), strong = true)
                                 if (o.deadline > 0) Tag(Planner.weekendsLeft(today, Engine.date(o.deadline)))
-                                Tag(if (o.fee > 0) money(o.fee) else "Free")
+                                Tag(if (o.fee > 0) money(o.fee) else if (Texts.feeStated(o)) "Free" else "Fee?")
                                 if (o.kind != "exhibition" && o.kind.isNotBlank()) Tag(o.kind.replaceFirstChar { it.uppercase() })
                             }
-                            o.fitReasons.lines().filter { it.isNotBlank() && !it.startsWith("Free to enter") && !it.startsWith("Fee ") }.take(2).forEach { Small(it) }
+                            o.fitReasons.lines().filter { it.isNotBlank() && !it.startsWith("Free to enter") && !it.startsWith("Fee ") && !it.startsWith("Fee not stated") }.take(2).forEach { Small(it) }
                             Flags(o)
                             if (saidNo == o.id) {
                                 // "Not this year" is one of the answers to No, so the card needs only two buttons.
@@ -289,7 +289,7 @@ fun CallDetail(nav: NavController, id: Long) {
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Small("Entry fee")
-                    Text(if (o.fee <= 0) "Free" else money(o.fee), style = MaterialTheme.typography.titleLarge)
+                    Text(if (o.fee > 0) money(o.fee) else if (Texts.feeStated(o)) "Free" else "Not stated", style = MaterialTheme.typography.titleLarge)
                 }
             }
             Hair()
@@ -311,10 +311,10 @@ fun CallDetail(nav: NavController, id: Long) {
             if (o.status in setOf("new", "later", "no")) Button(onClick = { scope.io({ status = it }) { val aid = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Yes, apply") }
             else if (o.status in setOf("yes", "applied", "accepted", "declined")) Button(onClick = { scope.io { val aid = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Open the application") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, o.url) }) { Text("Open the call's page") }
-            // No deadline known but an address is: a short polite question, ready in the mail app.
-            if (o.deadline <= 0 && Texts.looksLikeEmail(o.email)) OutlinedButton(onClick = {
+            // No deadline or fee known but an address is: a short polite question, ready in the mail app.
+            if ((o.deadline <= 0 || !Texts.feeStated(o)) && o.status in setOf("new", "later", "yes") && Texts.looksLikeEmail(o.email)) OutlinedButton(onClick = {
                 val l = letters.first { it.title == "Ask a question about a call" }
-                val place = o.venue.ifBlank { o.organiser }
+                val place = o.venue.ifBlank { o.organiser }.ifBlank { o.title }
                 Share.email(ctx, o.email, fillLetter(l.subject, "", place), fillLetter(l.body, "", place))
             }) { Text("Ask them by email") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = {
@@ -345,7 +345,11 @@ fun CallDetail(nav: NavController, id: Long) {
         Expand("Details", startOpen = placeholderTitle(o.title) || o.deadline <= 0) {
         Field("Title", o.title, { save(o.copy(title = it)) })
         Choice("Kind of call", Ai.callKinds, o.kind, names = { mapOf("fair" to "Art fair", "commission" to "Commission (a work made for them)")[it] ?: it.replaceFirstChar { c -> c.uppercase() } }) { save(o.copy(kind = it)) }
-        DateField("Deadline", deadlineText) { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0) save(o.copy(deadline = ms)) }
+        DateField("Deadline", deadlineText) { deadlineText = it; val ms = Ai.parseDate(it)
+            if (ms > 0 && ms != o.deadline) { val x = o.copy(deadline = ms); save(x)
+                // Already applying: the reminders move with the new date.
+                scope.io { dao.applsNow().firstOrNull { it.oppId == x.id && it.status !in setOf("submitted", "accepted", "declined", "withdrawn") }?.let { Engine.scheduleDeadline(ctx, x, it.id) } }
+            } }
         Num("Entry fee, " + st.currency, o.fee) { save(o.copy(fee = it)) }
         Choice("Who can enter", listOf("campus", "local", "online", "regional", "national", "international"), o.scope, names = { mapOf("campus" to "My campus", "local" to "My city", "online" to "Online", "regional" to "My region", "national" to "The whole country", "international" to "Anywhere")[it] ?: it }) { save(o.copy(scope = it)) }
         Field("Link to the call's page", o.url, { save(o.copy(url = it.trim())) })
@@ -584,6 +588,19 @@ fun ApplScreen(nav: NavController, id: Long) {
             OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Submitted on the organizer's site on ${fmtDate(now())}.") } }) { Text("I submitted it") }
         }
         if (!allGreen) Note("Sending unlocks when every check above passes.")
+        // Changing your mind is allowed: the application goes, its reminders go, the call is marked no. Undo brings it all back.
+        if (a.submittedAt == 0L && a.status != "sending") {
+            Space(8)
+            TextButton(onClick = {
+                val keepA = a; val keepO = o
+                scope.undoable("Not applying to ${o.title}", {
+                    val evts = dao.eventsNow().filter { it.applId == keepA.id && !it.done }
+                    evts.forEach { e -> if (e.calendarId > 0) try { com.emotionalleaves.studioagent.sys.Cal.remove(ctx, e.calendarId) } catch (x: Exception) { }; dao.del(e) }
+                    dao.del(keepA); dao.put(keepO.copy(status = "no"))
+                    withContext(Dispatchers.Main) { nav.popBackStack() }
+                }, { dao.put(keepA); dao.put(keepO); Engine.scheduleDeadline(ctx, keepO, keepA.id) })
+            }) { Text("Not applying after all") }
+        }
     }
 }
 

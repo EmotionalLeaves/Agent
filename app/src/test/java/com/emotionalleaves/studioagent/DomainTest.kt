@@ -288,6 +288,15 @@ class DomainTest {
         assertFalse(Texts.sameSite("riverside.org", ""))
     }
 
+    @Test fun aZeroFeeIsOnlyFreeWhenTheCallSaysSo() {
+        val o = com.emotionalleaves.studioagent.data.Opp(title = "A", rawText = "Submit up to three works by May 1.")
+        assertFalse(Texts.feeStated(o))
+        assertTrue(Texts.feeStated(o.copy(rawText = "There is no entry fee.")))
+        assertTrue(Texts.feeStated(o.copy(rawText = "Free to enter for all artists")))
+        assertTrue(Texts.feeStated(o.copy(rawText = "")))
+        assertTrue(Texts.feeStated(o.copy(fee = 25.0)))
+    }
+
     @Test fun errorsReadAsPlainWords() {
         val off = com.emotionalleaves.studioagent.ui.plainError(java.net.UnknownHostException("Unable to resolve host \"api.anthropic.com\""))
         assertTrue(off.startsWith("No internet connection"))

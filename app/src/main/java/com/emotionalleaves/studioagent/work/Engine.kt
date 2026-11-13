@@ -569,15 +569,27 @@ object Engine {
         )
         dao.put(opp.copy(status = "yes"))
         if (Scoring.isStretch(opp, profile())) st.lastStretch = System.currentTimeMillis()
-        if (opp.deadline > 0) {
-            val now = System.currentTimeMillis()
-            listOf(Triple("pack", "Pack ready: ${opp.title}", opp.deadline - 7 * DAY), Triple("submit", "Submit: ${opp.title}", opp.deadline - 3 * DAY), Triple("deadline", "Deadline: ${opp.title}", opp.deadline))
-                .forEach { (type, title, at) ->
-                    val calId = if (at > now && st.useCalendar && type != "pack") Cal.add(ctx, title, at - 3_600_000, at) else 0L
-                    dao.put(Evt(type = type, title = title, date = at, oppId = opp.id, applId = id, calendarId = calId))
-                }
-        }
+        scheduleDeadline(ctx, opp, id)
         return id
+    }
+
+    /**
+     * The three dated reminders for an application (pack ready, submit, deadline). Run again when the deadline is
+     * typed in or changed later: the old open ones are replaced, so the dates always follow the call.
+     */
+    suspend fun scheduleDeadline(ctx: Context, opp: Opp, applId: Long) {
+        val kinds = setOf("pack", "submit", "deadline")
+        dao.eventsNow().filter { it.applId == applId && it.type in kinds && !it.done }.forEach { e ->
+            if (e.calendarId > 0) try { Cal.remove(ctx, e.calendarId) } catch (x: Exception) { }
+            dao.del(e)
+        }
+        if (opp.deadline <= 0) return
+        val now = System.currentTimeMillis()
+        listOf(Triple("pack", "Pack ready: ${opp.title}", opp.deadline - 7 * DAY), Triple("submit", "Submit: ${opp.title}", opp.deadline - 3 * DAY), Triple("deadline", "Deadline: ${opp.title}", opp.deadline))
+            .forEach { (type, title, at) ->
+                val calId = if (at > now && st.useCalendar && type != "pack") Cal.add(ctx, title, at - 3_600_000, at) else 0L
+                dao.put(Evt(type = type, title = title, date = at, oppId = opp.id, applId = applId, calendarId = calId))
+            }
     }
 
     fun workIds(a: Appl): List<Long> = a.workIds.split(",").mapNotNull { it.trim().toLongOrNull() }
@@ -590,14 +602,20 @@ object Engine {
         if (o.minWorks > 0) out += "At least ${o.minWorks} works chosen (${chosen.size})" to (chosen.size >= o.minWorks)
         else out += "At least one work chosen (${chosen.size})" to chosen.isNotEmpty()
         if (o.maxWorks > 0) out += "No more than ${Texts.count(o.maxWorks, "work")}" to (chosen.size <= o.maxWorks)
-        out += "Every work has an image" to (chosen.isNotEmpty() && chosen.all { it.imagePath.isNotBlank() && File(it.imagePath).exists() })
-        out += "Every work has a title, year and size" to (chosen.isNotEmpty() && chosen.all { it.title.isNotBlank() && it.year > 0 && it.widthIn > 0 && it.heightIn > 0 })
+        // A failing line names the pieces, so you know which one to open.
+        fun named(ws: List<Artwork>) = if (ws.isEmpty()) "" else " (check: " + ws.take(3).joinToString(", ") { it.title.ifBlank { "Untitled #${it.id}" } } + (if (ws.size > 3) " and ${ws.size - 3} more" else "") + ")"
+        val noImage = chosen.filter { !(it.imagePath.isNotBlank() && File(it.imagePath).exists()) }
+        val noFacts = chosen.filter { !(it.title.isNotBlank() && it.year > 0 && it.widthIn > 0 && it.heightIn > 0) }
+        out += "Every work has an image" + named(noImage) to (chosen.isNotEmpty() && noImage.isEmpty())
+        out += "Every work has a title, year and size" + named(noFacts) to (chosen.isNotEmpty() && noFacts.isEmpty())
         out += "Statement included" to a.statement.isNotBlank()
         if (o.statementLimit > 0) out += "Statement within ${o.statementLimit} words (${Texts.words(a.statement)})" to (Texts.words(a.statement) <= o.statementLimit)
         out += "No stock art jargon" to Texts.jargonIn(a.statement + " " + a.themeText, st.jargonExtra).isEmpty()
         val qa = answers(a)
         // Starter drafts made without AI leave [square brackets] for you to fill; nothing goes out with one left in.
-        out += "No [blanks] left to fill" to !(a.statement + a.themeText + qa.joinToString(" ") { it.second }).contains('[')
+        val blanksIn = listOfNotNull("the statement".takeIf { '[' in a.statement }, "the theme text".takeIf { '[' in a.themeText },
+            "an answer".takeIf { qa.any { '[' in it.second } }, "the email".takeIf { a.method == "email" && '[' in a.emailBody })
+        out += "No [blanks] left to fill" + (if (blanksIn.isEmpty()) "" else " (in " + blanksIn.joinToString(", ") + ")") to blanksIn.isEmpty()
         if (qa.isNotEmpty()) out += "Every question answered (${qa.count { it.second.isNotBlank() }} of ${qa.size})" to qa.all { it.second.isNotBlank() }
         if (o.fee > 0 && feeLeft < Double.MAX_VALUE) out += "Fee of ${st.currency}${"%.0f".format(o.fee)} fits this month's budget" to (o.fee <= feeLeft)
         if (a.method == "email") out += "Submission email address known" to Texts.looksLikeEmail(a.emailTo)
@@ -640,16 +658,21 @@ object Engine {
         dao.put(a.copy(status = "submitted", submittedAt = now, proofText = proof, proofPath = proofPath.ifBlank { a.proofPath }))
         dao.oppsNow().firstOrNull { it.id == a.oppId }?.let { dao.put(it.copy(status = "applied")) }
         dao.artworksNow().filter { it.id in workIds(a) && available(it) }.forEach { dao.put(it.copy(status = "pending")) }
-        dao.eventsNow().filter { it.applId == a.id && it.type in setOf("pack", "submit", "deadline") }.forEach { dao.put(it.copy(done = true)) }
+        dao.eventsNow().filter { it.applId == a.id && it.type in setOf("pack", "submit", "deadline") }.forEach {
+            // Sent means done: the "Submit" and "Deadline" entries leave your phone's calendar too.
+            if (it.calendarId > 0) try { Cal.remove(G, it.calendarId) } catch (e: Exception) { }
+            dao.put(it.copy(done = true, calendarId = 0))
+        }
         st.log("Application locked as sent: " + (dao.oppsNow().firstOrNull { it.id == a.oppId }?.title ?: "application") + ". " + proof)
     }
 
     /** Unlocks a submitted application, for the rare case it really has to change. */
     suspend fun reopen(a: Appl) {
         dao.put(a.copy(status = "ready", proofText = "Reopened on ${com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis())}. Earlier note: ${a.proofText}".take(600)))
-        dao.oppsNow().firstOrNull { it.id == a.oppId }?.let { dao.put(it.copy(status = "yes")) }
+        dao.oppsNow().firstOrNull { it.id == a.oppId }?.let { dao.put(it.copy(status = "yes")); scheduleDeadline(G, it, a.id) }
         dao.artworksNow().filter { it.id in workIds(a) && it.status == "pending" }.forEach { dao.put(it.copy(status = "available")) }
-        dao.eventsNow().filter { it.applId == a.id && it.type in setOf("pack", "submit", "deadline") }.forEach { dao.put(it.copy(done = false)) }
+        // The sent-and-done reminders give way to fresh ones (and calendar entries) for the same deadline.
+        dao.eventsNow().filter { it.applId == a.id && it.type in setOf("pack", "submit", "deadline") && it.done }.forEach { dao.del(it) }
     }
 
     suspend fun sendApplication(ctx: Context, id: Long): Boolean {
