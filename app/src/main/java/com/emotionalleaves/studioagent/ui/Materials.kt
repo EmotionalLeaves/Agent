@@ -176,11 +176,6 @@ fun Materials(nav: NavController) {
                 withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
             }
         }) { Text("Slides for a talk") }
-        // The card people ask for at an opening: also in Market day.
-        OutlinedButton(onClick = { scope.io({ status = it }) {
-            val f = Papers.businessCards(ctx, st, Engine.portfolioOrdered(works).firstOrNull())
-            withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
-        } }) { Text("Business cards, ten to a sheet") }
         if (works.none { Engine.documented(it) }) Small("The portfolio fills in once a piece has a photo and is marked Ready to send.")
         if (works.count { Engine.documented(it) } > 1) TextButton(onClick = { nav.navigate("order") }) { Text("Set the order of my portfolio") }
         // When a gallery says "send me your materials": one file, ready to attach.
