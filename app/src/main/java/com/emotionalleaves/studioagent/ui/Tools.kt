@@ -20,7 +20,7 @@ val toolGroups: List<Pair<String, List<Triple<String, String, String>>>> = listO
         Triple("Empty your head", "Everything at once, one line each; it is sorted and put away", "dump"),
         Triple("Foundations", "Short weeknight exercises, a body of work, and a master to study", "foundations"),
         Triple("Your pieces and series", "Fresh eyes, planning a series, is it done", "works"),
-        Triple("Photograph your pieces", "Every piece without a picture, one after another", "photoshoot"),
+        Triple("Photograph your pieces", "Every piece without a picture, one after another; flat ones can be scanned", "photoshoot"),
         Triple("Supplies", "What is running low, and a shopping list", "supplies"),
         Triple("Your week", "Studio times that fit your shifts", "week"),
         Triple("The year ahead", "Where steady work leads, month by month", "year")
