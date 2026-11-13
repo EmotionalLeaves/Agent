@@ -233,7 +233,12 @@ fun Calls(nav: NavController) {
                         words.all { w -> callWords(it).contains(w) } }
                     .sortedWith(compareBy<Opp>({ it.status == "expired" || (it.deadline in 1 until now()) }, { if (it.deadline > 0) it.deadline else Long.MAX_VALUE }))
                 if (everything.size > allLimit) Small("Showing the first $allLimit of ${everything.size}.")
+                // Grouped by the month they close, so the year of calls reads like a calendar.
+                var lastMonth = ""
                 everything.take(allLimit).forEach { o ->
+                    val month = when { o.status == "expired" || o.deadline in 1 until now() -> "Closed"; o.deadline <= 0 -> "No deadline given"
+                        else -> Engine.date(o.deadline).let { d -> d.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.US) + (if (d.year != LocalDate.now().year) " ${d.year}" else "") } }
+                    if (month != lastMonth) { Section(month + " (" + everything.take(allLimit).count { x -> (when { x.status == "expired" || x.deadline in 1 until now() -> "Closed"; x.deadline <= 0 -> "No deadline given"; else -> Engine.date(x.deadline).let { d -> d.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.US) + (if (d.year != LocalDate.now().year) " ${d.year}" else "") } }) == month } + ")"); lastMonth = month }
                     val why = Scoring.ineligible(o, p, now())
                     Panel(onClick = { nav.navigate("call/${o.id}") }) {
                         Text(o.title, style = MaterialTheme.typography.titleSmall)
