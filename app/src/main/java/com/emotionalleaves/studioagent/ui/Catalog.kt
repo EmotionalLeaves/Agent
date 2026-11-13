@@ -263,6 +263,11 @@ fun WorkDetail(nav: NavController, id: Long) {
                 }
             }
             else {
+                // A piece started from a parked picture keeps that picture in view while it is being made.
+                w.extraImages.split("|").firstOrNull { it.isNotBlank() && File(it).exists() }?.let { ref ->
+                    PathImage(ref, Modifier.fillMaxWidth().height(180.dp), 700, description = "Your reference picture")
+                    Small("Your reference. The piece's own picture goes here once it is made.")
+                }
                 Text("No picture yet", style = MaterialTheme.typography.titleLarge)
                 Small("Photograph the work, or bring in the file. Everything else can come later.")
             }
@@ -578,7 +583,9 @@ fun IdeasBody(nav: NavController) {
                                 scope.io {
                                     // A working title from the idea's first words; it can change any time.
                                     val working = i.text.trim().split(Regex("\\s+")).take(5).joinToString(" ").trimEnd('.', ',', ';', ':').replaceFirstChar { it.uppercase() }
-                                    val id = dao.put(newWork().copy(title = working, notes = i.text, nextStep = "Start: " + i.text.take(60)))
+                                    // The picture that sparked it comes along as a reference image.
+                                    val id = dao.put(newWork().copy(title = working.ifBlank { "New piece" }, notes = i.text, nextStep = if (i.text.isNotBlank()) "Start: " + i.text.take(60) else "Look at the reference picture and make a first mark",
+                                        extraImages = i.photoPath))
                                     dao.put(i.copy(done = true))
                                     withContext(Dispatchers.Main) { nav.navigate("work/$id") }
                                 }

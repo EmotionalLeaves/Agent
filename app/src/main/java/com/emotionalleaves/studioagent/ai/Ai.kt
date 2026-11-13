@@ -244,6 +244,14 @@ class Ai(private val settings: Settings) {
         return try { val a = JSONArray(jsonSlice(out, '[', ']')); (0 until a.length()).map { a.optLong(it) }.filter { it in known }.distinct().take(count) } catch (e: Exception) { emptyList() }
     }
 
+    /** A question about one call, answered only from that call's own words; "the call does not say" when it does not. */
+    suspend fun askCall(callText: String, question: String): String {
+        val sys = "You answer an artist's question about one open call, using only the call's text inside <data>. $dataRule " +
+            "Answer in at most three short plain sentences. Quote the call's own words for anything that matters (a date, a fee, a size). " +
+            "If the text does not answer it, say: The call does not say. Then suggest asking the organizer."
+        return clean(complete(sys, "<data>\n${callText.take(14000)}\n</data>\n\nQuestion: ${question.take(500)}", fast = true, maxTokens = 400))
+    }
+
     private fun writerSystem(voice: String) =
         "You write short professional texts for a working artist, in the artist's own plain voice. " +
             "Rules: use only facts given to you; never invent exhibitions, awards, education, dates or claims. " +

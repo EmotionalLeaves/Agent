@@ -370,6 +370,18 @@ fun CallDetail(nav: NavController, id: Long) {
                 }
             }) { Text("Read the page for me") }
         }
+        // "Can I send prints?" "Is it only for Texas?" Answered from the call's own words, quoted.
+        if (G.ai.ready && o.rawText.isNotBlank()) {
+            val q = rememberSaveable(id) { mutableStateOf("") }
+            var answer by remember(id) { mutableStateOf("") }
+            var asking by remember { mutableStateOf(false) }
+            Field("Ask about this call (for example: can I send prints?)", q)
+            if (q.value.isNotBlank()) TextButton(enabled = !asking, onClick = {
+                asking = true; answer = "Reading the call…"
+                scope.io({ answer = it; asking = false }) { answer = G.ai.askCall(o.rawText, q.value.trim()); asking = false }
+            }) { Text("Ask") }
+            if (answer.isNotBlank()) Panel { Text(answer) }
+        }
         Expand("Details", startOpen = placeholderTitle(o.title) || o.deadline <= 0) {
         Field("Title", o.title, { save(o.copy(title = it)) })
         Choice("Kind of call", Ai.callKinds, o.kind, names = { mapOf("fair" to "Art fair", "commission" to "Commission (a work made for them)")[it] ?: it.replaceFirstChar { c -> c.uppercase() } }) { save(o.copy(kind = it)) }
@@ -585,6 +597,19 @@ fun ApplScreen(nav: NavController, id: Long) {
                     if (prior.isNotBlank()) status = "You answered a question like this before, so that answer is filled in. Check it still fits this call."
                 }
             }) { Text("Add question") }
+        }
+        // Before the checks: how this call's jury will read the words, without changing a word.
+        var notes by remember(id) { mutableStateOf<List<String>>(emptyList()) }
+        if (G.ai.ready && a.statement.isNotBlank()) {
+            TextButton(enabled = !busy, onClick = {
+                busy = true; status = "Reading it like this call's juror…"
+                scope.io({ status = it; busy = false }) {
+                    val words = "Call: ${o.title}. Theme: ${o.theme.ifBlank { "none stated" }}.\n\nStatement:\n${a.statement}" +
+                        (if (a.themeText.isNotBlank()) "\n\nWhy it fits:\n${a.themeText}" else "") + qa.joinToString("") { "\n\nQ: ${it.first}\nA: ${it.second}" }
+                    notes = G.ai.jurorNotes("application to this call", words); status = ""; busy = false
+                }
+            }) { Text("Read it like this call's juror") }
+            if (notes.isNotEmpty()) Panel { Text("A juror's notes", fontWeight = FontWeight.SemiBold); notes.forEach { Text("• $it") }; Small("Change only what you agree with.") }
         }
 
         StageHead(3, "Checks before sending", allGreen)

@@ -54,6 +54,9 @@ fun placeToContact(p: Places.Place, now: Long): Contact = Contact(
     createdAt = now
 )
 
+/** The last search, kept while the app is open: the map takes up to a minute, so coming back does not mean waiting again. */
+private object NearbyCache { var key = ""; var list: List<Places.Place> = emptyList() }
+
 @Composable
 fun Nearby(nav: NavController, startWithLabs: Boolean = false) {
     val scope = rememberCoroutineScope()
@@ -65,7 +68,7 @@ fun Nearby(nav: NavController, startWithLabs: Boolean = false) {
     val town = rememberSaveable { mutableStateOf(listOf(st.city, st.region).filter { it.isNotBlank() }.joinToString(", ")) }
     var reach by rememberSaveable { mutableStateOf("25") }
     var labs by rememberSaveable { mutableStateOf(startWithLabs) }
-    var found by remember { mutableStateOf<List<Places.Place>>(emptyList()) }
+    var found by remember { mutableStateOf(if (NearbyCache.key.endsWith("|$startWithLabs")) NearbyCache.list else emptyList()) }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     val known = contacts.map { it.venue.lowercase().trim() }.toSet()
@@ -80,6 +83,7 @@ fun Nearby(nav: NavController, startWithLabs: Boolean = false) {
                 val at = Places.locate(town.value.trim()) ?: throw Exception("That town was not found on the map. Try adding the state, like \"Springfield, Illinois\".")
                 val list = Places.near(at.first, at.second, reach.toInt(), labs)
                 found = list
+                NearbyCache.key = town.value.trim() + "|" + reach + "|" + labs; NearbyCache.list = list
                 if (st.city.isBlank()) st.city = town.value.substringBefore(',').trim()
                 status = if (list.isEmpty()) "Nothing marked on the map within ${distanceWords(reach.toDouble())}. Try further, or a bigger town nearby." else "${Texts.count(list.size, "place")} found, nearest first."
                 busy = false

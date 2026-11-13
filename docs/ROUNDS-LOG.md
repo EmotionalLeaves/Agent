@@ -301,3 +301,7 @@ One real change per round. Pushed and built every ten rounds.
 294. Saying yes to a call with a theme: the writing help picks the pieces that answer the theme (strongest first, coherent as a group) from their titles, mediums, series and your notes, instead of just the biggest series.
 295. The calendar also marks the days good-fit calls you have not decided on yet close, so a strong call is seen in time; tap it to open the call.
 296. Today's Deadlines became Next 7 days: deadlines, the steps of shows you got into, and good-fit calls closing that you have not decided on, in date order with Today, Tomorrow or the weekday.
+297. An application can be read "like this call's juror": the statement, why it fits and the answers, against the call's own theme, with up to three specific notes and no rewriting.
+298. Starting a piece from a parked picture idea keeps the picture as its reference, shown at the top of the piece until the work's own picture replaces it.
+299. On any call, "Ask about this call" answers a question (can I send prints, is it only for Texas) from the call's own words, quoting them, or says the call does not say and to ask the organizer.
+300. Places near you keeps its last results while the app is open, so going into a place and back does not mean waiting for the map again.
