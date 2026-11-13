@@ -537,7 +537,7 @@ class DomainTest {
     }
 
     @Test fun moneyByMonth() {
-        val d = java.time.LocalDate::of
+        fun d(y: Int, mo: Int, day: Int) = java.time.LocalDate.of(y, mo, day)
         val m = com.emotionalleaves.studioagent.domain.MoneyByMonth.of(2027, listOf(d(2027, 3, 2) to 200.0, d(2027, 3, 9) to -35.0, d(2027, 3, 20) to 50.0, d(2026, 3, 1) to 999.0, d(2027, 12, 1) to -10.0))
         assertEquals(12, m.size)
         assertEquals(250.0 to 35.0, m[2]); assertEquals(0.0 to 10.0, m[11]); assertEquals(0.0 to 0.0, m[0])
