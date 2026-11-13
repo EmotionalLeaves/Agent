@@ -1650,6 +1650,12 @@ object Engine {
             }
             if (tip != null) { st.seasonTold = "${today.year}-$m"; st.seasonDay = today.toString(); return NextStep(tip.first, tip.second, tip.third) }
         }
+        // A Sunday mid-month, until you have found some: other artists, in person. Shown all that Sunday, then not that month.
+        val ym = java.time.YearMonth.now().toString()
+        if (st.peopleTried.isBlank() && today.dayOfWeek == DayOfWeek.SUNDAY && today.dayOfMonth in 15..21 && (st.peopleTold.substringBefore("|") != ym || st.peopleTold.substringAfter("|") == today.toString())) {
+            st.peopleTold = "$ym|$today"
+            return NextStep("Draw with other people this month", "A drop-in life drawing session or a sketch group: bring a pad, nobody looks at your drawings, and you meet the people who hear about shows first.", "people")
+        }
         // The first weekend of a month: one goal for it, set in a minute, told to one friend.
         if (today.dayOfMonth <= 7 && today.dayOfWeek in setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) && st.monthGoalMonth != java.time.YearMonth.now().toString()) {
             return NextStep("One goal for this month", "A minute: say it in your own words, and tell one friend. Telling someone makes it far likelier.", "year")

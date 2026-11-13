@@ -248,6 +248,7 @@ class Settings(ctx: Context) {
     var yearSends by I("yearSends", 24)
     /** The kinds of artist gathering you have been to, by key. */
     var peopleTried by S("peopleTried")
+    var peopleTold by S("peopleTold")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */
