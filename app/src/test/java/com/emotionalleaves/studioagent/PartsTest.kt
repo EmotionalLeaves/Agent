@@ -427,4 +427,25 @@ class PartsTest {
         java.io.File(ctx.cacheDir, "w40.jpg").copyTo(java.io.File("build/screens/docs/on_the_wall.jpg").apply { parentFile?.mkdirs() }, overwrite = true)
     }
 
+
+    @Test fun aVenuesOwnSiteIsReadForExhibitionPages() = kotlinx.coroutines.runBlocking {
+        ctx
+        val server = MockWebServer()
+        server.dispatcher = object : okhttp3.mockwebserver.Dispatcher() {
+            override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest): MockResponse = when (request.path) {
+                "/" -> MockResponse().setBody("<html><body><a href='/hours'>Hours and parking</a> <a href='/exhibits'>Exhibit space for local artists</a> <a href='https://elsewhere.org/call'>Call for artists elsewhere</a></body></html>")
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        server.start()
+        try {
+            val id = G.dao.put(com.emotionalleaves.studioagent.data.Contact(venue = "Central Library", website = server.url("/").toString(), status = "research"))
+            assertEquals(1, Engine.researchVenues())
+            val c = G.dao.contactsNow().first { it.id == id }
+            assertTrue(c.submissionNotes, c.submissionNotes.contains("Exhibit space for local artists"))
+            assertTrue(!c.submissionNotes.contains("Hours") && !c.submissionNotes.contains("elsewhere"))
+            assertEquals("each venue is read once", 0, Engine.researchVenues())
+        } finally { server.shutdown() }
+    }
+
 }

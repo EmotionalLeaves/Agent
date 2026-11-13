@@ -1162,6 +1162,34 @@ object Engine {
         return o.copy(title = title, url = url, dedupeKey = Texts.dedupeKey("", o.deadline, title))
     }
 
+    /**
+     * The homework on a venue, done for you: its own site is read for pages about exhibitions, display walls,
+     * artist proposals or calls, and what it finds is noted on the venue with the link. Three venues a day, each once.
+     */
+    suspend fun researchVenues(perDay: Int = 3): Int = withContext(Dispatchers.IO) {
+        val done = st.venuesRead.split(",").filter { it.isNotBlank() }.toMutableSet()
+        val todo = dao.contactsNow().filter { it.kind != "subscriber" && it.website.isNotBlank() && it.id.toString() !in done && it.status in setOf("research", "drafted") }.take(perDay)
+        var found = 0
+        val words = Regex("exhibit|exhibition|gallery|call for (art|entr|submission)|artists?\\b|display|proposal|submit|local art|art wall|show your", RegexOption.IGNORE_CASE)
+        for (c in todo) {
+            done += c.id.toString()
+            val doc = try { Fetch.html(c.website) } catch (e: Exception) { continue }
+            val host = try { java.net.URI(doc.location()).host.orEmpty() } catch (e: Exception) { "" }
+            val links = doc.select("a[href]").mapNotNull { a ->
+                val t = a.text().trim(); val href = a.absUrl("href")
+                if (t.length in 4..80 && words.containsMatchIn(t + " " + href) && (host.isBlank() || href.contains(host.removePrefix("www.")))) t to href else null
+            }.distinctBy { it.second }.take(4)
+            if (links.isNotEmpty()) {
+                found++
+                val note = "Their site has: " + links.joinToString("; ") { "${it.first} (${it.second})" }
+                val fresh = dao.contactsNow().firstOrNull { it.id == c.id } ?: continue
+                dao.put(fresh.copy(submissionNotes = (fresh.submissionNotes + "\n" + note).trim(), notes = (fresh.notes + "\nRead their site on ${com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis())}.").trim()))
+            }
+        }
+        st.venuesRead = done.toList().takeLast(400).joinToString(",")
+        found
+    }
+
     // ------------------------------------------------------------ the daily run
 
     suspend fun runDaily(ctx: Context): String {
@@ -1181,6 +1209,7 @@ object Engine {
         step("email") { withContext(Dispatchers.IO) { checkMail(ctx) } }
         step("outreach") { withContext(Dispatchers.IO) { sendOutreach(now) } }
         step("rescore") { rescore() }
+        step("venues") { researchVenues() }
         step("backup") { backupToGitHub(ctx) }
         step("folder backup") {
             if (st.backupFolder.isNotBlank()) withContext(Dispatchers.IO) { val name = com.emotionalleaves.studioagent.sys.Backup.toFolder(ctx, st); st.log("Backup saved to your folder: $name") }

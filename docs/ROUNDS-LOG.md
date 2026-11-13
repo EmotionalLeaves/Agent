@@ -311,3 +311,5 @@ One real change per round. Pushed and built every ten rounds.
 304. A strong-fit call that closes within ten days is announced once, the day it is found, instead of waiting for the weekend notice that would come too late.
 305. New: a catalogue of works (PDF) from Studio: every piece two to a page with its picture, full details, inventory number, edition, price and where it is, and its history of shows and sales. The record a gallery asks for.
 306. A show's checklist steps each open their ready-made part in one tap: the yes email, the thank-you, the note to your list, the wall labels, the flyer, the print lab finder, or the delivery question.
+307. A venue's page has Directions (opens the phone's maps app) beside Open their site.
+308. The daily check reads up to three venues' own websites a day (each once, following robots rules) for pages about exhibitions, display walls, proposals or calls, and lists them on the venue as "On their site" with the links.

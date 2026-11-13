@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -225,6 +226,13 @@ fun ContactScreen(nav: NavController, id: Long) {
         Field("Their submission instructions", c.submissionNotes, { save(c.copy(submissionNotes = it)) }, lines = 2)
         Field("Notes (what they show, who you met, openings you went to)", c.notes, { save(c.copy(notes = it)) }, lines = 3)
         }
+        // What the daily check found on their own site: the pages to read before writing to them.
+        val pages = Regex("""([^;:]+?) \((https?://[^)\s]+)\)""").findAll(c.submissionNotes.lines().filter { it.startsWith("Their site has:") }.joinToString(";").removePrefix("Their site has:")).map { it.groupValues[1].trim() to it.groupValues[2] }.toList()
+        if (pages.isNotEmpty()) Panel {
+            Text("On their site", fontWeight = FontWeight.SemiBold)
+            Small("Pages about showing work there, found by the daily check. Read these before writing.")
+            pages.forEach { (t, u) -> TextButton(onClick = { Share.open(ctx, u) }, modifier = Modifier.offset(x = (-12).dp)) { Text(t) } }
+        }
         // They said yes to a show of your own: one screen turns it into a dated plan.
         if (c.status in setOf("sent", "followed_up", "interested", "more", "research")) OutlinedButton(onClick = { nav.navigate("plan/${c.id}") }, modifier = Modifier.fillMaxWidth()) { Text("They said yes to a show: plan it") }
         // A visit is real progress: log it in one tap, and the weekend suggestion moves on to the next place.
@@ -233,7 +241,11 @@ fun ContactScreen(nav: NavController, id: Long) {
             TextButton(onClick = { save(c.copy(revisitAt = now() + 21 * DAY)) }) { Text("Not this weekend") }
         }
         // Their site is the usual next look, so it stays outside the folded details.
-        if (c.website.isNotBlank()) TextButton(onClick = { Share.open(ctx, c.website.let { if (it.startsWith("http")) it else "https://$it" }) }) { Text("Open their site") }
+        Row {
+            if (c.website.isNotBlank()) TextButton(onClick = { Share.open(ctx, c.website.let { if (it.startsWith("http")) it else "https://$it" }) }) { Text("Open their site") }
+            // Going there is the first step for most places: directions in the phone's maps app.
+            if (c.venue.isNotBlank() && !c.venue.startsWith("Your ")) TextButton(onClick = { Share.open(ctx, "geo:0,0?q=" + android.net.Uri.encode(c.venue + ", " + st.city)) }) { Text("Directions") }
+        }
         SavedLine()
         Status(status)
 

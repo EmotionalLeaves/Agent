@@ -175,6 +175,8 @@ class Settings(ctx: Context) {
     var widgetTitle by S("widgetTitle")
     /** Strong, soon-closing calls already mentioned once, so none is announced twice. */
     var urgentTold by S("urgentTold")
+    /** Venues whose own websites have been read once for exhibition pages. */
+    var venuesRead by S("venuesRead")
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")
