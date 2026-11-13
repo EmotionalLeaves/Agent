@@ -492,6 +492,27 @@ fun ShareScreen(nav: NavController) {
     val image = remember { Shared.image }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
+    val many = remember { Shared.images }
+    if (many.size > 1) {
+        // Several pictures at once are almost always your own work: one button makes a piece from each.
+        Screen("Shared with Studio Agent", nav) {
+            Text("${Texts.count(many.size, "picture")} shared.", style = MaterialTheme.typography.titleMedium)
+            Small("Each becomes a piece in Studio, titled from its file name, with its picture on it. You can change anything after.")
+            Status(status)
+            Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
+                busy = true; status = "Adding ${Texts.count(many.size, "piece")}…"
+                scope.io({ status = it; busy = false }) {
+                    var ok = 0
+                    many.forEachIndexed { i, u ->
+                        val name = try { ctx.contentResolver.query(u, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c -> if (c.moveToFirst()) c.getString(0) else null } } catch (e: Exception) { null } ?: "Untitled ${i + 1}"
+                        try { Engine.importFile(ctx, u, name); ok++ } catch (e: Exception) { }
+                    }
+                    withContext(Dispatchers.Main) { nav.navigate("works") { popUpTo("home") } }
+                }
+            }) { Text("Add ${Texts.count(many.size, "piece")} to Studio") }
+        }
+        return
+    }
     Screen("Shared with Studio Agent", nav) {
         if (image != null) {
             Note("A picture was shared.")

@@ -124,7 +124,11 @@ fun WeekScreen(nav: NavController) {
             coming.forEach { e ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(fmtDate(e.date) + ", " + clock(e.date) + ", ${(e.endDate - e.date) / 60000} min", Modifier.weight(1f))
-                    TextButton(onClick = { scope.remove("the studio time", { Cal.remove(ctx, e.calendarId); dao.del(e) }, { dao.put(e) }) }) { Text("Skip this one") }
+                    TextButton(onClick = {
+                        // Undo puts it back in the calendar too, not only in the app.
+                        scope.undoable("Skipped ${fmtDate(e.date)}. Nothing is marked missed.", { Cal.remove(ctx, e.calendarId); dao.del(e) },
+                            { val cal = if (e.calendarId != 0L) Cal.add(ctx, e.title, e.date, e.endDate) else 0L; dao.put(e.copy(calendarId = cal)) })
+                    }) { Text("Skip this one") }
                 }
             }
         }

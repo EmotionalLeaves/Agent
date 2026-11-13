@@ -163,8 +163,8 @@ object Engine {
     }
 
     /** Text (or a flyer photo) in, call records out, read by the writing help and checked by the plain reader. */
-    suspend fun ingest(text: String, sourceName: String, image: ByteArray? = null): Int {
-        val raw = ai.extractCalls(text, sourceName, image)
+    suspend fun ingest(text: String, sourceName: String, image: ByteArray? = null, fromListing: Boolean = false): Int {
+        val raw = ai.extractCalls(text, sourceName, image).map { if (fromListing && it.scope == "campus") it.copy(scope = "") else it }
         // A free model can miss or misread a date. When the page holds one call, the plain reader checks its work and fills gaps.
         val found = if (raw.size == 1 && text.length > 40) {
             val plain = com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, System.currentTimeMillis())
@@ -733,7 +733,7 @@ object Engine {
             val src = sources.firstOrNull { m.from.contains(it.url.trim(), ignoreCase = true) }
             // With AI the email is read properly; without it the plain reader still picks out title, deadline, fee and link.
             if (src != null) {
-                val n = if (ai.ready) try { ingest(m.subject + "\n" + m.text, src.name) } catch (e: Exception) { 0 } else 0
+                val n = if (ai.ready) try { ingest(m.subject + "\n" + m.text, src.name, fromListing = true) } catch (e: Exception) { 0 } else 0
                 if (n == 0) try { ingestPlain(m.subject + "\n" + m.text, src.name) } catch (e: Exception) { }
             }
         }
@@ -893,14 +893,16 @@ object Engine {
 
     /** One call's page text into the list. AI reads it when it can; the plain reader always works. Skips calls already closed. */
     private suspend fun readCall(text: String, sourceName: String, linkText: String, url: String, now: Long, siteTitle: String = "", useAi: Boolean = true): Int {
-        if (useAi && ai.ready) try { val n = ingest(text, sourceName); if (n > 0) return n } catch (e: Exception) { }
+        if (useAi && ai.ready) try { val n = ingest(text, sourceName, fromListing = true); if (n > 0) return n } catch (e: Exception) { }
         val o = plainCall(text, sourceName, linkText, url, now, siteTitle) ?: return 0
         return addCalls(listOf(o))
     }
 
     /** The plain reading of one call page, or null when it is closed or does not read like a call. */
     fun plainCall(text: String, sourceName: String, linkText: String, url: String, now: Long, siteTitle: String = ""): Opp? {
-        val o = local(com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, now), text)
+        val read = com.emotionalleaves.studioagent.domain.CallReader.read(text, LocalDate.now(), zone, sourceName, now)
+        // A campus call found on a public listing site is for some other school's students, unless it names your own city.
+        val o = local(if (read.scope == "campus") read.copy(scope = "") else read, text)
         // A date of today is usually the page printing today's date, and a call closing today is too late to start.
         if (o.deadline in 1 until now + DAY) return null
         val looksLikeCall = o.deadline > 0 || Regex("open call|call for|submission|apply", RegexOption.IGNORE_CASE).containsMatchIn(text.take(3000))

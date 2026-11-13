@@ -41,8 +41,8 @@ object Notifier {
 
     fun channel(ctx: Context) {
         val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(NotificationChannel(CHANNEL, "Studio Agent", NotificationManager.IMPORTANCE_DEFAULT).apply {
-            description = "At most a couple of quiet notifications a day"
+        nm.createNotificationChannel(NotificationChannel(CHANNEL, "Reminders, calls and results", NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = "Studio times, calls that fit, deadlines and results. At most a couple a day, never in quiet hours."
         })
         nm.createNotificationChannel(NotificationChannel(SESSION, "Session running", NotificationManager.IMPORTANCE_LOW).apply {
             description = "A silent note while a session runs, so you can get back to it"

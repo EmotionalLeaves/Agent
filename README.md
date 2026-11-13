@@ -32,6 +32,12 @@ Four tabs, the same every time. Each thing has one place.
 - **Calls**: open calls this week, all of them, what you applied to, and where calls come from.
 - **You**, six rows: Statement, bio and CV; People and venues; Guide (with the five levels); Records (to-dos, money, sales, proof of what was sent); Settings; Help (the tour, plain answers, about).
 
+## Quick ways in
+
+- Long-press the icon: Start now, Calls, Park an idea.
+- The Start now widget and quick-settings tile start a session in one tap.
+- Share a link, text or flyer into the app to add a call; share several pictures from the gallery to add them as pieces.
+
 ## Works with nothing set up
 
 - Calls: four public listing sites (ArtCall, Artwork Archive, ArtJobs, Artshow) are read once a day without AI, and only where the site's robots.txt allows it. Each new call's own page is opened and read for title, deadline, fee, kind and scope.

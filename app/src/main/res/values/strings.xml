@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">Studio Agent</string>
-    <string name="start_session">Start session</string>
+    <string name="start_session">Start now</string>
+    <string name="widget_desc">One tap starts a studio session on the right piece.</string>
+    <string name="sc_start">Start now</string>
+    <string name="sc_start_long">Start a studio session</string>
+    <string name="sc_calls">Calls</string>
+    <string name="sc_calls_long">Calls that fit this week</string>
+    <string name="sc_idea">Park an idea</string>
+    <string name="sc_idea_long">Park an idea so it stops circling</string>
 </resources>

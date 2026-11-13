@@ -82,3 +82,13 @@ One real change per round. Pushed and built every ten rounds.
 78. Read the page for me fills only empty boxes, so nothing you typed is overwritten, and a past date from the helper gives way to the plain reader's.
 79. Blocking an organiser names them and can be undone for 30 seconds.
 80. Plain answers: where the calls come from, and how to add more.
+81. Skipping a studio time says it is not marked missed, and Undo puts it back in the phone calendar too.
+82. A campus-only call found on a public listing site (another school's students) is no longer shown as a realistic first step, unless it names your city.
+83. The same rule applies to calls from email alerts and to calls the writing help reads from listing sites.
+84. The phone's notification settings name the app's channel for what it carries: "Reminders, calls and results".
+85. Long-press the app icon for three shortcuts: Start now, Calls, Park an idea.
+86. Share several pictures from the phone gallery at once and each becomes a piece in Studio, in one tap.
+87. The home-screen widget has a description in the phone's widget picker.
+88. The widget, quick tile and shortcut all say "Start now", the same as Today.
+89. Plain answers: the three quicker ways to start (icon shortcut, widget, quick-settings tile).
+90. README: a Quick ways in section.

@@ -59,11 +59,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** What another app (or a notification, tile or widget) handed us. */
-data class Incoming(val route: String, val text: String = "", val image: Uri? = null)
+data class Incoming(val route: String, val text: String = "", val image: Uri? = null, val images: List<Uri> = emptyList())
 
 object Shared {
     var text: String = ""
     var image: Uri? = null
+    /** Several pictures shared at once, usually your own work from the gallery. */
+    var images: List<Uri> = emptyList()
 }
 
 class MainActivity : ComponentActivity() {
@@ -86,6 +88,11 @@ class MainActivity : ComponentActivity() {
     @Suppress("DEPRECATION")
     private fun handle(i: Intent?) {
         if (i == null) return
+        if (i.action == Intent.ACTION_SEND_MULTIPLE) {
+            val list: List<Uri> = try { i.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM).orEmpty() } catch (e: Exception) { emptyList() }
+            incoming.value = Incoming("share", "", list.firstOrNull(), list)
+            return
+        }
         if (i.action == Intent.ACTION_SEND) {
             val stream: Uri? = try { i.getParcelableExtra<Uri>(Intent.EXTRA_STREAM) } catch (e: Exception) { null }
             incoming.value = Incoming("share", i.getStringExtra(Intent.EXTRA_TEXT).orEmpty(), stream)
@@ -126,7 +133,7 @@ fun Root(incoming: MutableState<Incoming?>) {
     val inc = incoming.value
     LaunchedEffect(inc) {
         if (inc != null) {
-            if (inc.route == "share") { Shared.text = inc.text; Shared.image = inc.image }
+            if (inc.route == "share") { Shared.text = inc.text; Shared.image = inc.image; Shared.images = inc.images }
             // The screens are set up a moment after this runs on a cold start, so wait for them before moving.
             var tries = 0
             while (tries < 200) {
