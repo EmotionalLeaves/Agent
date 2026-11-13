@@ -131,6 +131,17 @@ object Look {
             .fold(mutableListOf<Pair<Int, Double>>()) { acc, x -> val near = acc.indexOfFirst { dist(it.first, x.first) < 18 }; if (near >= 0) acc[near] = acc[near].first to acc[near].second + x.second else acc += x; acc }
     }
 
+    /**
+     * The one color that most stands for the picture: among its main colors, the one with the most color in it
+     * (saturation, weighted by how much of the picture it covers), so the app can wear the artist's own color.
+     * Grey pictures give 0 (none).
+     */
+    fun seed(b: Bitmap): Int {
+        val hsl = FloatArray(3)
+        return palette(b, 6).map { (c, share) -> androidx.core.graphics.ColorUtils.colorToHSL(c, hsl); Triple(c, hsl[1] * kotlin.math.sqrt(share.toFloat()) * (1f - kotlin.math.abs(hsl[2] - 0.5f)), hsl[1]) }
+            .filter { it.third > 0.18f }.maxByOrNull { it.second }?.first ?: 0
+    }
+
     private fun dist(a: Int, b: Int): Double { val dr = Color.red(a) - Color.red(b); val dg = Color.green(a) - Color.green(b); val db = Color.blue(a) - Color.blue(b); return sqrt((dr * dr + dg * dg + db * db).toDouble()) }
 
     /** A plain name for a color, so "a warm mid brown" can be said out loud. */

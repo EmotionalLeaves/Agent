@@ -161,6 +161,45 @@ fun Home(nav: NavController) {
             }
         }
 
+        // The easel: today's one step, painted over your own work, with Start right under it.
+        val n = next
+        LaunchedEffect(works.size) { withContext(Dispatchers.IO) { try { Engine.refreshSeed() } catch (e: Exception) { } } }
+        fun go(min: Int, tired: Boolean) {
+            buzz()
+            if (tired) { st.energy = "wiped"; st.energyDay = today.toString() }
+            scope.io { st.welcomedBack = now(); Engine.quickStart(min); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } }
+        }
+        Easel(
+            title = n?.title ?: "Finding your next step", detail = n?.detail.orEmpty(), piece = Engine.heroPiece(works),
+            dateLine = "Your next step",
+            minutes = st.defaultSessionMin, inSession = st.sessionStart > 0,
+            onOpen = { n?.let { if (it.route != "home") nav.navigate(it.route) } },
+            onStart = { if (st.onboarded) go(st.defaultSessionMin, false) else nav.navigate("tour") },
+            onTired = { if (st.onboarded) go(5, true) else nav.navigate("tour") },
+            onSession = { nav.navigate("session") },
+            menu = {
+            if (st.onboarded) Box {
+                    IconButton(onClick = { menu = true }, modifier = Modifier.offset(x = 12.dp, y = (-10).dp)) { Icon(Icons.Default.MoreVert, "Change today's step", tint = androidx.compose.ui.graphics.Color.White) }
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        if (st.pinnedStep.isNotBlank()) DropdownMenuItem(text = { Text("Done, clear my pin") }, onClick = { st.pinnedStep = ""; menu = false })
+                        else {
+                            if (st.snoozeDay == today.toString()) DropdownMenuItem(text = { Text("Bring today's step back") }, onClick = { st.snoozeDay = ""; menu = false })
+                            else DropdownMenuItem(text = { Text("Not today") }, onClick = { st.snoozeRun = if (st.snoozeDay == today.minusDays(1).toString()) st.snoozeRun + 1 else 1; st.snoozeDay = today.toString(); menu = false })
+                            DropdownMenuItem(text = { Text("Empty my head first") }, onClick = { menu = false; nav.navigate("dump") })
+                            n?.let { step -> DropdownMenuItem(text = { Text("Remind me this evening") }, onClick = { menu = false
+                                // Said back plainly, so there is no need to check that it worked; Undo cancels it.
+                                scope.undoable("Reminder set for " + Engine.laterTime(), { Engine.remindLater(ctx, step.title, step.route) }, { Engine.cancelLater(ctx) }) }) }
+                            // When it is all too much: three quiet days, the step shrinks to five minutes, everything else waits.
+                            DropdownMenuItem(text = { Text("It is all too much") }, onClick = { st.calmUntil = System.currentTimeMillis() + 3 * 86_400_000L; menu = false })
+                            DropdownMenuItem(text = { Text("Pin my own step") }, onClick = { pinning = true; menu = false })
+                            DropdownMenuItem(text = { Text(if (calm) "Show everything on Today" else "Calm Today: just this step") }, onClick = { if (calm) { st.calmToday = false; st.calmUntil = 0 } else st.calmToday = true; menu = false })
+                        }
+                    }
+                }
+            }
+        )
+        if (st.onboarded && st.sessionStart == 0L) TextButton(onClick = { nav.navigate("session") }, modifier = Modifier.offset(x = (-12).dp)) { Text("Choose the piece or the kind of session") }
+
         // After an update: what is new, once, in a few lines, so new features are found instead of hunted for.
         val version = remember { try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).let { if (android.os.Build.VERSION.SDK_INT >= 28) it.longVersionCode else @Suppress("DEPRECATION") it.versionCode.toLong() } } catch (e: Exception) { 0L } }
         var showNew by remember { mutableStateOf(st.onboarded && version > 0 && st.seenVersion < version) }
@@ -248,55 +287,12 @@ fun Home(nav: NavController) {
                 TextButton(onClick = { st.snoozeRun = 0 }) { Text("No, I'm all right") }
             }
         }
-        // The one next step, pinned to the wall.
-        val n = next
-        WallLabel(onClick = { n?.let { if (it.route != "home") nav.navigate(it.route) } }) {
-            Row(verticalAlignment = Alignment.Top) {
-                Text(n?.title ?: "Finding your next step", Modifier.weight(1f), style = MaterialTheme.typography.headlineMedium, color = if (n == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
-                if (st.onboarded) Box {
-                    IconButton(onClick = { menu = true }, modifier = Modifier.offset(x = 12.dp, y = (-10).dp)) { Icon(Icons.Default.MoreVert, "Change today's step", tint = MaterialTheme.colorScheme.onSurfaceVariant) }
-                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        if (st.pinnedStep.isNotBlank()) DropdownMenuItem(text = { Text("Done, clear my pin") }, onClick = { st.pinnedStep = ""; menu = false })
-                        else {
-                            if (st.snoozeDay == today.toString()) DropdownMenuItem(text = { Text("Bring today's step back") }, onClick = { st.snoozeDay = ""; menu = false })
-                            else DropdownMenuItem(text = { Text("Not today") }, onClick = { st.snoozeRun = if (st.snoozeDay == today.minusDays(1).toString()) st.snoozeRun + 1 else 1; st.snoozeDay = today.toString(); menu = false })
-                            DropdownMenuItem(text = { Text("Empty my head first") }, onClick = { menu = false; nav.navigate("dump") })
-                            n?.let { step -> DropdownMenuItem(text = { Text("Remind me this evening") }, onClick = { menu = false
-                                // Said back plainly, so there is no need to check that it worked; Undo cancels it.
-                                scope.undoable("Reminder set for " + Engine.laterTime(), { Engine.remindLater(ctx, step.title, step.route) }, { Engine.cancelLater(ctx) }) }) }
-                            // When it is all too much: three quiet days, the step shrinks to five minutes, everything else waits.
-                            DropdownMenuItem(text = { Text("It is all too much") }, onClick = { st.calmUntil = System.currentTimeMillis() + 3 * 86_400_000L; menu = false })
-                            DropdownMenuItem(text = { Text("Pin my own step") }, onClick = { pinning = true; menu = false })
-                            DropdownMenuItem(text = { Text(if (calm) "Show everything on Today" else "Calm Today: just this step") }, onClick = { if (calm) { st.calmToday = false; st.calmUntil = 0 } else st.calmToday = true; menu = false })
-                        }
-                    }
-                }
-            }
-            if (n != null && n.detail.isNotBlank()) Text(n.detail, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
         if (!st.onboarded) TextButton(onClick = { st.setupDone = true; st.tourSeen = true; nav.navigate("home") { popUpTo("home") { inclusive = true } } }) { Text("Skip the tour and start") }
         if (pinning) {
             Field("What do you want to see here instead?", pinText)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (pinText.value.isNotBlank()) Button(onClick = { st.pinnedStep = pinText.value.trim(); pinText.value = ""; pinning = false }) { Text("Pin it") }
                 TextButton(onClick = { pinning = false }) { Text("Cancel") }
-            }
-        }
-
-        if (st.onboarded) {
-            if (st.sessionStart > 0) Button(onClick = { nav.navigate("session") }, modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)) { Text("Back to your session") }
-            else {
-                // One tap: the app picks the piece and starts the clock. A tired day is the second button, not a question first.
-                fun go(min: Int, tired: Boolean) {
-                    buzz()
-                    if (tired) { st.energy = "wiped"; st.energyDay = today.toString() }
-                    scope.io { st.welcomedBack = now(); Engine.quickStart(min); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } }
-                }
-                Button(onClick = { go(st.defaultSessionMin, false) }, modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)) { Text("Start now, ${st.defaultSessionMin} minutes") }
-                FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    TextButton(onClick = { go(5, true) }) { Text("Tired? Just 5 minutes") }
-                    TextButton(onClick = { nav.navigate("session") }) { Text("Choose the piece") }
-                }
             }
         }
 

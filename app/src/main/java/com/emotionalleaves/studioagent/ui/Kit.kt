@@ -147,9 +147,49 @@ private val AppShapes = Shapes(
     large = RoundedCornerShape(16.dp), extraLarge = RoundedCornerShape(24.dp)
 )
 
+/** Phthalo green: a real paint, deep and calm, worn until your own work gives the app its color. */
+const val DefaultSeed = 0xFF1F6B63.toInt()
+
+/** HSL in, Compose color out (h 0..360, s and l 0..1). */
+fun hsl(h: Float, s: Float, l: Float, a: Float = 1f): Color =
+    Color(androidx.core.graphics.ColorUtils.HSLToColor(floatArrayOf(((h % 360f) + 360f) % 360f, s.coerceIn(0f, 1f), l.coerceIn(0f, 1f)))).copy(alpha = a)
+
+/**
+ * The whole app's colors, grown from one seed color: the artist's own (taken from their work) or phthalo green.
+ * Neutrals carry a whisper of the seed's hue, so every screen belongs to the same studio.
+ */
+fun seedScheme(seed: Int, dark: Boolean): androidx.compose.material3.ColorScheme {
+    val f = FloatArray(3); androidx.core.graphics.ColorUtils.colorToHSL(seed, f)
+    val h = f[0]; val sat = f[1].coerceIn(0.35f, 0.85f)
+    val warm = h + 32f
+    return if (!dark) lightColorScheme(
+        primary = hsl(h, sat, 0.34f), onPrimary = Color.White, primaryContainer = hsl(h, sat * 0.75f, 0.88f), onPrimaryContainer = hsl(h, sat, 0.13f),
+        secondary = hsl(warm, sat * 0.7f, 0.40f), onSecondary = Color.White, secondaryContainer = hsl(warm, sat * 0.5f, 0.90f), onSecondaryContainer = hsl(warm, sat, 0.14f),
+        tertiary = hsl(48f, 0.70f, 0.32f), onTertiary = Color.White, tertiaryContainer = hsl(48f, 0.75f, 0.84f), onTertiaryContainer = hsl(48f, 0.6f, 0.15f),
+        background = hsl(h, 0.16f, 0.955f), onBackground = hsl(h, 0.18f, 0.12f), surface = hsl(h, 0.16f, 0.955f), onSurface = hsl(h, 0.18f, 0.12f),
+        surfaceVariant = hsl(h, 0.12f, 0.90f), onSurfaceVariant = hsl(h, 0.08f, 0.38f), outline = hsl(h, 0.06f, 0.52f), outlineVariant = hsl(h, 0.10f, 0.86f),
+        surfaceTint = Color.Transparent, inverseSurface = hsl(h, 0.18f, 0.14f), inverseOnSurface = hsl(h, 0.14f, 0.95f), inversePrimary = hsl(h, sat * 0.8f, 0.78f),
+        surfaceContainerLowest = Color.White, surfaceContainerLow = hsl(h, 0.18f, 0.975f), surfaceContainer = hsl(h, 0.14f, 0.93f),
+        surfaceContainerHigh = hsl(h, 0.13f, 0.905f), surfaceContainerHighest = hsl(h, 0.12f, 0.88f), surfaceBright = Color.White, surfaceDim = hsl(h, 0.10f, 0.86f)
+    ) else darkColorScheme(
+        primary = hsl(h, sat * 0.75f, 0.74f), onPrimary = hsl(h, sat, 0.12f), primaryContainer = hsl(h, sat * 0.6f, 0.26f), onPrimaryContainer = hsl(h, sat * 0.6f, 0.90f),
+        secondary = hsl(warm, sat * 0.6f, 0.74f), onSecondary = hsl(warm, sat, 0.12f), secondaryContainer = hsl(warm, sat * 0.45f, 0.24f), onSecondaryContainer = hsl(warm, sat * 0.5f, 0.90f),
+        tertiary = hsl(48f, 0.65f, 0.72f), onTertiary = hsl(48f, 0.6f, 0.12f), tertiaryContainer = hsl(48f, 0.35f, 0.26f), onTertiaryContainer = hsl(48f, 0.6f, 0.88f),
+        background = hsl(h, 0.16f, 0.075f), onBackground = hsl(h, 0.10f, 0.92f), surface = hsl(h, 0.16f, 0.075f), onSurface = hsl(h, 0.10f, 0.92f),
+        surfaceVariant = hsl(h, 0.10f, 0.20f), onSurfaceVariant = hsl(h, 0.08f, 0.72f), outline = hsl(h, 0.06f, 0.52f), outlineVariant = hsl(h, 0.08f, 0.24f),
+        surfaceTint = Color.Transparent, inverseSurface = hsl(h, 0.10f, 0.92f), inverseOnSurface = hsl(h, 0.16f, 0.10f), inversePrimary = hsl(h, sat, 0.34f),
+        surfaceContainerLowest = hsl(h, 0.14f, 0.11f), surfaceContainerLow = hsl(h, 0.14f, 0.10f), surfaceContainer = hsl(h, 0.13f, 0.13f),
+        surfaceContainerHigh = hsl(h, 0.12f, 0.16f), surfaceContainerHighest = hsl(h, 0.11f, 0.20f), surfaceBright = hsl(h, 0.10f, 0.24f), surfaceDim = hsl(h, 0.16f, 0.075f)
+    )
+}
+
 @Composable
 fun StudioTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (isDark()) DarkColors else LightColors, typography = AppType, shapes = AppShapes, content = content)
+    val tick by st.changed.collectAsState()
+    val seed = if (tick >= 0 && st.artSeed != 0 && st.wearArt) st.artSeed else DefaultSeed
+    val dark = isDark()
+    val scheme = androidx.compose.runtime.remember(seed, dark) { seedScheme(seed, dark) }
+    MaterialTheme(colorScheme = scheme, typography = AppType, shapes = AppShapes, content = content)
 }
 
 /** Dark or light: the phone's choice unless you picked one in Settings (an evening studio may want dark, a bright day light). */

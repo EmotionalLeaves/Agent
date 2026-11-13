@@ -129,7 +129,7 @@ class ScreensTest {
     /** The same screens after dark, to check nothing turns unreadable. */
     @Test @Config(sdk = [34], qualifiers = "w360dp-h740dp-night-xhdpi") fun dark() {
         val ids = seed()
-        shot("30_dark_home", "home", "Start now")
+        shot("30_dark_home", "home", "Start, ")
         shot("31_dark_studio", "works", "Blue Hour")
         shot("32_dark_calls", "calls", "Winter Open")
         shot("33_dark_document", "doc/${ids["doc"]}", "Ready when")
@@ -148,7 +148,7 @@ class ScreensTest {
     @Test fun bigText() {
         org.robolectric.RuntimeEnvironment.setFontScale(1.3f)
         val ids = seed()
-        shot("40_big_home", "home", "Start now")
+        shot("40_big_home", "home", "Start, ")
         shot("41_big_calls", "calls", "Winter Open")
         shot("42_big_session", "startnow", "Now: Block in the big shapes")
         shot("43_big_studio", "works", "Blue Hour")
@@ -244,14 +244,14 @@ class ScreensTest {
     @Test fun hugeText() {
         org.robolectric.RuntimeEnvironment.setFontScale(2.0f)
         seed()
-        shot("45_huge_home", "home", "Start now")
+        shot("45_huge_home", "home", "Start, ")
         shot("46_huge_session", "startnow", "Now: Block in the big shapes")
     }
 
     /** The phone turned sideways. */
     @Test @Config(sdk = [34], qualifiers = "w740dp-h360dp-land-xhdpi") fun sideways() {
         seed()
-        shot("47_land_home", "home", "Start now")
+        shot("47_land_home", "home", "Start, ")
         shot("48_land_session", "startnow", "Now: Block in the big shapes")
     }
 }

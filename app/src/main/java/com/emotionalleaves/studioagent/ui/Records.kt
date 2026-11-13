@@ -618,6 +618,7 @@ fun SettingsScreen(nav: NavController, section: String) {
             "calm" -> {
                 Text("Each of these is a default you can switch. None of them is a rule about you.")
                 H("Today")
+                Toggle("Wear the color of my own work (taken from the piece I am on)", st.wearArt) { st.wearArt = it }
                 Choice("How the app looks", listOf("", "light", "dark"), st.look, names = { mapOf("" to "Like the phone", "light" to "Light", "dark" to "Dark")[it] ?: it }) { st.look = it }
                 Toggle("Calm Today: show only the next step and Start", st.calmToday) { st.calmToday = it }
                 // Today, your way: each card can be switched off on its own.

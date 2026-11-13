@@ -1219,6 +1219,20 @@ object Engine {
     /** A break that has ended gives the usual weekly hours back. */
     fun endBreak() { if (st.hoursBeforeBreak > 0) { st.weeklyHours = st.hoursBeforeBreak; st.hoursBeforeBreak = 0 } }
 
+    /** The picture that best stands for the work now: the piece you are on, else the newest with a picture. */
+    fun heroPiece(works: List<Artwork>): Artwork? =
+        currentPiece(works)?.takeIf { it.imagePath.isNotBlank() } ?: works.filter { it.imagePath.isNotBlank() && it.status != "idea" }.maxByOrNull { it.createdAt }
+
+    /** Takes the app's color from your own work when the picture standing for it changes. */
+    suspend fun refreshSeed() {
+        val w = heroPiece(dao.artworksNow()) ?: return
+        if (w.imagePath == st.artSeedFrom) return
+        val b = ImageTools.decode(w.imagePath, 300) ?: return
+        val c = com.emotionalleaves.studioagent.media.Look.seed(b)
+        st.artSeedFrom = w.imagePath
+        if (c != 0) st.artSeed = c
+    }
+
     /** This week's work days: the usual ones, less days off and a break, plus any extra shift. */
     fun workDaysNow(): Set<Int> = if (st.offUntil.isNotBlank() && st.offUntil >= LocalDate.now().toString()) thisWeek(st.extraThisWeek)
         else Planner.days(st.workDays) - thisWeek(st.offThisWeek) + thisWeek(st.extraThisWeek)

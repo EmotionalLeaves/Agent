@@ -68,6 +68,11 @@ class Settings(ctx: Context) {
     var mutedNotifs by S("mutedNotifs")
     /** "", "light" or "dark": the app's look, or the phone's when blank. */
     var look by S("look")
+    /** The color taken from your own work (ARGB), and the picture it came from; 0 when there is none yet. */
+    var artSeed by I("artSeed", 0)
+    var artSeedFrom by S("artSeedFrom")
+    /** The app wears the color of your work (on unless switched off). */
+    var wearArt by B("wearArt", true)
     var website by S("website")
     var city by S("city")
     /** A university or college you work or study at: its campus calls are open to you, so they are kept. */
