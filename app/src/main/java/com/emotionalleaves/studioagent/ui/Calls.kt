@@ -383,6 +383,12 @@ fun CallDetail(nav: NavController, id: Long) {
                 val place = o.venue.ifBlank { o.organiser }.ifBlank { o.title }
                 Share.email(ctx, o.email, fillLetter(l.subject, "", place), fillLetter(l.body, "", place))
             }) { Text("Ask them by email") }
+            // A fee that is a stretch: asking about a waiver costs nothing, and many smaller organizers have one.
+            else if (o.fee > 0 && o.status in setOf("new", "later", "yes") && Texts.looksLikeEmail(o.email)) OutlinedButton(onClick = {
+                val l = letters.first { it.title == "Ask whether the entry fee can be waived" }
+                val place = o.title.ifBlank { o.venue.ifBlank { o.organiser } }
+                Share.email(ctx, o.email, fillLetter(l.subject, "", place), fillLetter(l.body, "", place))
+            }) { Text("Ask about a fee waiver") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = {
                 status = "Reading the page…"
                 scope.io({ status = it }) {
