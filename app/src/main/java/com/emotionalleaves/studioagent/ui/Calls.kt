@@ -597,6 +597,13 @@ fun ApplScreen(nav: NavController, id: Long) {
                 }, label = { Text(w.title.ifBlank { "Untitled #${w.id}" }) })
             }
         }
+        // The pictures are most of the decision: a dark, washed-out or soft one is named now, while there is time to reshoot.
+        var looks by remember(a.workIds) { mutableStateOf<List<String>>(emptyList()) }
+        LaunchedEffect(a.workIds) {
+            looks = withContext(Dispatchers.IO) { works.filter { it.id in chosenIds && it.format == "physical" }.mapNotNull { w ->
+                ImageTools.quality(w.imagePath).firstOrNull()?.let { "${w.title.ifBlank { "Untitled" }}: " + it.substringBefore(".").lowercase() + "." } } }
+        }
+        if (looks.isNotEmpty()) Panel { Text("Before a juror sees them", fontWeight = FontWeight.SemiBold); looks.forEach { Small(it) }; Small("Optional, but a better photo often changes the result more than anything else.") }
         // Jurors see the works one at a time, in order; the order is part of the application.
         if (chosenIds.size > 1) OutlinedButton(onClick = { nav.navigate("jury/${a.id}") }, modifier = Modifier.fillMaxWidth()) { Text("See them as a juror will, and set the order") }
         StageHead(2, "Statement and fit", a.statement.isNotBlank() && a.themeText.isNotBlank())

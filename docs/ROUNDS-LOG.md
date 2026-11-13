@@ -364,3 +364,4 @@ One real change per round. Pushed and built every ten rounds.
 358. Applications whose checks all pass get their files made by the daily check, so the pack is waiting and sending is one look and one tap.
 359. Settings, Focus and calm: Calm Today shows only the next step and Start on Today, for days when anything more is too much; everything else waits in the tabs.
 360. Calm Today can be switched from Today's own menu (the three dots on the step), in one tap either way.
+361. An application names any chosen photo of physical work that looks dark, washed out, glary or soft, while there is still time to reshoot; a better photo often changes the result more than anything else.
