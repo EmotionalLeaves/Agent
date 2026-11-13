@@ -187,6 +187,7 @@ fun Records(nav: NavController) {
         }
 
         TextButton(onClick = { nav.navigate("market") }) { Text("Selling at a market or fair today? Market day") }
+        TextButton(onClick = { nav.navigate("pricing") }) { Text("Your prices: the rule, strays, and raising them") }
         Expand("Record a sale") {
         val sellable = works.filter { it.status != "sold" && it.status != "idea" && it.status != "in_progress" }
         if (sellable.isEmpty()) Small("No finished works to sell yet.")

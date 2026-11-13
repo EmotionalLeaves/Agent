@@ -840,6 +840,22 @@ object CallReader {
 }
 
 
+/** Prices that hold together: a table from your rule, the pieces that stray from it, and a raise rounded the way prices are. */
+object Pricing {
+    val sizes = listOf(5.0 to 7.0, 8.0 to 10.0, 9.0 to 12.0, 11.0 to 14.0, 16.0 to 20.0, 18.0 to 24.0, 24.0 to 36.0)
+
+    /** Rounded to a price that looks chosen: to 5 under 100, to 10 under 1,000, to 50 above. */
+    fun round(p: Double): Double = when { p <= 0 -> 0.0; p < 100 -> Math.round(p / 5) * 5.0; p < 1000 -> Math.round(p / 10) * 10.0; else -> Math.round(p / 50) * 50.0 }
+
+    fun raised(p: Double, pct: Double): Double = round(p * (1 + pct / 100))
+
+    /** Pieces whose price is more than a quarter away from what your rule gives their size. */
+    fun strays(works: List<com.emotionalleaves.studioagent.data.Artwork>, perSqIn: Double): List<Pair<com.emotionalleaves.studioagent.data.Artwork, Double>> =
+        works.filter { it.price > 0 && !it.nfs && it.widthIn > 0 && it.heightIn > 0 && it.status != "sold" }
+            .map { it to Texts.price(it.widthIn, it.heightIn, perSqIn) }
+            .filter { (w, r) -> r > 0 && kotlin.math.abs(w.price - r) / r > 0.25 }
+}
+
 /** Someone wants to see your work in person: what to do before, what to have out, what to ask, and the thank-you after. */
 object StudioVisit {
     fun steps(visit: LocalDate, today: LocalDate): List<Pair<String, LocalDate>> = listOf(

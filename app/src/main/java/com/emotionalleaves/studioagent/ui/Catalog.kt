@@ -523,6 +523,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             }
         }
         Expand("Price, edition and where it is") {
+        TextButton(onClick = { nav.navigate("pricing") }) { Text("Prices for all your work") }
         var priceVersion by remember { mutableStateOf(0) }
         // The box is redrawn only when the rule fills it, so typing in it is never interrupted.
         key(priceVersion) { Num("Price, " + st.currency, w.price) { save(w.copy(price = it)) } }

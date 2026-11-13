@@ -491,4 +491,14 @@ class DomainTest {
         assertEquals(5.0 + 15.0 + 300.0, M.total(M.tally(t), items, mapOf(12L to 300.0)), 0.001)
         assertTrue(M.tally(M.bump(t, "w:12", -1)).keys.none { it == "w:12" })
     }
+
+    @Test fun pricesHoldTogether() {
+        val P = com.emotionalleaves.studioagent.domain.Pricing
+        assertEquals(85.0, P.round(83.0), 0.0); assertEquals(460.0, P.round(457.0), 0.0); assertEquals(1350.0, P.round(1340.0), 0.0)
+        assertEquals(330.0, P.raised(300.0, 10.0), 0.0)
+        val a = com.emotionalleaves.studioagent.data.Artwork(id = 1, title = "A", widthIn = 9.0, heightIn = 12.0, price = 400.0, status = "documented")
+        val b = com.emotionalleaves.studioagent.data.Artwork(id = 2, title = "B", widthIn = 9.0, heightIn = 12.0, price = 160.0, status = "documented")
+        val s = P.strays(listOf(a, b), 1.5)
+        assertEquals(listOf(1L), s.map { it.first.id }); assertEquals(160.0, s[0].second, 0.0)
+    }
 }
