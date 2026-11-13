@@ -167,8 +167,8 @@ fun Home(nav: NavController) {
         var openNew by remember { mutableStateOf(false) }
         if (showNew) Panel(strong = true) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("New in this version: " + Texts.count(whatsNew.size, "thing"), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
-                TextButton(onClick = { openNew = !openNew }) { Text(if (openNew) "Hide" else "Show") }
+                // The line itself opens the list, so two short buttons never squeeze it at large text sizes.
+                Text("New in this version: " + Texts.count(whatsNew.size, "thing") + if (openNew) "" else " (show)", Modifier.weight(1f).clickable(onClickLabel = if (openNew) "Hide what is new" else "Show what is new") { openNew = !openNew }.padding(vertical = 8.dp), style = MaterialTheme.typography.titleSmall)
                 TextButton(onClick = { st.seenVersion = version; showNew = false }) { Text("Got it") }
             }
             if (openNew) whatsNew.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
