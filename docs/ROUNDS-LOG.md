@@ -645,3 +645,4 @@ One real change per round. Pushed and built every ten rounds.
 638. The email offering a staff class no longer assumes your job: About you takes your day job in a few words (optional), and the email says "I work here as a cook in the dining hall" only if you have written it.
 639. The writing helper knows your day job, as you wrote it, and is told to mention it only where it helps (a bio, a statement about work and kitchens), never as a label.
 640. "New in this version" lists what rounds 621 to 639 added.
+641. Public art, in plain words: a Basics answer on public art calls (painted utility boxes, crosswalks, small murals: often open to beginners, a fixed fee plus paint, a design sketch) with what to search for, and "Public art" in the glossary.

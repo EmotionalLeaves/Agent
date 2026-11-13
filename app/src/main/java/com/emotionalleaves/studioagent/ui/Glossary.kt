@@ -46,6 +46,7 @@ val glossary: List<Pair<String, String>> = listOf(
     "PPI / DPI" to "Pixels (or dots) per inch: how many pixels of a picture go into each inch of a print. About 300 looks sharp up close; under 200 can look soft. Labs often say DPI when they mean PPI.",
     "Press release" to "A one-page announcement of a show for newspapers and listing sites: what, where, when, who, and one picture.",
     "Prospectus" to "The full rules of a call: dates, sizes, fees, what to send, what they take.",
+    "Public art" to "Art paid for by a city, school or agency for a public place: murals, painted utility boxes, bus shelters. Calls ask for a design sketch and pay a fixed fee.",
     "Residency" to "Time and space somewhere else to make work, sometimes with a stipend.",
     "Retail price" to "What a buyer pays, the same everywhere you sell. A venue's commission comes out of it, so keep your prices the same online and at a gallery.",
     "Rights (image use)" to "Who may use pictures of your work and how. You keep copyright; a call may ask to use images to promote the show. Watch for calls that ask for more than that.",
