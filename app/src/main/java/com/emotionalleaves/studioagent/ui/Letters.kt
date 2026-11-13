@@ -56,6 +56,8 @@ val letters = listOf(
         "Hello [THEM],\n\nI hope [PLACE] is still hanging happily. I wanted you to be among the first to see some new work: [LINK]\n\nIf anything catches your eye, just reply.\n\nWarmly,\n\n[ME]"),
     Letter("Ask about payment for a sale", "If a sale has not been paid a few weeks after a show ends.", "Payment for sold work",
         "Hello [THEM],\n\nI understand a piece of mine sold during the show at [PLACE]. Could you let me know when I can expect payment and whether you need anything from me?\n\nThank you,\n\n[ME]"),
+    Letter("A gift-season note to people you know", "November or early December, to friends, family and coworkers who have said they like your work. Private, one email, no pressure; send it with everyone in BCC.", "Prints and small pieces, if you are looking for gifts",
+        "Hello,\n\nA short note in case it helps with gifts this year: I have a few small prints and original pieces available, from [PRICE]. You can see them here: [LINK]\n\nIf anything catches your eye, just reply and I will set it aside. No pressure at all, and thank you for the encouragement this year.\n\n[ME]"),
     Letter("Ask whether the entry fee can be waived", "When a call fits but the fee is a stretch. Many smaller organizers have a quiet waiver or a reduced fee; asking costs nothing.", "Entry fee question",
         "Hello [THEM],\n\nI'm an early-career artist and would love to enter the call at [PLACE]. Is there a fee waiver or a reduced fee for artists in my position? If not, I completely understand.\n\nThank you,\n\n[ME]"),
     Letter("Arrange to get work back", "When a show has ended and the pick-up details are not clear yet.", "Collecting my work",
@@ -66,7 +68,7 @@ val letters = listOf(
 
 fun fillLetter(text: String, them: String, place: String): String =
     text.replace("Hello [THEM],", if (them.isBlank()) "Hello," else "Dear ${them.trim()},").replace("[THEM]", them.trim().ifBlank { "there" }).replace("[PLACE]", place.trim().ifBlank { "your space" })
-        .replace("[ME]", if (st.fullName.isBlank()) "(your name)" else com.emotionalleaves.studioagent.work.Papers.signature(st)).replace("[LINK]", st.website.ifBlank { "(your portfolio link)" })
+        .replace("[ME]", if (st.fullName.isBlank()) "(your name)" else com.emotionalleaves.studioagent.work.Papers.signature(st)).replace("[LINK]", st.website.ifBlank { "(your portfolio link)" }).replace("[PRICE]", "(your lowest price)")
 
 @Composable
 fun Letters(nav: NavController) {
