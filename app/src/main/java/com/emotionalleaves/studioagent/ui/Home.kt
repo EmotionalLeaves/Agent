@@ -1060,11 +1060,11 @@ val lightPrompts = listOf(
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
 val whatsNew = listOf(
-    "On a break from work (winter, summer)? Your week takes a date, and every day until then is planned as free.",
-    "Teach a class: book the date (the class, a shopping day and the supplies go on your lists), a handout for the people who come, and what you were paid into Records.",
-    "Market day: a sign for the table with a code to pay by; closing the day names what sold best.",
-    "Still sent, still safe: a sent entry opened again and again says there is nothing left to check. A third good photo is called good enough.",
-    "Can't choose? Pick one for me, in Ideas and in the weekly look ahead. Foundations lets you move on to the next week.",
-    "To-dos open where they are done; Empty your head reads dates like \"Nov 20\" and \"the 20th\".",
-    "Your people adds museum sketching days; more seasons on Saturdays (market season, the year on one page, spring light)."
+    "Market day: a little zine of your pieces from one sheet, business cards ten to a sheet, and all the things to print folded together.",
+    "Ask in your own words with no helper: plain answers from Basics and the glossary, and Find anything shows them too.",
+    "Eight more plain answers in Basics: meeting other artists, teaching, how many pieces a show needs, hearing back, a website, openings.",
+    "An Empty your head widget for the home screen.",
+    "Your people: a reminder to go again next week, and museum sketching days.",
+    "A gift-season note to people you know, in Ready-made emails.",
+    "Your day job, in your own words, for the letters and writing where it helps."
 )

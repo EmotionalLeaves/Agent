@@ -644,3 +644,4 @@ One real change per round. Pushed and built every ten rounds.
 637. Market day tidied: the things to print (price tags, postcards, the table sign, business cards, the zine) had piled up inside "What you are bringing". They now have their own folded line, "Things to print".
 638. The email offering a staff class no longer assumes your job: About you takes your day job in a few words (optional), and the email says "I work here as a cook in the dining hall" only if you have written it.
 639. The writing helper knows your day job, as you wrote it, and is told to mention it only where it helps (a bio, a statement about work and kitchens), never as a label.
+640. "New in this version" lists what rounds 621 to 639 added.
