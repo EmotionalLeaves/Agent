@@ -595,6 +595,19 @@ object Papers {
     private fun cell(s: String): String = "\"" + s.replace("\"", "\"\"").replace("\n", " ") + "\""
 
     /** The whole catalog as a spreadsheet file: one row per piece, the columns a registrar would expect. */
+    /** Every entry sent: the call, who ran it, when it was sent, the fee, the works and what came of it. */
+    fun entriesCsv(appls: List<com.emotionalleaves.studioagent.data.Appl>, opps: Map<Long, com.emotionalleaves.studioagent.data.Opp>, works: Map<Long, Artwork>): String = buildString {
+        appendLine("sent,call,organizer,city,kind,fee,works,result")
+        appls.sortedBy { it.submittedAt }.forEach { a ->
+            val o = opps[a.oppId]
+            val ids = a.workIds.split(",").mapNotNull { it.trim().toLongOrNull() }
+            appendLine(listOf(java.time.Instant.ofEpochMilli(a.submittedAt).atZone(ZoneId.systemDefault()).toLocalDate().toString(), cell(o?.title.orEmpty()),
+                cell(o?.organiser?.ifBlank { o.venue }.orEmpty()), cell(o?.city.orEmpty()), o?.kind.orEmpty(),
+                if ((o?.fee ?: 0.0) > 0) "%.2f".format(o!!.fee) else "0", cell(ids.mapNotNull { works[it]?.title?.ifBlank { "Untitled" } }.joinToString("; ")),
+                when (a.status) { "accepted" -> "accepted"; "declined" -> "not this time"; else -> "waiting" }).joinToString(","))
+        }
+    }
+
     fun inventoryCsv(works: List<Artwork>, seriesNames: Map<Long, String>, s: Settings = com.emotionalleaves.studioagent.G.settings): String = buildString {
         appendLine("catalog_no,title,year,medium,height_in,width_in,depth_in,height_cm,width_cm,framed,edition,prints_made,series,status,price,location,tags")
         works.forEach { a ->

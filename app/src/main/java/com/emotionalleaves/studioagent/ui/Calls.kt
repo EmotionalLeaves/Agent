@@ -258,6 +258,14 @@ fun Calls(nav: NavController) {
             }
             else -> {
                 if (appls.isEmpty()) Empty("Nothing applied to yet. Say Yes to a call and the app builds the application.")
+                // Every entry and its result as a spreadsheet: your own record of where the work has gone.
+                if (appls.any { it.submittedAt > 0 }) TextButton(onClick = {
+                    scope.io {
+                        val f = java.io.File(com.emotionalleaves.studioagent.media.ImageTools.exportDir(ctx), Papers.docName(st, "Entries", "csv"))
+                        f.writeText(Papers.entriesCsv(appls.filter { it.submittedAt > 0 }, opps.associateBy { it.id }, works.associateBy { it.id }))
+                        withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "text/csv") }
+                    }
+                }) { Text("Your entries as a spreadsheet") }
                 // Ones still being prepared come first, nearest deadline at the top; finished ones follow, newest first.
                 val oppOf = opps.associateBy { it.id }
                 val evts by dao.events().collectAsState(emptyList())
