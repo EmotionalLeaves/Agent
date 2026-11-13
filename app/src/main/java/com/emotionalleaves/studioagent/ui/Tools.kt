@@ -43,7 +43,8 @@ val toolGroups: List<Pair<String, List<Triple<String, String, String>>>> = listO
     ),
     "Money and records" to listOf(
         Triple("Records", "Sales, costs, receipts, the year in a picture, taxes", "records"),
-        Triple("Find anything", "Any piece, call or person, or ask a question", "search")
+        Triple("Find anything", "Any piece, call or person, or ask a question", "search"),
+        Triple("Is everything working?", "The daily check, listing sites, helper, backups", "health")
     )
 )
 
