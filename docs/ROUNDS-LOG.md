@@ -630,3 +630,4 @@ One real change per round. Pushed and built every ten rounds.
 623. The README lists the Empty your head widget among the quick ways in.
 624. After ticking "I've been" in Your people, "Remind me to go again next week" puts it on your to-dos a week on. Once is a visit; going again is how people start to know you.
 625. That reminder opens Your people when it comes up on Today.
+626. Your week's description names days off, extra shifts and breaks, so searching "break" or "shift" finds it.
