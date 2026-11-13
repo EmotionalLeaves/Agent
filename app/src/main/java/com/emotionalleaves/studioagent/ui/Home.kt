@@ -170,6 +170,23 @@ fun Home(nav: NavController) {
             }
             if (openNew) whatsNew.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
         }
+        // On a break at work: small jobs that fit in five minutes on the phone, so the evening is for making.
+        val atWork = remember { val n0 = java.time.LocalDateTime.now(); n0.dayOfWeek.value in com.emotionalleaves.studioagent.domain.Planner.days(st.workDays) &&
+            !n0.toLocalTime().isBefore(com.emotionalleaves.studioagent.domain.Planner.time(st.workStart, java.time.LocalTime.of(7, 0))) && n0.toLocalTime().isBefore(com.emotionalleaves.studioagent.domain.Planner.time(st.workEnd, java.time.LocalTime.of(15, 30))) }
+        if (st.onboarded && atWork && !st.calmToday) {
+            val opps0 by dao.opps().collectAsState(emptyList())
+            val toDecide = opps0.count { it.status == "new" && it.fitScore >= 60 && it.deadline > now() }
+            val jobs = listOfNotNull(
+                if (toDecide > 0) Triple("Say yes or no to ${Texts.count(toDecide, "call")}", "About a minute each", "calls") else null,
+                if (pendingCount > 0) Triple("Approve ${Texts.count(pendingCount, "email")}", "One tap each", "admin") else null,
+                Triple("Park an idea you had today", "A line, or a photo", "ideas"),
+                Triple("Read a call's page in plain words", "Then decide tonight", "calls")
+            ).take(3)
+            Panel {
+                Text("On a break? Five-minute jobs", style = MaterialTheme.typography.titleSmall)
+                jobs.forEach { (t, d, r) -> IconRow(Icons.Default.Done, t, d) { nav.navigate(r) } }
+            }
+        }
         // What the app did while you were away, in a few lines: the work done for you, seen without hunting.
         val tickA by st.changed.collectAsState()
         val fresh = remember(tickA) { st.activityLines().filter { it.first > st.activitySeen && !it.second.startsWith("Daily check finished") && !it.second.startsWith("Checked your inbox") } }
