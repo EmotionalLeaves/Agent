@@ -351,6 +351,19 @@ class IdeaTile : TileService() {
     }
 }
 
+/** Home-screen widget: one button that opens Empty your head, for when the head is full. */
+class DumpWidget : AppWidgetProvider() {
+    override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
+        val i = Intent(context, MainActivity::class.java).putExtra("route", "dump").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pi = PendingIntent.getActivity(context, 11, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        for (id in ids) {
+            val views = RemoteViews(context.packageName, R.layout.widget_dump)
+            views.setOnClickPendingIntent(R.id.widget_dump_button, pi)
+            manager.updateAppWidget(id, views)
+        }
+    }
+}
+
 /** Home-screen widget: a single Start session button. */
 class SessionWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {

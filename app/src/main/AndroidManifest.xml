@@ -84,6 +84,12 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_next_info" />
         </receiver>
 
+        <receiver android:name=".sys.DumpWidget" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_dump_info" />
+        </receiver>
         <receiver android:name=".sys.SessionWidget" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

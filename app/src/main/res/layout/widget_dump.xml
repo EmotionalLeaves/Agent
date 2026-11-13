@@ -1,0 +1,11 @@
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_dump_button"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:gravity="center"
+    android:padding="10dp"
+    android:text="@string/sc_dump"
+    android:textColor="#FFFFFF"
+    android:textSize="17sp"
+    android:textStyle="bold" />

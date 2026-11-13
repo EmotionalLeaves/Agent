@@ -626,3 +626,4 @@ One real change per round. Pushed and built every ten rounds.
 619. Your people adds a sixth way in: a sketching day at a museum (many have free sketching hours), drawing a master's work in front of it among other people doing the same.
 620. "New in this version" and the README catch up with rounds 597 to 619.
 621. Is everything working? checks two more things: that the focus app chosen for sessions is still on the phone, and that Google Play services is there for scanning flat pieces and reading flyers (taking photos works either way).
+622. An "Empty your head" widget for the home screen: one button that opens the box for everything on your mind, beside the Start session and Next step widgets.
