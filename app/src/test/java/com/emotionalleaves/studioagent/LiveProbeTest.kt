@@ -130,6 +130,13 @@ class LiveProbeTest {
             }
         } catch (e: Exception) { log("places failed: $e") }
 
+        log("\n== Museum open collection (Study a master)")
+        try {
+            val found = com.emotionalleaves.studioagent.net.Museum.search("gouache")
+            log("gouache: ${found.size} public-domain with pictures; first: ${found.firstOrNull()?.let { it.title + " / " + it.artist + " / " + it.imageUrl }}")
+            found.firstOrNull()?.let { p -> val f = com.emotionalleaves.studioagent.net.Museum.download(p, File("build/museum")); log("picture: ${f.length()} bytes") }
+            log("drawing: ${com.emotionalleaves.studioagent.net.Museum.search(com.emotionalleaves.studioagent.net.Museum.termFor("digital, archival print")).size}")
+        } catch (e: Exception) { log("museum failed: $e") }
         log("\n== Candidate listing sites (not yet in the app): readable, allowed, and how many calls")
         listOf(
             "ArtConnect" to "https://www.artconnect.com/opportunities",
