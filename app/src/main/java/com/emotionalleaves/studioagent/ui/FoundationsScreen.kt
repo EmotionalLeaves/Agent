@@ -58,6 +58,8 @@ fun FoundationsScreen(nav: NavController) {
                 Text("Week ${wk.n}: ${wk.skill}", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
                 Text(wk.why)
                 wk.exercises.forEach { e -> Toggle(e.text + (if (e.text.contains("minute")) "" else " (${e.minutes} min)"), e.id in done) { on -> st.foundationsDone = Foundations.mark(st.foundationsDone, e.id, on) } }
+                // Finishing every exercise is not the point: moving on is allowed, and is part of practice.
+                if (wk.exercises.any { it.id !in done }) androidx.compose.material3.TextButton(onClick = { st.foundationsDone = wk.exercises.fold(st.foundationsDone) { acc, e -> Foundations.mark(acc, e.id, true) } }) { Text("Move on to the next week") }
                 Small("To check it: open the drawing's photo in Fresh eyes and look at it ${wk.check.lowercase().let { if (it == "as it is") "as it is, next to what you painted from" else "with $it" }}.")
             } else Expand("Week ${wk.n}: ${wk.skill}" + (if (all) " (done)" else "")) {
                 Text(wk.why)
