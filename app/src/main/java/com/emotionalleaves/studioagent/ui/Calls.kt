@@ -117,7 +117,8 @@ fun Calls(nav: NavController) {
 
     Screen("Calls", nav, back = false) {
         Intro("calls", "Open calls you could apply to. The app checks each one against your level, budget and work, and shows the few worth a look. You only answer Yes or No.")
-        LaunchedEffect(Unit) { st.lastCallsLook = now() }
+        // Opening Calls re-ranks with your latest details (level, city, rules), so the list is never stale.
+        LaunchedEffect(Unit) { st.lastCallsLook = now(); try { withContext(Dispatchers.IO) { Engine.rescore() } } catch (e: Exception) { } }
         Choice("", listOf("this week", "all", "applied"), tab) { tab = it }
         if (kindsPresent.size > 1 && tab != "applied") Choice("", listOf("every kind") + kindsPresent, kindFilter, names = { mapOf("every kind" to "Every kind", "fair" to "Art fairs", "exhibition" to "Exhibitions", "residency" to "Residencies", "grant" to "Grants", "publication" to "Publications", "commission" to "Commissions", "other" to "Other")[it] ?: it }) { kindFilter = it }
         Status(status)
@@ -190,9 +191,10 @@ fun Calls(nav: NavController) {
                 Field("Paste a link or the call text", paste, lines = 2)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (paste.value.isNotBlank()) Button(onClick = {
-                        val t = paste.value.trim(); paste.value = ""; status = "Reading it…"
+                        val t0 = paste.value.trim(); paste.value = ""; status = "Reading it…"
                         scope.io({ status = it }) {
-                            val isUrl = t.startsWith("http") && !t.contains(" ")
+                            val isUrl = Texts.isLink(t0)
+                            val t = if (isUrl && !t0.startsWith("http")) "https://$t0" else t0
                             val page = if (isUrl) (try { Fetch.pageText(t) } catch (e: Exception) { "" }) else ""
                             val n = if (G.ai.ready) try { Engine.ingest(if (isUrl) "Link: $t\n$page" else t, "Pasted") } catch (e: Exception) { -1 } else -1
                             if (n > 0) status = "Added $n. It is at the top of All."
@@ -750,7 +752,10 @@ fun Sources(nav: NavController) {
         Field(if (kind == "email") "Sender address or domain" else "Page address", value)
         // Appears once there is something to add, like Park it.
         if (name.value.isNotBlank() && value.value.isNotBlank()) Button(onClick = {
-            val s = Source(name = name.value.trim(), kind = kind, url = value.value.trim()); name.value = ""; value.value = ""
+            val raw = value.value.trim()
+            // "artcall.org/calls" works as typed: the web address gets its https:// added.
+            val url = if (kind == "url" && !raw.startsWith("http")) "https://$raw" else raw
+            val s = Source(name = name.value.trim(), kind = kind, url = url); name.value = ""; value.value = ""
             scope.io { dao.put(s) }
         }) { Text("Add source") }
         Status(status)

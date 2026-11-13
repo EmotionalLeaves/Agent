@@ -3,6 +3,7 @@ package com.emotionalleaves.studioagent.ui
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -60,8 +61,11 @@ fun Letters(nav: NavController) {
             Field("The place (gallery, library, lab)", place)
             Field("Their email (optional)", to)
             Panel { Text(fillLetter(l.subject, them.value, place.value), fontWeight = FontWeight.SemiBold); Text(fillLetter(l.body, them.value, place.value)) }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { Share.email(ctx, to.value.trim(), fillLetter(l.subject, them.value, place.value), fillLetter(l.body, them.value, place.value)) }) { Text("Open in my mail app") }
+                // For a contact form or a message app instead of email.
+                val clip = androidx.compose.ui.platform.LocalClipboardManager.current
+                OutlinedButton(onClick = { clip.setText(androidx.compose.ui.text.AnnotatedString(fillLetter(l.body, them.value, place.value))) }) { Text("Copy the text") }
                 OutlinedButton(onClick = { picked = -1 }) { Text("Choose another letter") }
             }
         }

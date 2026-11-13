@@ -147,6 +147,7 @@ fun Records(nav: NavController) {
             }
             key(saleWork) { Num("Sale price, " + st.currency, salePrice) { salePrice = it } }
             Num("Venue commission, %", saleCommission) { saleCommission = it }
+            if (salePrice > 0) Small("You receive ${money(salePrice * (1 - saleCommission.coerceIn(0.0, 100.0) / 100))}" + (if (saleCommission > 0) " after the venue's ${"%.0f".format(saleCommission)}%." else "."))
             Field("Buyer's name, for the bill of sale", buyer)
             Button(enabled = saleWork != 0L && salePrice > 0, onClick = {
                 val w = works.firstOrNull { it.id == saleWork }
@@ -217,7 +218,7 @@ fun Records(nav: NavController) {
         if (decided.isEmpty()) Note("Your first report appears at the start of a new quarter, once there are results from the one before. Until then there is nothing to analyze.")
         else Panel {
             val acc = decided.count { it.status == "accepted" }
-            Text("Up to ${quarterStart.minusDays(1)}: $acc accepted of ${decided.size} decided", fontWeight = FontWeight.SemiBold)
+            Text("Up to ${fmtDate(Engine.millis(quarterStart.minusDays(1).atTime(12, 0)))}: accepted $acc of ${Texts.count(decided.size, "result")}", fontWeight = FontWeight.SemiBold)
             listOf(1, 2, 3).forEach { t ->
                 val group = decided.filter { a -> opps.firstOrNull { it.id == a.oppId }?.let { Scoring.tier(it) } == t }
                 if (group.isNotEmpty()) Text(listOf("", "Local, campus, online", "Regional", "National and up")[t] + ": ${group.count { it.status == "accepted" }} of ${group.size}")
@@ -228,7 +229,7 @@ fun Records(nav: NavController) {
             if (paid.isNotEmpty()) Text("Paid calls: ${paid.count { it.status == "accepted" }} of ${paid.size}")
         }
         val learned = st.noReasonCounts()
-        if (learned.isNotEmpty()) Note("The ranking has learned from your No answers: " + learned.entries.joinToString(", ") { "${it.key} ×${it.value}" })
+        if (learned.isNotEmpty()) Note("The ranking has learned from your No answers: " + learned.entries.joinToString(", ") { "${mapOf("too far" to "too far", "fee" to "the fee", "wrong vibe" to "not your kind of show")[it.key] ?: it.key} (${it.value})" })
         ReceiptsBody()
     }
 }

@@ -162,3 +162,13 @@ One real change per round. Pushed and built every ten rounds.
 158. Email drafts from the writing help are cleaned the same way before the signature is added.
 159. Short AI tasks (reading a reply, judging fit, reading a venue page) get enough room for the free models, which think before answering.
 160. The live check on the build server now also tries reading a reply and judging fit with the free helper.
+161. Ready-made emails can be copied as text, for a contact form or a message app.
+162. A listing page typed without https:// (artcall.org/calls) works as typed.
+163. Any page the app reads (a call, a venue) works when its address was typed without https://.
+164. A pasted or shared link is recognised even without https:// in front.
+165. The tour's last page asks for your city too (optional), the one fact that brings local calls to the top.
+166. Adding your city later brings calls that name it forward on the next check, not just new ones.
+167. Opening Calls re-ranks the list with your latest details (level, city, rules), so it is never stale.
+168. Recording a sale shows what you receive after the venue's commission, as you type.
+169. The quarterly report shows its date the readable way and says "accepted 2 of 5 results".
+170. What the ranking learned from your No answers reads in the same words as the No choices ("the fee (3)").

@@ -200,6 +200,7 @@ class DomainTest {
         // Numbers typed the way people type them.
         assertEquals(1200.0, Texts.number("$1,200")!!, 0.0); assertEquals(12.5, Texts.number("12,5")!!, 0.0)
         assertEquals(16.0, Texts.number("16 in")!!, 0.0); assertEquals(null, Texts.number("about"))
+        assertTrue(Texts.isLink("artcall.org/calls") && Texts.isLink("https://www.artjobs.com/open-calls?x=1") && !Texts.isLink("Winter Open, deadline Jan 15") && !Texts.isLink("a@b.org"))
         assertTrue(Texts.looksLikeEmail("entries@riverside.org") && !Texts.looksLikeEmail("entries@riverside") && !Texts.looksLikeEmail("a b@c.org"))
         assertEquals("the 150-word statement", com.emotionalleaves.studioagent.work.docWords("statement", "150"))
         assertEquals("the bio", com.emotionalleaves.studioagent.work.docWords("bio", "first"))

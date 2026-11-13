@@ -29,7 +29,9 @@ object Fetch {
     const val AGENT = "StudioAgent/1.0 (personal artist tool; reads a page at most once a day)"
 
     /** [automatic] reads (the daily check) follow robots.txt; a page you open yourself is read like a browser would. */
-    fun html(url: String, automatic: Boolean = true): org.jsoup.nodes.Document {
+    fun html(address: String, automatic: Boolean = true): org.jsoup.nodes.Document {
+        // An address typed without https:// still works.
+        val url = address.trim().let { if (it.startsWith("http://") || it.startsWith("https://")) it else "https://$it" }
         if (automatic && !Robots.allowed(url)) throw Exception("This site asks apps not to read that page")
         val req = Request.Builder().url(url).header("User-Agent", AGENT).header("Accept", "text/html,application/xhtml+xml").build()
         return http.newCall(req).execute().use { r ->

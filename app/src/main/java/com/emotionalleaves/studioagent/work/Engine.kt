@@ -151,7 +151,8 @@ object Engine {
     suspend fun rescore() {
         val p = profile()
         dao.oppsNow().filter { it.status == "new" || it.status == "later" }.forEach { o ->
-            val n = scored(o, p); if (n != o) dao.put(n)
+            // A city added later still brings that city's calls forward.
+            val n = scored(local(o, o.rawText), p); if (n != o) dao.put(n)
         }
     }
 

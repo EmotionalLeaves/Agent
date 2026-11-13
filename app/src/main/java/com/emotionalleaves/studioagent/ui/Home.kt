@@ -532,8 +532,9 @@ fun ShareScreen(nav: NavController) {
         Button(enabled = !busy, modifier = Modifier.fillMaxWidth(), onClick = {
             busy = true; status = "Reading it…"
             scope.io({ status = it; busy = false }) {
-                val t = text.value.trim()
-                val isUrl = t.startsWith("http") && !t.contains(" ")
+                val t0 = text.value.trim()
+                val isUrl = Texts.isLink(t0)
+                val t = if (isUrl && !t0.startsWith("http")) "https://$t0" else t0
                 var bytes: ByteArray? = null
                 if (image != null) {
                     val f = File(ctx.cacheDir, "shared.jpg")

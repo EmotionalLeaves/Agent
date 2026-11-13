@@ -455,6 +455,9 @@ object Texts {
         return x.toDoubleOrNull()
     }
 
+    /** A web address, with or without https:// ("artcall.org/calls"), and nothing else in the text. */
+    fun isLink(t: String): Boolean = Regex("^(https?://)?([\\w-]+\\.)+[a-zA-Z]{2,}(:\\d+)?(/\\S*)?$").matches(t.trim()) && !t.trim().contains('@')
+
     /** A quick check that an address could be an email: something@somewhere.tld, no spaces. */
     fun looksLikeEmail(e: String): Boolean = Regex("^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$").matches(e.trim())
 
