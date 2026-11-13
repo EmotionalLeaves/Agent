@@ -107,6 +107,10 @@ fun MarketDay(nav: NavController) {
                 names = { i -> if (i == "0") "Not prints of a piece" else editions.firstOrNull { it.id.toString() == i }?.let { w -> w.title + " (${w.editionSize - w.editionUsed} of ${w.editionSize} left)" } ?: i }) { forPiece = it.toLongOrNull() ?: 0L; if (name.value.isBlank() && forPiece > 0) name.value = "Prints of " + (editions.firstOrNull { it.id == forPiece }?.title ?: "") }
             if (name.value.isNotBlank() && price > 0) OutlinedButton(onClick = { st.marketItems = Market.itemsText(items + Market.Item(name.value.trim().replace(",", " ").replace(":", " "), price, qty, forPiece)); name.value = ""; forPiece = 0L }) { Text("Add") }
             Num("Booth or table fee, " + st.currency, st.marketFee) { st.marketFee = it }
+            Small("A mix sells best: something under 10, something under 30, and a few originals. Price everything, in plain view.")
+        }
+        // Everything to print for the table, in one folded place.
+        Expand("Things to print: tags, postcards, a sign, cards, a zine") {
             if (items.isNotEmpty() || originals.isNotEmpty()) OutlinedButton(onClick = { scope.io {
                 val f = com.emotionalleaves.studioagent.work.Papers.priceTags(ctx, st, items.map { it.name to it.price } + originals.map { it.title.ifBlank { "Untitled" } to it.price })
                 withContext(Dispatchers.Main) { com.emotionalleaves.studioagent.sys.Share.view(ctx, f, "application/pdf") }
@@ -132,7 +136,6 @@ fun MarketDay(nav: NavController) {
                 val f = com.emotionalleaves.studioagent.work.Papers.zine(ctx, st, st.fullName.ifBlank { "Selected work" }, cards)
                 withContext(Dispatchers.Main) { com.emotionalleaves.studioagent.sys.Share.view(ctx, f, "application/pdf") }
             } }) { Text("A little zine of your pieces (one sheet)") }
-            Small("A mix sells best: something under 10, something under 30, and a few originals. Price everything, in plain view.")
         }
         Field("Where (for the records)", where, { where = it })
         if (tally.isNotEmpty()) Button(onClick = {
