@@ -1044,11 +1044,11 @@ val lightPrompts = listOf(
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
 val whatsNew = listOf(
-    "When it is all too much: in the menu on Today's step, three quiet days with one five-minute step and no notifications. \"Remind me this evening\" is there too.",
-    "Empty your head: everything at once, one line each; it is sorted into jobs, things to buy and ideas, and put away.",
-    "Your people: life drawing, sketch groups and art leagues near you, and a hello for after.",
-    "Teach a class: a beginner class at a library, laid out minute by minute, with supplies, a fair fee and the email.",
-    "Postcards of your pieces to print, from Market day; packing for drop-off day on an accepted entry.",
-    "A studio friend to text when you start; no's that count toward the year's sends; answers you wrote before, offered again.",
-    "An extra shift this week moves your studio times; supplies you bought go into Records in one number."
+    "Firsts are noticed on the day: your first piece, first hour, first entry, first yes, first sale, first opening. A year of making is marked too.",
+    "Three \"Not today\"s in a row offer three quiet days; coming back, Today keeps it to one step.",
+    "Straight from work: a ten-minute reset before a session, and a nudge in 20 minutes. Every 45 minutes, a reminder to step back.",
+    "Foundations goes further: six more weeks (drawing out in the world, from memory, bigger, materials, the next idea, looking at shows).",
+    "A piece's page shows what it earned and what was spent on it; Your prices flags anything below cost after a gallery's share.",
+    "Find anything finds tools, to-dos and settings by name, and answers \"what is...\" from the glossary with no helper needed.",
+    "Market day has a packing list for the table; Teach a class can start where you work; three more ready-made emails, including a fee waiver."
 )

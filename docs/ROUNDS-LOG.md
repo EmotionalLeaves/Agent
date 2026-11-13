@@ -574,3 +574,4 @@ One real change per round. Pushed and built every ten rounds.
 567. What one piece earned. Once a piece has sold, its page shows the money on it: what it sold for, the venue's commission, printing, framing, shipping and any other costs recorded against it, and what you kept.
 568. Before a piece sells, its page says what has been spent on it so far (printing, framing and the like), and whether its price still covers that after a gallery's usual 40 percent, so a price is never quietly below cost.
 569. Your prices lists any piece that would be below cost after a gallery's share: what has been spent on it (printing, framing), what a 40 percent commission would leave, and a one-tap price that covers it (with Undo).
+570. "New in this version" lists what rounds 543 to 569 added.
