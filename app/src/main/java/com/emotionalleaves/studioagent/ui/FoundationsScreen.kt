@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
@@ -25,6 +26,17 @@ fun FoundationsScreen(nav: NavController) {
         Text(if (current == null) "All ${Foundations.weeks.size} weeks done. That is real groundwork, and a body of work." else "${done.size} of ${Foundations.weeks.sumOf { it.exercises.size }} exercises done. This week: ${current.skill}.", style = MaterialTheme.typography.bodyLarge)
         if (current != null) Button(onClick = { nav.navigate("session") }) { Text("Practice the next one") }
         StudyAMaster()
+        // Your practice so far, as pictures: the clearest sign that it is working.
+        val practice by com.emotionalleaves.studioagent.G.dao.sessions().collectAsState(emptyList())
+        val shots = practice.filter { it.kind == "skill" && it.photoPath.isNotBlank() && java.io.File(it.photoPath).exists() }.take(9)
+        if (shots.isNotEmpty()) Panel {
+            Text("Your practice so far", fontWeight = FontWeight.SemiBold)
+            shots.chunked(3).forEach { row -> androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
+                row.forEach { x -> androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.weight(1f)) { PathImage(x.photoPath, androidx.compose.ui.Modifier.fillMaxWidth().height(96.dp), 400, androidx.compose.ui.layout.ContentScale.Crop); Small(fmtDate(x.start)) } }
+                repeat(3 - row.size) { androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.weight(1f)) }
+            } }
+            Small("Take a photo when you stop a practice session and it appears here.")
+        }
         Foundations.weeks.forEach { wk ->
             if (wk.n == 13) Section("Building a body of work")
             val all = wk.exercises.all { it.id in done }

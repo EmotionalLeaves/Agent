@@ -489,3 +489,4 @@ One real change per round. Pushed and built every ten rounds.
 483. Market day items can be prints of one of your pieces: each print sold there counts against that piece's edition (how many are left shows as you add it), and an edition that sells out is marked so.
 484. A call with an email address has "Email the organizer a question": a short, polite note written for you that already asks for whatever the call left out (the deadline, whether there is a fee), with a blank for your own question.
 485. Three no's in a row get a kind word on Today: runs like this are normal, and one change helps most (ask three people which piece is strongest, check the photos, or try a few local calls before the bigger ones). It opens Ask for feedback, and goes once seen until another run begins.
+486. Foundations shows your practice so far as pictures: the photos from your recent practice sessions in a grid with their dates, the clearest sign that it is working.
