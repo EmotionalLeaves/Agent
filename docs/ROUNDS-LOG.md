@@ -631,3 +631,4 @@ One real change per round. Pushed and built every ten rounds.
 624. After ticking "I've been" in Your people, "Remind me to go again next week" puts it on your to-dos a week on. Once is a visit; going again is how people start to know you.
 625. That reminder opens Your people when it comes up on Today.
 626. Your week's description names days off, extra shifts and breaks, so searching "break" or "shift" finds it.
+627. Four more plain answers in Basics (meeting other artists, teaching without being an expert, photographing a drawing or print, what a market table is like), and asking a question with no helper now finds the Basics answer asked much the same way, before naming a tool.

@@ -1531,12 +1531,17 @@ object Engine {
             has("practice", "exercise", "foundation") -> com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone)?.let { "Next exercise: ${it.text}\nGO: session" } ?: "All the weeks of foundations are done. Any exercise from Practice is still there.\nGO: session"
             has("what should i do", "what next", "what do i do", "where do i start", "this weekend", "today") -> nextStep().let { "${it.title}. ${it.detail}" }
             // "What is a juried show?", "What does consignment mean?": the glossary, in plain words.
-            has("what is", "what's", "what are", "what does", "mean", "define", "meaning of") -> glossaryAnswer(q) ?: toolAnswer(q)
+            has("what is", "what's", "what are", "what does", "mean", "define", "meaning of") -> glossaryAnswer(q) ?: basicsAnswer(q) ?: toolAnswer(q)
             // "How do I price my work?", "Where can I make postcards?": the tool that does it.
-            has("how do i", "how can i", "where do i", "where can i", "can the app", "is there a way", "help me") -> toolAnswer(q) ?: glossaryAnswer(q)
-            else -> null
+            has("how do i", "how can i", "where do i", "where can i", "can the app", "is there a way", "help me") -> basicsAnswer(q) ?: toolAnswer(q) ?: glossaryAnswer(q)
+            else -> basicsAnswer(q)
         }
     }
+
+    /** The plain answer in Basics to a question asked much the same way. */
+    fun basicsAnswer(q: String): String? = com.emotionalleaves.studioagent.ui.basics
+        .map { it to com.emotionalleaves.studioagent.domain.AnswerBank.likeness(q, it.first) }.filter { it.second >= 0.5 }
+        .maxByOrNull { it.second }?.first?.second
 
     /** The glossary entry a question names: its main words or the words in brackets ("Call for art (open call)"). */
     fun glossaryAnswer(q: String): String? = com.emotionalleaves.studioagent.ui.glossary.firstOrNull { (term, _) ->

@@ -822,6 +822,9 @@ class PartsTest {
         assertTrue(E.toolAnswer("how do i make postcards")!!.endsWith("GO: market"))
         assertTrue(E.toolAnswer("where can i teach a class")!!.endsWith("GO: teach"))
         assertEquals(null, E.toolAnswer("how do i"))
+        assertTrue(E.basicsAnswer("how do i meet other artists")!!.startsWith("In person"))
+        assertTrue(E.basicsAnswer("can i teach a class if i am not an expert")!!.startsWith("Yes."))
+        assertEquals(null, E.basicsAnswer("what is the weather like"))
     }
 
     @Test fun aTiffForThePrintLab() {

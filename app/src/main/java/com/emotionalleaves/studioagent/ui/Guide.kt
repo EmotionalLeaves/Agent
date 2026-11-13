@@ -180,6 +180,10 @@ fun Guide(nav: NavController) {
 
 
 val basics = listOf(
+    "How do I meet other artists?" to "In person, in the easy places: a drop-in life drawing session, an Urban Sketchers group, the local art league, a museum sketching day. Go twice; the second time people say hello. Your people (Everything the app can do, Showing it) finds them near you.",
+    "Can I teach a class without being an expert?" to "Yes. A beginner class needs someone a few steps ahead who is kind and organized. Libraries, community centers and staff wellness programs look for exactly that. Teach a class lays one out minute by minute, with the supplies, a fair fee and the email.",
+    "How do I photograph a drawing or print?" to "Flat pieces can be scanned: on the piece's page, Scan a flat piece finds the edges and squares the picture for you. For canvases and framed work, photograph by a big window on an overcast day, phone square to the piece, then straighten it.",
+    "What is a market or fair table like?" to "A table for a day, a booth fee, and a lot of people walking past. Small prints and cards sell most; originals sell now and then. Market day has a packing list, price tags, postcards and a sign, and counts sales with one tap.",
     "Do I need to know how the art world works?" to "No. The app is built so you can start knowing nothing. Wherever it asks something you cannot answer, there is a \"not sure\" or \"decide for me\" choice, and it picks a safe default.",
     "What is an open call?" to "An invitation from a gallery, art center, library, magazine or fair for artists to send in work for a show. You apply by a deadline and they choose what goes in. It is the normal way to get a first exhibition.",
     "What does \"juried\" mean?" to "One or more named people, the jurors, pick the work. That is the good, normal kind. If paying a fee guarantees you a place, nobody is choosing, and it does little for you. The app holds those back.",
