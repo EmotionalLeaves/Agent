@@ -1,5 +1,17 @@
 package com.emotionalleaves.studioagent.ui
 
+import com.emotionalleaves.studioagent.domain.Texts
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.Icons
@@ -61,6 +73,7 @@ fun WeekScreen(nav: NavController) {
 
     Screen("Your week", nav) {
         Intro("week", "These are the times the app books for making work. They are a plan, not a test: skip one and nothing is marked missed. Change anything here to fit your real life.")
+        MonthView(events, nav)
         Status(status)
         H("Studio times")
         if (!custom) {
@@ -184,6 +197,76 @@ fun SessionsScreen(nav: NavController) {
                 note.value = ""
                 scope.io { dao.put(s) }
             }) { Text("Log this session") }
+        }
+    }
+}
+
+/** What a dated thing is, as a mark color and a word: making time, a deadline, or something for a show. */
+private fun evtKind(type: String): Int = when (type) { "studio" -> 0; "deadline", "submit", "pack" -> 1; else -> 2 }
+
+/**
+ * The month at a glance: every studio time, deadline and show step as a small mark on its day.
+ * Tap a day to see what is on it; tap an item to open it.
+ */
+@Composable
+fun MonthView(events: List<com.emotionalleaves.studioagent.data.Evt>, nav: NavController) {
+    val cs = MaterialTheme.colorScheme
+    val today = LocalDate.now()
+    var month by remember { mutableStateOf(today.withDayOfMonth(1)) }
+    var picked by remember { mutableStateOf(today) }
+    val open = events.filter { !it.done && it.date > 0 }
+    val byDay = open.groupBy { Engine.date(it.date) }
+    val markColors = listOf(cs.primary, cs.error, cs.tertiary)
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cs.surfaceContainerLowest).padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { month = month.minusMonths(1) }) { Text("Earlier") }
+            Text(month.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) + " " + month.year,
+                Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center, style = MaterialTheme.typography.titleMedium)
+            TextButton(onClick = { month = month.plusMonths(1) }) { Text("Later") }
+        }
+        Row(Modifier.fillMaxWidth()) { listOf("M", "T", "W", "T", "F", "S", "S").forEach { Text(it, Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant) } }
+        val first = month.dayOfWeek.value - 1
+        val days = month.lengthOfMonth()
+        (0 until (first + days + 6) / 7).forEach { week ->
+            Row(Modifier.fillMaxWidth()) {
+                (0..6).forEach { col ->
+                    val n = week * 7 + col - first + 1
+                    if (n < 1 || n > days) Spacer(Modifier.weight(1f).height(44.dp))
+                    else {
+                        val d = month.withDayOfMonth(n)
+                        val marks = byDay[d].orEmpty().map { evtKind(it.type) }.distinct().sorted()
+                        val sel = d == picked
+                        Column(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp)).background(if (sel) cs.secondaryContainer else androidx.compose.ui.graphics.Color.Transparent)
+                            .clickable(onClickLabel = "Show this day") { picked = d }
+                            .semantics(mergeDescendants = true) { contentDescription = d.toString() + if (marks.isEmpty()) "" else ", " + Texts.count(byDay[d].orEmpty().size, "item") },
+                            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                            Text("$n", style = MaterialTheme.typography.bodyMedium, fontWeight = if (d == today) FontWeight.Bold else FontWeight.Normal,
+                                color = if (d.isBefore(today)) cs.onSurfaceVariant else cs.onSurface)
+                            Row(horizontalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.height(8.dp).padding(top = 2.dp)) {
+                                marks.forEach { k -> Box(Modifier.size(5.dp).clip(androidx.compose.foundation.shape.CircleShape).background(markColors[k])) }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            listOf("Making time", "Deadlines", "Shows").forEachIndexed { k, label ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Box(Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape).background(markColors[k])); Text(label, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                }
+            }
+        }
+        Hair()
+        val items = byDay[picked].orEmpty().sortedBy { it.date }
+        Text(fmtDate(Engine.millis(picked.atTime(12, 0))), style = MaterialTheme.typography.titleSmall)
+        if (items.isEmpty()) Small("Nothing on this day.")
+        items.forEach { e ->
+            Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).clickable(enabled = e.applId > 0) { nav.navigate("appl/${e.applId}") }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape).background(markColors[evtKind(e.type)]))
+                Text(e.title.ifBlank { if (e.type == "studio") "Studio time" else e.type }, Modifier.weight(1f))
+                if (e.type == "studio") Text(clock(e.date), color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

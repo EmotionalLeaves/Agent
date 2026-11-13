@@ -282,3 +282,5 @@ One real change per round. Pushed and built every ten rounds.
 275. New listing sites reach existing installs on their own, and a site you removed is never put back.
 276. New: Studio update. A short email to your email list, drafted from what is true (new finished work since the last one, shows you got into, with venue, city and dates), with small copies of the new pictures attached, sent to yourself with the list blind-copied so no one sees anyone else's address.
 277. New: a printable sign-up sheet (name and email lines, and the promise that makes people sign) for a clipboard at an opening, so the list grows in person.
+278. New: a month calendar at the top of Your week. Every studio time, deadline and show step is a colored mark on its day (making time, deadlines, shows), with a key; tap a day to see what is on it and open it.
+279. With an opening in the next three weeks and people on your email list, Today's step is to tell them, with the note already drafted.

@@ -963,6 +963,14 @@ object Engine {
                 val t = dao.oppsNow().firstOrNull { it.id == a.oppId }?.title.orEmpty().ifBlank { "an entry" }
                 return NextStep("Heard back from $t?", "Six weeks since you sent it. If a result came, one tap records it. If not, there is nothing to do; this stops asking after three months.", "appl/${a.id}")
             }
+        // An opening coming up and people who asked to hear: tell them, once, about three weeks ahead.
+        dao.eventsNow().filter { it.type == "task" && !it.done && it.title.contains("opening", true) && it.date in now..(now + 24 * DAY) }.minByOrNull { it.date }?.let { e ->
+            val subs = dao.contactsNow().count { it.kind == "subscriber" && Texts.looksLikeEmail(it.email) }
+            if (subs > 0 && st.lastNewsletter < e.date - 30 * DAY) {
+                val t = dao.oppsNow().firstOrNull { it.id == e.oppId }?.title.orEmpty().ifBlank { "your show" }
+                return NextStep("Tell your email list about $t", "${Texts.count(subs, "person", "people")} asked to hear about your shows. The note is drafted; read it and send.", "update")
+            }
+        }
         // A weekend with nothing pressing: one real place near you to go and look at. Looking is the whole step.
         if (today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY)
             dao.contactsNow().filter { it.status == "research" && it.revisitAt < now && it.kind != "subscriber" && it.notes.contains("OpenStreetMap") }
