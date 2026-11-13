@@ -85,6 +85,8 @@ fun Nearby(nav: NavController, startWithLabs: Boolean = false) {
                 found = list
                 NearbyCache.key = town.value.trim() + "|" + reach + "|" + labs; NearbyCache.list = list
                 if (st.city.isBlank()) st.city = town.value.substringBefore(',').trim()
+                // The state comes with it, so calls limited to other states can be held back.
+                if (st.region.isBlank() && Places.lastState.isNotBlank()) st.region = Places.lastState
                 status = if (list.isEmpty()) "Nothing marked on the map within ${distanceWords(reach.toDouble())}. Try further, or a bigger town nearby." else "${Texts.count(list.size, "place")} found, nearest first."
                 busy = false
             }

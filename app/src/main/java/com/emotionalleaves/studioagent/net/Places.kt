@@ -27,10 +27,13 @@ object Places {
     var geocodeUrl = "https://nominatim.openstreetmap.org/search"
     var overpassUrl = "https://overpass-api.de/api/interpreter"
 
+    /** The state the last located town is in, when the map knows it. */
+    @Volatile var lastState: String = ""
+
     /** Latitude and longitude of a town, or null when it cannot be found. */
     fun locate(place: String): Pair<Double, Double>? {
         if (place.isBlank()) return null
-        val url = "$geocodeUrl?format=json&limit=1&q=" + URLEncoder.encode(place, "UTF-8")
+        val url = "$geocodeUrl?format=json&limit=1&addressdetails=1&q=" + URLEncoder.encode(place, "UTF-8")
         val body = http.newCall(Request.Builder().url(url).header("User-Agent", AGENT).build()).execute().use { r ->
             if (!r.isSuccessful) throw Exception("The map search returned ${r.code}")
             r.body?.string().orEmpty()
@@ -38,6 +41,7 @@ object Places {
         val a = JSONArray(body)
         if (a.length() == 0) return null
         val o = a.getJSONObject(0)
+        lastState = o.optJSONObject("address")?.optString("state").orEmpty()
         return o.getString("lat").toDouble() to o.getString("lon").toDouble()
     }
 
