@@ -264,4 +264,15 @@ class AppTest {
         assertEquals(3, tasks.map { Engine.date(it.date) }.toSet().size) // two a day
         assertTrue(dao.eventsNow().first { it.type == "submit" }.date < now)
     }
+
+    @Test fun theYearsEntriesAreAnsweredOnThePhone() = runBlocking {
+        ctx
+        val dao = G.dao; val now = System.currentTimeMillis()
+        dao.put(Appl(oppId = 1, submittedAt = now, status = "declined"))
+        dao.put(Appl(oppId = 2, submittedAt = now, status = "accepted"))
+        dao.put(Appl(oppId = 3, submittedAt = now, status = "submitted"))
+        dao.put(Appl(oppId = 4, status = "draft"))
+        val a = Engine.answerLocally("How many entries have I sent this year?")!!
+        assertTrue(a, a.startsWith("This year: 3 entries sent of the 24 you aimed for; 1 yes, 1 no, 1 still to hear."))
+    }
 }
