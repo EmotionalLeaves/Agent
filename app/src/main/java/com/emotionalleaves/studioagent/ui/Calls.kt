@@ -564,7 +564,9 @@ fun ApplScreen(nav: NavController, id: Long) {
                 val note = docsAll.firstOrNull { it.type == "note" && it.title == key }
                 var lines by remember(id, note?.id) { mutableStateOf(note?.text.orEmpty()) }
                 Expand("After the show: two lines for next time") {
-                    Field("What went well, and one thing to do differently", lines, { t -> lines = t; scope.io { dao.put((note ?: com.emotionalleaves.studioagent.data.Doc(type = "note", title = key)).copy(text = t, updatedAt = now())) } }, lines = 3, mic = true)
+                    var noteId by remember(id) { mutableStateOf(note?.id ?: 0L) }
+                    Field("What went well, and one thing to do differently", lines, { t -> lines = t; val nid = noteId
+                        scope.io { val saved = dao.put(com.emotionalleaves.studioagent.data.Doc(id = nid, type = "note", title = key, text = t, updatedAt = now())); if (nid == 0L) noteId = saved } }, lines = 3, mic = true)
                     Small("Read it before the next show. It is how each one gets easier.")
                 }
             }
