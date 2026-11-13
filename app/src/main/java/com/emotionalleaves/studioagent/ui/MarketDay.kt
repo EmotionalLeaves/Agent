@@ -126,6 +126,9 @@ fun MarketDay(nav: NavController) {
             Small("A mix sells best: something under 10, something under 30, and a few originals. Price everything, in plain view.")
         }
         Field("Where (for the records)", where, { where = it })
-        if (tally.isNotEmpty()) Button(onClick = { scope.io { val t = Engine.closeMarket(where.trim()); st.marketPacked = ""; withContext(Dispatchers.Main) { closed = "Day closed: ${money(t)} recorded in Records. What is left over is kept for next time." } } }, modifier = Modifier.heightIn(min = 56.dp)) { Text("Close the day") }
+        if (tally.isNotEmpty()) Button(onClick = {
+            // What sold best, said before the tally is cleared: the one thing to bring more of next time.
+            val best = tally.maxByOrNull { it.value }?.let { (k, n) -> (if (k.startsWith("m:")) k.removePrefix("m:") else originals.firstOrNull { "w:${it.id}" == k }?.title?.ifBlank { "an original" } ?: "an original") to n }
+            scope.io { val t = Engine.closeMarket(where.trim()); st.marketPacked = ""; withContext(Dispatchers.Main) { closed = "Day closed: ${money(t)} recorded in Records." + (best?.takeIf { it.second > 1 }?.let { " Sold best: ${it.first} (${it.second}). Bring more of those next time." } ?: "") + " What is left over is kept for next time." } } }, modifier = Modifier.heightIn(min = 56.dp)) { Text("Close the day") }
     }
 }
