@@ -487,6 +487,8 @@ fun ApplScreen(nav: NavController, id: Long) {
                 }
             }
             if (loaded.status == "accepted") {
+                // On the night: the phone becomes the sign-up sheet.
+                OutlinedButton(onClick = { nav.navigate("opening") }) { Text("At the opening: a code to scan") }
                 // Before the opening: what to say, in your own words, for a glance on the way in.
                 var talk by remember(id) { mutableStateOf("") }
                 if (G.ai.ready && loaded.statement.isNotBlank()) {

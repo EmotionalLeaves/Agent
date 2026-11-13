@@ -378,3 +378,5 @@ One real change per round. Pushed and built every ten rounds.
 372. Good calls come back every year: one that closed is remembered as "Watch for: Winter Open" a month before it closed last year, on your calendar and in Today's next seven days, linking to last year's call.
 373. A screen for something that no longer exists (an old call, a removed piece) says so after a moment instead of loading forever.
 374. New: Find anything (on You). One box finds a piece, a call, a venue or person, or a document by any word, each opening where it lives.
+375. The screenshot and spoken-label checks cover Find anything and Portfolio order.
+376. New: At the opening. Your phone shows a big code people scan to join your list (or see your page), and a two-box form to add someone on the spot; from any show's page.

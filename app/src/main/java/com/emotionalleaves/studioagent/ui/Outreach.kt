@@ -1,5 +1,8 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.FlowRow
@@ -513,5 +516,37 @@ fun PlanShow(nav: NavController, contactId: Long) {
                 withContext(Dispatchers.Main) { nav.navigate("appl/$id") { popUpTo("outreach") } }
             }
         }) { Text("Make the plan") }
+    }
+}
+
+/**
+ * For your phone at an opening or a table: a big code people scan to join your list or see your page,
+ * and a two-box form to add someone who would rather say their email out loud.
+ */
+@Composable
+fun AtTheOpening(nav: NavController) {
+    val scope = rememberCoroutineScope()
+    val name = rememberSaveable { mutableStateOf("") }
+    val mail = rememberSaveable { mutableStateOf("") }
+    var added by remember { mutableStateOf(0) }
+    var showPage by rememberSaveable { mutableStateOf(false) }
+    val join = if (st.email.isNotBlank()) "mailto:${st.email}?subject=" + java.net.URLEncoder.encode("Please add me to your studio news", "UTF-8").replace("+", "%20") else ""
+    val page = st.website.let { if (it.isBlank() || it.startsWith("http")) it else "https://$it" }
+    val code = if (showPage && page.isNotBlank()) page else join.ifBlank { page }
+    val bmp = remember(code) { if (code.isBlank()) null else com.emotionalleaves.studioagent.media.Qr.bitmap(code, 700)?.asImageBitmap() }
+    Screen("At the opening", nav) {
+        Text(if (code == page) "Scan to see my work" else "Scan to hear about my next show", style = MaterialTheme.typography.headlineSmall)
+        if (bmp != null) androidx.compose.foundation.Image(bmp, "Code to scan", Modifier.fillMaxWidth().aspectRatio(1f).background(androidx.compose.ui.graphics.Color.White).padding(16.dp))
+        else Small("Add your email in You, Settings, Your details, and the code appears here.")
+        if (join.isNotBlank() && page.isNotBlank()) TextButton(onClick = { showPage = !showPage }) { Text(if (showPage) "Show the sign-up code" else "Show the code for my page") }
+        Section("Or add them here")
+        Field("Name", name)
+        Field("Email", mail)
+        Button(enabled = Texts.looksLikeEmail(mail.value), onClick = {
+            val c = Contact(name = name.value.trim(), email = mail.value.trim(), kind = "subscriber", status = "subscriber", notes = "Signed up at an opening, ${fmtDate(now())}.", createdAt = now())
+            name.value = ""; mail.value = ""; added++
+            scope.io { if (dao.contactsNow().none { it.email.equals(c.email, true) }) dao.put(c) }
+        }) { Text("Add to my list") }
+        if (added > 0) Small("${Texts.count(added, "person", "people")} added tonight.")
     }
 }

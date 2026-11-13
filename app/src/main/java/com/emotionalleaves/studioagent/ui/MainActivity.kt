@@ -217,6 +217,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("update") { UpdateScreen(nav) }
             composable("order") { PortfolioOrder(nav) }
             composable("search") { SearchScreen(nav) }
+            composable("opening") { AtTheOpening(nav) }
             composable("plan/{id}") { PlanShow(nav, it.id()) }
             composable("jury/{id}") { JuryView(nav, it.id()) }
             composable("contact/{id}") { ContactScreen(nav, it.id()) }
