@@ -1379,6 +1379,14 @@ object Dump {
         if ("today" in words || "tonight" in words) return today
         if ("tomorrow" in words) return today.plusDays(1)
         if (low.contains("next week")) return today.plusDays((8 - today.dayOfWeek.value).toLong())
+        // A date written out: "nov 20", "20 november", "11/20", "the 20th" (the next one that has not passed).
+        val months = listOf("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
+        fun next(m: Int, d: Int): LocalDate? = runCatching { LocalDate.of(today.year, m, d).let { if (it.isBefore(today)) it.plusYears(1) else it } }.getOrNull()
+        Regex("\\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.? (\\d{1,2})(st|nd|rd|th)?\\b").find(low)?.let { m -> next(months.indexOf(m.groupValues[1]) + 1, m.groupValues[2].toInt())?.let { return it } }
+        Regex("\\b(\\d{1,2})(st|nd|rd|th)? (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)").find(low)?.let { m -> next(months.indexOf(m.groupValues[3]) + 1, m.groupValues[1].toInt())?.let { return it } }
+        Regex("\\b(\\d{1,2})/(\\d{1,2})\\b").find(low)?.let { m -> next(m.groupValues[1].toInt(), m.groupValues[2].toInt())?.let { return it } }
+        Regex("\\bthe (\\d{1,2})(st|nd|rd|th)\\b").find(low)?.let { m -> val d = m.groupValues[1].toInt()
+            runCatching { today.withDayOfMonth(d).let { if (it.isBefore(today)) it.plusMonths(1).withDayOfMonth(d) else it } }.getOrNull()?.let { return it } }
         words.firstNotNullOfOrNull { days[it] }?.let { d ->
             val ahead = ((d.value - today.dayOfWeek.value) + 7) % 7
             return today.plusDays(if (ahead == 0) 7L else ahead.toLong())

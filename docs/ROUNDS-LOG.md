@@ -618,3 +618,4 @@ One real change per round. Pushed and built every ten rounds.
 611. Booked? Once a venue says yes, give Teach a class the date: the class goes on your to-dos, a shopping day three days before it, and every supply for that many people onto your supplies list as needed.
 612. Foundations lets you move on: the week you are on has "Move on to the next week", which ticks off what is left of it. Doing every exercise is not the point; moving on is part of practice.
 613. The first day of a break from work, Today says so once: every day until then is free, a good stretch for a bigger piece, a few Foundations weeks, or more studio hours if you want them (opening Your week).
+614. Empty your head reads dates written out too: "deliver the work Nov 20", "opening 3 December", "renew by 1/5", "pay it on the 20th" each land on that day (the next one that has not passed).
