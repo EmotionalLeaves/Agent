@@ -825,6 +825,8 @@ object Engine {
         val pickup = show?.let { (a, _) -> dao.eventsNow().filter { it.applId == a.id && it.type == "task" && Regex("pick.?up|take.?down|collect", RegexOption.IGNORE_CASE).containsMatchIn(it.title) }.maxOfOrNull { it.date } }
         val day = (pickup ?: (now + 14 * DAY)).coerceAtLeast(now + DAY)
         dao.put(Evt(type = "task", title = "Get ${w.title.ifBlank { "the piece" }} to ${buyer.ifBlank { "the buyer" }}", date = day, oppId = show?.second?.id ?: 0, applId = show?.first?.id ?: 0, artworkId = w.id))
+        // When the venue takes the payment: a check a month after the show that it has reached you.
+        show?.let { (a, o) -> dao.put(Evt(type = "task", title = "Check ${o.venue.ifBlank { o.organiser.ifBlank { o.title } }} has paid you for ${w.title.ifBlank { "the piece" }}", date = day + 30 * DAY, oppId = o.id, applId = a.id, artworkId = w.id)) }
         return price * (1 - pct / 100)
     }
 

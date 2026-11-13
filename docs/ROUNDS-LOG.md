@@ -508,3 +508,4 @@ One real change per round. Pushed and built every ten rounds.
 502. All calls can be narrowed to "Near me or online": calls in towns within sixty miles of yours, plus online ones, once the map knows the towns.
 503. Ideas parked more than four months ago can be looked through now and then: keep the ones that still pull at you (they move to the top) and let the rest go, with one plain line that letting an idea go is not losing it.
 504. A show you got into has "Before you sign their agreement": seven plain things to look for (the commission and on which sales, when you are paid, insurance, delivery and return costs, the return date, image use limited to promotion, no long ban on showing nearby), and that asking about any of them is normal.
+505. A sale at a show also puts a check on your week a month after the show: that the venue has paid you for the piece, with a one-tap polite note to ask if it has not.

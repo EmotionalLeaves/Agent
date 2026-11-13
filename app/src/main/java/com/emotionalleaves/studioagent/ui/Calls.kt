@@ -621,6 +621,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                                     t.contains("prints and frames") || t.startsWith("order print") -> "Find a lab" to { nav.navigate("nearby/labs") }
                                     t.contains("hanging kit") -> "See the list" to { nav.navigate("basics") }
                                     t.contains("deliver") || t.contains("ask about delivery") -> "Ask about delivery" to { letter("Ask about delivery details") }
+                                    t.startsWith("check") && t.contains("paid you") -> "Ask about payment" to { letter("Ask about payment for a sale") }
                                     else -> null
                                 }
                                 act?.let { (label, go) -> TextButton(onClick = go, modifier = Modifier.offset(x = (-12).dp)) { Text(label) } }
