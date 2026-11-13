@@ -471,7 +471,8 @@ fun SessionScreen(nav: NavController) {
                 }
             }
             if (goal > 0 && secs >= goal * 60L) Panel(strong = true) { Text("That is your $goal minutes. Stopping now is a complete session. Keep going only if you want to.") }
-            Text(work?.title?.ifBlank { "Untitled" } ?: (if (st.sessionKind == "skill") "Practice" else "Light session"), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)            if (work == null && st.sessionKind in setOf("skill", "light") && st.practiceText.isNotBlank()) Text(st.practiceText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
+            Text(work?.title?.ifBlank { "Untitled" } ?: (if (st.sessionKind == "skill") "Practice" else "Light session"), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            if (work == null && st.sessionKind in setOf("skill", "light") && st.practiceText.isNotBlank()) Text(st.practiceText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
 
             if (work != null) {
                 val steps = Texts.steps(work.steps)
