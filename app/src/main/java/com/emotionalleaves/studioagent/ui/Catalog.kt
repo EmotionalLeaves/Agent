@@ -330,7 +330,14 @@ fun WorkDetail(nav: NavController, id: Long) {
             status = (if (photo) "Photo added and color-corrected. Straighten it next if the edges are not square." else "File imported at $pw × $ph px.") +
                 (if (looks.isNotEmpty()) " " + looks.joinToString(" ") else "") +
                 // Juries usually ask for 1920 px or more on the long side; say so now, not on the day of a deadline.
-                (if (maxOf(pw, ph) in 1..1599) " It is small for calls, which often want 1920 px on the long side. The original file or a closer photo will look better to a juror." else "")
+                (if (maxOf(pw, ph) in 1..1599) " It is small for calls, which often want 1920 px on the long side. The original file or a closer photo will look better to a juror." else "") +
+                // A third retake in a day that passes every check: said plainly that this one is good enough.
+                run {
+                    val k = "${w.id}:${LocalDate.now()}"
+                    val n = (st.retakes.split(",").firstOrNull { it.startsWith("$k:") }?.substringAfterLast(":")?.toIntOrNull() ?: 0) + 1
+                    st.retakes = (st.retakes.split(",").filter { it.isNotBlank() && it.substringBeforeLast(":").substringAfter(":") == LocalDate.now().toString() && !it.startsWith("$k:") } + "$k:$n").joinToString(",")
+                    if (n >= 3 && looks.isEmpty() && maxOf(pw, ph) >= 1600) " It passed every check. This picture is good enough to send; a juror will not see what a fourth would change." else ""
+                }
         }
     }
 
