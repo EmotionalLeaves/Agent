@@ -1262,6 +1262,14 @@ object Engine {
                 }
                 continue
             }
+            // A stranger's offer with the signs of a known scheme (overpaying buyer, paid feature, pay-to-show): said once, plainly.
+            val signs = com.emotionalleaves.studioagent.domain.Offers.check(m.subject + "\n" + m.text)
+            if (signs.any { it.serious } && dao.contactsNow().none { it.email.equals(m.from, true) }) {
+                Notifier.post(ctx, st, 450 + (m.date % 40).toInt(), "Careful with this email", "From ${m.from}: " + signs.first { it.serious }.what.substringBefore(".") + ".", "check")
+                st.log("Flagged an email from ${m.from} with the signs of a known scheme.")
+                st.checkText = ("From: " + m.from + "\n" + m.subject + "\n\n" + m.text).take(4000)
+                continue
+            }
             val src = sources.firstOrNull { m.from.contains(it.url.trim(), ignoreCase = true) }
             // With AI the email is read properly; without it the plain reader still picks out title, deadline, fee and link.
             if (src != null) {

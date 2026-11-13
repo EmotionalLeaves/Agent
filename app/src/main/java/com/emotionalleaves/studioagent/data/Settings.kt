@@ -196,6 +196,8 @@ class Settings(ctx: Context) {
     var findableDone by S("findableDone")
     /** Towns found on the map: "town|lat|lon" per line, so each is looked up once. */
     var geoCache by S("geoCache")
+    /** A flagged email's words, waiting to be shown on the offer check. */
+    var checkText by S("checkText")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

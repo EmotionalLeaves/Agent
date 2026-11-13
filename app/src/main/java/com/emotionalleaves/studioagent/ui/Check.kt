@@ -12,7 +12,8 @@ import com.emotionalleaves.studioagent.domain.Offers
 /** Paste a message, invitation or offer: the signs of the usual schemes aimed at artists, named in plain words. */
 @Composable
 fun OfferCheck(nav: NavController) {
-    val text = rememberSaveable { mutableStateOf("") }
+    // A flagged email arrives already pasted; it is shown once.
+    val text = rememberSaveable { mutableStateOf(st.checkText.also { if (it.isNotBlank()) st.checkText = "" }) }
     Screen("Is this offer real?", nav) {
         Intro("check", "Paste an email or message: a buyer, a gallery invitation, a magazine feature, an award. It is checked on your phone for the signs of the usual schemes aimed at artists. Nothing is sent anywhere.")
         Field("Paste the message here", text, lines = 8)
