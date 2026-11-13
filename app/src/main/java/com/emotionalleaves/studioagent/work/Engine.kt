@@ -1407,6 +1407,32 @@ object Engine {
         return b.toString().take(6000)
     }
 
+    /**
+     * Plain answers to the commonest questions about your own situation, worked out on the phone: for when the writing
+     * helper is off or does not answer. Null when the question is not one of these.
+     */
+    suspend fun answerLocally(question: String): String? {
+        val q = question.lowercase(); val now = System.currentTimeMillis()
+        fun has(vararg w: String) = w.any { q.contains(it) }
+        return when {
+            has("deadline", "due", "closes", "close next") -> dao.eventsNow().filter { it.type == "submit" && !it.done && it.date > now }.minByOrNull { it.date }?.let { e ->
+                "Your next deadline: ${e.title}, ${com.emotionalleaves.studioagent.ui.fmtDate(e.date)} (${Planner.weekendsLeft(LocalDate.now(), date(e.date))}).\nGO: calls" }
+                ?: "No entry has a deadline coming up. Calls that fit you are in Open Calls.\nGO: calls"
+            has("sold", "sales", "earn", "made this year", "money") -> {
+                val y = LocalDate.now().year; val l = dao.ledgerNow().filter { date(it.date).year == y }
+                val inn = l.filter { it.amount > 0 }.sumOf { it.amount }; val out = -l.filter { it.amount < 0 }.sumOf { it.amount }
+                "This year: ${money(inn)} in, ${money(out)} in costs, so ${if (inn - out >= 0) "${money(inn - out)} ahead" else "${money(out - inn)} behind"}.\nGO: records"
+            }
+            has("how many pieces", "how many works", "finished pieces", "ready to send") -> {
+                val w = dao.artworksNow()
+                "${Texts.count(w.count { available(it) }, "piece")} ready to send, ${w.count { it.status == "in_progress" }} in progress, ${w.count { it.status == "idea" }} ideas.\nGO: works"
+            }
+            has("practice", "exercise", "foundation") -> com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone)?.let { "Next exercise: ${it.text}\nGO: session" } ?: "All twelve weeks of foundations are done. Any exercise from Practice is still there.\nGO: session"
+            has("what should i do", "what next", "what do i do", "where do i start", "this weekend", "today") -> nextStep().let { "${it.title}. ${it.detail}" }
+            else -> null
+        }
+    }
+
     private fun statusWord(s: String) = when (s) { "in_progress" -> "in progress"; "documented", "available" -> "ready to send"; "pending" -> "out on a call"; else -> s.replace('_', ' ') }
 
     /** The single thing shown on the home screen. */

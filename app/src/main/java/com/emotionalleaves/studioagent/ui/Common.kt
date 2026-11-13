@@ -493,7 +493,13 @@ fun SearchScreen(nav: NavController) {
         val question = q.value.trim().let { t -> t.length > 8 && (t.endsWith("?") || Regex("^(how|what|when|where|which|who|why|should|can|could|do|does|is|am|are|will|would)\\b", RegexOption.IGNORE_CASE).containsMatchIn(t)) }
         if (question) androidx.compose.material3.Button(enabled = !asking, onClick = {
             asking = true; answer = "Thinking it over…"
-            scope.io({ answer = it; asking = false }) { val a = G.ai.askAnything(com.emotionalleaves.studioagent.work.Engine.snapshot(), q.value.trim()); answer = a; asking = false }
+            scope.io({ answer = it; asking = false }) {
+                val question = q.value.trim()
+                // With the helper: a full answer. Without it, or when it does not answer: the common questions are worked out on the phone.
+                val a = if (G.ai.ready) try { G.ai.askAnything(com.emotionalleaves.studioagent.work.Engine.snapshot(), question) } catch (e: Exception) { null } else null
+                answer = a ?: com.emotionalleaves.studioagent.work.Engine.answerLocally(question) ?: "That one needs the writing helper, which is not answering just now. Try again in a minute, or turn it on in Settings."
+                asking = false
+            }
         }) { Text("Ask") }
         if (answer.isNotBlank()) {
             val go = Regex("(?m)^\\s*GO:\\s*(\\w+)\\s*$").find(answer)?.groupValues?.get(1)?.lowercase()

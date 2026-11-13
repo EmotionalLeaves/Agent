@@ -721,6 +721,18 @@ class PartsTest {
         assertTrue(!html.contains("<Cooler>"))
     }
 
+    @Test fun commonQuestionsAreAnsweredOnThePhone() = kotlinx.coroutines.runBlocking {
+        ctx
+        val E = com.emotionalleaves.studioagent.work.Engine
+        G.dao.put(com.emotionalleaves.studioagent.data.Ledger(kind = "sale", amount = 300.0, date = System.currentTimeMillis()))
+        G.dao.put(com.emotionalleaves.studioagent.data.Ledger(kind = "fee", amount = -25.0, date = System.currentTimeMillis()))
+        val money = E.answerLocally("How much have I sold this year?")!!
+        assertTrue(money, money.startsWith("This year: ${G.settings.currency}300 in, ${G.settings.currency}25 in costs"))
+        assertTrue(E.answerLocally("when is my next deadline?")!!.contains("GO: calls"))
+        assertTrue(E.answerLocally("what exercise is next?")!!.startsWith("Next exercise: Draw a chair"))
+        assertEquals(null, E.answerLocally("Who painted the Mona Lisa?"))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!
