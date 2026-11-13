@@ -301,7 +301,7 @@ object Engine {
                 val s = millis(start); val e = millis(start.plusMinutes(slot.minutes.toLong()))
                 val calId = if (st.useCalendar) Cal.add(ctx, "Studio time", s, e, "Planned by Studio Agent from your own week.") else 0L
                 dao.put(Evt(type = "studio", title = "Studio time", date = s, endDate = e, calendarId = calId))
-                remind(ctx, s, now)
+                remind(ctx, s, now, slot.minutes)
                 continue
             }
             if (start.toLocalDate() in planned) continue
@@ -313,7 +313,7 @@ object Engine {
             val calId = if (st.useCalendar) Cal.add(ctx, "Studio time", s, e, "Planned by Studio Agent. Move it if you need to.") else 0L
             dao.put(Evt(type = "studio", title = "Studio time", date = s, endDate = e, calendarId = calId))
             planned += start.toLocalDate()
-            remind(ctx, s, now)
+            remind(ctx, s, now, slot.minutes)
         }
     }
 
@@ -324,11 +324,11 @@ object Engine {
         try { WorkManager.getInstance(ctx).enqueueUniqueWork("studio-later", ExistingWorkPolicy.REPLACE, req) } catch (e: Exception) { }
     }
 
-    private fun remind(ctx: Context, s: Long, now: Long) {
+    private fun remind(ctx: Context, s: Long, now: Long, minutes: Int = 0) {
         val delay = s - now - 15 * 60_000
         if (delay <= 0) return
         val req = OneTimeWorkRequestBuilder<ReminderWorker>().setInitialDelay(delay, TimeUnit.MILLISECONDS)
-            .setInputData(workDataOf("title" to "Studio in 15 minutes", "route" to "session")).build()
+            .setInputData(workDataOf("title" to "Studio in 15 minutes", "route" to "session", "minutes" to minutes)).build()
         try { WorkManager.getInstance(ctx).enqueueUniqueWork("studio-$s", ExistingWorkPolicy.KEEP, req) } catch (e: Exception) { }
     }
 
@@ -1691,8 +1691,12 @@ class DailyWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx,
 class ReminderWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
         val next = try { G.dao.artworksNow().firstOrNull { it.status == "in_progress" }?.let { Engine.firstStep(it) }.orEmpty() } catch (e: Exception) { "" }
+        // A short block on a weeknight suits the next foundations exercise better than a big piece.
+        val minutes = inputData.getInt("minutes", 0)
+        val practice = if (minutes in 1..35) com.emotionalleaves.studioagent.domain.Foundations.next(G.settings.foundationsDone)?.text.orEmpty() else ""
         Notifier.post(applicationContext, G.settings, 50, inputData.getString("title") ?: "Studio time",
-            if (next.isNotBlank()) "First small step: $next" else "One small first step is enough.", inputData.getString("route") ?: "session", choices = true)
+            when { practice.isNotBlank() -> "A short one: practice. $practice"; next.isNotBlank() -> "First small step: $next"; else -> "One small first step is enough." },
+            inputData.getString("route") ?: "session", choices = true)
         return Result.success()
     }
 }
