@@ -1599,7 +1599,7 @@ object Engine {
         // Calls that fit, once a week at most, and only when you have not looked already.
         if (now - st.lastCallsLook > 6 * DAY) {
             val fit = shortlist(dao.oppsNow(), profile(), now, stretchOk(now), st.shortlistSize)
-            if (fit.isNotEmpty()) return NextStep(if (fit.size == 1) "A call fits you this week" else "${fit.size} calls fit you this week", "Yes or No on each takes a minute.", "calls")
+            if (fit.isNotEmpty()) return NextStep(if (fit.size == 1) "A call fits you this week" else "${fit.size} calls fit you this week", "Yes or No on each takes a minute, one at a time.", if (fit.size >= 2) "decide" else "calls")
         }
         // An entry the app prepared, not yet looked at: one look, then send or say no.
         if (st.autopilotAppl > 0) dao.applsNow().firstOrNull { it.id == st.autopilotAppl && it.submittedAt == 0L && it.status == "draft" }?.let { a ->

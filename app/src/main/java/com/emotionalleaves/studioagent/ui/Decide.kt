@@ -43,6 +43,7 @@ fun DecideScreen(nav: NavController) {
     val prof = p
     val list = if (prof == null) emptyList() else Engine.shortlist(opps, prof, now(), Engine.stretchOk(now()), 20).filter { it.id !in skipped }
     val o = list.firstOrNull()
+    androidx.compose.runtime.LaunchedEffect(Unit) { st.lastCallsLook = now() }
     Screen("Decide, one at a time", nav) {
         Intro("decide", "The calls that fit you, one at a time. Yes starts the entry, No teaches the ranking, Not this year keeps it for next year. Skip if you are not sure.")
         if (o == null) {
