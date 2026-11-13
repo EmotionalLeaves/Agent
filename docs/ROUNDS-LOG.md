@@ -597,3 +597,4 @@ One real change per round. Pushed and built every ten rounds.
 590. Two more seasons on a Saturday's step: in November, market season (the packing list and postcards in Market day), and in December, the year on one page (the tax page and the year in a picture, from Records).
 591. Then and now, in Foundations: once a month separates them, your first practice photo sits beside your newest, large, with their dates: "Same hands, 9 weeks of practice apart."
 592. Everything the app can do had grown to thirty tools in one long list. It now opens folded: five groups, each one line with how many tools and their names, opened one at a time; and the three tools you used last sit at the top under "Used lately".
+593. Settings, Hours and calm is grouped under three headings (Work and sleep; Notifications and calendar; Starting a session), and the optional helpers for starting (a friend, music, a focus app) are folded into one line until one is used.

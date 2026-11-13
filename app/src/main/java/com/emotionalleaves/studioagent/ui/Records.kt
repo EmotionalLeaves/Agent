@@ -546,20 +546,26 @@ fun SettingsScreen(nav: NavController, section: String) {
             }
             "hours" -> {
                 Intro("hours", "The app sends nothing during work hours on work days, and nothing from one hour before bedtime until 7:00.")
+                Section("Work and sleep")
                 DaysField("Days you work", st.workDays) { st.workDays = it }
                 TimeField("Work starts", st.workStart) { st.workStart = it }
                 TimeField("Work ends", st.workEnd) { st.workEnd = it }
                 Count("Rest after work before studio time", st.bufferMin, 0, 240, 15, "min") { st.bufferMin = it }
                 TimeField("Bedtime", st.bedtime) { st.bedtime = it }
+                Section("Notifications and calendar")
                 Count("Notifications a day, at most", st.notifCap, 0, 10) { st.notifCap = it }
                 Toggle("Book studio time in my calendar", useCal) { useCal = it; st.useCalendar = it }
+                Section("Starting a session")
                 Toggle("Silence my phone during sessions", dnd) { dnd = it; st.dndInSession = it }
-                // Working "alongside" someone, even by text, makes starting easier for many people with ADHD.
-                SText("A friend to text when you start (optional)", st.buddy) { st.buddy = it }
-                // The same music each time can become the cue that it is studio time.
-                SText("A studio playlist: paste its link (optional)", st.playlist) { st.playlist = it }
-                // A blocker or focus app of your own (Honest Lockout, for one): opened from the session screen, so the lock goes on as the timer starts.
-                FocusAppPicker()
+                // The optional helpers, folded until one is used: a friend, music, a focus app.
+                Expand("A friend, music, a focus app (all optional)", startOpen = st.buddy.isNotBlank() || st.playlist.isNotBlank() || st.focusApp.isNotBlank()) {
+                    // Working "alongside" someone, even by text, makes starting easier for many people with ADHD.
+                    SText("A friend to text when you start", st.buddy) { st.buddy = it }
+                    // The same music each time can become the cue that it is studio time.
+                    SText("A studio playlist: paste its link", st.playlist) { st.playlist = it }
+                    // A blocker or focus app of your own (Honest Lockout, for one): opened from the session screen, so the lock goes on as the timer starts.
+                    FocusAppPicker()
+                }
                 Small("Your studio times themselves are on Today: tap Your week.")
             }
             "rules" -> {
