@@ -605,4 +605,12 @@ class DomainTest {
         val t = T.of("Visited on 2027-02-03. Liked the back room.\nWrote again from Mon, Mar 1, 2027.", listOf(java.time.LocalDate.of(2027, 4, 9) to "Opening at Gallery 4"))
         assertEquals(listOf("Opening at Gallery 4", "Wrote again from Mon, Mar 1, 2027.", "Visited on 2027-02-03."), t.map { it.second })
     }
+
+    @Test fun aPastedListOfPlaces() {
+        val r = com.emotionalleaves.studioagent.domain.VenueList.read("Central Library, art@library.example.org, library.example.org\n- Bean There Cafe - www.beanthere.com\nhello@gallery4.art\n\nx")
+        assertEquals(3, r.size)
+        assertEquals(com.emotionalleaves.studioagent.domain.VenueList.Row("Central Library", "art@library.example.org", "library.example.org"), r[0])
+        assertEquals("Bean There Cafe", r[1].name); assertEquals("www.beanthere.com", r[1].website)
+        assertEquals("hello", r[2].name); assertEquals("hello@gallery4.art", r[2].email); assertEquals("", r[2].website)
+    }
 }

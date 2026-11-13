@@ -484,3 +484,4 @@ One real change per round. Pushed and built every ten rounds.
 478. A venue's or person's page shows what has happened with them, newest first: added, emails and follow-ups sent, visits, replies, openings and studio visits, read from the dates in their notes and the app's own records.
 479. Photograph your pieces in one go (in Studio when two or more finished pieces have no picture): each piece comes up in turn, one tap opens the camera, the photo is color-corrected and checked (too dark, glare, blur) and saved to the piece, and the next one comes up; any can be skipped for now.
 480. "New in this version" brought up to date with the rounds since 462.
+481. People takes a pasted list of places from anywhere (a friend's note, a spreadsheet, an arts council page): each line's name, email and website are picked out, places already in People are left out, and the rest are added in one tap, to be read for how they take work over the next few days.

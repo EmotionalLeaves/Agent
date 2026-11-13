@@ -160,6 +160,20 @@ fun Outreach(nav: NavController) {
         Button(onClick = { nav.navigate("nearby") }, modifier = Modifier.fillMaxWidth()) { Text("Find places near me") }
         TextButton(onClick = { nav.navigate("check") }) { Text("Got an offer or a buyer that seems too good? Check it") }
         H("Add a venue or person")
+        // A list from anywhere (a friend's note, a spreadsheet, an arts council page): pasted once, each line a place.
+        Expand("Paste a list of places") {
+            val pasted = rememberSaveable { mutableStateOf("") }
+            Field("One place per line: name, email, website (any order, any can be missing)", pasted, lines = 5)
+            val rows = com.emotionalleaves.studioagent.domain.VenueList.read(pasted.value)
+            val known = contacts.map { it.venue.lowercase() }.toSet() + contacts.map { it.email.lowercase() }.filter { it.isNotBlank() }
+            val fresh = rows.filter { r -> r.name.lowercase() !in known && (r.email.isBlank() || r.email.lowercase() !in known) }
+            if (rows.isNotEmpty()) Small("${Texts.count(rows.size, "place")} read" + (if (fresh.size < rows.size) ", ${rows.size - fresh.size} already in People" else "") + ".")
+            if (fresh.isNotEmpty()) Button(onClick = {
+                val list = fresh; pasted.value = ""
+                scope.io { list.forEachIndexed { i, r -> dao.put(Contact(venue = r.name, email = r.email, website = r.website, kind = "community", notes = "From a pasted list, ${fmtDate(now())}.", createdAt = now() - i)) } }
+                status = "Added ${Texts.count(list.size, "place")} to People. Each is read for how they take work over the next few days."
+            }) { Text("Add ${Texts.count(fresh.size, "place")}") }
+        }
         Field("Their website", url)
         Status(status)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
