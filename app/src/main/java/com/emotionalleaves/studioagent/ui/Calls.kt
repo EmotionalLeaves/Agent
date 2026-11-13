@@ -537,6 +537,10 @@ fun ApplScreen(nav: NavController, id: Long) {
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.labels(ctx, st, chosen); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Wall labels") }
+                    // For a library, cafe or community space: what was agreed by email, on one page to sign.
+                    if (o.sourceName == "Your own show") OutlinedButton(onClick = { scope.io({ status = it }) {
+                        val f = Papers.agreement(ctx, st, o.venue, chosen, o.exhibitionDates, o.commission)
+                        withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Agreement to sign") }
                     // A flyer with the first chosen piece: for a show of your own, or to pin up at work.
                     OutlinedButton(onClick = { scope.io({ status = it }) {
                         val opening = events.firstOrNull { it.applId == id && it.title.startsWith("Go to the opening", true) && it.date > 0 }?.let { fmtDate(it.date) + ", " + clock(it.date) }.orEmpty()

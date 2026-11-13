@@ -108,10 +108,10 @@ class PartsTest {
         com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
         val files = try {
             listOf(Papers.cv(ctx, s, facts), Papers.portfolio(ctx, s, works, "A statement about the work, long enough to wrap onto a second line so the measure can be judged properly.", 5), Papers.imageList(ctx, s, works, true),
-                Papers.labels(ctx, s, works), Papers.signupSheet(ctx, s), Papers.catalogue(ctx, s, works.take(3), mapOf(1L to listOf("Shown: Winter Open 2027, Riverside Arts, Austin"))), Papers.certificate(ctx, s, works[0], 2), Papers.billOfSale(ctx, s, works[0], "Sam Buyer", 1300.0, 1),
+                Papers.labels(ctx, s, works), Papers.signupSheet(ctx, s), Papers.agreement(ctx, s, "Central Library", works.take(2), "March 1 to March 29, 2027", 20.0), Papers.catalogue(ctx, s, works.take(3), mapOf(1L to listOf("Shown: Winter Open 2027, Riverside Arts, Austin"))), Papers.certificate(ctx, s, works[0], 2), Papers.billOfSale(ctx, s, works[0], "Sam Buyer", 1300.0, 1),
                 Papers.proposal(ctx, s, "Riverside Gallery", "Night", "A statement.", "A bio.", works))
         } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
-        assertEquals(listOf("Leaves_CV.pdf", "Leaves_Portfolio.pdf", "Leaves_Price_list.pdf", "Leaves_Wall_labels.pdf", "Leaves_Signup_sheet.pdf", "Leaves_Catalogue.pdf", "Leaves_Certificate_Piece1_2.pdf", "Leaves_Bill_of_sale_Piece1.pdf", "Leaves_Proposal_RiversideGallery.pdf"), files.map { it.name })
+        assertEquals(listOf("Leaves_CV.pdf", "Leaves_Portfolio.pdf", "Leaves_Price_list.pdf", "Leaves_Wall_labels.pdf", "Leaves_Signup_sheet.pdf", "Leaves_Agreement_CentralLibrary.pdf", "Leaves_Catalogue.pdf", "Leaves_Certificate_Piece1_2.pdf", "Leaves_Bill_of_sale_Piece1.pdf", "Leaves_Proposal_RiversideGallery.pdf"), files.map { it.name })
         files.forEach { f -> assertTrue(f.name, File(docs, f.nameWithoutExtension + "_p1.png").length() > 1000) }
         assertTrue("30 CV lines need a second page", File(docs, "Leaves_CV_p2.png").exists())
         assertTrue("9 labels need a second page", File(docs, "Leaves_Wall_labels_p2.png").exists())

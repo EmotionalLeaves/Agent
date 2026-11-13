@@ -306,6 +306,32 @@ object Papers {
         return pdf.save(File(dir, file))
     }
 
+    /**
+     * A plain loan and consignment agreement for showing work at a library, cafe or community space:
+     * who, what (each work with its price), when, the venue's share of any sale, care and insurance, and pick-up.
+     * Two signature lines. Not legal advice; it puts in writing what was agreed by email.
+     */
+    fun agreement(ctx: Context, s: Settings, venue: String, works: List<Artwork>, dates: String, commission: Double): File {
+        val pdf = pdf(ctx, s, "Exhibition agreement")
+        pdf.text("Exhibition agreement", 22f, face = Pdf.Face.DISPLAY, gap = 4f)
+        pdf.text("Between ${name(s).ifBlank { "the artist" }} (the artist) and ${venue.ifBlank { "the venue" }} (the venue).", 11.5f, gap = 12f)
+        fun clause(h: String, body: String) { pdf.keep(60f); pdf.text(h, 11.5f, face = Pdf.Face.BOLD, gap = 2f); pdf.text(body, 11f, gap = 10f) }
+        clause("Dates", dates.ifBlank { "From ______________ to ______________." })
+        clause("The works", "The artist lends the works listed below for display. They remain the artist's property until sold and paid for.")
+        works.forEachIndexed { i, a -> pdf.text("${i + 1}. " + caption(a) + ". " + priceLine(s, a) + ".", 10.5f, gap = 3f) }
+        pdf.space(8f)
+        clause("Sales", if (commission > 0) "If a work sells, the venue keeps ${"%.0f".format(commission)}% of the price and pays the artist the rest within 30 days. Prices are set by the artist." else "If a work sells, the buyer pays the artist directly. Prices are set by the artist.")
+        clause("Care", "The venue hangs the works where they are not in direct sun or near heat, and does not move or alter them without asking. The venue tells the artist at once of any damage or loss.")
+        clause("Insurance", "The venue's insurance covers the works while on its premises: ______ yes  ______ no. If no, the artist accepts the risk.")
+        clause("Copyright", "The artist keeps the copyright. The venue may use pictures of the works only to promote this show, with the artist's name.")
+        clause("Hanging and pick-up", "Delivered and hung on ______________. Collected by the artist on ______________.")
+        pdf.space(18f)
+        pdf.text("Artist: ________________________________   Date: __________", 11f, gap = 18f)
+        pdf.text("For the venue: __________________________   Date: __________", 11f, gap = 8f)
+        contactLine(s).takeIf { it.isNotBlank() }?.let { pdf.text(it, 9.5f, grey = true) }
+        return pdf.save(out(ctx, docName(s, "Agreement_" + venue.filter { it.isLetterOrDigit() }.take(24))))
+    }
+
     /** A one-page show flyer: the strongest image, the title, where and when, and the opening. Plain, so it reads from across a hall. */
     fun flyer(ctx: Context, s: Settings, title: String, venue: String, dates: String, opening: String, image: Artwork?): File {
         val pdf = pdf(ctx, s, "Flyer", margin = 54, footer = false)

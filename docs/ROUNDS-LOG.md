@@ -328,3 +328,5 @@ One real change per round. Pushed and built every ten rounds.
 322. People: with more than ten venues (easy after Places near you), a find box and a kind filter (galleries, libraries, campus…), drawn 25 at a time.
 323. A show you got into has Photos of the show: take installation shots (the work on the wall, the room, the label) right on its page, kept with it and backed up, and share them; venues ask for these next time.
 324. The portfolio web page shows up to six installation views from your shows, captioned with the show and venue.
+325. A print's printing steps say which ready-made frame fits it (standard store sizes, with at least two inches of mat) and the mat opening to ask for, so a first show does not need custom framing.
+326. A show of your own has "Agreement to sign": a plain one-page loan and consignment agreement with the venue (dates, each work and its price, the venue's share of sales, care, insurance, copyright, hanging and pick-up, two signature lines), putting in writing what was agreed by email.

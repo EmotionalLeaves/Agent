@@ -209,6 +209,31 @@ data class Slot(val start: LocalDateTime, val minutes: Int)
 /** One studio slot in the artist's own weekly template. day: 1 = Monday to 7 = Sunday. */
 data class TemplateSlot(val day: Int, val time: LocalTime, val minutes: Int)
 
+/**
+ * Ready-made frames: the standard US sizes sold at craft and big-box stores, with a mat that leaves
+ * at least two inches around the image. Far cheaper than custom framing, and fine for a first show.
+ */
+object Frames {
+    val standard = listOf(8.0 to 10.0, 11.0 to 14.0, 12.0 to 16.0, 16.0 to 20.0, 18.0 to 24.0, 20.0 to 24.0, 24.0 to 30.0, 24.0 to 36.0, 30.0 to 40.0)
+
+    /** The smallest standard frame that fits the image with a mat of at least [minMat] inches each side, in the image's orientation. */
+    fun fit(wIn: Double, hIn: Double, minMat: Double = 2.0): Pair<Double, Double>? {
+        if (wIn <= 0 || hIn <= 0) return null
+        val portrait = hIn >= wIn
+        return standard.map { (a, b) -> if (portrait) a to b else b to a }
+            .filter { (fw, fh) -> fw - wIn >= 2 * minMat && fh - hIn >= 2 * minMat }
+            .minByOrNull { it.first * it.second }
+    }
+
+    /** A plain sentence: the frame to buy and the mat opening to ask for (a quarter inch smaller than the print, so it holds it). */
+    fun advice(wIn: Double, hIn: Double): String {
+        val f = fit(wIn, hIn) ?: return "This size is bigger than ready-made frames; a framer will make one to measure."
+        val ow = wIn - 0.25; val oh = hIn - 0.25
+        fun n(d: Double) = if (d % 1.0 == 0.0) d.toInt().toString() else "%.2f".format(d).trimEnd('0').trimEnd('.')
+        return "A ready-made ${n(f.first)} × ${n(f.second)} in frame, with a mat cut to an opening of ${n(ow)} × ${n(oh)} in (a quarter inch smaller than the print, so it holds it)."
+    }
+}
+
 object Planner {
     fun time(s: String, def: LocalTime): LocalTime = timeOrNull(s) ?: def
 

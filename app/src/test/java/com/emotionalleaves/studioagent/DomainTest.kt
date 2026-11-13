@@ -309,6 +309,14 @@ class DomainTest {
         assertEquals(null, Planner.betterSlot(plan, sat, today))
     }
 
+    @Test fun aPrintGetsTheReadyMadeFrameThatFits() {
+        val f = com.emotionalleaves.studioagent.domain.Frames
+        assertEquals(11.0 to 14.0, f.fit(7.0, 10.0))
+        assertEquals(20.0 to 16.0, f.fit(12.0, 9.0))
+        assertEquals(null, f.fit(40.0, 50.0))
+        assertTrue(f.advice(8.0, 10.0).contains("12 × 16 in frame") && f.advice(8.0, 10.0).contains("7.75 × 9.75 in"))
+    }
+
     @Test fun errorsReadAsPlainWords() {
         val off = com.emotionalleaves.studioagent.ui.plainError(java.net.UnknownHostException("Unable to resolve host \"api.anthropic.com\""))
         assertTrue(off.startsWith("No internet connection"))

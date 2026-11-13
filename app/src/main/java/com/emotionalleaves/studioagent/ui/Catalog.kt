@@ -416,6 +416,8 @@ fun WorkDetail(nav: NavController, id: Long) {
                 if (i == w.printStage) Text(how)
             }
             if (w.printStage < 5) Button(onClick = { save(w.copy(printStage = w.printStage + 1)) }) { Text("Done: " + Readiness.printSteps[w.printStage.coerceIn(0, 4)].first.lowercase()) }
+            // Framing without a framer: the standard frame that fits, and the mat opening to ask for.
+            if (w.widthIn > 0 && w.heightIn > 0) Small(com.emotionalleaves.studioagent.domain.Frames.advice(w.widthIn, w.heightIn))
             // Not knowing where to get it printed is where most digital work stalls.
             if (w.printStage < 5) TextButton(onClick = { nav.navigate("nearby/labs") }) { Text("Find a print lab or framer near me") }
             else Small("Printed and framed. This piece can hang.")
