@@ -1,6 +1,8 @@
 package com.emotionalleaves.studioagent.ui
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -42,7 +44,13 @@ fun TeachScreen(nav: NavController) {
         Count("How many people", people, 3, 25) { people = it }
         Section("The class")
         Panel {
-            Workshop.outline(kind, minutes).forEach { p -> Text("${p.minutes} min", fontWeight = FontWeight.SemiBold); Text(p.what, style = MaterialTheme.typography.bodyMedium) }
+            // Minutes in a column of their own, so the class reads down like a running order.
+            Workshop.outline(kind, minutes).forEach { p ->
+                androidx.compose.foundation.layout.Row {
+                    Text("${p.minutes} min", Modifier.width(64.dp), fontWeight = FontWeight.SemiBold)
+                    Text(p.what, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                }
+            }
         }
         Section("What to bring")
         Panel { Workshop.supplies(kind, people).forEach { Text("• $it") } }

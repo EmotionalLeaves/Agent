@@ -591,3 +591,4 @@ One real change per round. Pushed and built every ten rounds.
 584. A test for welcome back: slipped to-dos are spread two a day from the day after tomorrow, deadlines and finished ones are left alone.
 585. Your people, tidied after looking at the screenshot: the tick box sat jammed against each title with no word saying what it meant. Each place now reads title, what it is like, then "Find one near you" with "I've been" to tick beside it.
 586. Empty your head shows a few example lines while the box is empty (a job, something to buy, one with a day, an idea), and it belongs to the Today tab now, where it is opened from.
+587. Teach a class lays the class out as a running order: minutes in their own column, what happens beside them.
