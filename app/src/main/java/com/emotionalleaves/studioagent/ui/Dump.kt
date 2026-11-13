@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.emotionalleaves.studioagent.G
 import com.emotionalleaves.studioagent.data.Evt
 import com.emotionalleaves.studioagent.data.Idea
 import com.emotionalleaves.studioagent.domain.Dump
@@ -53,12 +54,12 @@ fun DumpScreen(nav: NavController) {
             Button(onClick = {
                 val keep = lines.toList(); val now = System.currentTimeMillis()
                 val before = st.supplies
-                val added = mutableListOf<Any>()
+                val evts = mutableListOf<Long>(); val ideas = mutableListOf<Long>()
                 scope.undoable("Put away ${keep.size} ${if (keep.size == 1) "thing" else "things"}", {
                     keep.forEach { l ->
                         when (l.kind) {
-                            Dump.Kind.TASK -> { val d = l.day ?: LocalDate.now().plusDays(2); added += dao.put(Evt(type = "task", title = l.text, date = Engine.millis(d.atTime(18, 0)))) to "evt" }
-                            Dump.Kind.IDEA -> added += dao.put(Idea(text = l.text, createdAt = now)) to "idea"
+                            Dump.Kind.TASK -> { val d = l.day ?: LocalDate.now().plusDays(2); evts += dao.put(Evt(type = "task", title = l.text, date = Engine.millis(d.atTime(18, 0)))) }
+                            Dump.Kind.IDEA -> { ideas += dao.put(Idea(text = l.text, createdAt = now)) }
                             Dump.Kind.SUPPLY -> {
                                 val have = supplies(st.supplies)
                                 st.supplies = suppliesText(if (have.any { it.first.equals(l.text, true) }) have.map { if (it.first.equals(l.text, true)) it.first to true else it } else have + (l.text to true))
@@ -66,8 +67,8 @@ fun DumpScreen(nav: NavController) {
                         }
                     }
                 }, {
-                    added.forEach { a -> val (id, kind) = a as Pair<*, *>
-                        if (kind == "evt") dao.eventsNow().firstOrNull { it.id == id }?.let { dao.del(it) } else dao.ideasNow().firstOrNull { it.id == id }?.let { dao.del(it) } }
+                    dao.eventsNow().filter { e: Evt -> e.id in evts }.forEach { e: Evt -> dao.del(e) }
+                    dao.ideasNow().filter { i: Idea -> i.id in ideas }.forEach { i: Idea -> dao.del(i) }
                     st.supplies = before
                 })
                 text.value = ""; moved.clear()
