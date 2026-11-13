@@ -393,3 +393,4 @@ One real change per round. Pushed and built every ten rounds.
 387. Help answers two questions for later on: when to raise prices (and how much), and how artists come to be represented by a gallery.
 388. Records shows how much of the work you showed this year sold, and says when it is over half, the usual point to raise prices.
 389. An email to a venue opens in your mail app with your three strongest pictures attached (in portfolio order, sized for any inbox, your name inside each file), since venues decide from the work.
+390. Venue emails the app sends for you (with email set up) carry the same three pictures; follow-ups go without them.

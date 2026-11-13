@@ -587,6 +587,15 @@ object Engine {
         return out
     }
 
+    /** Your three strongest pictures, sized for any inbox, for a first email to a venue. */
+    private suspend fun outreachPictures(): List<File> {
+        val dir = File(G.cacheDir, "outreach_mail").apply { deleteRecursively(); mkdirs() }
+        return portfolioOrdered(dao.artworksNow()).take(3).mapIndexedNotNull { i, w ->
+            File(dir, Texts.fileName(st.lastName.ifBlank { st.firstName }, w.title, w.year, "", 0.0, 0.0, number = i + 1))
+                .takeIf { ImageTools.export(w.imagePath, 1400, 700_000, it, st.fullName, Papers.caption(w)) }
+        }
+    }
+
     /** The covering email for an application: short, formal, and naming exactly what is attached. */
     fun applicationEmail(opp: Opp, chosen: List<Artwork>, statement: String): String = buildString {
         val to = listOf(opp.organiser, opp.venue).firstOrNull { it.isNotBlank() }
@@ -927,7 +936,7 @@ object Engine {
             if (sentThisWeek(contacts, now) >= st.outreachWeeklyCap) break
             if (!Levels.outreachAllowed(level, c.kind, rules()) || !c.acceptsSubmissions) continue
             try {
-                Mail.send(st.smtpHost, st.mailUser, st.mailPass, c.email, c.draftSubject, c.draftBody, fromName = st.fullName)
+                Mail.send(st.smtpHost, st.mailUser, st.mailPass, c.email, c.draftSubject, c.draftBody, outreachPictures(), fromName = st.fullName)
                 dao.put(c.copy(status = "sent", sentAt = now, followUpAt = now + 24 * DAY))
                 st.log("Email sent to ${c.venue.ifBlank { c.email }}.")
                 contacts = dao.contactsNow()
