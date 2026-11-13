@@ -111,7 +111,7 @@ class PartsTest {
                 Papers.labels(ctx, s, works), Papers.signupSheet(ctx, s), Papers.certificate(ctx, s, works[0], 2), Papers.billOfSale(ctx, s, works[0], "Sam Buyer", 1300.0, 1),
                 Papers.proposal(ctx, s, "Riverside Gallery", "Night", "A statement.", "A bio.", works))
         } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
-        assertEquals(listOf("Leaves_CV.pdf", "Leaves_Portfolio.pdf", "Leaves_Price_list.pdf", "Leaves_Wall_labels.pdf", "Leaves_Certificate_Piece1_2.pdf", "Leaves_Bill_of_sale_Piece1.pdf", "Leaves_Proposal_RiversideGallery.pdf"), files.map { it.name })
+        assertEquals(listOf("Leaves_CV.pdf", "Leaves_Portfolio.pdf", "Leaves_Price_list.pdf", "Leaves_Wall_labels.pdf", "Leaves_Signup_sheet.pdf", "Leaves_Certificate_Piece1_2.pdf", "Leaves_Bill_of_sale_Piece1.pdf", "Leaves_Proposal_RiversideGallery.pdf"), files.map { it.name })
         files.forEach { f -> assertTrue(f.name, File(docs, f.nameWithoutExtension + "_p1.png").length() > 1000) }
         assertTrue("30 CV lines need a second page", File(docs, "Leaves_CV_p2.png").exists())
         assertTrue("9 labels need a second page", File(docs, "Leaves_Wall_labels_p2.png").exists())
