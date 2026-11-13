@@ -1122,7 +1122,12 @@ object Engine {
         if (pend.isNotEmpty()) return NextStep("${pend.size} to approve", pend.first().title, "admin")
         // An entry with no result six weeks on: one gentle ask, at the weekend, since results do not always arrive by email.
         if (today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY)
-            appls.filter { it.status == "submitted" && it.submittedAt in (now - 90 * DAY)..(now - 42 * DAY) }.minByOrNull { it.submittedAt }?.let { a ->
+            appls.filter { a -> a.status == "submitted" && a.submittedAt > now - 90 * DAY && run {
+                    // After the call's own results day when it gave one; otherwise six weeks on.
+                    val o = dao.oppsNow().firstOrNull { it.id == a.oppId }
+                    val day = o?.let { com.emotionalleaves.studioagent.ui.resultsDay(it) }
+                    if (day != null) today.isAfter(day.plusDays(3)) else a.submittedAt < now - 42 * DAY
+                } }.minByOrNull { it.submittedAt }?.let { a ->
                 val t = dao.oppsNow().firstOrNull { it.id == a.oppId }?.title.orEmpty().ifBlank { "an entry" }
                 return NextStep("Heard back from $t?", "Six weeks since you sent it. If a result came, one tap records it. If not, there is nothing to do; this stops asking after three months.", "appl/${a.id}")
             }

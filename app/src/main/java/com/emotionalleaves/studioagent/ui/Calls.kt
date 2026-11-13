@@ -271,7 +271,10 @@ fun Calls(nav: NavController) {
                         Text(o?.title ?: "Application", style = MaterialTheme.typography.titleSmall)
                         StageTrack(stage(a), a.status == "declined")
                         Small(when (a.status) {
-                            "submitted" -> "Submitted ${fmtDate(a.submittedAt)}. " + (if (st.mailReady) "The result email is picked up for you." else "When you hear back, open it and tap Accepted or Not this time.")
+                            "submitted" -> "Submitted ${fmtDate(a.submittedAt)}. " +
+                                // When the call said results come: knowing the date ends the checking.
+                                (o?.let { resultsDay(it) }?.let { "Results expected about ${fmtDate(Engine.millis(it.atTime(12, 0)))}. " } ?: "") +
+                                (if (st.mailReady) "The result email is picked up for you." else "When you hear back, open it and tap Accepted or Not this time.")
                             // Accepted: the one thing to do next, with its day, so the show does not slip.
                             "accepted" -> open(a).sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.firstOrNull()
                                 ?.let { "Next: " + it.title + (if (it.date > 0) ", " + fmtDate(it.date) else "") } ?: "Everything on its list is done."
@@ -1141,3 +1144,8 @@ fun callKindTip(kind: String): String = when (kind) {
     "commission" -> "A piece made for a place or a brief. They want your idea for it and similar work you have made."
     else -> ""
 }
+
+/** The day a call said it would announce results, when its own words say ("notification: March 1", "artists notified by"). */
+fun resultsDay(o: Opp): LocalDate? = if (o.rawText.isBlank()) null else
+    com.emotionalleaves.studioagent.domain.CallReader.dateAfter(o.rawText, "notif|results (will be|are) (announced|sent|emailed)|accepted artists (will be|are)|selections? (will be )?announced|jury(ing)? results", LocalDate.now().minusMonths(6))
+        ?.takeIf { o.deadline <= 0 || !it.isBefore(Engine.date(o.deadline)) }
