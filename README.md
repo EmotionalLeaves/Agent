@@ -27,7 +27,7 @@ Every build photographs the main screens in light, dark and large text and attac
 
 Four tabs, the same every time. Each thing has one place.
 
-- **Today**: the one next step, Start now, your week (tap it for the month calendar, studio times, pausing and session history), the next 7 days, the road to your first show, and anything waiting for your yes.
+- **Today**: the one next step (with a menu: not today, remind me this evening, empty my head first, it is all too much, pin your own), Start now, your week, five-minute jobs on a break at work, firsts on the day they happen, done this week, and the road to your first show. Every card but the step can be switched off.
 - **Studio**: your pieces, series and parked ideas.
 - **Calls**: open calls this week, all of them (with a find box), and what you applied to as a board that follows each entry from chosen to the show and home again.
 - **You**: Everything the app can do; Find anything (or ask a question);  Statement, bio and CV; People and venues; Guide (with the five levels); Records (to-dos, money, sales, proof of what was sent); Settings; Help (the tour, plain answers, about).
