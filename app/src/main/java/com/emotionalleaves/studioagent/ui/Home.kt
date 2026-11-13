@@ -225,6 +225,9 @@ fun Home(nav: NavController) {
                 }
             }
         }
+        // The day after quiet days end: a soft way back in, not a pile of everything that waited.
+        if (st.onboarded && !calm && st.calmUntil in (System.currentTimeMillis() - 86_400_000L)..System.currentTimeMillis())
+            Small("Welcome back. Just the one step below today; everything else will find its place over the next few days.")
         // Three "Not today"s in a row is a signal, not a failing: offer the quiet days, once, and let it go either way.
         if (st.onboarded && !calm && st.snoozeRun >= 3 && st.snoozeDay != today.toString()) Panel(strong = true) {
             Text("Three days of \"Not today\"", fontWeight = FontWeight.SemiBold)

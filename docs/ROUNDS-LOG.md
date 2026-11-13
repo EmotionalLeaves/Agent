@@ -564,3 +564,4 @@ One real change per round. Pushed and built every ten rounds.
 557. Find anything finds settings: "bedtime", "notifications", "do not disturb", "currency" or "studio friend" opens the settings page it lives on.
 558. Three "Not today"s in a row is a signal, not a failing. The next day, Today asks once whether three quiet days would help (one five-minute step, no notifications); "Yes, quiet days" or "No, I'm all right", and either way it is not asked again until another run of three.
 559. From Friday on, with a studio friend named, "Done this week" offers "Tell Sam about your week": the week's sessions, pieces, entries, emails and ideas in one short message, and "How was yours?"
+560. Coming back from quiet days: for the first day after they end, Today opens with "Welcome back. Just the one step below today; everything else will find its place over the next few days."
