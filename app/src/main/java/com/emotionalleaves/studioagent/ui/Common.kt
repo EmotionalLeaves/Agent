@@ -492,6 +492,12 @@ fun SearchScreen(nav: NavController) {
     var asking by remember { mutableStateOf(false) }
     Screen("Find anything", nav) {
         Field("A title, a venue, a person, a word, or a question", q, mic = true)
+        // A few questions it can answer on the phone, so asking is found by trying.
+        if (q.value.isBlank()) androidx.compose.foundation.layout.FlowRow(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+            listOf("What's on this week?", "What should I do today?", "How many entries have I sent this year?", "What does consignment mean?", "How do I meet other artists?").forEach { ex ->
+                androidx.compose.material3.AssistChip(onClick = { q.value = ex }, label = { Text(ex) })
+            }
+        }
         // A question gets an answer about your own situation, not a list of matches.
         val question = q.value.trim().let { t -> t.length > 8 && (t.endsWith("?") || Regex("^(how|what|when|where|which|who|why|should|can|could|do|does|is|am|are|will|would)\\b", RegexOption.IGNORE_CASE).containsMatchIn(t)) }
         if (question) androidx.compose.material3.Button(enabled = !asking, onClick = {

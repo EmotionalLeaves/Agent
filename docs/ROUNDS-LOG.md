@@ -655,3 +655,4 @@ One real change per round. Pushed and built every ten rounds.
 648. The test of where to-dos open covers market days and packing evenings.
 649. Asking "what's on this week?" or "what's coming up?" lists the next seven days on the phone (studio times, to-dos, deadlines, by day), with a button to Your week.
 650. A test for "what's on this week?": the next seven days only, finished to-dos left out. Six hundred and fifty rounds.
+651. Find anything shows a few questions it can answer on the phone while the box is empty ("What's on this week?", "What should I do today?", "How many entries have I sent this year?", "What does consignment mean?", "How do I meet other artists?"); a tap puts one in the box, ready to ask.
