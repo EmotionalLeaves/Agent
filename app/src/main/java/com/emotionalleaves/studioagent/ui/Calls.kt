@@ -564,7 +564,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                     val f = java.io.File(ImageTools.exportDir(ctx), Papers.docName(st, "Show_post_$id", "jpg"))
                     ImageTools.saveJpeg(com.emotionalleaves.studioagent.media.Post.process(bms, st.fullName), f, 90)
                     val place = o.venue.ifBlank { o.organiser }
-                    val words = "\"${o.title}\"" + (if (place.isNotBlank()) " at $place" else "") + (if (o.exhibitionDates.isNotBlank()) ", ${o.exhibitionDates}" else "") + ". Thank you to everyone who came, and to $place for having the work.".let { if (place.isBlank()) " Thank you to everyone who came." else it } +
+                    val words = "\"${o.title}\"" + (if (place.isNotBlank()) " at $place" else "") + (if (o.exhibitionDates.isNotBlank()) ", ${o.exhibitionDates}" else "") + ". Thank you to everyone who came" + (if (place.isNotBlank()) ", and to $place for having the work." else ".") +
                         "\n\n" + com.emotionalleaves.studioagent.media.Post.tags(chosen.firstOrNull()?.medium.orEmpty(), st.city)
                     st.lastPosted = System.currentTimeMillis()
                     withContext(Dispatchers.Main) { Share.post(ctx, f, words) }
