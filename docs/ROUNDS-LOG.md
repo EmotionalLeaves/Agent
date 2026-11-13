@@ -285,3 +285,6 @@ One real change per round. Pushed and built every ten rounds.
 278. New: a month calendar at the top of Your week. Every studio time, deadline and show step is a colored mark on its day (making time, deadlines, shows), with a key; tap a day to see what is on it and open it.
 279. With an opening in the next three weeks and people on your email list, Today's step is to tell them, with the note already drafted.
 280. A new photo of physical work is checked like a juror would look at it: too dark, washed out, a glare spot, or soft. Any problem is said in plain words with how to fix it, while the work is still in front of you.
+281. Statements, bios and your own documents: "Read it like a juror" gives up to three short, specific notes from the free writing help (vague phrases, claims not shown, jargon, what jurors look for), each quoting the words it means. It never rewrites your text.
+282. A piece's price is compared with your other works of the same medium and about the same size; if it is far off, it says what they cost, since matching prices by size looks considered to galleries.
+283. New: "Send all my materials as one file". When a gallery says "send me your materials": one zip with the portfolio PDF, CV, statement and bio, image list, and the pictures at 2000 px with your name inside them, named so they stay together.

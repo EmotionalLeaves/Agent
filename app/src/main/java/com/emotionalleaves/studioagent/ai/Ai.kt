@@ -242,6 +242,20 @@ class Ai(private val settings: Settings) {
     suspend fun write(kind: String, wordTarget: Int, facts: String, voice: String, extra: String = ""): String =
         clean(complete(writerSystem(voice), "Write: $kind\nLength: about $wordTarget words, never more.\n$extra\n\nFacts you may use:\n$facts", maxTokens = 1500))
 
+    /**
+     * How a juror would read a piece of writing: at most three short, specific notes, kind and practical,
+     * each pointing at a sentence. Never a rewrite, so the words stay the artist's own.
+     */
+    suspend fun jurorNotes(kind: String, text: String): List<String> {
+        val sys = "You are an experienced, kind juror for open calls, reading an artist's $kind. $dataRule " +
+            "Give at most three notes, the ones that would most change how a juror reads it: something vague that could be concrete, a claim that is not shown, " +
+            "jargon, a sentence that could be cut, or what is missing that jurors look for (what the work is, how it is made, why). " +
+            "Each note is one or two plain sentences and quotes the few words it is about. Do not rewrite the text. Do not praise. " +
+            "If it already reads clearly, reply with the single line: It reads clearly. Reply with one note per line, no numbering, no markdown."
+        val out = clean(complete(sys, "<data>\n${text.take(6000)}\n</data>", maxTokens = 500))
+        return out.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "") }.filter { it.length > 3 }.take(3)
+    }
+
     /** Plain prose: no markdown stars or headings, no quotation marks around the whole text. */
     fun clean(t: String): String = t.replace(Regex("\\*\\*|__|`"), "").replace(Regex("(?m)^#{1,6}\\s*"), "").trim().removeSurrounding("\"").trim()
 

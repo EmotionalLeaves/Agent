@@ -411,6 +411,15 @@ fun WorkDetail(nav: NavController, id: Long) {
         if (w.widthIn > 0 && w.heightIn > 0) TextButton(onClick = { save(w.copy(price = Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))); priceVersion++; status = "Price set from your rule." }) {
             Text("Use my price rule: ${money(Texts.price(w.widthIn, w.heightIn, st.pricePerSqIn))}")
         }
+        // Collectors and galleries notice when two pieces of the same size cost very different amounts.
+        if (w.price > 0 && w.widthIn > 0 && w.heightIn > 0 && !w.nfs) {
+            val area = w.widthIn * w.heightIn
+            val alike = works.filter { it.id != w.id && it.price > 0 && !it.nfs && it.widthIn > 0 && it.heightIn > 0 && kotlin.math.abs(it.widthIn * it.heightIn - area) / area < 0.2 && it.medium.equals(w.medium, true) }
+            if (alike.isNotEmpty()) {
+                val typical = alike.map { it.price }.sorted()[alike.size / 2]
+                if (kotlin.math.abs(w.price - typical) / typical > 0.25) Small("Your other ${w.medium.ifBlank { "pieces" }.lowercase()} about this size are around ${money(typical)}. Prices that match by size look considered to buyers and galleries.")
+            }
+        }
         Toggle("Not for sale", w.nfs) { save(w.copy(nfs = it)) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(Modifier.weight(1f)) { Whole("Edition size", w.editionSize) { save(w.copy(editionSize = it)) } }

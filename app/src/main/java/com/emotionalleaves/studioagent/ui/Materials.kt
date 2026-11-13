@@ -167,6 +167,11 @@ fun Materials(nav: NavController) {
             }
         }
         if (works.none { Engine.documented(it) }) Small("The portfolio fills in once a piece has a photo and is marked Ready to send.")
+        // When a gallery says "send me your materials": one file, ready to attach.
+        if (works.any { Engine.documented(it) }) Button(modifier = Modifier.fillMaxWidth(), onClick = {
+            status = "Putting your materials together…"
+            scope.io({ status = it }) { val f = Engine.pressKit(ctx); status = "Ready: ${f.name}"; withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "application/zip") } }
+        }) { Text("Send all my materials as one file") }
         if (facts.isEmpty()) Row(verticalAlignment = Alignment.CenterVertically) {
             Text("The CV holds only your CV facts, and there are none yet.", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             TextButton(onClick = { nav.navigate("facts") }) { Text("Add CV facts") }
@@ -322,6 +327,19 @@ fun DocScreen(nav: NavController, id: Long) {
                     color = if (lengthOk) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary, trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
             Check(d.text.isNotBlank() && jargon.isEmpty(), if (jargon.isEmpty()) "No stock art jargon" else "Jargon to cut: " + jargon.joinToString(", "))
             Check(true, "Written only from your interview and CV facts")
+        }
+        // A second pair of eyes before approving: what a juror would stumble on, without rewriting a word.
+        var notes by remember(id) { mutableStateOf<List<String>>(emptyList()) }
+        if (G.ai.ready && d.text.isNotBlank() && !locked) {
+            TextButton(enabled = !busy, onClick = {
+                busy = true; status = "Reading it like a juror…"
+                scope.io({ status = it; busy = false }) { notes = G.ai.jurorNotes(kind, d.text); status = ""; busy = false }
+            }) { Text("Read it like a juror") }
+            if (notes.isNotEmpty()) Panel {
+                Text("A juror's notes", fontWeight = FontWeight.SemiBold)
+                notes.forEach { Text("• $it") }
+                Small("Change only what you agree with. It is your text.")
+            }
         }
         Status(status)
         if (d.approved) { if (!locked) Panel { Text("Approved. Editing it un-approves it.") } }

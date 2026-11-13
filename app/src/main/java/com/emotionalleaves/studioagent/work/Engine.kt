@@ -532,6 +532,32 @@ object Engine {
         return fit?.text ?: pool.minByOrNull { Texts.words(it.text) }?.let { Texts.trimToWords(it.text, cap) }.orEmpty()
     }
 
+    /**
+     * Everything a gallery asks for when they say "send me your materials", as one zip:
+     * portfolio PDF, CV, statement and bio, an image list, and the pictures at 2000 px with your name in them.
+     */
+    suspend fun pressKit(ctx: Context): File = withContext(Dispatchers.IO) {
+        val works = dao.artworksNow().filter { documented(it) }.sortedByDescending { it.createdAt }.take(15)
+        if (works.isEmpty()) throw Exception("Mark at least one piece Ready to send first; the kit is built from those.")
+        val dir = File(ctx.cacheDir, "kit").apply { deleteRecursively(); mkdirs() }
+        val last = st.lastName.ifBlank { st.firstName }
+        val names = works.mapIndexed { i, w -> Texts.fileName(last, w.title, w.year, Papers.medium(w), w.widthIn, w.heightIn, number = i + 1) }
+        works.forEachIndexed { i, w -> ImageTools.export(w.imagePath, 2000, 2_500_000, File(dir, names[i]), st.fullName, Papers.caption(w)) }
+        Papers.imageList(ctx, st, works, withPrices = true, dir = dir, files = names, title = "Image list")
+        Papers.portfolio(ctx, st, works, pickStatement(150), works.size).copyTo(File(dir, Papers.docName(st, "Portfolio")), overwrite = true)
+        if (dao.factsNow().isNotEmpty()) Papers.cv(ctx, st, dao.factsNow()).copyTo(File(dir, Papers.docName(st, "CV")), overwrite = true)
+        val docs = dao.docsNow()
+        val statement = pickStatement(300)
+        val bio = docs.filter { it.type == "bio" && it.text.isNotBlank() }.sortedByDescending { if (it.approved) 1 else 0 }.firstOrNull()?.text.orEmpty()
+        val sections = listOfNotNull(statement.takeIf { it.isNotBlank() }?.let { "Artist statement" to it }, bio.takeIf { it.isNotBlank() }?.let { "Bio" to it }, "Contact" to Papers.signature(st))
+        Papers.textDoc(ctx, st, "Statement and bio", sections, dir, Papers.docName(st, "Statement_and_bio"))
+        val zip = File(ImageTools.exportDir(ctx), Papers.docName(st, "Materials", "zip"))
+        java.util.zip.ZipOutputStream(zip.outputStream()).use { z ->
+            dir.listFiles()?.sortedBy { it.name }?.forEach { f -> z.putNextEntry(java.util.zip.ZipEntry(f.name)); f.inputStream().use { it.copyTo(z) }; z.closeEntry() }
+        }
+        zip
+    }
+
     /** The covering email for an application: short, formal, and naming exactly what is attached. */
     fun applicationEmail(opp: Opp, chosen: List<Artwork>, statement: String): String = buildString {
         val to = listOf(opp.organiser, opp.venue).firstOrNull { it.isNotBlank() }
