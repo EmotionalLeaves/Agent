@@ -1511,7 +1511,7 @@ object Engine {
                 val inn = l.filter { it.amount > 0 }.sumOf { it.amount }; val out = -l.filter { it.amount < 0 }.sumOf { it.amount }
                 "This year: ${money(inn)} in, ${money(out)} in costs, so ${if (inn - out >= 0) "${money(inn - out)} ahead" else "${money(out - inn)} behind"}.\nGO: records"
             }
-            has("how many pieces", "how many works", "finished pieces", "ready to send") -> {
+            has("how many pieces do i have", "how many works do i have", "how many pieces have i", "my finished pieces", "ready to send") -> {
                 val w = dao.artworksNow()
                 "${Texts.count(w.count { available(it) }, "piece")} ready to send, ${w.count { it.status == "in_progress" }} in progress, ${w.count { it.status == "idea" }} ideas.\nGO: works"
             }

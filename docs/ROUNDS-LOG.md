@@ -633,3 +633,4 @@ One real change per round. Pushed and built every ten rounds.
 626. Your week's description names days off, extra shifts and breaks, so searching "break" or "shift" finds it.
 627. Four more plain answers in Basics (meeting other artists, teaching without being an expert, photographing a drawing or print, what a market table is like), and asking a question with no helper now finds the Basics answer asked much the same way, before naming a tool.
 628. Four more plain answers in Basics: how many pieces a show needs, how long it takes to hear back, whether you need a website, and what to wear or say at an opening. Each can be asked in your own words with no helper.
+629. "How many pieces do I need for a show?" now gets the plain answer, not a count of your own pieces; "how many pieces do I have?" still gets the count.
