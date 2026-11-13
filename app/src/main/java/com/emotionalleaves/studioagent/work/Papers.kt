@@ -283,8 +283,8 @@ object Papers {
         pdf.text("Original art, prints and cards", 20f, gap = 40f, grey = true, center = true)
         pdf.text("Cash or card" + (if (payLink.isNotBlank()) ", or scan to pay" else ""), 22f, gap = 24f, center = true)
         fun qr(url: String) = com.emotionalleaves.studioagent.media.Qr.bitmap(if (url.startsWith("http")) url else "https://$url", 400)
-        if (payLink.isNotBlank()) { pdf.bitmap(qr(payLink.trim()), 170f); pdf.text("Scan to pay", 14f, gap = 30f, center = true) }
-        if (s.website.isNotBlank()) { pdf.bitmap(qr(s.website.trim()), 110f); pdf.text("More work: " + s.website, 13f, center = true, grey = true) }
+        if (payLink.isNotBlank()) qr(payLink.trim())?.let { pdf.bitmap(it, 170f); pdf.text("Scan to pay", 14f, gap = 30f, center = true) }
+        if (s.website.isNotBlank()) qr(s.website.trim())?.let { pdf.bitmap(it, 110f); pdf.text("More work: " + s.website, 13f, center = true, grey = true) }
         return pdf.save(out(ctx, docName(s, "Table_sign")))
     }
 
