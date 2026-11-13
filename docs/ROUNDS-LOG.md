@@ -549,3 +549,4 @@ One real change per round. Pushed and built every ten rounds.
 542. "New in this version" on Today now lists what rounds 521 to 541 added, in seven lines.
 543. Find anything finds tools and to-dos too: type "postcards", "teach" or "prices" and the tool comes up by name, first; open to-dos (yours and the app's) are listed with their dates.
 544. Ideas offers "Lots on your mind? Empty your head" beside "Park a picture", for when it is more than one idea.
+545. One way to recognise a question you have answered before. Adding a question already filled in a past answer; the offer under an empty answer (round 534) used a second, different matcher. Both now use the same one, which knows that "practice", "artwork" and "work", or "influences" and "what inspires you", ask the same thing.

@@ -553,8 +553,8 @@ object Engine {
 
     /** An answer you already wrote to the same or a very similar question in another application, if there is one. */
     fun priorAnswer(question: String, appls: List<Appl>, exceptId: Long): String =
-        appls.filter { it.id != exceptId }.flatMap { answers(it) }.filter { it.second.isNotBlank() }
-            .map { it to Texts.similarity(question, it.first) }.filter { it.second >= 0.5 }.maxByOrNull { it.second }?.first?.second.orEmpty()
+        // One matcher for past answers everywhere: the one that knows "practice" and "work" ask the same thing.
+        com.emotionalleaves.studioagent.domain.AnswerBank.best(question, appls.filter { it.id != exceptId }.flatMap { a -> answers(a).map { com.emotionalleaves.studioagent.domain.AnswerBank.Past(it.first, it.second, "") } })?.answer.orEmpty()
 
     /** Names the week (by its Monday) so the weekly look-ahead is offered once a week. */
     fun weekId(): String = LocalDate.now().with(DayOfWeek.MONDAY).toString()
