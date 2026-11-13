@@ -14,8 +14,8 @@ import kotlin.math.min
  * For deciding a print size, and for showing someone what it will look like before it is printed.
  */
 object Mockup {
-    /** Wall width in inches that the picture covers; a 48-inch bench sits under the work for scale. */
-    private const val WALL_IN = 120.0
+    /** Wall height in inches shown above the floor, so a 57-inch hang sits a little above the middle, as in a gallery. */
+    private const val WALL_IN = 100.0
 
     fun render(imagePath: String, widthIn: Double, heightIn: Double, framed: Boolean, dest: File, outW: Int = 1600, outH: Int = 1100): File? {
         val b = draw(imagePath, widthIn, heightIn, framed, outW, outH) ?: return null
@@ -28,8 +28,8 @@ object Mockup {
         val art = ImageTools.decode(imagePath, 1600) ?: return null
         val b = Bitmap.createBitmap(outW, outH, Bitmap.Config.ARGB_8888)
         val c = Canvas(b)
-        val ppi = outW / WALL_IN
         val floorY = outH * 0.84f
+        val ppi = floorY / WALL_IN
         // Wall: a soft light falling from above; floor: pale wood.
         c.drawRect(0f, 0f, outW.toFloat(), floorY, Paint().apply { shader = LinearGradient(0f, 0f, 0f, floorY, 0xFFF7F6F2.toInt(), 0xFFE6E4DE.toInt(), Shader.TileMode.CLAMP) })
         c.drawRect(0f, floorY, outW.toFloat(), outH.toFloat(), Paint().apply { color = 0xFFC9B79C.toInt() })
@@ -57,9 +57,9 @@ object Mockup {
         // A bench 48 inches wide and 18 high, so the size reads at a glance.
         val bw = (48 * k); val bh = (18 * k)
         val bench = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF3A3530.toInt() }
-        c.drawRect(RectF(cx - bw / 2, floorY - bh, cx + bw / 2, floorY - bh + 3 * k), bench)
-        c.drawRect(RectF(cx - bw / 2 + 2 * k, floorY - bh, cx - bw / 2 + 4 * k, floorY), bench)
-        c.drawRect(RectF(cx + bw / 2 - 4 * k, floorY - bh, cx + bw / 2 - 2 * k, floorY), bench)
+        c.drawRect(RectF(cx - bw / 2, floorY - bh, cx + bw / 2, floorY - bh + 2 * k), bench)
+        c.drawRect(RectF(cx - bw / 2 + 3 * k, floorY - bh, cx - bw / 2 + 4.5f * k, floorY), bench)
+        c.drawRect(RectF(cx + bw / 2 - 4.5f * k, floorY - bh, cx + bw / 2 - 3 * k, floorY), bench)
         return b
     }
 }

@@ -147,7 +147,7 @@ object Papers {
             if (a.imagePath.isNotBlank()) pdf.image(a.imagePath, 250f)
             pdf.text(caption(pdf, a), 11f, gap = 2f)
             pdf.text(listOfNotNull(inventoryNo(s, a),
-                if (a.editionSize > 1) "edition of ${a.editionSize}, ${a.editionUsed} made" else null,
+                if (a.editionSize > 1) "${a.editionUsed} of ${a.editionSize} made" else null,
                 if (a.nfs) "not for sale" else if (a.price > 0) money(s, a.price) else null,
                 a.location.takeIf { it.isNotBlank() && it != "Studio" }?.let { "at $it" }
             ).joinToString(". ") + ".", 9.5f, grey = true, gap = 2f)
