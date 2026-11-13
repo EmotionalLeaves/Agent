@@ -66,6 +66,8 @@ class Settings(ctx: Context) {
     var todayHidden by S("todayHidden")
     /** Kinds of notification switched off: calls, week, waiting, studio, session, tasks. */
     var mutedNotifs by S("mutedNotifs")
+    /** "", "light" or "dark": the app's look, or the phone's when blank. */
+    var look by S("look")
     var website by S("website")
     var city by S("city")
     /** A university or college you work or study at: its campus calls are open to you, so they are kept. */

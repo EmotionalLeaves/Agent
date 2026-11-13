@@ -57,6 +57,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -148,7 +149,14 @@ private val AppShapes = Shapes(
 
 @Composable
 fun StudioTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) DarkColors else LightColors, typography = AppType, shapes = AppShapes, content = content)
+    MaterialTheme(colorScheme = if (isDark()) DarkColors else LightColors, typography = AppType, shapes = AppShapes, content = content)
+}
+
+/** Dark or light: the phone's choice unless you picked one in Settings (an evening studio may want dark, a bright day light). */
+@Composable
+fun isDark(): Boolean {
+    val tick by st.changed.collectAsState()
+    return when (if (tick >= 0) st.look else "") { "dark" -> true; "light" -> false; else -> isSystemInDarkTheme() }
 }
 
 /* Buttons: squared-off rather than pill-shaped, and tall enough to hit without looking. */
@@ -260,7 +268,7 @@ fun Panel(onClick: (() -> Unit)? = null, strong: Boolean = false, content: @Comp
 /** A strip of masking tape, drawn at a slight angle over the top edge of whatever it sits on. */
 @Composable
 fun TapeStrip(modifier: Modifier = Modifier, angle: Float = -3f) {
-    val tape = if (isSystemInDarkTheme()) Color(0xFFCDBB72) else Color(0xFFE9D27E)
+    val tape = if (isDark()) Color(0xFFCDBB72) else Color(0xFFE9D27E)
     Box(modifier.rotate(angle).size(width = 92.dp, height = 22.dp).background(tape.copy(alpha = 0.92f)))
 }
 

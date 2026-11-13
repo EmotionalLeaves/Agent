@@ -436,7 +436,7 @@ val settingIndex = listOf(
     "Your name, email, phone, website" to "you", "City and state" to "you", "Mediums, what your work is about" to "you", "Goals for the year" to "you", "Currency" to "you",
     "Days you work, work hours" to "hours", "Rest after work before studio time" to "hours", "Bedtime" to "hours", "Notifications a day" to "hours", "Which notifications" to "hours",
     "Studio time in my calendar" to "hours", "Silence my phone during sessions (do not disturb)" to "hours", "A studio friend to text" to "hours", "Studio playlist, music" to "hours", "Focus or blocker app (Honest Lockout)" to "hours",
-    "Calm Today" to "calm", "What Today shows (cards)" to "calm", "Days off from the app" to "calm", "Wi-Fi only, while charging" to "calm", "Social media help" to "calm", "Session length" to "calm",
+    "Calm Today" to "calm", "Dark or light look (theme)" to "calm", "What Today shows (cards)" to "calm", "Days off from the app" to "calm", "Wi-Fi only, while charging" to "calm", "Social media help" to "calm", "Session length" to "calm",
     "Keep the screen on" to "calm", "Hide the gray explanations" to "calm",
     "Level and gates" to "rules", "Fee caps and monthly budget" to "rules", "Calls to send this year" to "rules", "Farthest distance for calls" to "rules",
     "Blocked organizers" to "rules", "Outreach emails a week" to "rules", "Prepare a free entry each week (autopilot)" to "rules",
@@ -618,6 +618,7 @@ fun SettingsScreen(nav: NavController, section: String) {
             "calm" -> {
                 Text("Each of these is a default you can switch. None of them is a rule about you.")
                 H("Today")
+                Choice("How the app looks", listOf("", "light", "dark"), st.look, names = { mapOf("" to "Like the phone", "light" to "Light", "dark" to "Dark")[it] ?: it }) { st.look = it }
                 Toggle("Calm Today: show only the next step and Start", st.calmToday) { st.calmToday = it }
                 // Today, your way: each card can be switched off on its own.
                 Expand("What Today shows") {

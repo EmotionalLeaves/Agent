@@ -661,3 +661,4 @@ One real change per round. Pushed and built every ten rounds.
 654. "One of your finished pieces each day" joins the Today cards you can switch off.
 655. Which notifications, in Settings, Hours and calm: studio time coming up, time up in a session, deadlines and show days, a call that fits, something waiting for your yes, and the week ahead can each be switched off. Results of entries, an email that did not send, and the bedtime reminder always come through.
 656. The label for the week-ahead notification no longer names a day it may not come on.
+657. How the app looks: like the phone, light or dark, in Settings, Hours and calm (an evening studio may want dark, a bright day light), whatever the phone is set to.
