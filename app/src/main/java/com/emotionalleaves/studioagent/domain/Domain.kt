@@ -1382,8 +1382,8 @@ object Dump {
         // A date written out: "nov 20", "20 november", "11/20", "the 20th" (the next one that has not passed).
         val months = listOf("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
         fun next(m: Int, d: Int): LocalDate? = runCatching { LocalDate.of(today.year, m, d).let { if (it.isBefore(today)) it.plusYears(1) else it } }.getOrNull()
-        Regex("\\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\\.? (\\d{1,2})(st|nd|rd|th)?\\b").find(low)?.let { m -> next(months.indexOf(m.groupValues[1]) + 1, m.groupValues[2].toInt())?.let { return it } }
-        Regex("\\b(\\d{1,2})(st|nd|rd|th)? (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)").find(low)?.let { m -> next(months.indexOf(m.groupValues[3]) + 1, m.groupValues[1].toInt())?.let { return it } }
+        Regex("\\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\.? (\\d{1,2})(st|nd|rd|th)?\\b").find(low)?.let { m -> next(months.indexOf(m.groupValues[1].take(3)) + 1, m.groupValues[2].toInt())?.let { return it } }
+        Regex("\\b(\\d{1,2})(st|nd|rd|th)? (jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\b").find(low)?.let { m -> next(months.indexOf(m.groupValues[3].take(3)) + 1, m.groupValues[1].toInt())?.let { return it } }
         Regex("\\b(\\d{1,2})/(\\d{1,2})\\b").find(low)?.let { m -> next(m.groupValues[1].toInt(), m.groupValues[2].toInt())?.let { return it } }
         Regex("\\bthe (\\d{1,2})(st|nd|rd|th)\\b").find(low)?.let { m -> val d = m.groupValues[1].toInt()
             runCatching { today.withDayOfMonth(d).let { if (it.isBefore(today)) it.plusMonths(1).withDayOfMonth(d) else it } }.getOrNull()?.let { return it } }

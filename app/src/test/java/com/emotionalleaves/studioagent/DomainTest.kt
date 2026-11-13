@@ -647,6 +647,7 @@ class DomainTest {
         assertEquals(java.time.LocalDate.of(2027, 1, 5), D.dayIn("renew by 1/5", fri))
         assertEquals(java.time.LocalDate.of(2026, 11, 20), D.dayIn("pay it on the 20th", fri))
         assertEquals(java.time.LocalDate.of(2026, 12, 2), D.dayIn("pay it on the 2nd", fri))
+        assertEquals(null, D.dayIn("book the market 2 weeks ahead", fri))
     }
 
     @Test fun aClassAddsUpAndIsPricedFairly() {
