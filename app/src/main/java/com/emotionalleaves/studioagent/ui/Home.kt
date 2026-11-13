@@ -970,6 +970,10 @@ fun Review(nav: NavController) {
                 names = { i -> active.firstOrNull { it.id.toString() == i }?.let { it.title.ifBlank { "Untitled #${it.id}" } } ?: i }) { i ->
                 i.toLongOrNull()?.let { st.focusWork = it }
             }
+            // Several in progress and none chosen: one picked for you, the one waited on longest, so the choice is not the obstacle.
+            if (active.size >= 3 && active.none { it.id == st.focusWork }) TextButton(onClick = {
+                st.focusWork = active.minByOrNull { w -> sessions.filter { it.artworkId == w.id }.maxOfOrNull { it.start } ?: w.createdAt }!!.id
+            }, modifier = Modifier.offset(x = (-12).dp)) { Text("Can't choose? Pick for me") }
             Small("Start now will open straight onto it. Other ideas can wait in Ideas.")
         }
         StageHead(3, "Your studio times", false)
