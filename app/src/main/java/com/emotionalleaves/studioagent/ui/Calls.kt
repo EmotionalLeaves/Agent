@@ -599,6 +599,17 @@ fun ApplScreen(nav: NavController, id: Long) {
         Note((if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.")
         StageHead(1, "Choose the works", chosenIds.isNotEmpty())
         val ready = works.filter { Engine.available(it) || it.id in chosenIds }
+        // Short of pieces: the making, planned back from the deadline, a Saturday for each.
+        val short = Engine.piecesShort(a, o, works)
+        if (short > 0 && o.deadline > now()) {
+            var planned by remember(a.id) { mutableStateOf("") }
+            Panel(strong = true) {
+                Text("This call needs ${Texts.count(short, "more piece")} than you have ready", fontWeight = FontWeight.SemiBold)
+                Small("Time to make " + (if (short == 1) "it" else "them") + ": " + Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline - 3 * 86_400_000L)) + ", sending three days early.")
+                if (planned.isBlank()) TextButton(onClick = { scope.io({ planned = it }) { planned = Engine.planMaking(a, o) } }) { Text("Plan the making") }
+                else { Text(planned); Small("Each one is on your week, on its Saturday.") }
+            }
+        }
         if (ready.isEmpty()) Empty("No pieces are ready to send yet. A piece is ready once it has a picture and you tap Mark it Ready to send on it in Studio.", "Open Studio") { nav.navigate("works") }
         else if (o.maxWorks > 0 && chosenIds.isEmpty()) Small("This call takes up to ${Texts.count(o.maxWorks, "work")}. Tap to choose.")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

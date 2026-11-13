@@ -677,6 +677,41 @@ object Engine {
             .maxByOrNull { it.fitScore * 10 - (if (it.fee > 0) it.fee.toInt() else 0) }
     }
 
+    /** How many more pieces a call needs than are ready for it, counting the ones already chosen. */
+    fun piecesShort(a: Appl, o: Opp, works: List<Artwork>): Int {
+        val need = when { o.minWorks > 0 -> o.minWorks; o.maxWorks > 0 -> minOf(o.maxWorks, 3); else -> 1 }
+        val have = works.count { available(it) || it.id in workIds(a) }
+        return (need - have).coerceAtLeast(0)
+    }
+
+    /**
+     * Making the missing pieces in time: the pieces in progress first (newest first), then ideas, each given a
+     * Saturday to be finished by, spread evenly over the weekends before the deadline (three days early).
+     * Returns what was planned, in words. Saturdays with a plan already are left alone.
+     */
+    suspend fun planMaking(a: Appl, o: Opp): String {
+        val works = dao.artworksNow(); val short = piecesShort(a, o, works)
+        if (short == 0) return "Enough pieces are ready."
+        val end = date(o.deadline - 3 * DAY); val today = LocalDate.now()
+        val sats = generateSequence(today.with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.SATURDAY))) { it.plusWeeks(1) }.takeWhile { !it.isAfter(end) }.toList()
+        if (sats.isEmpty()) return "There is no weekend left before this deadline. A piece you already have, or a later call, is the kinder choice."
+        val already = dao.eventsNow().filter { it.applId == a.id && it.type == "task" && it.title.startsWith("Finish ") && !it.done }
+        val pieces = (works.filter { it.status == "in_progress" }.sortedByDescending { it.createdAt } + works.filter { it.status in setOf("idea", "finished") }.sortedBy { if (it.status == "finished") 0 else 1 })
+            .filter { w -> already.none { it.title == "Finish " + w.title.ifBlank { "Untitled #${w.id}" } } }.take(short - already.size)
+        if (pieces.isEmpty() && already.isEmpty()) return "Start a piece (or add an idea) in Studio first, and the making can be planned."
+        val planned = mutableListOf<String>()
+        pieces.forEachIndexed { i, w ->
+            val idx = (((i + 1 + already.size) * sats.size) / short - 1).coerceIn(0, sats.size - 1)
+            val day = sats[idx]; val name = w.title.ifBlank { "Untitled #${w.id}" }
+            dao.put(Evt(type = "task", title = "Finish $name", date = millis(day.atTime(17, 0)), oppId = o.id, applId = a.id))
+            planned += name + " by " + day.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.US) + " " + day.monthValue + "/" + day.dayOfMonth
+        }
+        val tight = short > sats.size
+        return (if (planned.isEmpty()) "Already planned." else "Planned: " + planned.joinToString("; ") + ".") +
+            (if (pieces.size + already.size < short) " Still " + Texts.count(short - pieces.size - already.size, "piece") + " short: start one, or send fewer if the call allows." else "") +
+            (if (tight) " That is more than a piece a weekend. A smaller size, or a later call, may be kinder." else "")
+    }
+
     fun workIds(a: Appl): List<Long> = a.workIds.split(",").mapNotNull { it.trim().toLongOrNull() }
 
     /** The steps of putting up your own show, counted back from the opening (days before it), then the show and the take-down. */

@@ -507,6 +507,27 @@ class PartsTest {
         assertTrue(L.valueNotes(flat).first().startsWith("The values sit close together"))
     }
 
+    @Test fun missingPiecesGetASaturdayEach() = kotlinx.coroutines.runBlocking {
+        ctx
+        val now = System.currentTimeMillis(); val day = 86_400_000L
+        G.dao.put(Artwork(title = "Ready one", status = "documented", imagePath = "/x/r.jpg"))
+        G.dao.put(Artwork(title = "On the easel", status = "in_progress", createdAt = now))
+        G.dao.put(Artwork(title = "Just an idea", status = "idea", createdAt = now - day))
+        val oid = G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Needs three", minWorks = 3, deadline = now + 40 * day))
+        val o = G.dao.oppsNow().single { it.id == oid }
+        val aid = G.dao.put(com.emotionalleaves.studioagent.data.Appl(oppId = oid))
+        val a = G.dao.applsNow().single { it.id == aid }
+        val E = com.emotionalleaves.studioagent.work.Engine
+        assertEquals(2, E.piecesShort(a, o, G.dao.artworksNow()))
+        val said = E.planMaking(a, o)
+        assertTrue(said, said.startsWith("Planned: On the easel by Sat") && said.contains("Just an idea by Sat"))
+        val tasks = G.dao.eventsNow().filter { it.applId == aid && it.title.startsWith("Finish ") }
+        assertEquals(2, tasks.size)
+        assertTrue(tasks.all { E.date(it.date).dayOfWeek == java.time.DayOfWeek.SATURDAY && it.date < o.deadline - 3 * day })
+        // Asking again plans nothing twice.
+        assertTrue(E.planMaking(a, o).startsWith("Already planned"))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!
