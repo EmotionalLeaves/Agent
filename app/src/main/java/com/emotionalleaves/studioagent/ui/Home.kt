@@ -253,6 +253,27 @@ fun Home(nav: NavController) {
             }
         }
 
+        // Until the first show: the road there, as seven milestones with the next one named. It disappears once you are in a show.
+        if (st.onboarded && appls.none { it.status == "accepted" }) {
+            val contacts by dao.contacts().collectAsState(emptyList())
+            val venues = contacts.filter { it.kind != "subscriber" }
+            val stones = listOf(
+                "Three pieces with pictures" to (works.count { it.imagePath.isNotBlank() } >= 3),
+                "Your statement approved" to docs.any { it.type == "statement" && it.approved && it.text.isNotBlank() },
+                "Five real places in People" to (venues.size >= 5),
+                "Go and look at two of them" to (venues.count { it.notes.contains("Visited on") } + events.count { it.type == "opening" && it.done } >= 2),
+                "Write to one" to venues.any { it.status in setOf("sent", "followed_up", "interested", "more", "not_now", "no") },
+                "Send your first application" to appls.any { it.submittedAt > 0 },
+                "Your first show" to false
+            )
+            val at = stones.indexOfFirst { !it.second }.coerceAtLeast(0)
+            Section("The road to your first show")
+            Row(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                stones.forEachIndexed { i, (_, done) -> Box(Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp)).background(if (done) MaterialTheme.colorScheme.primary else if (i == at) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHigh)) }
+            }
+            Small("Next: ${stones[at].first} (${at + 1} of ${stones.size}). Order does not matter much; every one counts.")
+        }
+
         // Proof of what got done, in plain counts. No streaks, nothing to break.
         val weekStart = Engine.millis(today.with(java.time.DayOfWeek.MONDAY).atStartOfDay())
         val weekSessions = sessions.filter { it.start >= weekStart && it.end > it.start }
