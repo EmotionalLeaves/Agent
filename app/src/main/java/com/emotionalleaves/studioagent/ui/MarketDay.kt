@@ -87,7 +87,7 @@ fun MarketDay(nav: NavController) {
                 Column(Modifier.weight(1f)) { Num("Price, " + st.currency, price) { price = it } }
                 Column(Modifier.weight(1f)) { Whole("How many", qty) { qty = it } }
             }
-            if (name.value.isNotBlank() && price > 0) OutlinedButton(onClick = { st.marketItems = Market.itemsText(items + Market.Item(name.value.trim(), price, qty)); name.value = "" }) { Text("Add") }
+            if (name.value.isNotBlank() && price > 0) OutlinedButton(onClick = { st.marketItems = Market.itemsText(items + Market.Item(name.value.trim().replace(",", " ").replace(":", " "), price, qty)); name.value = "" }) { Text("Add") }
             Num("Booth or table fee, " + st.currency, st.marketFee) { st.marketFee = it }
             Small("A mix sells best: something under 10, something under 30, and a few originals. Price everything, in plain view.")
         }
