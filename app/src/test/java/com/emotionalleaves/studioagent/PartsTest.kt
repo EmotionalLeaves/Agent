@@ -652,6 +652,11 @@ class PartsTest {
         assertEquals("gouache", M.termFor("Gouache, pencil")); assertEquals("drawing", M.termFor("digital, archival print")); assertEquals("oil sketch", M.termFor("acrylic"))
     }
 
+    @Test fun everyToolOpensARealScreen() {
+        val nav = File("src/main/java/com/emotionalleaves/studioagent/ui/MainActivity.kt").readText()
+        com.emotionalleaves.studioagent.ui.toolGroups.flatMap { it.second }.forEach { (name, _, route) -> assertTrue("$name -> $route", nav.contains("composable(\"$route\")") || nav.contains("\"$route\" ->") || nav.contains("route = \"$route\"")) }
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

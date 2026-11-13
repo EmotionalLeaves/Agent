@@ -210,6 +210,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("market") { MarketDay(nav) }
             composable("pricing") { PricingScreen(nav) }
             composable("findable") { FindableScreen(nav) }
+            composable("tools") { ToolsScreen(nav) }
             composable("announce/{id}") { AnnounceScreen(nav, it.id()) }
             composable("ideas") { Ideas(nav) }
             composable("materials") { Materials(nav) }

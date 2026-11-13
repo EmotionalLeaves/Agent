@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.foundation.clickable
@@ -757,6 +758,7 @@ fun More(nav: NavController) {
             }
         }
         IconRow(Icons.Default.Search, "Find anything", "A piece, a call, a person, or ask a question") { nav.navigate("search") }
+        IconRow(Icons.Default.Menu, "Everything the app can do", "Every tool, grouped by what you want to get done") { nav.navigate("tools") }
         val statementOk = docs.any { it.type == "statement" && it.approved && it.text.isNotBlank() }
         IconRow(Icons.Default.Edit, "Statement, bio and CV", (if (statementOk) "Statement approved" else "Statement not approved yet") + ", " + Texts.count(facts.size, "CV line")) { nav.navigate("materials") }
         IconRow(Icons.Default.Search, "When someone looks you up", "What jurors and venues find online") { nav.navigate("findable") }
