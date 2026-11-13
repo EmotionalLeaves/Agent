@@ -391,3 +391,4 @@ One real change per round. Pushed and built every ten rounds.
 385. The daily check runs its quick steps (email, venues, openings) before the long read of the listing sites, which now stops opening new links after seven minutes, so a slow site never crowds out packs and backups.
 386. Back after ten days or more without a session, Today's step is a plain "Welcome back": nothing was missed, nothing to catch up, five minutes on the piece you were on is the whole step.
 387. Help answers two questions for later on: when to raise prices (and how much), and how artists come to be represented by a gallery.
+388. Records shows how much of the work you showed this year sold, and says when it is over half, the usual point to raise prices.

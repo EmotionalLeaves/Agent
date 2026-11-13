@@ -154,6 +154,13 @@ fun Records(nav: NavController) {
             val net = thisYear.sumOf { it.amount }
             if (thisYear.isNotEmpty()) Small((if (net >= 0) "Ahead by " else "Behind by ") + money(kotlin.math.abs(net)) + " this year.")
             Small("Entry fees this month ${money(Engine.feesThisMonth(ledger))}" + (if (st.feeBudget > 0) " of ${money(st.feeBudget)}" else ""))
+            // Of the works that hung in shows this year, how many sold: the number that says when prices can rise.
+            val shownIds = appls.filter { it.status == "accepted" && it.submittedAt >= Engine.millis(java.time.LocalDate.of(year, 1, 1).atStartOfDay()) }.flatMap { Engine.workIds(it) }.toSet()
+            if (shownIds.size >= 4) {
+                val soldIds = thisYear.filter { it.kind == "sale" }.map { it.artworkId }.toSet()
+                val pct = shownIds.count { it in soldIds } * 100 / shownIds.size
+                Small("Sold $pct% of the ${shownIds.size} works you showed this year." + if (pct > 50) " Above half is when raising prices by 10 to 20 percent is usual." else "")
+            }
         }
         Expand("Add a cost") {
             Choice("What kind", listOf("fee", "shipping", "print", "framing", "other"), kind, names = { mapOf("fee" to "Entry fee", "print" to "Printing")[it] ?: it.replaceFirstChar { c -> c.uppercase() } }) { kind = it }
