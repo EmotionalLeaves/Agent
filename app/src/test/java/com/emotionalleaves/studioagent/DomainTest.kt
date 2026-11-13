@@ -593,4 +593,10 @@ class DomainTest {
         val h = com.emotionalleaves.studioagent.domain.HoursByWeek.of(today, listOf(java.time.LocalDate.of(2027, 3, 8) to 1.5, java.time.LocalDate.of(2027, 3, 7) to 2.0, java.time.LocalDate.of(2027, 1, 1) to 9.0), 3)
         assertEquals(listOf(0.0, 2.0, 1.5), h)
     }
+
+    @Test fun theNextTitleInASeries() {
+        val T = com.emotionalleaves.studioagent.domain.Texts
+        assertEquals("Night Shift II", T.nextTitle("Night Shift")); assertEquals("Night Shift III", T.nextTitle("Night Shift II"))
+        assertEquals("Study 4", T.nextTitle("Study 3")); assertEquals("Untitled", T.nextTitle(" "))
+    }
 }

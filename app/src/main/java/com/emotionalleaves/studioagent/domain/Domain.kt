@@ -552,6 +552,15 @@ object Texts {
 
     fun words(s: String): Int = s.trim().split(Regex("\\s+")).count { it.isNotBlank() }
 
+    /** "Night Shift" -> "Night Shift II", "Night Shift II" -> "Night Shift III", "Study 3" -> "Study 4". */
+    fun nextTitle(t: String): String {
+        val s = t.trim().ifBlank { return "Untitled" }
+        Regex("^(.*?)\\s+(\\d+)$").find(s)?.let { return it.groupValues[1] + " " + (it.groupValues[2].toInt() + 1) }
+        val romans = listOf("II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X")
+        Regex("^(.*?)\\s+(II|III|IV|V|VI|VII|VIII|IX)$").find(s)?.let { m -> return m.groupValues[1] + " " + romans[romans.indexOf(m.groupValues[2]) + 1] }
+        return "$s II"
+    }
+
     /** Sentences over [max] words, the start of each: long sentences are where readers (and jurors) drift off. */
     fun longSentences(s: String, max: Int = 28): List<String> = s.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.split(Regex("\\s+")).size > max }.map { it.split(Regex("\\s+")).take(6).joinToString(" ") + "..." }
 
