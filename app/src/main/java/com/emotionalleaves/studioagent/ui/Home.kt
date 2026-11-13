@@ -159,10 +159,15 @@ fun Home(nav: NavController) {
         var showNew by remember { mutableStateOf(st.onboarded && version > 0 && st.seenVersion < version) }
         // A brand-new install has nothing to compare against: it starts as seen.
         LaunchedEffect(version) { if (!st.onboarded && st.seenVersion != version) st.seenVersion = version }
+        // One line, so today's step stays at the top of the screen; the list opens only when asked.
+        var openNew by remember { mutableStateOf(false) }
         if (showNew) Panel(strong = true) {
-            Text("New in this version", style = MaterialTheme.typography.titleSmall)
-            whatsNew.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
-            TextButton(onClick = { st.seenVersion = version; showNew = false }, modifier = Modifier.offset(x = (-12).dp)) { Text("Got it") }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("New in this version: " + Texts.count(whatsNew.size, "thing"), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                TextButton(onClick = { openNew = !openNew }) { Text(if (openNew) "Hide" else "Show") }
+                TextButton(onClick = { st.seenVersion = version; showNew = false }) { Text("Got it") }
+            }
+            if (openNew) whatsNew.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
         }
         // The one next step, pinned to the wall.
         val n = next

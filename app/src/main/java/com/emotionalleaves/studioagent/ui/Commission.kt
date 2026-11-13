@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emotionalleaves.studioagent.G
 import com.emotionalleaves.studioagent.data.Artwork
@@ -48,7 +49,7 @@ fun CommissionStart(nav: NavController) {
         Field("Their email (for the quote)", email, { email = it })
         Field("Or their phone", phone, { phone = it })
         Field("What they would like (subject, colors, where it will hang)", brief, { brief = it }, lines = 3, mic = true)
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)) {
             androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.weight(1f)) { Num("Width, inches", wIn) { wIn = it; if (!priceTouched) price = Engine.commissionPrice(wIn, hIn) } }
             androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.weight(1f)) { Num("Height, inches", hIn) { hIn = it; if (!priceTouched) price = Engine.commissionPrice(wIn, hIn) } }
         }

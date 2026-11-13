@@ -426,11 +426,12 @@ object Planner {
             plans.let(::inMonth).let { p -> p.take(3).forEach { lines += "${it.first.dayOfMonth} ${ym.month.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.US)}: ${it.second}" }; if (p.size > 3) lines += "and ${p.size - 3} more of your own dates" }
             calls.let(::inMonth).let { c -> if (c.isNotEmpty()) lines += "Closing: " + c.take(3).joinToString("; ") { it.second } + (if (c.size > 3) "; and ${c.size - 3} more" else "") }
             again.let(::inMonth).let { a -> if (a.isNotEmpty()) lines += "Likely to open again: " + a.take(3).joinToString("; ") { it.second } }
-            if (inMonth(calls).isEmpty() && inMonth(plans).isEmpty()) lines += when {
-                level <= 0 -> "Focus: make, and go and look at one place near you."
-                level == 1 -> "Focus: one local or campus call, and one venue to write to."
-                else -> "Focus: one regional call that fits, and keep making."
-            }
+            // A quiet month gets one plain focus for your level, a different one each month so the year has a shape.
+            if (inMonth(calls).isEmpty() && inMonth(plans).isEmpty()) lines += "Focus: " + when {
+                level <= 0 -> listOf("make, and go and look at one place near you.", "finish one piece and photograph it well.", "post one piece, and ask three people which of yours is strongest.", "go to one opening and say hello.")
+                level == 1 -> listOf("one local or campus call, and one venue to write to.", "go to one opening and say hello.", "finish two pieces for the series.", "write to a library or cafe that shows local work.")
+                else -> listOf("one regional call that fits, and keep making.", "write to one gallery you have visited.", "a proposal for a small solo show.", "finish the strongest piece of the series.")
+            }[k % 4]
             ym to lines
         }
     }
