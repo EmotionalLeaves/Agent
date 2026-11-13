@@ -523,3 +523,4 @@ One real change per round. Pushed and built every ten rounds.
 516. A show you are in has "After the show: two lines for next time": what went well and one thing to do differently (by voice if easier), kept with your writing and found by Find anything, to read before the next show.
 517. The page of a show you got into shows what you wrote after your last one ("Last time you wrote: ..."), so each show starts from the lesson of the one before.
 518. Today's "calls fit you this week" step opens Decide, one at a time, when there are two or more, and opening it counts as having looked.
+519. "New in this version" brought up to date with the rounds since 490.

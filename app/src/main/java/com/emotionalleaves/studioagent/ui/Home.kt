@@ -945,11 +945,11 @@ val lightPrompts = listOf(
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
 val whatsNew = listOf(
-    "Photograph every finished piece in one go, each checked and color-corrected, and start a new piece like any other with one tap.",
-    "Foundations now goes on to six weeks on building a body of work; Fresh eyes can compare a piece with its photo before.",
-    "Today: one goal a month (tell a friend), the art year's seasons, practice on quiet weeknights, and what the app did while you were away.",
-    "Is everything working? checks the daily run, listing sites, notifications, backups and the writing helper in plain words.",
-    "Posts vary week to week (a piece, how one was made, a series); a faint name on posted pictures if you like; post a show from its photos.",
-    "Each venue's page shows what has happened with them; your dates can go to another calendar; your hours and your prices side by side.",
-    "Sessions say when five minutes are left, and when bedtime is near. Ask answers common questions even without the writing helper."
+    "Social media help is off unless you turn it on (Settings, Hours and calm); days off from the app are there too.",
+    "On a break at work, Today offers five-minute jobs, and calls can be decided one at a time with big buttons.",
+    "From your wall: one of your finished pieces on Today each day.",
+    "At an opening: keep the names of people you talked to, with a reminder to follow up; photograph an opening poster to put it on your calendar.",
+    "After a show, two lines for next time, shown again before the next one; a check that the venue paid you.",
+    "Print this week for the fridge; your CV as text; People as a spreadsheet; a portfolio page with no account.",
+    "A distance limit for calls, and Near me or online in All calls."
 )
