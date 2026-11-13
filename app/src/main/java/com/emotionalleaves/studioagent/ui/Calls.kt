@@ -332,6 +332,8 @@ fun CallDetail(nav: NavController, id: Long) {
     val why = Scoring.ineligible(o, p, now())
 
     Screen(o.title.ifBlank { "Call" }, nav) {
+        // The call as its poster, the same one it wears in the list.
+        CallPoster(o) { }
         // The facts that decide it, at a glance: when, what it costs, how well it fits.
         Panel {
             if (whereLine(o).isNotBlank()) Small(whereLine(o))
