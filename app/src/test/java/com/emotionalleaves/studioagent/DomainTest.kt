@@ -725,4 +725,12 @@ class DomainTest {
         assertEquals(null, F.toShow(more, seen, "2026-11-14")) // not the next
         assertEquals(null, F.toShow(more, F.mark(seen, "sent", "done"), "2026-11-13")) // put away
     }
+
+    @Test fun whatOnePieceEarned() {
+        val P = com.emotionalleaves.studioagent.domain.PieceMoney
+        val e = listOf("sale" to 400.0, "commission" to -120.0, "framing" to -45.0, "print" to -30.0, "framing" to -5.0)
+        assertEquals(listOf("Sold for" to 400.0, "The venue's commission" to -120.0, "Printing" to -30.0, "Framing" to -50.0), P.lines(e))
+        assertEquals(200.0, P.kept(e), 0.001)
+        assertEquals(listOf("Sold for" to 10.0, "Postage" to -2.0), P.lines(listOf("sale" to 10.0, "postage" to -2.0)))
+    }
 }

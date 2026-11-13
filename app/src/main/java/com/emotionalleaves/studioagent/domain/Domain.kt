@@ -1606,3 +1606,16 @@ object Firsts {
     /** On a fresh install with history (a restore), every first already reached is marked seen, so nothing old is celebrated. */
     fun markAll(reached: List<First>, day: String): String = reached.joinToString(",") { "${it.key}:$day" }
 }
+
+// ---------------------------------------------------------------- what one piece earned
+/** For one piece: what came in, what went out by kind, and what you kept. Only kinds that happened are listed. */
+object PieceMoney {
+    private val names = listOf("sale" to "Sold for", "commission" to "The venue's commission", "print" to "Printing", "framing" to "Framing",
+        "shipping" to "Shipping", "fee" to "Entry fees", "materials" to "Materials", "other" to "Other costs")
+
+    fun lines(entries: List<Pair<String, Double>>): List<Pair<String, Double>> =
+        names.mapNotNull { (k, label) -> entries.filter { it.first == k }.sumOf { it.second }.takeIf { it != 0.0 }?.let { label to it } } +
+            entries.filter { e -> names.none { it.first == e.first } }.groupBy { it.first }.map { (k, l) -> k.replaceFirstChar { it.uppercase() } to l.sumOf { it.second } }
+
+    fun kept(entries: List<Pair<String, Double>>): Double = entries.sumOf { it.second }
+}

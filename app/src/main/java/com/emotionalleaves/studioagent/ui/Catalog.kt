@@ -571,6 +571,17 @@ fun WorkDetail(nav: NavController, id: Long) {
                 OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.backLabels(ctx, st, listOf(w)); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Label for the back") }
             }
         }
+        // Money on this piece, once any has moved: what it sold for, what went out, and what you kept.
+        val pieceLedger by dao.ledger().collectAsState(emptyList())
+        val mine = pieceLedger.filter { it.artworkId == w.id }.map { it.kind to it.amount }
+        if (mine.any { it.first == "sale" }) Panel {
+            Text("Money on this piece", fontWeight = FontWeight.SemiBold)
+            com.emotionalleaves.studioagent.domain.PieceMoney.lines(mine).forEach { (label, amt) ->
+                Row { Text(label, Modifier.weight(1f)); Text(money(amt)) }
+            }
+            val kept = com.emotionalleaves.studioagent.domain.PieceMoney.kept(mine)
+            Row { Text("You kept", Modifier.weight(1f), fontWeight = FontWeight.SemiBold); Text(money(kept), fontWeight = FontWeight.SemiBold) }
+        }
         Expand("Price, edition and where it is") {
         TextButton(onClick = { nav.navigate("pricing") }) { Text("Prices for all your work") }
         var priceVersion by remember { mutableStateOf(0) }
