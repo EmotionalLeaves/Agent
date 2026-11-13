@@ -528,6 +528,18 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
         Explain("What do these mean?", "Idea: not started. In progress: still making it. Finished: done, not photographed yet. Ready to send: has its picture and details and can go to calls. Out on a call, Shown and Sold are set by the app when they happen.")
         // The rest only matters once a piece is heading out, so it stays folded until then.
+        // This piece's own to-dos (from Empty your head, a commission, a sale), ticked off here.
+        val pieceTasks by dao.events().collectAsState(emptyList())
+        val mineOpen = pieceTasks.filter { it.artworkId == w.id && it.type == "task" && !it.done }
+        if (mineOpen.isNotEmpty()) Panel {
+            Text("To do for this piece", fontWeight = FontWeight.SemiBold)
+            mineOpen.forEach { e -> key("t" + e.id) {
+                Row(Modifier.fillMaxWidth().toggleable(false, role = androidx.compose.ui.semantics.Role.Checkbox) { scope.undoable("Ticked off: " + e.title, { dao.put(e.copy(done = true)) }, { dao.put(e) }) }, verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.Checkbox(checked = false, onCheckedChange = null)
+                    Column(Modifier.weight(1f)) { Text(e.title); if (e.date > 0) Small(fmtDate(e.date)) }
+                }
+            } }
+        }
         Expand("Size, year, medium, format, series", startOpen = w.widthIn <= 0 && w.status in setOf("finished", "documented")) {
             Whole("Year", w.year) { save(w.copy(year = it)) }
             Field("Medium (blank uses the default for its format)", w.medium, { save(w.copy(medium = it)) })
