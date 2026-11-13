@@ -617,3 +617,4 @@ One real change per round. Pushed and built every ten rounds.
 610. A handout for the class, from Teach a class: one page for the people who come, with the class's running order, three small things to try at home (for the kind of class it is), a line that doing it badly is how everyone starts, and where to find you.
 611. Booked? Once a venue says yes, give Teach a class the date: the class goes on your to-dos, a shopping day three days before it, and every supply for that many people onto your supplies list as needed.
 612. Foundations lets you move on: the week you are on has "Move on to the next week", which ticks off what is left of it. Doing every exercise is not the point; moving on is part of practice.
+613. The first day of a break from work, Today says so once: every day until then is free, a good stretch for a bigger piece, a few Foundations weeks, or more studio hours if you want them (opening Your week).

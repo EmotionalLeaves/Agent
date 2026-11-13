@@ -1690,6 +1690,11 @@ object Engine {
                 return NextStep("Three no's in a row", "Every working artist has runs like this; most work is turned down many times first. One change helps most: ask three people which piece is strongest, check the photos, or try a few local calls before the bigger ones.", "feedback")
             }
         }
+        // The start of a break from work: said once, that day, with what a long free stretch is good for.
+        if (st.offUntil.isNotBlank() && st.offUntil >= today.toString() && (st.breakTold != st.offUntil || st.breakToldDay == today.toString())) {
+            st.breakTold = st.offUntil; st.breakToldDay = today.toString()
+            return NextStep("A break from work", "Every day until ${java.time.LocalDate.parse(st.offUntil).let { "${it.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.US)} ${it.dayOfMonth}" }} is free. A good stretch for a bigger piece, a few Foundations weeks, or more studio hours if you want them.", "week")
+        }
         // Painting after work means painting by lamplight: said once, on the day it first matters, with the fix.
         if ((st.lightTold.isBlank() || st.lightTold == today.toString()) && Regex("paint|acrylic|oil|watercolo|gouache|pastel|colou?r", RegexOption.IGNORE_CASE).containsMatchIn(st.mediums) &&
             dao.sessionsNow().count { it.end > it.start && java.time.Instant.ofEpochMilli(it.start).atZone(zone).hour >= 17 } >= 3) {
