@@ -251,4 +251,17 @@ class AppTest {
         s.snoozeDay = java.time.LocalDate.now().toString()
         assertEquals("Nothing else needs you today", Engine.nextStep().title)
     }
+
+    @Test fun slippedToDosAreSpreadNotPiledUp() = runBlocking {
+        ctx
+        val dao = G.dao; val day = 86_400_000L; val now = System.currentTimeMillis()
+        (1..5).forEach { dao.put(Evt(type = "task", title = "Late $it", date = now - (10 + it) * day)) }
+        dao.put(Evt(type = "submit", title = "Deadline", date = now - 3 * day))
+        dao.put(Evt(type = "task", title = "Done one", date = now - 20 * day, done = true))
+        assertEquals(5, Engine.spreadOverdue())
+        val tasks = dao.eventsNow().filter { it.type == "task" && !it.done }
+        assertTrue(tasks.all { it.date > now + day })
+        assertEquals(3, tasks.map { Engine.date(it.date) }.toSet().size) // two a day
+        assertTrue(dao.eventsNow().first { it.type == "submit" }.date < now)
+    }
 }
