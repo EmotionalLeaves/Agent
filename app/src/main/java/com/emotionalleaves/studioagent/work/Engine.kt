@@ -1196,7 +1196,8 @@ object Engine {
         return com.emotionalleaves.studioagent.domain.Firsts.reached(com.emotionalleaves.studioagent.domain.Firsts.Counts(
             works.count { it.status != "idea" }, works.count { it.imagePath.isNotBlank() }, works.count { it.status !in setOf("idea", "in_progress") },
             sessions.size, sessions.any { it.end - it.start >= 55 * 60_000L }, appls.count { it.submittedAt > 0 }, appls.count { it.status == "accepted" },
-            dao.ledgerNow().count { it.kind == "sale" }, dao.factsNow().count { it.category == "teaching" }))
+            dao.ledgerNow().count { it.kind == "sale" }, dao.factsNow().count { it.category == "teaching" },
+            dao.eventsNow().count { it.type == "opening" && it.done }, dao.contactsNow().count { it.sentAt > 0 && it.kind != "subscriber" }))
     }
 
     fun cancelGoal(ctx: Context) { try { listOf("goal", "goal-warn", "goal-bed").forEach { WorkManager.getInstance(ctx).cancelUniqueWork(it) } } catch (e: Exception) { } }
