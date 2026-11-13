@@ -166,10 +166,7 @@ fun Calls(nav: NavController) {
                 list.forEach { o ->
                     key(o.id) {
                         Panel {
-                            Row(Modifier.fillMaxWidth().clickable { nav.navigate("call/${o.id}") }, verticalAlignment = Alignment.CenterVertically) {
-                                Text(o.title, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Full details", tint = MaterialTheme.colorScheme.outline)
-                            }
+                            CallPoster(o) { nav.navigate("call/${o.id}") }
                             if (whereLine(o).isNotBlank()) Small(whereLine(o))
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Tag(fitLabel(o.fitScore), strong = true)
@@ -1379,3 +1376,24 @@ fun callKindTip(kind: String): String = when (kind) {
 fun resultsDay(o: Opp): LocalDate? = if (o.rawText.isBlank()) null else
     com.emotionalleaves.studioagent.domain.CallReader.dateAfter(o.rawText, "notif|results (will be|are) (announced|sent|emailed)|accepted artists (will be|are)|selections? (will be )?announced|jury(ing)? results", LocalDate.now().minusMonths(6))
         ?.takeIf { o.deadline <= 0 || !it.isBefore(Engine.date(o.deadline)) }
+
+
+/**
+ * A call as a small poster: its own color field, the title in white, and how many days are left, big, in the corner,
+ * so the nearest deadline is the one the eye finds first.
+ */
+@Composable
+fun CallPoster(o: Opp, onOpen: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val days = if (o.deadline > 0) ((o.deadline - System.currentTimeMillis()) / 86_400_000L).toInt().coerceAtLeast(0) else -1
+    Box(Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(16.dp)).clickable(onClickLabel = "Full details") { onOpen() }) {
+        ColorField(cs.primary, Modifier.matchParentSize(), key = o.id + 1000, shift = ((o.id * 61) % 120 - 60).toFloat())
+        Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Transparent, 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.72f))))
+        if (days >= 0) Column(Modifier.align(Alignment.TopEnd).padding(12.dp).clip(RoundedCornerShape(12.dp)).background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.35f)).padding(horizontal = 10.dp, vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("$days", style = MaterialTheme.typography.headlineMedium, color = androidx.compose.ui.graphics.Color.White)
+            Text(if (days == 1) "day left" else "days left", style = MaterialTheme.typography.labelSmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
+        }
+        Text(o.title, Modifier.align(Alignment.BottomStart).padding(14.dp).fillMaxWidth(0.78f), style = MaterialTheme.typography.titleLarge, color = androidx.compose.ui.graphics.Color.White, maxLines = 3)
+    }
+}
