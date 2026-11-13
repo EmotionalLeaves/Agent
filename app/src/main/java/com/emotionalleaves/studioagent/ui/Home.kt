@@ -387,7 +387,7 @@ fun SessionScreen(nav: NavController) {
             Section("What kind?")
             // Three kinds as rows with a line each, so the choice explains itself.
             Column {
-                listOf("make" to ("Make" to "Work on a piece."), "skill" to ("Practice" to "A new medium or technique. Counts toward your week."),
+                listOf("make" to ("Make" to "Work on a piece."), "skill" to ("Practice" to "The next foundations exercise, or any exercise. Counts toward your week."),
                     "light" to ("Light" to "Low effort: sort references, a 15-minute sketch, tidy up.")).forEach { (k, tl) ->
                     val on = kind == k
                     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (on) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)

@@ -1,6 +1,8 @@
 package com.emotionalleaves.studioagent.ui
 
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.border
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -666,16 +668,32 @@ fun ApplScreen(nav: NavController, id: Long) {
         }
         if (ready.isEmpty()) Empty("No pieces are ready to send yet. A piece is ready once it has a picture and you tap Mark it Ready to send on it in Studio.", "Open Studio") { nav.navigate("works") }
         else if (o.maxWorks > 0 && chosenIds.isEmpty()) Small("This call takes up to ${Texts.count(o.maxWorks, "work")}. Tap to choose.")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            works.filter { Engine.available(it) || it.id in chosenIds }.forEach { w ->
-                FilterChip(selected = w.id in chosenIds, onClick = {
-                    val next = if (w.id in chosenIds) chosenIds - w.id else chosenIds + w.id
-                    // The covering email lists the works, so it follows the choice, unless you have rewritten it yourself.
-                    val byId = works.associateBy { it.id }
-                    val auto = Engine.applicationEmail(o, chosenIds.mapNotNull { byId[it] }, a.statement)
-                    val body = if (a.emailBody.isBlank() || a.emailBody == auto) Engine.applicationEmail(o, next.mapNotNull { byId[it] }, a.statement) else a.emailBody
-                    save(a.copy(workIds = next.joinToString(","), packDir = "", emailBody = body))
-                }, label = { Text(w.title.ifBlank { "Untitled #${w.id}" }) })
+        // Chosen by their pictures, the way a juror will see them: tap to add or take out; the number is the order they go in.
+        fun toggle(w: com.emotionalleaves.studioagent.data.Artwork) {
+            val next = if (w.id in chosenIds) chosenIds - w.id else chosenIds + w.id
+            // The covering email lists the works, so it follows the choice, unless you have rewritten it yourself.
+            val byId = works.associateBy { it.id }
+            val auto = Engine.applicationEmail(o, chosenIds.mapNotNull { byId[it] }, a.statement)
+            val body = if (a.emailBody.isBlank() || a.emailBody == auto) Engine.applicationEmail(o, next.mapNotNull { byId[it] }, a.statement) else a.emailBody
+            save(a.copy(workIds = next.joinToString(","), packDir = "", emailBody = body))
+        }
+        works.filter { Engine.available(it) || it.id in chosenIds }.chunked(3).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                row.forEach { w ->
+                    val pos = chosenIds.indexOf(w.id)
+                    Column(Modifier.weight(1f).clickable(role = androidx.compose.ui.semantics.Role.Checkbox, onClickLabel = if (pos >= 0) "Take out" else "Choose") { toggle(w) }) {
+                        Box(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(4.dp))
+                            .border(if (pos >= 0) 3.dp else 1.dp, if (pos >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(4.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerLowest)) {
+                            if (w.imagePath.isNotBlank()) PathImage(w.imagePath, Modifier.fillMaxSize().padding(6.dp), 300, androidx.compose.ui.layout.ContentScale.Fit, w.title)
+                            if (pos >= 0) Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(26.dp).clip(androidx.compose.foundation.shape.CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
+                                Text("${pos + 1}", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                        Text(w.title.ifBlank { "Untitled #${w.id}" }, style = MaterialTheme.typography.labelMedium, maxLines = 2, fontWeight = if (pos >= 0) FontWeight.SemiBold else FontWeight.Normal)
+                    }
+                }
+                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
             }
         }
         // The pictures are most of the decision: a dark, washed-out or soft one is named now, while there is time to reshoot.
