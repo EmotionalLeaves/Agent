@@ -49,6 +49,14 @@ fun TeachScreen(nav: NavController) {
         val (flat, per) = Workshop.fee(minutes, people)
         Small("A fair fee: about ${money(flat)} for the class (the setting up counts), or ${money(per)} a person when you charge at the door. Supplies are a cost to keep in Records.")
         Section("Offer it")
+        // Where you already work: staff wellness and enrichment programs look for exactly this, and you know the building.
+        if (st.school.isNotBlank()) Panel {
+            Text("At ${st.school}", fontWeight = FontWeight.SemiBold)
+            Text("Many universities run staff wellness or enrichment sessions. A lunchtime drawing class for staff is an easy first class to teach: the people already know you, and the room is down the hall. Ask HR or the wellness office who runs them.", style = MaterialTheme.typography.bodyMedium)
+            androidx.compose.material3.TextButton(onClick = {
+                Share.email(ctx, "", "A lunchtime drawing class for staff", Workshop.email(st.fullName.ifBlank { "an artist" }, st.school + " staff", title.value.trim(), minutes.coerceAtMost(60), people, st.website).replace("I'm ${st.fullName.ifBlank { "an artist" }}, a local artist.", "I'm ${st.fullName.ifBlank { "a member of staff" }}; I work in dining here, and I make art."))
+            }) { Text("Write to the wellness office") }
+        }
         if (places.isNotEmpty()) Choice("To", places.map { it.id.toString() }, venueId.toString(), names = { id -> places.firstOrNull { it.id.toString() == id }?.let { it.venue.ifBlank { it.name } } ?: "" }) { venueId = it.toLong() }
         val to = places.firstOrNull { it.id == venueId }
         val body = Workshop.email(st.fullName.ifBlank { "an artist" }, to?.let { it.venue.ifBlank { it.name } } ?: "", title.value.trim(), minutes, people, st.website, money(flat))
