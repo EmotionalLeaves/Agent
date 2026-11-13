@@ -548,6 +548,7 @@ fun SettingsScreen(nav: NavController, section: String) {
             "rules" -> {
                 Intro("rules", "The defaults follow the plan: start free and local, climb when a gate is met. Every one of them is yours to change.")
                 Toggle("Prepare one strong free entry a week for me (never sent without you)", st.autopilot) { st.autopilot = it }
+                Count("Calls to send this year (no's count too)", st.yearSends, 6, 100, 6) { st.yearSends = it }
                 Count("Farthest I will take or ship work (0 for no limit)", st.maxMiles, 0, 1000, 25, "miles") { st.maxMiles = it }
                 H("Level")
                 Choice("My level", listOf("automatic", "0", "1", "2", "3", "4"), levelPick, names = { if (it == "automatic") "Worked out for me" else "Level $it" }) { levelPick = it; st.levelOverride = it.toIntOrNull() ?: -1 }

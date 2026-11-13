@@ -240,6 +240,8 @@ class Settings(ctx: Context) {
     var calmUntil by L("calmUntil", 0)
     /** A friend's name: one tap tells them a session is starting, and that it is done. */
     var buddy by S("buddy")
+    /** Calls to send in a year; no's count toward it just the same. */
+    var yearSends by I("yearSends", 24)
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

@@ -658,4 +658,13 @@ class DomainTest {
         assertTrue(mail.contains("90 minutes") && mail.contains("Eastside Library") && mail.contains("$80"))
         assertTrue(W.email("J", "", "T", 120, 8, "").contains("about 2 hours"))
     }
+
+    @Test fun aNoCountsTowardTheYear() {
+        val A = com.emotionalleaves.studioagent.domain.Attempts
+        val t = A.afterNo(9, 3, 1, 24)
+        assertTrue(t.startsWith("Your 3rd no this year, from 9 sends and 1 yes."))
+        assertTrue(t.contains("15 sends to go toward your 24"))
+        assertTrue(A.afterNo(30, 11, 4, 24).startsWith("Your 11th no") && A.afterNo(30, 11, 4, 24).contains("already sent all 24"))
+        assertEquals("sent this year, aiming for 24", A.tile(3, 24))
+    }
 }

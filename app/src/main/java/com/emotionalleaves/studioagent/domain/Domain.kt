@@ -1440,3 +1440,20 @@ object Workshop {
             "I bring every supply and set up and clear away myself." + (if (feeText.isNotBlank()) " My fee for a class like this is $feeText, supplies included." else "") + "\n\nCould we find an evening or a weekend afternoon that suits you? " +
             "I'm happy to share an outline and a couple of pictures of my work" + (if (website.isNotBlank()) " (there are more at $website)" else "") + ".\n\nThank you,\n$name"
 }
+
+// ---------------------------------------------------------------- no's that count
+/**
+ * Counting sends, not yeses: the one number fully in your hands. Each no is a send that counts toward the year's aim,
+ * and the usual rate (several no's for every yes, for nearly everyone) is said plainly so a no is not read as a verdict.
+ */
+object Attempts {
+    fun afterNo(sent: Int, no: Int, yes: Int, aim: Int): String {
+        val nth = when (no % 100) { 11, 12, 13 -> "${no}th"; else -> when (no % 10) { 1 -> "${no}st"; 2 -> "${no}nd"; 3 -> "${no}rd"; else -> "${no}th" } }
+        val toGo = (aim - sent).coerceAtLeast(0)
+        return "Your $nth no this year, from ${Texts.count(sent, "send")}" + (if (yes > 0) " and ${Texts.count(yes, "yes", "yeses")}" else "") + ". " +
+            "Most artists hear several no's for every yes, so this is the usual road, not a verdict. " +
+            (if (toGo > 0) "It counts: ${Texts.count(toGo, "send")} to go toward your $aim this year." else "You have already sent all $aim you aimed for this year. Anything more is extra.")
+    }
+
+    fun tile(sent: Int, aim: Int): String = if (sent >= aim) "sent this year; aim of $aim met" else "sent this year, aiming for $aim"
+}

@@ -799,7 +799,8 @@ fun More(nav: NavController) {
         } else Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Tile(Modifier.weight(1f), "$ready", if (ready == 1) "piece ready to send" else "pieces ready to send") { nav.navigate("works") }
-                Tile(Modifier.weight(1f), "$sent", "sent" + if (inShows > 0) ", $inShows got in" else "") { nav.navigate("calls") }
+                val sentYear = appls.count { it.submittedAt > 0 && Engine.date(it.submittedAt).year == year }
+                Tile(Modifier.weight(1f), "$sentYear", com.emotionalleaves.studioagent.domain.Attempts.tile(sentYear, st.yearSends) + if (inShows > 0) ", $inShows got in" else "") { nav.navigate("calls") }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Tile(Modifier.weight(1f), "$venues", (if (venues == 1) "venue" else "venues") + if (list > 0) ", $list on your list" else "") { nav.navigate("outreach") }

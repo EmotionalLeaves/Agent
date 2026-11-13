@@ -490,7 +490,12 @@ fun ApplScreen(nav: NavController, id: Long) {
                 Text(if (own) (if (o.exhibitionDates.isNotBlank()) o.exhibitionDates + "." else "") else "Sent ${fmtDate(loaded.submittedAt)}.")
                 if (loaded.proofText.isNotBlank()) Note(loaded.proofText)
                 if (loaded.status == "submitted") Small("This application is locked. There is nothing left to check: the result comes to you" + (if (st.mailReady) " automatically." else " by email, and you record it below."))
-                if (loaded.status == "declined") Note("The works are free again and will be offered to the next call that fits.")
+                if (loaded.status == "declined") {
+                    val y = java.time.LocalDate.now().year
+                    val mine = appls.filter { it.submittedAt > 0 && Engine.date(it.submittedAt).year == y }
+                    Text(com.emotionalleaves.studioagent.domain.Attempts.afterNo(mine.size, mine.count { it.status == "declined" }.coerceAtLeast(1), mine.count { it.status == "accepted" }, st.yearSends))
+                    Note("The works are free again and will be offered to the next call that fits.")
+                }
             }
             if (loaded.proofPath.isNotBlank()) PathImage(loaded.proofPath, Modifier.fillMaxWidth())
             chosen.forEach { Note(Papers.caption(it)) }
