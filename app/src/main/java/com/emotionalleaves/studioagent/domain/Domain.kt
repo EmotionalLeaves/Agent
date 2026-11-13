@@ -1509,7 +1509,8 @@ object People {
         Place("sketch", "Urban Sketchers", "Free, any level, meets outdoors at a different spot each time and shares drawings at the end. Local groups are called chapters.", "Urban Sketchers"),
         Place("league", "Your local art league or association", "Members' shows are often open to every member, beginners included: a first show without a jury.", "art league OR art association"),
         Place("crit", "A critique group or open studio night", "A few artists showing work in progress and saying what they see. Kind ones exist; it is fine to leave one that is not.", "artist critique group OR open studio night"),
-        Place("library", "An art club at a library or community center", "Free or nearly, often in the evening, and a quiet way in.", "art club library OR community center")
+        Place("library", "An art club at a library or community center", "Free or nearly, often in the evening, and a quiet way in.", "art club library OR community center"),
+        Place("museum", "A sketching day at a museum", "Many museums have free sketching hours, pencils sometimes provided. Drawing a master's work in front of it, among other people doing the same.", "museum sketching drop-in drawing")
     )
 
     fun query(p: Place, city: String): String = (p.search + " " + city).trim()
