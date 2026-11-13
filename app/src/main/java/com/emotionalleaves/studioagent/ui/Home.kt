@@ -184,7 +184,8 @@ fun Home(nav: NavController) {
             ).take(3)
             Panel {
                 Text("On a break? Five-minute jobs", style = MaterialTheme.typography.titleSmall)
-                jobs.forEach { (t, d, r) -> IconRow(Icons.Default.Done, t, d) { nav.navigate(r) } }
+                // Each job wears what it is about; a tick would read as already done.
+                jobs.forEach { (t, d, r) -> IconRow(when { r.startsWith("call") || r == "decide" -> Icons.Default.Search; r == "admin" || r.startsWith("outreach") || r.startsWith("letters") || r.startsWith("contact") -> Icons.Default.Email; r.startsWith("idea") || r == "dump" -> Icons.Default.Edit; r.startsWith("work") || r == "photoshoot" -> Icons.Default.Star; else -> Icons.AutoMirrored.Filled.KeyboardArrowRight }, t, d) { nav.navigate(r) } }
             }
         }
         // What the app did while you were away, in a few lines: the work done for you, seen without hunting.
@@ -789,7 +790,11 @@ fun More(nav: NavController) {
         val sent = appls.count { it.submittedAt > 0 }; val inShows = appls.count { it.status == "accepted" }
         val venues = contacts.count { it.kind != "subscriber" }; val list = contacts.count { it.kind == "subscriber" }
         val sold = ledger.filter { it.kind == "sale" && Engine.date(it.date).year == year }
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        // Four zeros on day one read as a report card. Until something is counted, one calm line instead.
+        if (ready == 0 && sent == 0 && venues == 0 && list == 0 && sold.isEmpty()) Panel(onClick = { nav.navigate("works") }) {
+            Text("Nothing to count yet", fontWeight = FontWeight.SemiBold)
+            Small("Pieces ready to send, applications, venues and sales appear here as they happen. The first one is a piece in Studio.")
+        } else Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Tile(Modifier.weight(1f), "$ready", if (ready == 1) "piece ready to send" else "pieces ready to send") { nav.navigate("works") }
                 Tile(Modifier.weight(1f), "$sent", "sent" + if (inShows > 0) ", $inShows got in" else "") { nav.navigate("calls") }

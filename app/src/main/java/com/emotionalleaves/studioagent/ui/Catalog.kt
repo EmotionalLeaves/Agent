@@ -134,7 +134,7 @@ fun Works(nav: NavController) {
                 // One tap makes one piece, however fast the second tap comes.
                 var adding by remember { mutableStateOf(false) }
                 Button(enabled = !adding, onClick = { adding = true; scope.io({ adding = false }) { val id = dao.put(newWork()); withContext(Dispatchers.Main) { adding = false; nav.navigate("work/$id") } } }, modifier = Modifier.weight(1f)) { Text("Add a piece") }
-                OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Add from my files") }
+                OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("From my files", maxLines = 1) }
             }
             TextButton(onClick = { nav.navigate("commission") }) { Text("Someone wants a piece made for them") }
             val unphotographed = works.count { it.imagePath.isBlank() && it.status in setOf("finished", "documented", "available") && it.format != "digital" }
