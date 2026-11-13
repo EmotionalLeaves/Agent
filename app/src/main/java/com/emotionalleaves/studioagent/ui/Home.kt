@@ -177,7 +177,7 @@ fun Home(nav: NavController) {
             val opps0 by dao.opps().collectAsState(emptyList())
             val toDecide = opps0.count { it.status == "new" && it.fitScore >= 60 && it.deadline > now() }
             val jobs = listOfNotNull(
-                if (toDecide > 0) Triple("Say yes or no to ${Texts.count(toDecide, "call")}", "About a minute each", "calls") else null,
+                if (toDecide > 0) Triple("Say yes or no to ${Texts.count(toDecide, "call")}", "One at a time, about a minute each", "decide") else null,
                 if (pendingCount > 0) Triple("Approve ${Texts.count(pendingCount, "email")}", "One tap each", "admin") else null,
                 Triple("Park an idea you had today", "A line, or a photo", "ideas"),
                 Triple("Read a call's page in plain words", "Then decide tonight", "calls")
