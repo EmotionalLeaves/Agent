@@ -598,6 +598,18 @@ fun ApplScreen(nav: NavController, id: Long) {
         // Jurors see the works one at a time, in order; the order is part of the application.
         if (chosenIds.size > 1) OutlinedButton(onClick = { nav.navigate("jury/${a.id}") }, modifier = Modifier.fillMaxWidth()) { Text("See them as a juror will, and set the order") }
         StageHead(2, "Statement and fit", a.statement.isNotBlank() && a.themeText.isNotBlank())
+        // Over this call's word limit: cut down from your own words, nothing added.
+        if (o.statementLimit > 0 && Texts.words(a.statement) > o.statementLimit) Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("${Texts.words(a.statement)} words; this call allows ${o.statementLimit}.", Modifier.weight(1f), color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
+            TextButton(enabled = !busy, onClick = {
+                busy = true; status = "Shortening…"
+                scope.io({ status = it; busy = false }) {
+                    val short = if (G.ai.ready) try { G.ai.shorten(a.statement, o.statementLimit) } catch (e: Exception) { "" } else ""
+                    val fit = (if (short.isNotBlank() && Texts.words(short) <= o.statementLimit) short else Texts.trimToWords(a.statement, o.statementLimit))
+                    val x = a.copy(statement = fit, packDir = ""); a = x; dao.put(x); status = "Shortened to ${Texts.words(fit)} words. Read it once."; busy = false
+                }
+            }) { Text("Shorten to fit") }
+        }
         Field((if (o.statementLimit > 0) "Limit ${o.statementLimit} words. " else "") + "Edit only if this call needs it", a.statement, { t ->
             val chosen = works.filter { it.id in chosenIds }.sortedBy { chosenIds.indexOf(it.id) }
             val auto = Engine.applicationEmail(o, chosen, a.statement)

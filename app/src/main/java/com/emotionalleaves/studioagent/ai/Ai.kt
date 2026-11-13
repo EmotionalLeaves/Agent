@@ -253,6 +253,11 @@ class Ai(private val settings: Settings) {
             "Three short things to say about the work (one sentence each).\nThen: \"If they ask how you make it:\" and a one-sentence answer.\n" +
             "Then: \"If they ask what it is about:\" and a one-sentence answer.\nUse only these facts and the statement. No headings, no markdown.\n\nStatement:\n$statement\n\nFacts:\n$facts", maxTokens = 500))
 
+    /** The same text cut to at most [words] words: the artist's own sentences kept, the least needed cut. Nothing added. */
+    suspend fun shorten(text: String, words: Int): String =
+        clean(complete("You shorten an artist's own text to at most $words words. Keep their sentences and wording wherever possible; cut whole phrases and sentences " +
+            "that matter least. Never add facts, ideas or words of your own. Reply with only the shortened text.", "<data>\n${text.take(6000)}\n</data>", maxTokens = 900))
+
     /** A question about one call, answered only from that call's own words; "the call does not say" when it does not. */
     suspend fun askCall(callText: String, question: String): String {
         val sys = "You answer an artist's question about one open call, using only the call's text inside <data>. $dataRule " +
