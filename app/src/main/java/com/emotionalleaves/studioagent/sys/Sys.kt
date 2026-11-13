@@ -80,11 +80,18 @@ object Notifier {
     )
 
     /** Returns true if it was shown. Dropped items are never lost: they wait on the home card and in the admin pass. */
+    /** The kind of a notification, by its id, for switching kinds off. */
+    fun kindOf(id: Int): String = when (id) {
+        102, 104, 120 -> "calls"; 105 -> "week"; 100 -> "waiting"; 50 -> "studio"; 52, 53 -> "session"; 101, 103 -> "tasks"; else -> "always"
+    }
+
     fun post(ctx: Context, s: Settings, id: Int, title: String, text: String, route: String = "home", choices: Boolean = false): Boolean {
         if (!allowed(ctx) || quietNow(s)) return false
         // A day off from the app is a day off: only a deadline within a day still gets through.
         if (LocalDate.now().dayOfWeek.value.toString() in s.daysOff.split(",") && !title.startsWith("Deadline") && id != 54) return false
         if (s.calmUntil > System.currentTimeMillis() && !title.startsWith("Deadline") && id != 54) return false
+        // Kinds you switched off in Settings. Results, problems with an email and bedtime always come through.
+        if (kindOf(id) in s.mutedNotifs.split(",")) return false
         val today = LocalDate.now().toString()
         if (s.notifDay != today) { s.notifDay = today; s.notifCount = 0 }
         if (s.notifCount >= s.notifCap) return false

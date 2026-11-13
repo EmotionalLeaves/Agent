@@ -920,4 +920,9 @@ class PartsTest {
         assertEquals("Leaves_Business_cards.pdf", f.name)
         assertTrue(File(docs, "Leaves_Business_cards_p1.png").length() > 1000)
     }
+
+    @Test fun notificationKinds() {
+        val N = com.emotionalleaves.studioagent.sys.Notifier
+        assertEquals("calls", N.kindOf(102)); assertEquals("studio", N.kindOf(50)); assertEquals("always", N.kindOf(54)); assertEquals("always", N.kindOf(305))
+    }
 }

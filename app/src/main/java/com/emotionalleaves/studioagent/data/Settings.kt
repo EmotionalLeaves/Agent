@@ -64,6 +64,8 @@ class Settings(ctx: Context) {
     var job by S("job")
     /** Today cards switched off: jobs, fresh, road, wins. */
     var todayHidden by S("todayHidden")
+    /** Kinds of notification switched off: calls, week, waiting, studio, session, tasks. */
+    var mutedNotifs by S("mutedNotifs")
     var website by S("website")
     var city by S("city")
     /** A university or college you work or study at: its campus calls are open to you, so they are kept. */

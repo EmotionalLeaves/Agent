@@ -434,7 +434,7 @@ val sectionNames = listOf(
 /** Single settings by the words people search with, and the page each lives on, so Find anything finds them. */
 val settingIndex = listOf(
     "Your name, email, phone, website" to "you", "City and state" to "you", "Mediums, what your work is about" to "you", "Goals for the year" to "you", "Currency" to "you",
-    "Days you work, work hours" to "hours", "Rest after work before studio time" to "hours", "Bedtime" to "hours", "Notifications a day" to "hours",
+    "Days you work, work hours" to "hours", "Rest after work before studio time" to "hours", "Bedtime" to "hours", "Notifications a day" to "hours", "Which notifications" to "hours",
     "Studio time in my calendar" to "hours", "Silence my phone during sessions (do not disturb)" to "hours", "A studio friend to text" to "hours", "Studio playlist, music" to "hours", "Focus or blocker app (Honest Lockout)" to "hours",
     "Calm Today" to "calm", "What Today shows (cards)" to "calm", "Days off from the app" to "calm", "Wi-Fi only, while charging" to "calm", "Social media help" to "calm", "Session length" to "calm",
     "Keep the screen on" to "calm", "Hide the gray explanations" to "calm",
@@ -555,6 +555,14 @@ fun SettingsScreen(nav: NavController, section: String) {
                 TimeField("Bedtime", st.bedtime) { st.bedtime = it }
                 Section("Notifications and calendar")
                 Count("Notifications a day, at most", st.notifCap, 0, 10) { st.notifCap = it }
+                Expand("Which notifications") {
+                    listOf("studio" to "Studio time is coming up", "session" to "Time is up in a session", "tasks" to "Deadlines and show days this week",
+                        "calls" to "A call that fits you", "waiting" to "Something waiting for your yes", "week" to "Your week ahead, on Sunday").forEach { (k, label) ->
+                        val muted = st.mutedNotifs.split(",").filter { it.isNotBlank() }.toSet()
+                        Toggle(label, k !in muted) { on -> st.mutedNotifs = (if (on) muted - k else muted + k).joinToString(",") }
+                    }
+                    Small("Results of entries, an email that did not send, and the bedtime reminder always come through.")
+                }
                 Toggle("Book studio time in my calendar", useCal) { useCal = it; st.useCalendar = it }
                 Section("Starting a session")
                 Toggle("Silence my phone during sessions", dnd) { dnd = it; st.dndInSession = it }
