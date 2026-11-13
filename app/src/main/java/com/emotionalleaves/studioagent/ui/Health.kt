@@ -39,6 +39,13 @@ fun HealthScreen(nav: NavController) {
         val backup = maxOf(st.lastAutoBackup, st.lastManualBackup)
         Check(backup > now - 35 * day, if (backup == 0L) "No backup yet: your work lives only on this phone. Settings, Backup, picks a folder in two taps." else "Last backup ${fmtDate(backup)}.")
         Check(st.useCalendar, if (st.useCalendar) "Studio times and deadlines go on your phone's calendar." else "Calendar is off; dates stay inside the app (Your week can still send them to another calendar).")
+        // The focus app chosen for sessions is still on the phone, and the scanner for flat pieces is ready.
+        if (st.focusApp.isNotBlank()) {
+            val there = ctx.packageManager.getLaunchIntentForPackage(st.focusApp.substringBefore("|")) != null
+            Check(there, if (there) "${st.focusApp.substringAfter("|")} opens from the session screen." else "${st.focusApp.substringAfter("|")} is no longer on this phone. Choose another in Settings, Hours and calm, or None.")
+        }
+        val gms = try { com.google.android.gms.common.GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(ctx) == com.google.android.gms.common.ConnectionResult.SUCCESS } catch (e: Throwable) { false }
+        Check(gms, if (gms) "Scanning flat pieces and reading flyers work on this phone (Google Play services)." else "Google Play services is missing or out of date, so scanning flat pieces and reading flyers may not work. Taking photos still does.")
         Check(ai.startsWith("Working"), when { ai.isBlank() -> "Writing helper: not checked yet."; else -> ai })
         if (ai.isBlank()) TextButton(onClick = {
             ai = "Checking…"
