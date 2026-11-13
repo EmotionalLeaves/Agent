@@ -677,3 +677,4 @@ One real change per round. Pushed and built every ten rounds.
 670. A new face, part five. You opens on a cover: your name set like a show title over your own work (or a field in your color), with what you make and where, one tap from your details.
 671. A new face, part six. Ending a session, "Saved." settles into place over the piece you just worked on (your progress photo if you took one), with the minutes beneath it in white. A piece's photo buttons are tidier: Take a photo, then Scan it and Choose a file side by side.
 672. A call's own page opens with its poster, the same one it wears in the list, days left in the corner.
+673. Foundations opens on the week you are on, big, over a field in your color ("Week 3 of 24: Edges"), with the whole course as a white bar along its foot, and Practice the next one full width beneath.

@@ -10,6 +10,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
@@ -23,8 +26,20 @@ fun FoundationsScreen(nav: NavController) {
     val done = Foundations.done(stored); val current = Foundations.current(stored)
     Screen("Foundations", nav) {
         Intro("foundations", "Twelve weeks of the basics every exhibiting artist leans on, six on building a body of work, then six going further (drawing out in the world, from memory, bigger, your materials, the next idea, looking at shows), sized for weeknights: three short exercises a week. A practice session picks the next one by itself and ticks it when you save the session. Doing them badly is the point.")
-        Text(if (current == null) "All ${Foundations.weeks.size} weeks done. That is real groundwork, and a body of work." else "${done.size} of ${Foundations.weeks.sumOf { it.exercises.size }} exercises done. This week: ${current.skill}.", style = MaterialTheme.typography.bodyLarge)
-        if (current != null) Button(onClick = { nav.navigate("session") }) { Text("Practice the next one") }
+        // The week you are on, big, over a field in your color, with the whole course as a bar along the foot.
+        val total = Foundations.weeks.sumOf { it.exercises.size }
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxWidth().height(230.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))) {
+            ColorField(MaterialTheme.colorScheme.primary, androidx.compose.ui.Modifier.matchParentSize(), key = (current?.n ?: 99).toLong() + 500)
+            androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Transparent, 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.75f))))
+            androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.align(androidx.compose.ui.Alignment.BottomStart).padding(20.dp).fillMaxWidth(), verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
+                Text(if (current == null) "All ${Foundations.weeks.size} weeks" else "Week ${current.n} of ${Foundations.weeks.size}", style = MaterialTheme.typography.labelLarge, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
+                Text(current?.skill ?: "Done. Real groundwork.", style = MaterialTheme.typography.displaySmall, color = androidx.compose.ui.graphics.Color.White)
+                androidx.compose.material3.LinearProgressIndicator(progress = { done.size.toFloat() / total }, modifier = androidx.compose.ui.Modifier.fillMaxWidth().height(6.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(3.dp)),
+                    color = androidx.compose.ui.graphics.Color.White, trackColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.25f))
+                Text("${done.size} of $total exercises", style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f))
+            }
+        }
+        if (current != null) Button(onClick = { nav.navigate("session") }, modifier = androidx.compose.ui.Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Practice the next one") }
         StudyAMaster()
         // Your practice so far, as pictures: the clearest sign that it is working.
         val practice by com.emotionalleaves.studioagent.G.dao.sessions().collectAsState(emptyList())
