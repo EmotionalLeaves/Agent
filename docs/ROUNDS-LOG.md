@@ -390,3 +390,4 @@ One real change per round. Pushed and built every ten rounds.
 384. A piece shows how it was made: its sessions and hours, the progress photos from them in order, and your session notes.
 385. The daily check runs its quick steps (email, venues, openings) before the long read of the listing sites, which now stops opening new links after seven minutes, so a slow site never crowds out packs and backups.
 386. Back after ten days or more without a session, Today's step is a plain "Welcome back": nothing was missed, nothing to catch up, five minutes on the piece you were on is the whole step.
+387. Help answers two questions for later on: when to raise prices (and how much), and how artists come to be represented by a gallery.
