@@ -911,7 +911,7 @@ object Engine {
     suspend fun planEntrySteps(a: Appl, o: Opp): Int {
         if (o.deadline <= 0) return 0
         val have = dao.eventsNow().filter { it.applId == a.id && it.title.startsWith("Entry, 15 minutes: ") }.map { it.title }.toSet()
-        val days = com.emotionalleaves.studioagent.domain.EntrySteps.days(LocalDate.now(), date(o.deadline - 3 * DAY), Planner.days(st.workDays))
+        val days = com.emotionalleaves.studioagent.domain.EntrySteps.days(LocalDate.now(), date(o.deadline - 3 * DAY), workDaysNow())
         var n = 0
         com.emotionalleaves.studioagent.domain.EntrySteps.steps.forEachIndexed { i, step ->
             val t = "Entry, 15 minutes: $step"

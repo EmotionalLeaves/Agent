@@ -75,7 +75,7 @@ object Notifier {
         Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 
     fun quietNow(s: Settings): Boolean = Planner.isQuiet(
-        LocalDateTime.now(), Planner.days(s.workDays), Planner.time(s.workStart, LocalTime.of(7, 0)),
+        LocalDateTime.now(), com.emotionalleaves.studioagent.work.Engine.workDaysNow(), Planner.time(s.workStart, LocalTime.of(7, 0)),
         Planner.time(s.workEnd, LocalTime.of(15, 30)), Planner.time(s.bedtime, LocalTime.of(22, 30))
     )
 
