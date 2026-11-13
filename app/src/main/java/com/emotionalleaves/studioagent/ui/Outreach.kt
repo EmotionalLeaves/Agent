@@ -206,7 +206,9 @@ fun Outreach(nav: NavController) {
         shownPeople.take(peopleLimit).forEach { c ->
             Panel(onClick = { nav.navigate("contact/${c.id}") }) {
                 Text(c.venue.ifBlank { c.name.ifBlank { "New contact" } }, fontWeight = FontWeight.SemiBold)
-                Small(kindWords(c.kind) + ", " + statusWords(c).replaceFirstChar { it.lowercase() })
+                // Places from the map say how far they are.
+                val far = Regex("""(\d+ (mi|km)|under 1 (mi|km)) away""").find(c.notes)?.value
+                Small(kindWords(c.kind) + (if (far != null) ", $far" else "") + ", " + statusWords(c).replaceFirstChar { it.lowercase() })
                 if (!Levels.outreachAllowed(level, c.kind, Engine.rules())) Note("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}.")
             }
         }
