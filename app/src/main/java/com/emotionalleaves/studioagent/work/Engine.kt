@@ -1198,6 +1198,7 @@ object Engine {
             t.startsWith("follow up with") -> "outreach"
             t.startsWith("teach:") -> "teach"
             t.startsWith("go again:") -> "people"
+            t.startsWith("market day") || t.startsWith("pack for the market") -> "market"
             t.startsWith("buy ") || t.contains("supplies") -> "supplies"
             t.startsWith("email ") || t.startsWith("write to") || t.startsWith("reply ") -> "letters"
             t.startsWith("photograph") -> "photoshoot"

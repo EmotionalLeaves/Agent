@@ -50,7 +50,19 @@ fun MarketDay(nav: NavController) {
     var closed by remember { mutableStateOf("") }
     Screen("Market day", nav) {
         Intro("market", "For an art market, a fair table or an open studio: what you brought, one tap per sale, the running total. At the end of the day it all goes to Records in one go.")
-        if (closed.isNotBlank()) { Panel(strong = true) { Text(closed, fontWeight = FontWeight.SemiBold) }; return@Screen }
+        if (closed.isNotBlank()) {
+            Panel(strong = true) { Text(closed, fontWeight = FontWeight.SemiBold) }
+            // The next one, while today is fresh: the day and a packing evening two days before go on your to-dos.
+            var next by rememberSaveable { mutableStateOf("") }
+            if (next.isBlank()) DateField("Another market coming up? Its date", "") { d ->
+                next = d; val day = java.time.LocalDate.parse(d); val place = where.trim().ifBlank { "the market" }
+                scope.io {
+                    G.dao.put(com.emotionalleaves.studioagent.data.Evt(type = "task", title = "Market day: $place", date = Engine.millis(day.atTime(9, 0))))
+                    G.dao.put(com.emotionalleaves.studioagent.data.Evt(type = "task", title = "Pack for the market (Market day has the list)", date = Engine.millis(day.minusDays(2).atTime(18, 0))))
+                }
+            } else Small("On your to-dos: the market, and packing two evenings before.")
+            return@Screen
+        }
         val total = Market.total(tally, items, originals.associate { it.id to it.price })
         Panel(strong = true) {
             Text("Today: " + money(total), style = MaterialTheme.typography.headlineMedium)
