@@ -441,15 +441,24 @@ fun DoneScreen(nav: NavController) {
     val works by dao.artworks().collectAsState(emptyList())
     val s = sessions.firstOrNull()
     Screen("Session saved", nav, bare = true) {
-        Space(40)
-        // The one moment of motion in the app: the word settles into place once.
+        Space(16)
+        // The one moment of motion in the app: the word settles into place once, over the piece you just worked on.
         var shownIn by remember { mutableStateOf(false) }
         LaunchedEffect(Unit) { shownIn = true }
         val lift by animateFloatAsState(if (shownIn) 0f else 1f, tween(520), label = "saved")
-        Text("Saved.", Modifier.graphicsLayer { translationY = lift * 40f; alpha = 1f - lift }, style = MaterialTheme.typography.displayLarge)
+        val doneOn = works.firstOrNull { it.id == s?.artworkId }
+        Box(Modifier.fillMaxWidth().height(300.dp).clip(RoundedCornerShape(28.dp))) {
+            val pic = s?.photoPath?.takeIf { it.isNotBlank() && java.io.File(it).exists() } ?: doneOn?.imagePath?.takeIf { it.isNotBlank() }
+            if (pic != null) PathImage(pic, Modifier.matchParentSize(), 1000, ContentScale.Crop) else ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = doneOn?.id ?: 11L)
+            Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Transparent, 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.78f))))
+            Column(Modifier.align(Alignment.BottomStart).padding(22.dp)) {
+                Text("Saved.", Modifier.graphicsLayer { translationY = lift * 40f; alpha = 1f - lift }, style = MaterialTheme.typography.displayLarge, color = androidx.compose.ui.graphics.Color.White)
+                if (s != null) { val m0 = ((s.end - s.start) / 60000).coerceAtLeast(0)
+                    Text((if (m0 < 1) "Under a minute" else Texts.count(m0.toInt(), "minute")) + (doneOn?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".", style = MaterialTheme.typography.headlineSmall, color = androidx.compose.ui.graphics.Color.White) }
+            }
+        }
         if (s != null) {
             val mins = ((s.end - s.start) / 60000).coerceAtLeast(0)
-            Text((if (mins < 1) "Under a minute" else Texts.count(mins.toInt(), "minute")) + (works.firstOrNull { it.id == s.artworkId }?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".", style = MaterialTheme.typography.headlineSmall)
             Text(if (mins < 10) "Short sessions count. You showed up." else "That counts toward your week.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (st.buddy.isNotBlank()) { val ctx = LocalContext.current; TextButton(onClick = { Share.text(ctx, "Done: " + (if (mins < 1) "a few minutes" else Texts.count(mins.toInt(), "minute")) + " on my art. How did yours go?") }, modifier = Modifier.offset(x = (-12).dp)) { Text("Tell ${st.buddy} it's done") } }
             // The week so far, against the hours you set: progress, never a scold.

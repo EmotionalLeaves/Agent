@@ -415,8 +415,11 @@ fun WorkDetail(nav: NavController, id: Long) {
             }
             if (w.imagePath.isBlank()) Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }, modifier = Modifier.fillMaxWidth()) { Text("Take a photo") }
-                OutlinedButton(onClick = { scan() }, modifier = Modifier.fillMaxWidth()) { Text("Scan a flat piece (edges found for you)") }
-                OutlinedButton(onClick = { pick.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text("Choose a file") }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { scan() }, modifier = Modifier.weight(1f)) { Text("Scan it", maxLines = 1) }
+                    OutlinedButton(onClick = { pick.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Choose a file", maxLines = 1) }
+                }
+                Small("Scan finds the edges of a flat piece (paper, prints) and squares it for you.")
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (w.imagePath.isBlank()) { } else {
