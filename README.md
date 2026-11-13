@@ -47,7 +47,7 @@ Settings, Hours and calm has a focus app to open as a session starts (Honest Loc
 ## Quick ways in
 
 - Long-press the icon: Start now, Calls, Park an idea, Empty your head.
-- The Start now widget and quick-settings tile start a session in one tap. The Next step widget shows today's step on the home screen.
+- The Start now widget and quick-settings tile start a session in one tap. The Next step widget shows today's step on the home screen, and the Empty your head widget opens the box for everything on your mind.
 - Share a link, text or flyer into the app to add a call, or photograph a flyer from Calls: its words are read on the phone (offline, no key). Share several pictures from the gallery to add them as pieces.
 
 ## Works with nothing set up

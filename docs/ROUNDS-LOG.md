@@ -627,3 +627,4 @@ One real change per round. Pushed and built every ten rounds.
 620. "New in this version" and the README catch up with rounds 597 to 619.
 621. Is everything working? checks two more things: that the focus app chosen for sessions is still on the phone, and that Google Play services is there for scanning flat pieces and reading flyers (taking photos works either way).
 622. An "Empty your head" widget for the home screen: one button that opens the box for everything on your mind, beside the Start session and Next step widgets.
+623. The README lists the Empty your head widget among the quick ways in.
