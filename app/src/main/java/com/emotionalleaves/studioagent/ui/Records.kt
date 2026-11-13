@@ -250,6 +250,21 @@ fun Records(nav: NavController) {
                 withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "text/csv") }
             }
         }) { Text("Export $year as a spreadsheet file") }
+        // The page a tax preparer asks for: money in and out by kind for the year, and the difference.
+        if (thisYear.isNotEmpty()) OutlinedButton(onClick = {
+            scope.io({ status = it }) {
+                val names = mapOf("sale" to "Sales", "commission" to "Commissions paid to venues", "fee" to "Entry fees", "print" to "Printing", "framing" to "Framing", "shipping" to "Shipping and delivery", "other" to "Other costs")
+                val byKind = thisYear.groupBy { it.kind }.mapValues { (_, l) -> l.sumOf { it.amount } }
+                val lines = byKind.entries.sortedByDescending { it.value }.joinToString("\n") { (k, v) -> (names[k] ?: k.replaceFirstChar { it.uppercase() }) + ": " + money(kotlin.math.abs(v)) + if (v < 0) " (cost)" else " (income)" }
+                val net = thisYear.sumOf { it.amount }
+                val f = com.emotionalleaves.studioagent.work.Papers.textDoc(ctx, st, "Art income and costs, $year", listOf(
+                    "By kind" to lines,
+                    "Net for the year" to (if (net >= 0) "Profit of " else "Loss of ") + money(kotlin.math.abs(net)) + ".",
+                    "Notes" to "From the records kept in Studio Agent: each sale, fee and cost as it happened. The spreadsheet export has every entry with its date. This is a summary, not tax advice."
+                ), ImageTools.exportDir(ctx), com.emotionalleaves.studioagent.work.Papers.docName(st, "Income_and_costs_$year"))
+                withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
+            }
+        }) { Text("One page for taxes, $year (PDF)") }
 
         H("Quarterly report")
         // Results are only summarised once a quarter, never one by one.

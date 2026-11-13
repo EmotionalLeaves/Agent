@@ -385,3 +385,4 @@ One real change per round. Pushed and built every ten rounds.
 379. After you have visited a venue that has an email address and your level is ready for, Today's step is to write to them: you have been there, so you can say so.
 380. A grant's budget question has "Build the budget": add each line (what it pays for, how much) and the answer is written as a list with its total.
 381. A second quick-settings tile, Park an idea, opens the idea box from anywhere (at work, on a break) in one pull-down and tap.
+382. Records: "One page for taxes", a PDF of the year's art income and costs by kind (sales, commissions, entry fees, printing, framing, shipping) and the net, for a tax preparer; the spreadsheet has every entry.
