@@ -342,23 +342,13 @@ fun WorkDetail(nav: NavController, id: Long) {
 
     // Scanning a flat piece: Google's scanner on the phone finds the four edges and squares the picture, so there is nothing to straighten.
     val scanned = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { r ->
-        val uri = if (r.resultCode == android.app.Activity.RESULT_OK) com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult.fromActivityResultIntent(r.data)?.pages?.firstOrNull()?.imageUri else null
+        val uri = Scan.uri(r)
         if (uri != null) scope.io({ status = it }) {
             if (!ImageTools.copyUri(ctx, uri, orig)) throw Exception("Could not copy the scan.")
             withContext(Dispatchers.Main) { attached(true) }
         }
     }
-    fun scan() {
-        val act = generateSequence(ctx) { (it as? android.content.ContextWrapper)?.baseContext }.firstOrNull { it is android.app.Activity } as? android.app.Activity
-        if (act == null) { status = "The scanner could not open here. Take a photo instead, then straighten it."; return }
-        val opts = com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.Builder()
-            .setGalleryImportAllowed(true).setPageLimit(1)
-            .setResultFormats(com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
-            .setScannerMode(com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.SCANNER_MODE_BASE).build()
-        com.google.mlkit.vision.documentscanner.GmsDocumentScanning.getClient(opts).getStartScanIntent(act)
-            .addOnSuccessListener { sender -> scanned.launch(androidx.activity.result.IntentSenderRequest.Builder(sender).build()) }
-            .addOnFailureListener { status = "The scanner is not available on this phone yet (it comes with Google Play services). Take a photo instead, then straighten it." }
-    }
+    fun scan() = Scan.start(ctx, { scanned.launch(it) }, { status = it })
 
     val pickExtra = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) scope.io({ status = it }) {

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,9 +43,7 @@ fun PhotoshootScreen(nav: NavController) {
     var said by remember { mutableStateOf("") }
     var pending by remember { mutableStateOf(0L) }
     val dir = ImageTools.mediaDir(ctx)
-    val take = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
-        val id = pending
-        if (ok && id > 0) scope.io({ said = it }) {
+    fun finish(id: Long) = scope.io({ said = it }) {
             val orig = File(dir, "work_${id}_orig.jpg"); val main = File(dir, "work_${id}_main.jpg")
             val (pw, ph) = ImageTools.size(orig.absolutePath)
             val b = ImageTools.decode(orig.absolutePath, 2400) ?: throw Exception("The photo could not be read. Try that one again.")
@@ -52,6 +51,14 @@ fun PhotoshootScreen(nav: NavController) {
             dao.artworksNow().firstOrNull { it.id == id }?.let { w -> dao.put(w.copy(originalPath = orig.absolutePath, imagePath = main.absolutePath, pixelW = pw, pixelH = ph)) }
             val looks = ImageTools.quality(main.absolutePath)
             done++; said = if (looks.isEmpty()) "Looks good." else looks.first()
+    }
+    val take = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok -> if (ok && pending > 0) finish(pending) }
+    // Flat pieces can be scanned instead: edges found and squared on the phone.
+    val scanned = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { r ->
+        val uri = Scan.uri(r); val id = pending
+        if (uri != null && id > 0) scope.io({ said = it }) {
+            if (!ImageTools.copyUri(ctx, uri, File(dir, "work_${id}_orig.jpg"))) throw Exception("Could not copy the scan.")
+            finish(id)
         }
     }
     Screen("Photograph your pieces", nav) {
@@ -69,6 +76,7 @@ fun PhotoshootScreen(nav: NavController) {
                 val f = File(dir, "work_${next.id}_orig.jpg")
                 try { take.launch(Share.uri(ctx, f)) } catch (e: Exception) { said = "No camera app found." }
             }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Photograph it") }
+            OutlinedButton(onClick = { pending = next.id; Scan.start(ctx, { scanned.launch(it) }, { said = it }) }, modifier = Modifier.fillMaxWidth()) { Text("Scan it instead (flat pieces)") }
             TextButton(onClick = { skipped = skipped + next.id }) { Text("Skip this one for now") }
         }
         if (said.isNotBlank()) Note(said)
