@@ -352,3 +352,5 @@ One real change per round. Pushed and built every ten rounds.
 346. With five or more pieces and no backup turned on anywhere, Saturday's step is to turn on backups (a folder, saved daily), until one is on.
 347. Backup settings say plainly that a phone folder does not survive a lost phone, and that Save a backup can put a copy in Google Drive from the picker.
 348. Once a month (on a Sunday), without an off-phone backup, the step is to save a copy of the catalog off the phone, to Google Drive from the picker.
+349. Ready-made emails: a commission quote for someone who wants a piece made for them (size and medium, price, half deposit, time, one draft to approve, you keep the copyright).
+350. Help explains commissions: price from your rule plus about a quarter, half deposit, one draft, keep the copyright, and where the quote email is.

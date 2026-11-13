@@ -39,6 +39,12 @@ val letters = listOf(
         "Hello [THEM],\n\nThank you for including my work at [PLACE] and for all the effort that went into the show. I would be glad to hear about future calls.\n\nKind regards,\n\n[ME]"),
     Letter("Follow up after meeting someone at an opening", "Within a few days, while they remember you.", "Good to meet you at [PLACE]",
         "Hello [THEM],\n\nIt was good to meet you at [PLACE]. I enjoyed the show. If you would ever like to see what I make, there is a short portfolio here: [LINK]\n\nKind regards,\n\n[ME]"),
+    Letter("Reply to someone who wants a piece made for them", "When a person asks for a commission. A clear quote now saves misunderstandings later.", "Your commission: a quote",
+        "Hello [THEM],\n\nThank you for asking. I would be glad to make a piece for you. Here is how I usually work:\n\n" +
+            "Size and medium: [for example, 16 × 20 in, archival pigment print, framed]\nPrice: [price], including [framing / delivery]\n" +
+            "Deposit: half when we agree, the rest when it is finished and you are happy with it\nTime: about [number] weeks from the deposit\n" +
+            "Along the way: I will send you one sketch or draft to approve before I finish.\n\nI keep the copyright, as artists usually do; the piece itself is yours. " +
+            "If that all sounds right, reply and I will send the details for the deposit.\n\n[ME]"),
     Letter("Ask about payment for a sale", "If a sale has not been paid a few weeks after a show ends.", "Payment for sold work",
         "Hello [THEM],\n\nI understand a piece of mine sold during the show at [PLACE]. Could you let me know when I can expect payment and whether you need anything from me?\n\nThank you,\n\n[ME]")
 )
