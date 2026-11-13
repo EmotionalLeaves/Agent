@@ -11,4 +11,6 @@
     <string name="sc_calls_long">Calls that fit this week</string>
     <string name="sc_idea">Park an idea</string>
     <string name="sc_idea_long">Park an idea so it stops circling</string>
+    <string name="sc_dump">Empty your head</string>
+    <string name="sc_dump_long">Empty your head: everything at once</string>
 </resources>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Long-press the app icon: the three things people do most, one tap each. -->
+<!-- Long-press the app icon: the four things people do most, one tap each. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut android:shortcutId="start" android:enabled="true" android:icon="@drawable/ic_stat"
         android:shortcutShortLabel="@string/sc_start" android:shortcutLongLabel="@string/sc_start_long">
@@ -20,6 +20,13 @@
         <intent android:action="android.intent.action.VIEW" android:targetPackage="com.emotionalleaves.studioagent"
             android:targetClass="com.emotionalleaves.studioagent.ui.MainActivity">
             <extra android:name="route" android:value="ideas" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="dump" android:enabled="true" android:icon="@drawable/ic_stat"
+        android:shortcutShortLabel="@string/sc_dump" android:shortcutLongLabel="@string/sc_dump_long">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="com.emotionalleaves.studioagent"
+            android:targetClass="com.emotionalleaves.studioagent.ui.MainActivity">
+            <extra android:name="route" android:value="dump" />
         </intent>
     </shortcut>
 </shortcuts>
