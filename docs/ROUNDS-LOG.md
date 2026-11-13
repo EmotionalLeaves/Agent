@@ -22,3 +22,13 @@ One real change per round. Pushed and built every ten rounds.
 18. Plain answers: what pay-to-show (a vanity gallery) is, and how the app marks it.
 19. Plain answers: commission on sales, with usual ranges.
 20. Plain answers: what rights you give when you enter, and what an opening is.
+21. Ask anything answers stay consistent with the app's own plain answers.
+22. Captions, labels and price lists say "framed" when a piece is framed.
+23. A gentle notice when the session minutes are done, for when the phone is face down; pausing moves it and ending cancels it.
+24. Email servers fill themselves in from the address for Gmail, Yahoo, iCloud, AOL, Fastmail and Zoho.
+25. Outlook and Hotmail addresses get a plain note that those services no longer allow app sign-in, and that the mail-app route still works.
+26. The test email shows your name as the sender, like real applications.
+27. A test that mail servers follow from the address, and that Outlook is recognised.
+28. Email boxes on calls and contacts say when an address is not complete yet.
+29. The application checklist checks the email address properly and that email attachments stay under 20 MB in total.
+30. Checklist counts read "At least 1 work", "No more than 3 works".

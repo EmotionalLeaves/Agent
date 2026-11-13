@@ -336,6 +336,7 @@ fun CallDetail(nav: NavController, id: Long) {
         Field("Image rules (for example: JPEG, 1920 px, under 5 MB)", o.imageSpecs, { save(o.copy(imageSpecs = it)) })
         Whole("Statement word limit", o.statementLimit) { save(o.copy(statementLimit = it)) }
         Field("Send entries to (email, if entries go by email)", o.email, { save(o.copy(email = it.trim())) })
+        if (o.email.isNotBlank() && !Texts.looksLikeEmail(o.email)) Small("That does not look like a full email address yet (name@place.org).")
         Toggle("Accepts prints of digital work", o.acceptsPrints) { save(o.copy(acceptsPrints = it)) }
         Toggle("Accepts screen-based work", o.acceptsNewMedia) { save(o.copy(acceptsNewMedia = it)) }
         Toggle("Paying the fee guarantees a place", o.guaranteed) { save(o.copy(guaranteed = it)) }

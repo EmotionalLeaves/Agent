@@ -348,7 +348,8 @@ object Engine {
             return@withContext ai.complete(
                 "You answer questions from an artist who is new to the art world, works a full-time day job, and has ADHD. Answer in at most five short sentences of plain words. " +
                     "Be practical and honest; say when something depends on the call or the venue. Never invent specific organisations, prices or deadlines. " +
-                    "The artist uses an app that finds open calls, writes statements from their own answers, builds application packs and sends them; mention it only when it helps.",
+                    "The artist uses an app that finds open calls, writes statements from their own answers, builds application packs and sends them; mention it only when it helps. " +
+                    "Stay consistent with the app's own plain answers below when they cover the question.\n\n" + known.joinToString("\n") { "Q: ${it.first}\nA: ${it.second}" }.take(6000),
                 q.take(800), fast = true, maxTokens = 900).trim()
         } catch (e: Exception) { }
         if (best != null && bestScore > 0) best.first + "\n\n" + best.second
@@ -512,7 +513,7 @@ object Engine {
         out += "Deadline not passed" to (o.deadline == 0L || o.deadline > now)
         if (o.minWorks > 0) out += "At least ${o.minWorks} works chosen (${chosen.size})" to (chosen.size >= o.minWorks)
         else out += "At least one work chosen (${chosen.size})" to chosen.isNotEmpty()
-        if (o.maxWorks > 0) out += "No more than ${o.maxWorks} works" to (chosen.size <= o.maxWorks)
+        if (o.maxWorks > 0) out += "No more than ${Texts.count(o.maxWorks, "work")}" to (chosen.size <= o.maxWorks)
         out += "Every work has an image" to (chosen.isNotEmpty() && chosen.all { it.imagePath.isNotBlank() && File(it.imagePath).exists() })
         out += "Every work has a title, year and size" to (chosen.isNotEmpty() && chosen.all { it.title.isNotBlank() && it.year > 0 && it.widthIn > 0 && it.heightIn > 0 })
         out += "Statement included" to a.statement.isNotBlank()
@@ -523,7 +524,9 @@ object Engine {
         out += "No [blanks] left to fill" to !(a.statement + a.themeText + qa.joinToString(" ") { it.second }).contains('[')
         if (qa.isNotEmpty()) out += "Every question answered (${qa.count { it.second.isNotBlank() }} of ${qa.size})" to qa.all { it.second.isNotBlank() }
         if (o.fee > 0 && feeLeft < Double.MAX_VALUE) out += "Fee of ${st.currency}${"%.0f".format(o.fee)} fits this month's budget" to (o.fee <= feeLeft)
-        if (a.method == "email") out += "Submission email address known" to a.emailTo.contains("@")
+        if (a.method == "email") out += "Submission email address known" to Texts.looksLikeEmail(a.emailTo)
+        // Calls often cap the total attachment size; most mail services refuse anything over about 25 MB.
+        if (a.method == "email" && a.packDir.isNotBlank()) out += "Attachments under 20 MB in total" to (packFiles(a).sumOf { it.length() } < 20L * 1024 * 1024)
         return out
     }
 
@@ -583,6 +586,14 @@ object Engine {
             false
         }
     }
+
+    fun scheduleGoal(ctx: Context, inMs: Long, goal: Int) {
+        if (inMs <= 0) return
+        val req = OneTimeWorkRequestBuilder<GoalWorker>().setInitialDelay(inMs, TimeUnit.MILLISECONDS).setInputData(workDataOf("goal" to goal, "start" to st.sessionStart)).build()
+        try { WorkManager.getInstance(ctx).enqueueUniqueWork("goal", ExistingWorkPolicy.REPLACE, req) } catch (e: Exception) { }
+    }
+
+    fun cancelGoal(ctx: Context) { try { WorkManager.getInstance(ctx).cancelUniqueWork("goal") } catch (e: Exception) { } }
 
     fun queueSend(ctx: Context, applId: Long) {
         val req = OneTimeWorkRequestBuilder<SendWorker>().setInitialDelay(10, TimeUnit.MINUTES).setInputData(workDataOf("id" to applId))
@@ -928,6 +939,17 @@ class ReminderWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(c
         val next = try { G.dao.artworksNow().firstOrNull { it.status == "in_progress" }?.let { Engine.firstStep(it) }.orEmpty() } catch (e: Exception) { "" }
         Notifier.post(applicationContext, G.settings, 50, inputData.getString("title") ?: "Studio time",
             if (next.isNotBlank()) "First small step: $next" else "One small first step is enough.", inputData.getString("route") ?: "session", choices = true)
+        return Result.success()
+    }
+}
+
+/** Says, once and gently, that the session's minutes are done. Nothing if the session already ended. */
+class GoalWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
+    override suspend fun doWork(): Result {
+        val s = G.settings
+        if (s.sessionStart == 0L || s.sessionStart != inputData.getLong("start", -1)) return Result.success()
+        val goal = inputData.getInt("goal", 0)
+        Notifier.post(applicationContext, s, 52, "That is your $goal minutes", "Stopping now is a complete session. Keep going only if you want to.", "session")
         return Result.success()
     }
 }

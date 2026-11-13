@@ -64,7 +64,7 @@ object Papers {
     }
 
     private fun details(a: Artwork): List<String> =
-        listOf(medium(a), Texts.dims(a.widthIn, a.heightIn, a.depthIn), edition(a)).filter { it.isNotBlank() }
+        listOf(medium(a), Texts.dims(a.widthIn, a.heightIn, a.depthIn), if (a.framed) "framed" else "", edition(a)).filter { it.isNotBlank() }
 
     /** Plain caption for emails and forms: Title, year, medium, size, edition. */
     fun caption(a: Artwork): String =

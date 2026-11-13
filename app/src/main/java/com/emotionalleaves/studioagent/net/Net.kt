@@ -175,6 +175,20 @@ data class MailMsg(val from: String, val subject: String, val text: String, val 
 
 /** Email with an app password over SMTP and IMAP. */
 object Mail {
+    /** The servers for the common free mail services, worked out from the address. Null when the service is unknown or does not allow app passwords. */
+    fun serversFor(email: String): Pair<String, String>? = when (email.substringAfter('@', "").lowercase().trim()) {
+        "gmail.com", "googlemail.com" -> "smtp.gmail.com" to "imap.gmail.com"
+        "yahoo.com", "ymail.com", "rocketmail.com" -> "smtp.mail.yahoo.com" to "imap.mail.yahoo.com"
+        "icloud.com", "me.com", "mac.com" -> "smtp.mail.me.com" to "imap.mail.me.com"
+        "aol.com" -> "smtp.aol.com" to "imap.aol.com"
+        "fastmail.com", "fastmail.fm" -> "smtp.fastmail.com" to "imap.fastmail.com"
+        "zoho.com", "zohomail.com" -> "smtp.zoho.com" to "imap.zoho.com"
+        else -> null
+    }
+
+    /** Outlook and Hotmail stopped letting apps sign in with a password, so sending from the app cannot work there. */
+    fun noAppPasswords(email: String): Boolean = email.substringAfter('@', "").lowercase().trim() in setOf("outlook.com", "hotmail.com", "live.com", "msn.com")
+
     /** Tests point mail at a local server: (smtp port, imap port), plain connections. Never set in the app. */
     internal var testPorts: Pair<Int, Int>? = null
 

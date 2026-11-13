@@ -195,6 +195,7 @@ class DomainTest {
         // Numbers typed the way people type them.
         assertEquals(1200.0, Texts.number("$1,200")!!, 0.0); assertEquals(12.5, Texts.number("12,5")!!, 0.0)
         assertEquals(16.0, Texts.number("16 in")!!, 0.0); assertEquals(null, Texts.number("about"))
+        assertTrue(Texts.looksLikeEmail("entries@riverside.org") && !Texts.looksLikeEmail("entries@riverside") && !Texts.looksLikeEmail("a b@c.org"))
         assertEquals("1 file", Texts.count(1, "file")); assertEquals("3 files", Texts.count(3, "file"))
         // Warning signs a beginner would not know to look for, found without AI.
         assertTrue(CallReader.read("Gallery 9 Open\nAll artists are accepted. Wall fee $300. Deadline March 1, 2027", today, zone, "x", 1L).guaranteed)

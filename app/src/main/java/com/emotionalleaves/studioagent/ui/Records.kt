@@ -480,16 +480,23 @@ fun SettingsScreen(nav: NavController, section: String) {
             "email" -> {
                 Small("Optional. Without it, the app opens your mail app with everything filled in and you press Send. With it, approved emails go by themselves and replies are read for you.")
                 Explain("Where do I get an app password?", "For Gmail: turn on 2-Step Verification, then create an app password at myaccount.google.com/apppasswords and paste it below. It is not your normal password, and it can be removed any time.")
-                SText("Email address", st.mailUser) { st.mailUser = it }
+                var addr by remember { mutableStateOf(st.mailUser) }
+                SText("Email address", st.mailUser) { e ->
+                    st.mailUser = e; addr = e
+                    // The servers follow from the address for the common services, so there is nothing else to fill in.
+                    Mail.serversFor(e)?.let { (out, inc) -> st.smtpHost = out; st.imapHost = inc }
+                }
+                if (Mail.noAppPasswords(addr)) Note("Outlook and Hotmail no longer let apps sign in with a password, so emails cannot go out from here. Nothing is lost: each application opens in your mail app, filled in, and you press Send.")
+                else if (addr.contains('@') && Mail.serversFor(addr) == null) Note("The app does not know this mail service's servers. Fill them in under Servers, or leave email off and send from your mail app.")
                 SText("App password", st.mailPass, secret = true) { st.mailPass = it.replace(" ", "") }
-                Expand("Not Gmail?") {
+                Expand("Servers (filled in for Gmail, Yahoo, iCloud, AOL, Fastmail and Zoho)") {
                     SText("Outgoing server", st.smtpHost) { st.smtpHost = it }
                     SText("Incoming server", st.imapHost) { st.imapHost = it }
                 }
                 if (st.mailUser.isNotBlank() && st.mailPass.isNotBlank()) Button(enabled = !busy, onClick = {
                     busy = true; status = "Sending a test…"
                     scope.io({ status = "That did not work: $it"; busy = false }) {
-                        Mail.send(st.smtpHost, st.mailUser, st.mailPass, st.mailUser, "Studio Agent test", "If you can read this, Studio Agent can send email for you.")
+                        Mail.send(st.smtpHost, st.mailUser, st.mailPass, st.mailUser, "Studio Agent test", "If you can read this, Studio Agent can send email for you.", fromName = st.fullName)
                         Mail.recent(st.imapHost, st.mailUser, st.mailPass, now() - 60_000, 3)
                         status = "Sent, and the inbox can be read. Check your email for the test."; busy = false
                     }

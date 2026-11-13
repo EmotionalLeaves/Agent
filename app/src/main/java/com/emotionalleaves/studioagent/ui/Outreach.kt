@@ -202,6 +202,7 @@ fun ContactScreen(nav: NavController, id: Long) {
         Field("Venue", c.venue, { save(c.copy(venue = it)) })
         Field("Person", c.name, { save(c.copy(name = it)) })
         Field("Email", c.email, { save(c.copy(email = it.trim())) })
+        if (c.email.isNotBlank() && !Texts.looksLikeEmail(c.email)) Small("That does not look like a full email address yet (name@place.org).")
         Field("Website", c.website, { save(c.copy(website = it.trim())) })
         Choice("Kind", contactKinds, c.kind) { save(c.copy(kind = it)) }
         Choice("How realistic right now", listOf("now", "stretch", "long"), c.tier) { save(c.copy(tier = it)) }

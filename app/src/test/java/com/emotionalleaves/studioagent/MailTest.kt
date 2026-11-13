@@ -68,6 +68,13 @@ class MailTest {
         assertEquals("accepted", G.dao.applsNow().single { it.id == id }.status)
     }
 
+    @Test fun serversFollowFromTheAddress() {
+        assertEquals("smtp.gmail.com" to "imap.gmail.com", Mail.serversFor("Jade@Gmail.com"))
+        assertEquals("smtp.mail.me.com" to "imap.mail.me.com", Mail.serversFor("jade@icloud.com"))
+        assertEquals(null, Mail.serversFor("jade@studio.example"))
+        assertTrue(Mail.noAppPasswords("jade@outlook.com") && !Mail.noAppPasswords("jade@gmail.com"))
+    }
+
     @Test fun aWrongPasswordFailsInPlainWordsAndKeepsTheApplication() = runBlocking {
         ctx
         val s = G.settings

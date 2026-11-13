@@ -456,6 +456,9 @@ object Texts {
         return x.toDoubleOrNull()
     }
 
+    /** A quick check that an address could be an email: something@somewhere.tld, no spaces. */
+    fun looksLikeEmail(e: String): Boolean = Regex("^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$").matches(e.trim())
+
     /** "1 file", "3 files": a count with the right form of the word. */
     fun count(n: Int, one: String, many: String = one + "s"): String = "$n " + if (n == 1) one else many
 
