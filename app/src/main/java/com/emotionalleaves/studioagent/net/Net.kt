@@ -59,31 +59,38 @@ object Fetch {
 
 /** Honours a site's robots.txt: if it asks bots to stay out of a page, the app does not read it. */
 object Robots {
-    private val cache = mutableMapOf<String, Pair<Long, List<String>>>()
+    private val cache = mutableMapOf<String, Pair<Long, List<Pair<Boolean, String>>>>()
 
     fun allowed(url: String): Boolean {
         val u = try { java.net.URI(url) } catch (e: Exception) { return false }
         val host = u.scheme + "://" + u.host + (if (u.port > 0) ":${u.port}" else "")
         val now = System.currentTimeMillis()
         val rules = cache[host]?.takeIf { now - it.first < 86_400_000 }?.second ?: run {
-            val txt = Fetch.get("$host/robots.txt").orEmpty()
-            val r = disallowed(txt)
+            val r = rules(Fetch.get("$host/robots.txt").orEmpty())
             cache[host] = now to r
             r
         }
         val path = (u.rawPath ?: "/").ifBlank { "/" } + (u.rawQuery?.let { "?$it" } ?: "")
-        return rules.none { it.isNotBlank() && path.startsWith(it.removeSuffix("*").removeSuffix("$")) }
+        return allowedBy(rules, path)
     }
 
+    /** The longest matching rule decides, as search engines do; with no matching rule a page may be read. */
+    fun allowedBy(rules: List<Pair<Boolean, String>>, path: String): Boolean =
+        rules.filter { it.second.isNotBlank() && path.startsWith(it.second.removeSuffix("*").removeSuffix("$")) }.maxByOrNull { it.second.length }?.first ?: true
+
     /** The Disallow lines that apply to every bot (User-agent: *) or to this app by name. */
-    fun disallowed(txt: String): List<String> {
-        val out = mutableListOf<String>()
+    fun disallowed(txt: String): List<String> = rules(txt).filter { !it.first }.map { it.second }
+
+    /** Allow and Disallow lines for every bot or this app, in order: (allowed, path). */
+    fun rules(txt: String): List<Pair<Boolean, String>> {
+        val out = mutableListOf<Pair<Boolean, String>>()
         var applies = false; var inAgents = false
         txt.lines().map { it.substringBefore('#').trim() }.filter { it.isNotBlank() }.forEach { line ->
             val key = line.substringBefore(':').trim().lowercase(); val v = line.substringAfter(':', "").trim()
             when (key) {
                 "user-agent" -> { if (!inAgents) applies = false; inAgents = true; if (v == "*" || v.contains("studioagent", true)) applies = true }
-                "disallow" -> { inAgents = false; if (applies && v.isNotBlank()) out += v }
+                "disallow" -> { inAgents = false; if (applies && v.isNotBlank()) out += false to v }
+                "allow" -> { inAgents = false; if (applies && v.isNotBlank()) out += true to v }
                 else -> inAgents = false
             }
         }

@@ -196,6 +196,16 @@ fun Interview(nav: NavController) {
         LinearProgressIndicator(progress = { (i + 1f) / all.size }, modifier = Modifier.fillMaxWidth().height(4.dp), trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
         Small("Question ${i + 1} of ${all.size}. ${answers.values.count { it.isNotBlank() }} answered; three is enough to start.")
         Text(q, style = MaterialTheme.typography.headlineSmall)
+        // Each answer saves itself a moment after you stop typing, so leaving the screen never loses anything.
+        val typed = answers[k]
+        LaunchedEffect(k, typed) {
+            if (typed == null) return@LaunchedEffect
+            kotlinx.coroutines.delay(700)
+            withContext(Dispatchers.IO) {
+                val old = dao.docsNow().firstOrNull { it.type == "interview" && it.variant == k }
+                if (old?.text != typed.trim() && (old != null || typed.isNotBlank())) dao.put((old ?: Doc(type = "interview", variant = k)).copy(text = typed.trim(), updatedAt = now()))
+            }
+        }
         key(k) {
             Field("", answers[k].orEmpty(), { answers[k] = it }, lines = 5, mic = true)
             interviewStarters[k]?.let { Explain("Not sure what to say?", it) }
@@ -208,7 +218,12 @@ fun Interview(nav: NavController) {
         Expand("Add your own question") {
             Note("Something about your work these questions miss. Your answer is used in the writing like the others.")
             Field("Your question or topic", ownQuestion)
-            if (ownQuestion.value.isNotBlank()) OutlinedButton(onClick = { answers["own:" + ownQuestion.value.trim().take(80)] = ""; ownQuestion.value = "" }) { Text("Add question") }
+            if (ownQuestion.value.isNotBlank()) OutlinedButton(onClick = {
+                val key = "own:" + ownQuestion.value.trim().take(80)
+                answers[key] = ""; ownQuestion.value = ""
+                // Go straight to the new question.
+                at = (interviewQuestions.map { it.first } + answers.keys.filter { it.startsWith("own:") }.sorted()).indexOf(key).coerceAtLeast(0)
+            }) { Text("Add this question") }
         }
         Status(status)
         Button(modifier = Modifier.fillMaxWidth(), onClick = {
@@ -225,7 +240,8 @@ fun Interview(nav: NavController) {
                 status = "Saved."
                 withContext(Dispatchers.Main) { nav.popBackStack() }
             }
-        }) { Text("Save answers") }
+        }) { Text("Done for now") }
+        SavedLine()
     }
 }
 

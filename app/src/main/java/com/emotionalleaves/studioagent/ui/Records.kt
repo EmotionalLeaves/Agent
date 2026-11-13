@@ -127,10 +127,12 @@ fun Records(nav: NavController) {
                 Column(Modifier.weight(1f)) { Small("Spent in $year"); Text(money(-thisYear.filter { it.amount < 0 }.sumOf { it.amount }), style = MaterialTheme.typography.headlineSmall) }
                 Column(Modifier.weight(1f)) { Small("Earned in $year"); Text(money(thisYear.filter { it.amount > 0 }.sumOf { it.amount }), style = MaterialTheme.typography.headlineSmall) }
             }
-            Small("Fees this month ${money(Engine.feesThisMonth(ledger))}" + (if (st.feeBudget > 0) " of ${money(st.feeBudget)}" else ""))
+            val net = thisYear.sumOf { it.amount }
+            if (thisYear.isNotEmpty()) Small((if (net >= 0) "Ahead by " else "Behind by ") + money(kotlin.math.abs(net)) + " this year.")
+            Small("Entry fees this month ${money(Engine.feesThisMonth(ledger))}" + (if (st.feeBudget > 0) " of ${money(st.feeBudget)}" else ""))
         }
         Expand("Add a cost") {
-            Choice("What kind", listOf("fee", "shipping", "print", "framing", "other"), kind) { kind = it }
+            Choice("What kind", listOf("fee", "shipping", "print", "framing", "other"), kind, names = { mapOf("fee" to "Entry fee", "print" to "Printing")[it] ?: it.replaceFirstChar { c -> c.uppercase() } }) { kind = it }
             Num("Amount, " + st.currency, amount) { amount = it }
             Field("What for", note)
             if (amount > 0) Button(onClick = { val l = Ledger(kind = kind, amount = -amount, date = now(), note = note.value.trim()); note.value = ""; amount = 0.0; scope.io { dao.put(l) } }) { Text("Add cost") }
@@ -184,7 +186,11 @@ fun Records(nav: NavController) {
         H("Entries")
         ledger.take(40).forEach { l ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("${fmtDate(l.date)}  ${l.kind}  ${l.note}", Modifier.weight(1f))
+                Column(Modifier.weight(1f)) {
+                    Text((mapOf("fee" to "Entry fee", "sale" to "Sale", "commission" to "Commission", "shipping" to "Shipping", "print" to "Printing", "framing" to "Framing")[l.kind] ?: l.kind.replaceFirstChar { it.uppercase() }) +
+                        (if (l.note.isNotBlank()) ": ${l.note}" else ""))
+                    Small(fmtDate(l.date))
+                }
                 Text(money(l.amount))
                 RemoveButton("entry") { scope.remove("the ${l.kind} entry", { dao.del(l) }, { dao.put(l) }) }
             }

@@ -182,6 +182,29 @@ class PartsTest {
         assertEquals(emptyList<String>(), Engine.plainFacts(Opp(title = "Bare")))
     }
 
+    /** The listing reader keeps links to single calls and drops menus, categories and "see all" links. */
+    @Test fun aListingPageGivesOnlyTheCalls() {
+        val html = "<html><head><title>Calls</title></head><body><nav><a href='/calls/juried'>Juried exhibitions and open calls</a></nav><main>" +
+            "<a href='/cat/deadline'>Deadline</a> <a href='/all'>See all upcoming deadlines</a>" +
+            "<article><a href='/call/1'>Winter Juried Exhibition 2027</a><p>Deadline: January 15, 2027</p></article>" +
+            "<article><a href='/call/2'>Spring Open Call for Printmakers</a><p>Entries due March 1, 2027</p></article>" +
+            "<article><a href='https://facebook.com/share'>Share this call on Facebook</a></article>" +
+            "</main><footer><a href='/privacy'>Privacy policy and terms of use</a></footer></body></html>"
+        val doc = org.jsoup.Jsoup.parse(html, "https://listing.example.org/calls")
+        val links = com.emotionalleaves.studioagent.net.Listing.links(doc).map { it.url }.sorted()
+        assertEquals(listOf("https://listing.example.org/call/1", "https://listing.example.org/call/2"), links)
+    }
+
+    /** robots.txt: only the rules for every bot (or this app) count. */
+    @Test fun robotsRulesAreReadForEveryBot() {
+        val txt = "User-agent: Googlebot\nDisallow: /nothing-for-google\n\nUser-agent: *\nDisallow: /private\nDisallow: /members/\nAllow: /\n\nUser-agent: BadBot\nDisallow: /"
+        assertEquals(listOf("/private", "/members/"), com.emotionalleaves.studioagent.net.Robots.disallowed(txt))
+        assertEquals(emptyList<String>(), com.emotionalleaves.studioagent.net.Robots.disallowed(""))
+        // The longest rule wins: a site closed to bots except for its calls pages can still be read there.
+        val r = com.emotionalleaves.studioagent.net.Robots.rules("User-agent: *\nDisallow: /\nAllow: /calls")
+        assertTrue(com.emotionalleaves.studioagent.net.Robots.allowedBy(r, "/calls/winter-open") && !com.emotionalleaves.studioagent.net.Robots.allowedBy(r, "/members"))
+    }
+
     @Test fun existingFilesComeInAsFinishedPieces() = runBlocking {
         ctx
         val f = picture("blue_hour-final.jpg", 3000, 2400)

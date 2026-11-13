@@ -132,3 +132,13 @@ One real change per round. Pushed and built every ten rounds.
 128. Selling the last print of an edition marks the piece sold out.
 129. A bill of sale for a print names which print it is ("print 3 of 10").
 130. After recording a sale, the certificate of authenticity for the buyer is one tap away, numbered for the print sold.
+131. Money entries read "Entry fee: Winter Open" with the date underneath, instead of raw words run together.
+132. Cost kinds read Entry fee and Printing, matching the entries list.
+133. Money shows whether the year is ahead or behind overall, and says "Entry fees this month".
+134. Interview answers save themselves as you type; the button is "Done for now" and nothing is lost if you leave.
+135. "Add this question" in the interview.
+136. The portfolio web page tells search engines it is an artist's own site (name, city, website).
+137. A test that the listing reader keeps only single calls and drops menus, categories, "see all" and share links.
+138. A test that robots.txt rules are read for every bot and not for other named bots.
+139. robots.txt Allow lines are honoured too (the longest matching rule wins), so a site that opens only its calls pages can still be read there.
+140. A question you add to the interview opens straight away, ready to answer.

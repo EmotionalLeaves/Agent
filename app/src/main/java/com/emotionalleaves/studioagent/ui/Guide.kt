@@ -55,7 +55,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
             "tour", "Take the tour", st.onboarded),
         GuideStep("interview", a, "Do the interview",
             "Everything the app writes for you is built from these answers, so it sounds like you and never invents anything.",
-            listOf("Seven questions. Talk or type.", "Rough answers are fine. Three answered is enough to start.", "Tap Save answers. You can come back and add more any time."),
+            listOf("Seven questions. Talk or type.", "Rough answers are fine. Three answered is enough to start.", "Answers save as you type. Tap Done for now when you stop; come back and add more any time."),
             "interview", "Open the interview", docs.count { it.type == "interview" && it.text.isNotBlank() } >= 3),
         GuideStep("series", a, "Name your first series",
             "A series is a group of works that belong together. Shows and calls ask for one, and it gives you a finish line.",

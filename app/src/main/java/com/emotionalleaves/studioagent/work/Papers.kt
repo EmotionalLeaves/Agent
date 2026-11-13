@@ -326,6 +326,11 @@ object Papers {
         append("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
         append("<title>$n</title><meta name=\"description\" content=\"$desc\"><meta property=\"og:title\" content=\"$n\"><meta property=\"og:description\" content=\"$desc\">")
         works.firstOrNull()?.let { append("<meta property=\"og:image\" content=\"img/${escape(it.second)}\">") }
+        // So search engines know the page is an artist's own site.
+        val person = org.json.JSONObject().put("@context", "https://schema.org").put("@type", "Person").put("name", name(s)).put("jobTitle", "Artist")
+        if (s.website.isNotBlank()) person.put("url", s.website)
+        if (s.city.isNotBlank()) person.put("address", org.json.JSONObject().put("@type", "PostalAddress").put("addressLocality", s.city).put("addressRegion", s.region))
+        append("<script type=\"application/ld+json\">" + person.toString().replace("</", "<\\/") + "</script>")
         append("<style>")
         append(":root{--ink:#2A2C2E;--pencil:#63676B;--wall:#F2F2EF;--line:#DADBD6;--link:#2B4ACB}")
         append("*{box-sizing:border-box}body{margin:0;background:var(--wall);color:var(--ink);font:17px/1.55 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}")
