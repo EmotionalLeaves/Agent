@@ -189,6 +189,8 @@ class Settings(ctx: Context) {
     var lastWeekAhead by S("lastWeekAhead")
     /** When a backup file was last saved by hand (for example to Google Drive). */
     var lastManualBackup by L("lastManualBackup", 0)
+    /** The app version whose "what is new" note has been seen. */
+    var seenVersion by L("seenVersion", 0)
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")

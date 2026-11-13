@@ -1018,7 +1018,7 @@ fun FlyerButtons(nav: NavController, onStatus: (String) -> Unit) {
         busy = true; onStatus("Reading the flyer…")
         scope.io({ onStatus(it); busy = false }) {
             val (id, read) = Engine.callFromPhoto(ctx, path, "Flyer photo")
-            onStatus(if (read) "" else "No words could be read from that picture. Type the name and deadline from the flyer."); busy = false
+            onStatus(if (read) "" else "No words could be read from that picture. Type the name and deadline from the flyer. If it happens with every photo, the phone's text reader may still be downloading; try again later."); busy = false
             withContext(Dispatchers.Main) { nav.navigate("call/$id") }
         }
     }

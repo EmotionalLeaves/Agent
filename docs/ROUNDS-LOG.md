@@ -354,3 +354,5 @@ One real change per round. Pushed and built every ten rounds.
 348. Once a month (on a Sunday), without an off-phone backup, the step is to save a copy of the catalog off the phone, to Google Drive from the picker.
 349. Ready-made emails: a commission quote for someone who wants a piece made for them (size and medium, price, half deposit, time, one draft to approve, you keep the copyright).
 350. Help explains commissions: price from your rule plus about a quarter, half deposit, one draft, keep the copyright, and where the quote email is.
+351. When no words can be read from a flyer photo, the message adds that the phone's text reader may still be downloading if it happens every time.
+352. After an update, Today shows "New in this version" once: five lines about the newest, most useful changes, then Got it.

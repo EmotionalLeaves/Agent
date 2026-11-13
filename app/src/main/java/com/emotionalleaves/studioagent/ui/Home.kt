@@ -154,6 +154,15 @@ fun Home(nav: NavController) {
             }
         }
 
+        // After an update: what is new, once, in a few lines, so new features are found instead of hunted for.
+        val version = remember { try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).let { if (android.os.Build.VERSION.SDK_INT >= 28) it.longVersionCode else @Suppress("DEPRECATION") it.versionCode.toLong() } } catch (e: Exception) { 0L } }
+        var showNew by remember { mutableStateOf(st.onboarded && st.seenVersion in 1 until version) }
+        LaunchedEffect(version) { if ((!st.onboarded || st.seenVersion == 0L) && st.seenVersion != version) st.seenVersion = version }
+        if (showNew) Panel(strong = true) {
+            Text("New in this version", style = MaterialTheme.typography.titleSmall)
+            whatsNew.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
+            TextButton(onClick = { st.seenVersion = version; showNew = false }, modifier = Modifier.offset(x = (-12).dp)) { Text("Got it") }
+        }
         // The one next step, pinned to the wall.
         val n = next
         WallLabel(onClick = { n?.let { if (it.route != "home") nav.navigate(it.route) } }) {
@@ -848,4 +857,13 @@ val lightPrompts = listOf(
     "Read one open call in Calls and say Yes or No.",
     "Prime or prepare three surfaces for later.",
     "Put on music and look at your series side by side for ten minutes."
+)
+
+/** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
+val whatsNew = listOf(
+    "People: Find places near me shows real galleries, libraries, print labs and framers around you.",
+    "Calls now come from eight sites, including CaFÉ. Photograph a flyer in Calls to add one.",
+    "Applied is a board that follows each entry to the show and home again.",
+    "A venue said yes? Plan the show: dated steps, flyer, labels and an agreement.",
+    "Your week has a month calendar, and a Next step widget for your home screen."
 )
