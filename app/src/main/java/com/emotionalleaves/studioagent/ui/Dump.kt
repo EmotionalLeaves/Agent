@@ -63,7 +63,7 @@ fun DumpScreen(nav: NavController) {
                             val next = Dump.Kind.values()[(l.kind.ordinal + 1) % Dump.Kind.values().size]
                             moved.add(i to next)
                         }, label = { Text(l.kind.label) })
-                        Text(l.text + (l.day?.takeIf { l.kind == Dump.Kind.TASK }?.let { "  (" + dayName(it) + ")" } ?: "") + (if (l.kind == Dump.Kind.TASK) pieceFor(l.text)?.let { "  for " + it.title } ?: "" else ""), Modifier.weight(1f))
+                        Text(l.text + (l.day?.takeIf { l.kind == Dump.Kind.TASK }?.let { "  (" + dayName(it) + ")" } ?: "") + (if (l.kind != Dump.Kind.SUPPLY) pieceFor(l.text)?.let { "  for " + it.title } ?: "" else ""), Modifier.weight(1f))
                     }
                 }
             }
@@ -71,12 +71,16 @@ fun DumpScreen(nav: NavController) {
             Button(onClick = {
                 val keep = lines.toList(); val now = System.currentTimeMillis()
                 val before = st.supplies
-                val evts = mutableListOf<Long>(); val ideas = mutableListOf<Long>()
+                val evts = mutableListOf<Long>(); val ideas = mutableListOf<Long>(); val touched = mutableListOf<com.emotionalleaves.studioagent.data.Artwork>()
                 scope.undoable("Put away ${keep.size} ${if (keep.size == 1) "thing" else "things"}", {
                     keep.forEach { l ->
                         when (l.kind) {
                             Dump.Kind.TASK -> { val d = l.day ?: LocalDate.now().plusDays(2); evts += dao.put(Evt(type = "task", title = l.text, date = Engine.millis(d.atTime(18, 0)), artworkId = pieceFor(l.text)?.id ?: 0)) }
-                            Dump.Kind.IDEA -> { ideas += dao.put(Idea(text = l.text, createdAt = now)) }
+                            // An idea about one of your pieces goes into that piece's notes, where you will see it while working on it.
+                            Dump.Kind.IDEA -> { val p0 = pieceFor(l.text)
+                                if (p0 != null) { val cur = dao.artworksNow().firstOrNull { it.id == p0.id } ?: p0; if (touched.none { it.id == cur.id }) touched += cur
+                                    dao.put(cur.copy(notes = (cur.notes.trim() + "\nIdea: " + l.text).trim())) }
+                                else ideas += dao.put(Idea(text = l.text, createdAt = now)) }
                             Dump.Kind.SUPPLY -> {
                                 val have = supplies(st.supplies)
                                 st.supplies = suppliesText(if (have.any { it.first.equals(l.text, true) }) have.map { if (it.first.equals(l.text, true)) it.first to true else it } else have + (l.text to true))
@@ -86,6 +90,7 @@ fun DumpScreen(nav: NavController) {
                 }, {
                     dao.eventsNow().filter { e: Evt -> e.id in evts }.forEach { e: Evt -> dao.del(e) }
                     dao.ideasNow().filter { i: Idea -> i.id in ideas }.forEach { i: Idea -> dao.del(i) }
+                    touched.forEach { dao.put(it) }
                     st.supplies = before
                 })
                 // Where each kind went, so nothing feels lost.

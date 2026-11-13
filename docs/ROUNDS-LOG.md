@@ -649,3 +649,4 @@ One real change per round. Pushed and built every ten rounds.
 642. A job emptied from your head that names one of your pieces ("varnish Night Shift on Saturday") belongs to that piece: the preview says "for Night Shift", and the to-do opens the piece's page when it comes up.
 643. A piece's page shows its own to-dos ("To do for this piece": from Empty your head, a commission or a sale), each ticked off with one tap and Undo.
 644. During a session on a piece, anything else on that piece's list shows quietly under the step ("Also for this piece: varnish it on Saturday"), so it is not forgotten while the piece is in front of you.
+645. An idea emptied from your head that names one of your pieces ("Night Shift could use a moon in the window") goes into that piece's notes as "Idea: ...", where you will see it while working on it, instead of the general ideas board. Undo puts the notes back as they were.
