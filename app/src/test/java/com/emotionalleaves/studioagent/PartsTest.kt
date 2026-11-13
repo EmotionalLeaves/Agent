@@ -417,9 +417,11 @@ class PartsTest {
         val big = com.emotionalleaves.studioagent.media.Mockup.render(img, 40.0, 30.0, true, File(ctx.cacheDir, "w40.jpg"))!!
         assertTrue(small.length() > 1000 && big.length() > 1000)
         // The bigger print spans much more of the wall: measure between the dark frame edges across the middle.
-        fun span(wIn: Double, hIn: Double): Int { val bm = com.emotionalleaves.studioagent.media.Mockup.draw(img, wIn, hIn, true)!!; val y = bm.height / 2
-            val dark = (0 until bm.width).filter { x -> android.graphics.Color.red(bm.getPixel(x, y)) < 80 }
-            return if (dark.isEmpty()) 0 else dark.last() - dark.first() }
+        fun span(wIn: Double, hIn: Double): Int { val bm = com.emotionalleaves.studioagent.media.Mockup.draw(img, wIn, hIn, true)!!
+            // Above the bench, the widest run between dark frame edges in any row.
+            return (0 until (bm.height * 0.6).toInt() step 4).maxOf { y ->
+                val dark = (0 until bm.width).filter { x -> android.graphics.Color.red(bm.getPixel(x, y)) < 80 }
+                if (dark.isEmpty()) 0 else dark.last() - dark.first() } }
         assertTrue("${span(8.0, 6.0)} vs ${span(40.0, 30.0)}", span(40.0, 30.0) > span(8.0, 6.0) * 3)
         assertEquals(null, com.emotionalleaves.studioagent.media.Mockup.render(img, 0.0, 0.0, true, File(ctx.cacheDir, "w0.jpg")))
         java.io.File(ctx.cacheDir, "w40.jpg").copyTo(java.io.File("build/screens/docs/on_the_wall.jpg").apply { parentFile?.mkdirs() }, overwrite = true)
