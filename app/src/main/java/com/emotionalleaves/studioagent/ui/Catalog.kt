@@ -581,6 +581,14 @@ fun WorkDetail(nav: NavController, id: Long) {
             }
             val kept = com.emotionalleaves.studioagent.domain.PieceMoney.kept(moneyOn)
             Row { Text("You kept", Modifier.weight(1f), fontWeight = FontWeight.SemiBold); Text(money(kept), fontWeight = FontWeight.SemiBold) }
+        } else if (moneyOn.isNotEmpty()) {
+            // Not sold yet, but money has gone into it: say so, and whether the price still covers it after a gallery's share.
+            val spent = -moneyOn.filter { it.second < 0 }.sumOf { it.second }
+            if (spent > 0) Small("Spent on this piece so far: ${money(spent)}." + when {
+                w.price <= 0 -> ""
+                w.price * 0.6 < spent -> " At ${money(w.price)}, a gallery's usual 40 percent would leave less than that. Worth a look at its price."
+                else -> " At ${money(w.price)}, it covers that even after a gallery's usual 40 percent."
+            })
         }
         Expand("Price, edition and where it is") {
         TextButton(onClick = { nav.navigate("pricing") }) { Text("Prices for all your work") }
