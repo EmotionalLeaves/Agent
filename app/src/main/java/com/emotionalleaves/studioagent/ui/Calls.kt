@@ -620,6 +620,23 @@ fun ApplScreen(nav: NavController, id: Long) {
         val qa = Engine.answers(a)
         Expand("Questions this call asks (" + qa.size + ")", startOpen = qa.isNotEmpty()) {
             Note("If the entry form has its own questions, add each one here. The answers go into the pack and are ready to paste.")
+            // Several blank answers: drafted in one go, each from your own facts, for you to read and fix.
+            val blanks = qa.count { it.second.isBlank() }
+            if (G.ai.ready && blanks > 1) Button(enabled = !busy, onClick = {
+                busy = true; status = "Drafting ${Texts.count(blanks, "answer")}…"
+                scope.io({ status = it; busy = false }) {
+                    var cur = qa
+                    cur.forEachIndexed { i, (q, ans) ->
+                        if (ans.isBlank()) {
+                            status = "Drafting answer ${i + 1} of ${cur.size}…"
+                            val t = try { G.ai.write("an answer to this application question: $q", 120, Engine.factsText(chosenIds), Engine.voice(), "The call: ${o.title}. Theme: ${o.theme}") } catch (e: Exception) { "" }
+                            cur = cur.mapIndexed { j, p -> if (j == i) p.first to t else p }
+                        }
+                    }
+                    val x = a.copy(answers = Engine.answersJson(cur), packDir = ""); a = x; dao.put(x)
+                    status = "Drafted. Read each one and change anything that is not quite true or not you."; busy = false
+                }
+            }) { Text("Draft all ${blanks} answers") }
             qa.forEachIndexed { i, (q, ans) ->
                 key(i, q) {
                     Field(q, ans, { v -> save(a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to v else p }), packDir = "")) }, lines = 3)
