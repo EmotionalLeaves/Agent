@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -359,7 +360,7 @@ fun CallDetail(nav: NavController, id: Long) {
         Toggle("Paying the fee guarantees a place", o.guaranteed) { save(o.copy(guaranteed = it)) }
         Toggle("Terms take broad rights to my images", o.rightsGrab) { save(o.copy(rightsGrab = it)) }
         }
-        Row {
+        FlowRow {
             if (o.organiser.isNotBlank()) TextButton(onClick = {
                 val before = st.blocked
                 scope.undoable("Blocked ${o.organiser}. Their calls will be held back.", { st.blocked = (before.split(",").map { it.trim() }.filter { it.isNotBlank() } + o.organiser).distinct().joinToString(", "); Engine.rescore() }, { st.blocked = before; Engine.rescore() })
@@ -780,8 +781,9 @@ fun StageHead(n: Int, title: String, done: Boolean) {
 /** What your level lets through, in one line, with the way to change it right beside it. */
 @Composable
 fun LevelLine(nav: NavController, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        TextButton(onClick = { nav.navigate("settings/rules") }) { Text("Change my rules") }
+    // Text first, the button under it, so large text never squeezes the sentence into a thin column.
+    Column {
+        Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        TextButton(onClick = { nav.navigate("settings/rules") }, modifier = Modifier.offset(x = (-12).dp)) { Text("Change my rules") }
     }
 }

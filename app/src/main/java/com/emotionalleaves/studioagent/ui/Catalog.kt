@@ -124,7 +124,7 @@ fun Works(nav: NavController) {
         }
     }
     Screen("Studio", nav, back = false) {
-        Intro("studio", "Every piece you make lives here, with its image and details. Works are single pieces; Series are groups that belong together. Already have finished files? Bring in files picks several at once and each becomes a piece.")
+        Intro("studio", "Every piece you make lives here, with its image and details. Works are single pieces; Series are groups that belong together. Already have finished files? Add from my files picks several at once and each becomes a piece.")
         Choice("", listOf("works", "series", "ideas"), tab) { tab = it }
         if (tab == "ideas") IdeasBody(nav)
         else if (tab == "works") {
@@ -132,7 +132,7 @@ fun Works(nav: NavController) {
                 // One tap makes one piece, however fast the second tap comes.
                 var adding by remember { mutableStateOf(false) }
                 Button(enabled = !adding, onClick = { adding = true; scope.io({ adding = false }) { val id = dao.put(newWork()); withContext(Dispatchers.Main) { adding = false; nav.navigate("work/$id") } } }, modifier = Modifier.weight(1f)) { Text("Add a piece") }
-                OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Bring in files") }
+                OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Add from my files") }
             }
             Status(importStatus)
             if (works.isEmpty()) Empty("No pieces yet. Start one, or bring in work you have already made.")

@@ -355,13 +355,16 @@ object Engine {
                     "Be practical and honest; say when something depends on the call or the venue. Never invent specific organisations, prices or deadlines. " +
                     "The artist uses an app that finds open calls, writes statements from their own answers, builds application packs and sends them; mention it only when it helps. " +
                     "Stay consistent with the app's own plain answers below when they cover the question.\n\n" + known.joinToString("\n") { "Q: ${it.first}\nA: ${it.second}" }.take(6000),
-                q.take(800), fast = true, maxTokens = 900).trim()
+                q.take(800), fast = true, maxTokens = 900).let { plainText(it) }
         } catch (e: Exception) { }
         if (best != null && bestScore > 0) best.first + "\n\n" + best.second
         else "The writing help did not answer just now. Try the plain answers below, or ask again in a minute."
     }
 
     private val plainCache = mutableMapOf<Long, List<String>>()
+
+    /** Writing help sometimes answers in markdown; the app shows plain sentences. */
+    fun plainText(t: String): String = t.replace(Regex("\\*\\*|__|`"), "").replace(Regex("(?m)^#{1,6}\\s*"), "").replace(Regex("(?m)^\\s*[*-]\\s+"), "").trim()
 
     fun plainWordsCached(o: Opp): List<String> = plainCache[o.id].orEmpty()
 
@@ -374,7 +377,7 @@ object Engine {
                 "1) what this is and who runs it, 2) what they want you to send, 3) one thing to watch (cost, commission, image rights, delivery, travel). " +
                 "Give a date only if the text gives it, and say what that date is for (entry deadline, delivery, show dates). Do not praise or recommend.",
             "<data>\nTitle: ${o.title}\n${src.take(5000)}\n</data>", fast = true, maxTokens = 260) } catch (e: Exception) { return@withContext plainFacts(o) }
-        val lines = out.lines().map { it.trim().trimStart('-', '*', '•').replace(Regex("^\\d+[.)]\\s*"), "").trim() }.filter { it.length in 8..220 }.take(3)
+        val lines = plainText(out).lines().map { it.trim().trimStart('-', '*', '•').replace(Regex("^\\d+[.)]\\s*"), "").trim() }.filter { it.length in 8..220 }.take(3)
         plainCache[o.id] = lines
         lines
     }

@@ -218,7 +218,7 @@ class Ai(private val settings: Settings) {
     /** Returns 0..100 and a short reason. */
     suspend fun themeFit(o: Opp, practice: String): Pair<Int, String> {
         val sys = "You judge how well an artist's work fits an open call. $dataRule Reply with only JSON: {\"fit\": 0-100, \"reason\": \"under 12 words\"}."
-        val out = complete(sys, "Artist's practice:\n$practice\n\n<data>\nCall: ${o.title}\nTheme: ${o.theme}\nMediums: ${o.mediums}\nJurors: ${o.jurors}\nEligibility: ${o.eligibility}\n</data>", fast = true, maxTokens = 200)
+        val out = complete(sys, "Artist's practice:\n$practice\n\n<data>\nCall: ${o.title}\nTheme: ${o.theme}\nMediums: ${o.mediums}\nJurors: ${o.jurors}\nEligibility: ${o.eligibility}\n</data>", fast = true, maxTokens = 600)
         return try { val j = JSONObject(jsonSlice(out, '{', '}')); j.optInt("fit", 50).coerceIn(0, 100) to j.optString("reason") } catch (e: Exception) { 50 to "" }
     }
 
@@ -233,11 +233,14 @@ class Ai(private val settings: Settings) {
             (if (voice.isNotBlank()) "\n\nHow the artist writes (their own sentences):\n$voice" else "")
 
     suspend fun write(kind: String, wordTarget: Int, facts: String, voice: String, extra: String = ""): String =
-        complete(writerSystem(voice), "Write: $kind\nLength: about $wordTarget words, never more.\n$extra\n\nFacts you may use:\n$facts", maxTokens = 1500)
+        clean(complete(writerSystem(voice), "Write: $kind\nLength: about $wordTarget words, never more.\n$extra\n\nFacts you may use:\n$facts", maxTokens = 1500))
+
+    /** Plain prose: no markdown stars or headings, no quotation marks around the whole text. */
+    fun clean(t: String): String = t.replace(Regex("\\*\\*|__|`"), "").replace(Regex("(?m)^#{1,6}\\s*"), "").trim().removeSurrounding("\"").trim()
 
     suspend fun themeParagraph(o: Opp, facts: String, voice: String): String =
         complete(writerSystem(voice) + " " + dataRule, "Write 2 to 3 sentences linking the artist's submitted works to this call's theme. " +
-            "If the call has no theme, say plainly what the works are.\n\nFacts you may use:\n$facts\n\n<data>\nCall: ${o.title}\nTheme: ${o.theme}\n</data>", maxTokens = 400)
+            "If the call has no theme, say plainly what the works are.\n\nFacts you may use:\n$facts\n\n<data>\nCall: ${o.title}\nTheme: ${o.theme}\n</data>", maxTokens = 400).let { clean(it) }
 
     /** Returns subject, body, follow-up body. */
     suspend fun outreach(venue: String, venueNotes: String, facts: String, voice: String, portfolioUrl: String): Triple<String, String, String> {
@@ -251,8 +254,8 @@ class Ai(private val settings: Settings) {
             Triple(j.optString("subject"), j.optString("body"), j.optString("follow_up"))
         } catch (e: Exception) { Triple("", out, "") }
         // Every email closes the same way: the full signature, never a made-up one.
-        fun sign(t: String) = if (t.isBlank()) t else t.trimEnd().replace(Regex("(?s)\\n(Kind regards|Best|Best regards|Thank you|Thanks|Sincerely|Warm regards)[,!.]?(\\s*\\n.*)?$"), "").trimEnd() +
-            "\n\nKind regards,\n\n" + com.emotionalleaves.studioagent.work.Papers.signature(settings)
+        fun sign(raw: String): String { val t = clean(raw); return if (t.isBlank()) t else t.trimEnd().replace(Regex("(?s)\\n(Kind regards|Best|Best regards|Thank you|Thanks|Sincerely|Warm regards)[,!.]?(\\s*\\n.*)?$"), "").trimEnd() +
+            "\n\nKind regards,\n\n" + com.emotionalleaves.studioagent.work.Papers.signature(settings) }
         return Triple(subject, sign(body), sign(follow))
     }
 
@@ -261,14 +264,14 @@ class Ai(private val settings: Settings) {
         val sys = "You read a venue's public web page for an artist. $dataRule Reply with only JSON: " +
             "{\"venue\": \"\", \"kind\": one of campus|community|artist_run|nonprofit|university|commercial, \"contact_name\": \"\", \"email\": \"\", " +
             "\"accepts_submissions\": true|false, \"submission_notes\": \"\", \"notes\": \"what they show, in under 40 words\"}. Use \"\" when the page does not say."
-        val out = complete(sys, "<data>\n${pageText.take(16000)}\n</data>", fast = true, maxTokens = 500)
+        val out = complete(sys, "<data>\n${pageText.take(16000)}\n</data>", fast = true, maxTokens = 900)
         return try { JSONObject(jsonSlice(out, '{', '}')) } catch (e: Exception) { JSONObject() }
     }
 
     /** accepted, declined, interested, not_now, no, more or unknown. */
     suspend fun classifyReply(text: String): String {
         val sys = "You sort one email an artist received. $dataRule Reply with exactly one word: accepted, declined, interested, not_now, no, more, unknown."
-        val out = complete(sys, "<data>\n${text.take(6000)}\n</data>", fast = true, maxTokens = 10).lowercase()
+        val out = complete(sys, "<data>\n${text.take(6000)}\n</data>", fast = true, maxTokens = 300).lowercase()
         return listOf("accepted", "declined", "interested", "not_now", "more", "unknown", "no").firstOrNull { out.contains(it) } ?: "unknown"
     }
 

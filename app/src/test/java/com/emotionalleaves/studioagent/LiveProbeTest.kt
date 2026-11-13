@@ -81,6 +81,10 @@ class LiveProbeTest {
             log("suggestSteps:\n  " + steps.joinToString("\n  "))
             val reply = kotlinx.coroutines.runBlocking { com.emotionalleaves.studioagent.work.Engine.ask("Is it normal to pay to enter a juried show?", emptyList()) }
             log("ask: $reply")
+            val verdict = kotlinx.coroutines.runBlocking { G.ai.classifyReply("Dear Jade, congratulations! We are pleased to tell you that two of your works were selected for the Winter Open.") }
+            log("classifyReply (should be accepted): $verdict")
+            val fit = kotlinx.coroutines.runBlocking { G.ai.themeFit(com.emotionalleaves.studioagent.data.Opp(title = "Night Light", theme = "Light at night in the city"), "Graphite drawings of a university kitchen before dawn") }
+            log("themeFit: $fit")
         } catch (e: Exception) { log("failed: $e") }
 
         log("\n== Starter listing sites, exactly as the daily check reads them")

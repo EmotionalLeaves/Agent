@@ -152,3 +152,13 @@ One real change per round. Pushed and built every ten rounds.
 148. A piece's format reads "To be printed", "Made by hand", "On a screen", "Digital file", the same words as Settings.
 149. The format explanation uses the same words as the choices.
 150. The piece details fold is named for everything in it: "Size, year, medium, format, series"; the Guide matches.
+151. The level line on Calls puts "Change my rules" under the sentence, so large text no longer squeezes it into a thin column.
+152. Block and Delete on a call wrap onto two lines at large text sizes instead of running off the screen.
+153. When every small step of a piece is ticked during a session, the screen says so and offers "Call it finished".
+154. Studio says "Add from my files", in line with "Choose a file" on a piece.
+155. An answer from Ask anything can be selected and copied.
+156. Answers from the writing help are shown as plain sentences, without stray markdown stars or hashes.
+157. Statements, bios and fit paragraphs from the writing help come out as plain prose, without markdown or wrapping quotation marks.
+158. Email drafts from the writing help are cleaned the same way before the signature is added.
+159. Short AI tasks (reading a reply, judging fit, reading a venue page) get enough room for the free models, which think before answering.
+160. The live check on the build server now also tries reading a reply and judging fit with the free helper.

@@ -436,8 +436,13 @@ fun SessionScreen(nav: NavController) {
                     Text("Now: ${steps[open].second}", style = MaterialTheme.typography.titleLarge)
                     Small("${steps.count { it.first }} of ${steps.size} small steps done")
                     TextButton(onClick = { scope.io { dao.put(work.copy(steps = Texts.stepsText(steps.mapIndexed { i, p -> if (i == open) true to p.second else p }))) } }, modifier = Modifier.offset(x = (-12).dp)) { Text("Done, show the next one") }
+                } else if (steps.isNotEmpty() && work.status == "in_progress") WallLabel(onClick = null) {
+                    // Every step ticked: the finish line decides, not another pass.
+                    Text("Every small step is done.", style = MaterialTheme.typography.titleLarge)
+                    Small(if (work.doneWhen.isNotBlank()) "Finished when: ${work.doneWhen}" else "If it looks done to you, it is done.")
+                    TextButton(onClick = { scope.io { dao.put(work.copy(status = "finished")) } }, modifier = Modifier.offset(x = (-12).dp)) { Text("Call it finished") }
                 } else if (work.nextStep.isNotBlank()) Small("Where you left off: ${work.nextStep}")
-                if (work.doneWhen.isNotBlank()) Small("Finished when: ${work.doneWhen}")
+                if (work.doneWhen.isNotBlank() && (open >= 0 || steps.isEmpty())) Small("Finished when: ${work.doneWhen}")
             }
             if (Planner.isWindDown(LocalDateTime.now(), Planner.time(st.bedtime, LocalTime.of(22, 30)))) Panel(strong = true) {
                 Text("Wind-down time. A good place to stop: write your next step so nothing is lost.")

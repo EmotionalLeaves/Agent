@@ -214,7 +214,8 @@ fun Basics(nav: NavController) {
             val q = question.value.trim()
             scope.io({ reply = it; asking = false }) { reply = Engine.ask(q, basics); asking = false }
         }) { Text(if (asking) "Thinking…" else "Ask") }
-        if (reply.isNotBlank()) Panel { Text(reply) }
+        // The answer can be selected and copied, to keep or to send to someone.
+        if (reply.isNotBlank()) Panel { androidx.compose.foundation.text.selection.SelectionContainer { Text(reply) } }
         Section("Plain answers")
         Small("Tap any question. None of this is a test, and you can use the whole app without reading it.")
         basics.forEach { (q, a) -> Expand(q) { Text(a) } }
