@@ -636,9 +636,9 @@ class DomainTest {
         val fri = java.time.LocalDate.of(2026, 11, 13) // a Friday
         val lines = D.sort("- email the library about the wall\nbuy titanium white\nfox in the snow, all blue\nfinish the small heron by monday\ndon't forget to pay the entry fee tomorrow", fri)
         assertEquals(5, lines.size)
-        assertEquals(D.Kind.TASK, lines[0].kind); assertEquals(null, lines[0].day)
-        assertEquals(D.Kind.SUPPLY, lines[1].kind); assertEquals("Titanium white", lines[1].text)
-        assertEquals(D.Kind.IDEA, lines[2].kind)
+        assertEquals(com.emotionalleaves.studioagent.domain.Dump.Kind.TASK, lines[0].kind); assertEquals(null, lines[0].day)
+        assertEquals(com.emotionalleaves.studioagent.domain.Dump.Kind.SUPPLY, lines[1].kind); assertEquals("Titanium white", lines[1].text)
+        assertEquals(com.emotionalleaves.studioagent.domain.Dump.Kind.IDEA, lines[2].kind)
         assertEquals(java.time.LocalDate.of(2026, 11, 16), lines[3].day)
         assertEquals("Pay the entry fee tomorrow", lines[4].text); assertEquals(fri.plusDays(1), lines[4].day)
         assertEquals(fri.plusDays(7), D.dayIn("frame it friday", fri))
