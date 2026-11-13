@@ -606,3 +606,4 @@ One real change per round. Pushed and built every ten rounds.
 599. Asking "how many entries have I sent this year?" or "how many no's?" is answered on the phone: sent against the year's aim, yeses, no's and still to hear, with "every no counts toward the aim".
 600. A test that the year's entries are counted and answered on the phone (sent, yes, no, still to hear), drafts left out. Six hundred rounds.
 601. Can't choose? With three or more ideas parked, Ideas offers "Pick one for me": one idea picked at random, with "Another" and "Never mind". Choosing is often the hardest part.
+602. The Guide has an optional step, "Make starting easier": a friend to text, a studio playlist, and your blocker or focus app (Honest Lockout, for one), each shown on the session screen once set. It ticks itself when any one is set.

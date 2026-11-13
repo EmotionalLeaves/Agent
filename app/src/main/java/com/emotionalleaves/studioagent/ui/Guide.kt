@@ -120,7 +120,12 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
         GuideStep("tile", e, "Put Start session one swipe away",
             "The fewer taps between you and starting, the better.",
             listOf("Swipe down twice from the top of your phone to open quick settings.", "Tap the pencil or Edit.", "Drag Start session into your tiles.", "Or: long-press your home screen, tap Widgets, and add the Studio Agent button."),
-            "home", "Back to Home", m("tile"), optional = true, manual = true)
+            "home", "Back to Home", m("tile"), optional = true, manual = true),
+        // Starting is the hard part: three optional helpers that make the first minute easier.
+        GuideStep("helpers", e, "Make starting easier",
+            "A friend who knows you are starting, the same music each time, and your blocker switched on: any one of them makes the first minute easier.",
+            listOf("Open Settings, Hours and calm, and the line \"A friend, music, a focus app\".", "Type a friend's name to text when you start, if you like.", "Paste a playlist link, if you have one.", "Choose your focus or blocker app (Honest Lockout, for one). Each appears on the session screen."),
+            "settings/hours", "Open Hours and calm", st.buddy.isNotBlank() || st.playlist.isNotBlank() || st.focusApp.isNotBlank(), optional = true)
     ).map { if (it.optional && m(it.id)) it.copy(done = true) else it }
 }
 
