@@ -895,4 +895,16 @@ class PartsTest {
         assertEquals("records", E.taskRoute("Call the framer"))
         assertEquals("people", E.taskRoute("Go again: Drop-in life drawing session"))
     }
+
+    @Test fun aZineFromOneSheet() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"; G.settings.website = "jadeleaves.art"
+        val img = picture("zine.jpg")
+        val works = (1..6).map { Artwork(id = it.toLong(), title = "Piece $it", year = 2026, imagePath = img.absolutePath, pixelW = 1200, pixelH = 1500) }
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
+        val f = try { com.emotionalleaves.studioagent.work.Papers.zine(ctx, G.settings, "Night Kitchen", works) } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
+        assertEquals("Leaves_Zine.pdf", f.name)
+        assertTrue(File(docs, "Leaves_Zine_p1.png").length() > 1000 && File(docs, "Leaves_Zine_p2.png").length() > 1000)
+    }
 }

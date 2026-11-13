@@ -123,6 +123,11 @@ fun MarketDay(nav: NavController) {
                 val f = com.emotionalleaves.studioagent.work.Papers.tableSign(ctx, st, st.payLink)
                 withContext(Dispatchers.Main) { com.emotionalleaves.studioagent.sys.Share.view(ctx, f, "application/pdf") }
             } }) { Text("A sign for the table") }
+            // A zine of six pieces from one sheet: sold for a few dollars, or given away with a purchase.
+            if (cards.size >= 3) OutlinedButton(onClick = { scope.io {
+                val f = com.emotionalleaves.studioagent.work.Papers.zine(ctx, st, st.fullName.ifBlank { "Selected work" }, cards)
+                withContext(Dispatchers.Main) { com.emotionalleaves.studioagent.sys.Share.view(ctx, f, "application/pdf") }
+            } }) { Text("A little zine of your pieces (one sheet)") }
             Small("A mix sells best: something under 10, something under 30, and a few originals. Price everything, in plain view.")
         }
         Field("Where (for the records)", where, { where = it })

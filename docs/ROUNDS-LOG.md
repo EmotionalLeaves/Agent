@@ -637,3 +637,4 @@ One real change per round. Pushed and built every ten rounds.
 630. Find anything shows plain answers too: type "consignment", "opening" or "website" and the matching Basics answer or glossary word is right there, under the tools.
 631. A ready-made gift-season note to people you know: a private, no-pressure email to friends, family and coworkers who like your work, saying a few small prints and pieces are available as gifts, with your link, sent with everyone in BCC.
 632. November's market-season step mentions the gift-season note in Ready-made emails.
+633. A little zine of your pieces, from Market day: eight pages from one sheet of paper (a cover, six pieces with their titles, and a back page with your website and a code to scan), laid out so one fold-and-cut makes a booklet, with the folding steps on a second page. Sold for a few dollars at a market, or given away with a purchase.

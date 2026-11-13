@@ -289,6 +289,64 @@ object Papers {
     }
 
     /**
+     * An eight-page zine from one sheet of paper: a cover, six pieces and a back page, laid out so that a single sheet,
+     * folded and cut once in the middle, becomes a little booklet. Sold for a few dollars at a market, or given away.
+     * The second page shows how to fold it.
+     */
+    fun zine(ctx: Context, s: Settings, title: String, works: List<Artwork>): File {
+        val pdf = Pdf(ctx, "", "", 792, 612, 0)
+        pdf.newPage()
+        val c = pdf.canvas()
+        val cw = 792f / 4; val ch = 612f / 2
+        val guide = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFD0D0CC.toInt(); strokeWidth = 0.5f }
+        // Page number to its cell, and whether it is printed upside down (the top row).
+        val cells = mapOf(5 to (0 to 0), 4 to (1 to 0), 3 to (2 to 0), 2 to (3 to 0), 6 to (0 to 1), 7 to (1 to 1), 8 to (2 to 1), 1 to (3 to 1))
+        val pieces = works.filter { it.imagePath.isNotBlank() }.take(6)
+        for ((page, cell) in cells) {
+            val (col, row) = cell
+            val x = col * cw; val y = row * ch
+            c.save()
+            if (row == 0) c.rotate(180f, x + cw / 2, y + ch / 2)
+            val pad = 16f
+            fun put(t: CharSequence, size: Float, top: Float, face: Pdf.Face = Pdf.Face.BODY, grey: Boolean = false): Float {
+                val l = pdf.layout(t, (cw - 2 * pad).toInt(), size, face, grey, center = true); c.save(); c.translate(x + pad, top); l.draw(c); c.restore(); return top + l.height
+            }
+            when (page) {
+                1 -> { var t = put(title.ifBlank { "Selected work" }, 20f, y + ch * 0.32f, Pdf.Face.DISPLAY); put(name(s), 11f, t + 8f, grey = true) }
+                8 -> {
+                    var t = put(name(s), 12f, y + ch * 0.25f, Pdf.Face.BOLD)
+                    listOf(s.website, s.email).filter { it.isNotBlank() }.forEach { t = put(it, 9f, t + 4f) }
+                    s.website.takeIf { it.isNotBlank() }?.let { com.emotionalleaves.studioagent.media.Qr.bitmap(if (it.startsWith("http")) it else "https://$it", 240) }?.let { q ->
+                        val side = 70f; c.drawBitmap(q, null, android.graphics.RectF(x + (cw - side) / 2, t + 12f, x + (cw + side) / 2, t + 12f + side), Paint())
+                    }
+                }
+                else -> pieces.getOrNull(page - 2)?.let { a ->
+                    ImageTools.decode(a.imagePath, 900)?.let { b ->
+                        val boxW = cw - 2 * pad; val boxH = ch - 2 * pad - 34f
+                        val k = minOf(boxW / b.width, boxH / b.height); val dw = b.width * k; val dh = b.height * k
+                        val left = x + (cw - dw) / 2; val top = y + pad + (boxH - dh) / 2
+                        c.drawBitmap(b, null, android.graphics.RectF(left, top, left + dw, top + dh), Paint(Paint.FILTER_BITMAP_FLAG))
+                    }
+                    put(SpannableStringBuilder(pdf.em(a.title.ifBlank { "Untitled" })).append(if (a.year > 0) ", ${a.year}" else ""), 8.5f, y + ch - pad - 26f, grey = true)
+                }
+            }
+            c.restore()
+        }
+        // Fold lines, faint.
+        for (i in 1..3) c.drawLine(i * cw, 0f, i * cw, 612f, guide)
+        c.drawLine(0f, ch, 792f, ch, guide)
+        // How to fold it.
+        pdf.newPage()
+        val steps = listOf("Print this sheet on one side, landscape, at actual size.", "Fold it in half the long way, picture side out; unfold.",
+            "Fold it in half the short way, then in half again; unfold.", "Fold it in half the short way again and cut along the middle fold, from the folded edge to the center crease only.",
+            "Open it out, fold it the long way, and push the ends together so the cut opens into a diamond, then flattens into a booklet.", "Fold the pages around so the cover is on the front.")
+        var ty = 60f
+        val l0 = pdf.layout("How to fold your zine", 700, 22f, Pdf.Face.DISPLAY); val c2 = pdf.canvas(); c2.save(); c2.translate(46f, ty); l0.draw(c2); c2.restore(); ty += l0.height + 18f
+        steps.forEachIndexed { i, t -> val l = pdf.layout("${i + 1}.  $t", 700, 13f); c2.save(); c2.translate(46f, ty); l.draw(c2); c2.restore(); ty += l.height + 10f }
+        return pdf.save(out(ctx, docName(s, "Zine")))
+    }
+
+    /**
      * A sign for the market table: your name big enough to read from the aisle, what is for sale, how people can pay,
      * and codes to scan for paying (your payment link) and for your website.
      */
