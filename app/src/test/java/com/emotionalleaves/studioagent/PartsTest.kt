@@ -616,6 +616,18 @@ class PartsTest {
         assertTrue(G.dao.contactsNow().single { it.id == cid }.notes.contains("Studio visit planned"))
     }
 
+    @Test fun aProcessPostShowsEachStage() {
+        ctx
+        val colors = listOf(android.graphics.Color.RED, android.graphics.Color.GREEN, android.graphics.Color.BLUE, android.graphics.Color.BLACK)
+        val arts = colors.map { c -> android.graphics.Bitmap.createBitmap(200, 200, android.graphics.Bitmap.Config.ARGB_8888).apply { eraseColor(c) } }
+        val b = com.emotionalleaves.studioagent.media.Post.process(arts, "Jade Leaves")
+        assertEquals(1080, b.width)
+        // Two across: the first photo top left, the last bottom right.
+        val first = b.getPixel(300, 400); val last = b.getPixel(780, 900)
+        assertTrue(android.graphics.Color.red(first) > 200 && android.graphics.Color.green(first) < 50)
+        assertTrue(android.graphics.Color.red(last) < 40 && android.graphics.Color.green(last) < 40 && android.graphics.Color.blue(last) < 40)
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

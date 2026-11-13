@@ -73,7 +73,7 @@ fun MarketDay(nav: NavController) {
                 }
             } }
         }
-        Expand("What you are bringing") {
+        Expand("What you are bringing", startOpen = items.isEmpty()) {
             items.forEachIndexed { idx, i -> key("edit" + i.name) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("${i.name}, ${money(i.price)}, ${i.qty} brought", Modifier.weight(1f))

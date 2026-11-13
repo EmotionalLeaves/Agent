@@ -43,6 +43,36 @@ object Post {
         return b
     }
 
+    /**
+     * The making of a piece in one picture: up to nine progress photos in order, in a grid on the same quiet field,
+     * each whole (never cropped), with the finished piece last when there is one.
+     */
+    fun process(arts: List<Bitmap>, credit: String, outW: Int = W, outH: Int = H): Bitmap {
+        val b = Bitmap.createBitmap(outW, outH, Bitmap.Config.ARGB_8888)
+        val c = Canvas(b); c.drawColor(0xFFF4F3EF.toInt())
+        val list = if (arts.size > 9) (0 until 9).map { arts[it * (arts.size - 1) / 8] } else arts
+        val cols = when { list.size <= 1 -> 1; list.size <= 4 -> 2; else -> 3 }
+        val rows = (list.size + cols - 1) / cols
+        val margin = outW * 0.05f; val gap = outW * 0.025f
+        val bottom = if (credit.isNotBlank()) outH * 0.06f else 0f
+        val cellW = (outW - 2 * margin - gap * (cols - 1)) / cols
+        val cellH = (outH - 2 * margin - bottom - gap * (rows - 1)) / rows
+        val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
+        list.forEachIndexed { i, art ->
+            val col = i % cols; val row = i / cols
+            val x0 = margin + col * (cellW + gap); val y0 = margin + row * (cellH + gap)
+            val s = min(cellW / art.width, cellH / art.height)
+            val w = art.width * s; val h = art.height * s
+            val l = x0 + (cellW - w) / 2; val t = y0 + (cellH - h) / 2
+            c.drawBitmap(art, null, RectF(l, t, l + w, t + h), paint)
+        }
+        if (credit.isNotBlank()) {
+            val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF6B6A66.toInt(); textSize = outW * 0.024f; textAlign = Paint.Align.CENTER }
+            c.drawText(credit.take(70), outW / 2f, outH - margin * 0.7f, p)
+        }
+        return b
+    }
+
     fun render(imagePath: String, credit: String, dest: File): File? {
         val b = draw(imagePath, credit) ?: return null
         ImageTools.saveJpeg(b, dest, 92)

@@ -557,6 +557,14 @@ fun WorkDetail(nav: NavController, id: Long) {
             if (shots.isEmpty()) Small("Take a progress photo when you stop a session and it appears here, in order.")
             shots.chunked(3).forEach { row -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { row.forEach { x -> Column(Modifier.weight(1f)) { PathImage(x.photoPath, Modifier.fillMaxWidth().height(96.dp), 400, ContentScale.Crop); Small(fmtDate(x.start)) } }; repeat(3 - row.size) { Spacer(Modifier.weight(1f)) } } }
             mine.filter { it.note.isNotBlank() }.sortedBy { it.start }.takeLast(5).forEach { Small(fmtDate(it.start) + ": " + it.note) }
+            // The making, in one picture to post: progress photos in order, and the finished piece last.
+            if (shots.size >= 2) TextButton(onClick = { scope.io({ status = it }) {
+                val bms = (shots.map { it.photoPath } + listOfNotNull(w.imagePath.takeIf { p -> p.isNotBlank() })).mapNotNull { ImageTools.decode(it, 700) }
+                val f = File(ImageTools.exportDir(ctx), Papers.docName(st, "Process_" + w.title.filter { it.isLetterOrDigit() }.take(24), "jpg"))
+                ImageTools.saveJpeg(com.emotionalleaves.studioagent.media.Post.process(bms, st.fullName), f, 90)
+                val words = "How " + w.title.ifBlank { "this piece" } + " came together, " + Texts.count(mine.size, "session") + " from first marks to finished.\n\n" + com.emotionalleaves.studioagent.media.Post.tags(w.medium, st.city)
+                withContext(Dispatchers.Main) { Share.post(ctx, f, words) }
+            } }) { Text("Post how it was made") }
         }
         Expand("Pictures and papers") {
         Note("More pictures of this piece: a detail, the back, the piece on a wall. Kept with it and backed up.")
