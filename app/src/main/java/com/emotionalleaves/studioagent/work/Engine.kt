@@ -1518,6 +1518,9 @@ object Engine {
                 val w = dao.artworksNow()
                 "${Texts.count(w.count { available(it) }, "piece")} ready to send, ${w.count { it.status == "in_progress" }} in progress, ${w.count { it.status == "idea" }} ideas.\nGO: works"
             }
+            has("next studio", "studio time", "when do i paint", "when do i draw", "when is my next session") -> dao.eventsNow().filter { it.type == "studio" && !it.done && it.date > now }.minByOrNull { it.date }?.let { e ->
+                "Your next studio time: ${date(e.date).dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.US)}, ${com.emotionalleaves.studioagent.ui.fmtDate(e.date)}, for ${(e.endDate - e.date) / 60000} minutes. Nothing stops you starting sooner.\nGO: week"
+            } ?: "No studio time is planned yet. Your week plans them around your shifts in one tap.\nGO: week"
             has("what's on", "what is on", "coming up", "my week look", "what do i have", "anything on") -> {
                 val end = now + 7 * DAY
                 val ev = dao.eventsNow().filter { !it.done && it.date in now..end && it.type in setOf("task", "studio", "submit") }.sortedBy { it.date }.take(8)
