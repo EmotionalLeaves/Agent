@@ -158,6 +158,19 @@ fun Outreach(nav: NavController) {
         }, modifier = Modifier.fillMaxWidth()) { Text("A walk past ${toVisit.size} places you have not seen yet") }
         // The quickest way to a real list: what the map knows is near you.
         Button(onClick = { nav.navigate("nearby") }, modifier = Modifier.fillMaxWidth()) { Text("Find places near me") }
+        // A poster for an opening (in a cafe window, on a board at work): photographed, read on the phone, and put on your calendar.
+        var posterFile by remember { mutableStateOf<java.io.File?>(null) }
+        val poster = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.TakePicture()) { ok ->
+            val f = posterFile
+            if (ok && f != null) scope.io({ status = it }) {
+                val text = com.emotionalleaves.studioagent.media.Ocr.read(ctx, f.absolutePath)
+                val found = com.emotionalleaves.studioagent.domain.CallReader.openingFrom(text)
+                if (found == null) { status = "No date could be read on the poster. Add it by hand in Records, To do."; return@io }
+                dao.put(com.emotionalleaves.studioagent.data.Evt(type = "invite", title = "Opening: " + found.first.take(60), date = Engine.millis(found.second.atTime(18, 0))))
+                status = "On your calendar: ${found.first.take(60)}, ${fmtDate(Engine.millis(found.second.atTime(18, 0)))}. Openings are free; going is the whole step."
+            }
+        }
+        TextButton(onClick = { val f = java.io.File(ctx.cacheDir, "poster_${now()}.jpg"); posterFile = f; try { poster.launch(Share.uri(ctx, f)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Photograph a poster for an opening") }
         TextButton(onClick = { nav.navigate("check") }) { Text("Got an offer or a buyer that seems too good? Check it") }
         H("Add a venue or person")
         // A list from anywhere (a friend's note, a spreadsheet, an arts council page): pasted once, each line a place.

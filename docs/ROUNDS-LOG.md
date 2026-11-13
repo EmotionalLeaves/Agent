@@ -517,3 +517,4 @@ One real change per round. Pushed and built every ten rounds.
      (The separate organizer-question button from round 484 is folded into the call page's existing "Ask them by email", so there is one way in.)
 511. Two more questions answered on the phone without the writing helper: how many hours you have made this week (against the hours you set), and when your next opening is.
 512. Today shows one of your own finished pieces each day, "From your wall", once there are three with pictures: a quiet reminder of what the work is for; tapping it opens the piece.
+513. People can photograph a poster for an opening (in a cafe window, on a board at work): it is read on the phone and the opening goes on your calendar as an invitation, since openings are free and going is the whole step.

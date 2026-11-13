@@ -622,4 +622,12 @@ class DomainTest {
         assertTrue(S.ineligible(far.copy(online = true), p, 0).none { it.contains("miles") })
         assertTrue(S.ineligible(far, p.copy(maxMiles = 0), 0).none { it.contains("miles") })
     }
+
+    @Test fun anOpeningPosterIsRead() {
+        val today = java.time.LocalDate.of(2027, 3, 1)
+        val r = com.emotionalleaves.studioagent.domain.CallReader.openingFrom("SMALL HOURS\nNew paintings by Ana Ruiz\nOpening reception: Friday, March 12, 2027, 6-8pm\nGallery 4", today)
+        assertEquals(java.time.LocalDate.of(2027, 3, 12), r?.second)
+        assertTrue(r!!.first.isNotBlank())
+        assertEquals(null, com.emotionalleaves.studioagent.domain.CallReader.openingFrom("Opening reception: January 3, 2027", today))
+    }
 }

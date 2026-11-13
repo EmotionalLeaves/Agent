@@ -824,6 +824,13 @@ object CallReader {
     private val genericLine = Regex("^(an? )?(open call|call for (artists|entries|submissions|art|work)|now accepting|submissions? (open|wanted)|artists wanted|words read from a photo.*|apply now|seeking artists)[!:.]*$", RegexOption.IGNORE_CASE)
 
     /** The line that names the call: the first real line, skipping links, "OPEN CALL" style headings, and date or fee lines. */
+    /** An opening poster, read: the show's name and the day of the opening, or null when no date can be found. */
+    fun openingFrom(text: String, today: LocalDate = LocalDate.now()): Pair<String, LocalDate>? {
+        val d = dateAfter(text, "opening|reception|first friday|art walk|join us|opens", today) ?: dateAfter(text, "", today) ?: return null
+        if (d.isBefore(today)) return null
+        return titleLine(text).ifBlank { "An opening" } to d
+    }
+
     fun titleLine(text: String): String {
         val lines = text.lines().map { it.trim() }.filter { it.isNotBlank() && !it.startsWith("http") && !it.startsWith("Link:") }
         return lines.firstOrNull { l -> !genericLine.matches(l) && !Regex("^((deadline|due( date)?|entry fee|fees?|apply|submit|how to apply)\\s*[:\\-–]|open to |eligib)", RegexOption.IGNORE_CASE).containsMatchIn(l) }
