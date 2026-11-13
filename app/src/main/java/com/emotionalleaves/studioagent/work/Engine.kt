@@ -712,6 +712,36 @@ object Engine {
             (if (tight) " That is more than a piece a weekend. A smaller size, or a later call, may be kinder." else "")
     }
 
+    // ------------------------------------------------------------ selling at a show
+
+    /** The show a piece is in right now (an accepted entry it is part of, not yet released), or null. */
+    suspend fun showOf(workId: Long): Pair<Appl, Opp>? {
+        val a = dao.applsNow().filter { it.status == "accepted" && workId in workIds(it) }.maxByOrNull { it.submittedAt } ?: return null
+        val o = dao.oppsNow().firstOrNull { it.id == a.oppId } ?: return null
+        return a to o
+    }
+
+    /**
+     * Sold at a show: the sale and the venue's cut go in Records, the piece is marked sold (it stays on the wall
+     * until the show ends), the buyer can join your list, and a dated step to get it to them after the show
+     * goes on your week (the show's pick-up day when there is one). Returns what you receive.
+     */
+    suspend fun sellAtShow(w: Artwork, price: Double, buyer: String, email: String, joinList: Boolean): Double {
+        val now = System.currentTimeMillis()
+        val show = showOf(w.id)
+        val pct = show?.second?.commission ?: 0.0
+        dao.put(Ledger(kind = "sale", amount = price, date = now, note = w.title + (if (buyer.isNotBlank()) ", to $buyer" else "") + (show?.let { ", at " + it.second.title } ?: ""), artworkId = w.id, oppId = show?.second?.id ?: 0))
+        if (pct > 0) dao.put(Ledger(kind = "commission", amount = -price * pct / 100, date = now, note = "Commission on ${w.title}", artworkId = w.id, oppId = show?.second?.id ?: 0))
+        dao.put(if (w.editionSize > 1) w.copy(editionUsed = w.editionUsed + 1).let { x -> if (x.editionUsed >= x.editionSize) x.copy(status = "sold") else x } else w.copy(status = "sold", location = show?.second?.let { "Sold, on the wall at " + it.venue.ifBlank { it.title } } ?: "Sold"))
+        if (dao.factsNow().none { it.category == "collection" && it.text == "Private collection" }) dao.put(Fact(category = "collection", year = LocalDate.now().year, text = "Private collection"))
+        if (joinList && Texts.looksLikeEmail(email) && dao.contactsNow().none { it.email.equals(email, true) })
+            dao.put(Contact(name = buyer, email = email, kind = "subscriber", status = "subscriber", notes = "Bought ${w.title} on ${LocalDate.now()}.", createdAt = now))
+        val pickup = show?.let { (a, _) -> dao.eventsNow().filter { it.applId == a.id && it.type == "task" && Regex("pick.?up|take.?down|collect", RegexOption.IGNORE_CASE).containsMatchIn(it.title) }.maxOfOrNull { it.date } }
+        val day = (pickup ?: (now + 14 * DAY)).coerceAtLeast(now + DAY)
+        dao.put(Evt(type = "task", title = "Get ${w.title.ifBlank { "the piece" }} to ${buyer.ifBlank { "the buyer" }}", date = day, oppId = show?.second?.id ?: 0, applId = show?.first?.id ?: 0, artworkId = w.id))
+        return price * (1 - pct / 100)
+    }
+
     // ------------------------------------------------------------ commissions
 
     /** The steps of a piece made for someone, in order, with the day each falls on, counted from today to the promised day. */

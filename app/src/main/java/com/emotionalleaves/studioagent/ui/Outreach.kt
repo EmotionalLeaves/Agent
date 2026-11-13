@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Column
@@ -579,5 +580,53 @@ fun AtTheOpening(nav: NavController) {
             scope.io { if (dao.contactsNow().none { it.email.equals(c.email, true) }) dao.put(c) }
         }) { Text("Add to my list") }
         if (added > 0) Small("${Texts.count(added, "person", "people")} added tonight.")
+        SellingTonight()
     }
+}
+
+/** Someone wants to buy a piece tonight: the price, their name, a receipt, a red dot, and the step to get it to them later. */
+@Composable
+fun SellingTonight() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current; val scope = rememberCoroutineScope()
+    val works by dao.artworks().collectAsState(emptyList())
+    val appls by dao.appls().collectAsState(emptyList())
+    val inShows = appls.filter { it.status == "accepted" }.flatMap { Engine.workIds(it) }.toSet()
+    val atShow = works.filter { it.id in inShows && it.status in setOf("shown", "pending", "documented", "available") }
+    val pieces = atShow.ifEmpty { works.filter { it.status in setOf("documented", "available", "shown") && !it.nfs } }
+    var selling by rememberSaveable { mutableStateOf(0L) }
+    var done by remember { mutableStateOf<Triple<Long, Double, String>?>(null) }
+    if (pieces.isEmpty()) return
+    Section(if (atShow.isNotEmpty()) "If someone wants to buy" else "If someone wants to buy a piece")
+    done?.let { (id, keep, who) ->
+        val w = works.firstOrNull { it.id == id }
+        Panel(strong = true) {
+            Text("Sold: " + (w?.title ?: "the piece"), fontWeight = FontWeight.SemiBold)
+            Text("Put a red dot on its label. You receive ${money(keep)}. It stays on the wall until the show ends; getting it to $who after is on your week.")
+            if (w != null) androidx.compose.material3.OutlinedButton(onClick = { scope.io { val n = dao.ledgerNow().count { it.kind == "sale" && Engine.date(it.date).year == java.time.LocalDate.now().year }.coerceAtLeast(1)
+                val f = Papers.billOfSale(ctx, st, w, who, dao.ledgerNow().firstOrNull { it.artworkId == w.id && it.kind == "sale" }?.amount ?: w.price, n)
+                withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "application/pdf") } } }) { Text("Send them the receipt") }
+            TextButton(onClick = { done = null }) { Text("Done") }
+        }
+    }
+    pieces.filter { it.status != "sold" }.forEach { w -> androidx.compose.runtime.key(w.id) {
+        if (selling != w.id) IconRow(androidx.compose.material.icons.Icons.Default.Edit, w.title.ifBlank { "Untitled" }, if (w.price > 0) money(w.price) else "No price set") { selling = w.id }
+        else Panel {
+            val buyer = rememberSaveable(w.id) { mutableStateOf("") }; val mail = rememberSaveable(w.id) { mutableStateOf("") }
+            var price by rememberSaveable(w.id) { mutableStateOf(w.price) }
+            var join by rememberSaveable(w.id) { mutableStateOf(true) }
+            Text(w.title.ifBlank { "Untitled" }, fontWeight = FontWeight.SemiBold)
+            Num("Price, " + st.currency, price) { price = it }
+            Small("Your price is your price. If they ask for less, \"that is the price, and I think it is a fair one\" is a complete answer.")
+            Field("Their name", buyer); Field("Their email (for the receipt)", mail)
+            if (Texts.looksLikeEmail(mail.value)) Toggle("They would like to hear about my next show", join) { join = it }
+            Row {
+                Button(enabled = price > 0, onClick = {
+                    val who = buyer.value.trim(); val m = mail.value.trim(); val p = price
+                    scope.io { val keep = Engine.sellAtShow(dao.artworksNow().first { it.id == w.id }, p, who, m, join); withContext(Dispatchers.Main) { done = Triple(w.id, keep, who.ifBlank { "the buyer" }); selling = 0L } }
+                }) { Text("Sold") }
+                TextButton(onClick = { selling = 0L }) { Text("Not now") }
+            }
+        }
+    } }
+    Small("Ask how they would like to pay before the night: many venues take the payment and pay you after; otherwise a card reader app or a payment link on your phone works.")
 }

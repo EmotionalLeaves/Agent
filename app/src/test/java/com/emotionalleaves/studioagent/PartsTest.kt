@@ -555,6 +555,24 @@ class PartsTest {
         assertTrue(G.dao.factsNow().any { it.text == "Private collection" })
     }
 
+    @Test fun aSaleAtTheOpening() = kotlinx.coroutines.runBlocking {
+        ctx
+        val E = com.emotionalleaves.studioagent.work.Engine; val now = System.currentTimeMillis()
+        val wid = G.dao.put(Artwork(title = "Dish Pit", status = "shown", imagePath = "/x/d.jpg", price = 300.0))
+        val oid = G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Small Works", venue = "Gallery 4", commission = 30.0, deadline = now - 30 * 86_400_000L))
+        val aid = G.dao.put(com.emotionalleaves.studioagent.data.Appl(oppId = oid, workIds = "$wid", status = "accepted", submittedAt = now - 40 * 86_400_000L))
+        val pickup = now + 20 * 86_400_000L
+        G.dao.put(com.emotionalleaves.studioagent.data.Evt(type = "task", title = "Pick up the work", date = pickup, applId = aid, oppId = oid))
+        val keep = E.sellAtShow(G.dao.artworksNow().single { it.id == wid }, 300.0, "Ana", "ana@example.com", true)
+        assertEquals(210.0, keep, 0.01)
+        val w = G.dao.artworksNow().single { it.id == wid }
+        assertEquals("sold", w.status); assertTrue(w.location.contains("Gallery 4"))
+        assertEquals(90.0, -G.dao.ledgerNow().single { it.kind == "commission" }.amount, 0.01)
+        assertTrue(G.dao.contactsNow().any { it.email == "ana@example.com" && it.kind == "subscriber" })
+        val get = G.dao.eventsNow().single { it.title == "Get Dish Pit to Ana" }
+        assertEquals(pickup, get.date); assertEquals(wid, get.artworkId)
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!
