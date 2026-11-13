@@ -118,8 +118,40 @@ data class Profile(
     val noReasons: Map<String, Int> = emptyMap(),
     val currency: String = "$",
     /** Organizers and venues that have shown your work: a second yes is far likelier than a first. */
-    val friends: List<String> = emptyList()
+    val friends: List<String> = emptyList(),
+    /** Your state or region, as you typed it, for calls open only to artists in certain places. */
+    val region: String = ""
 )
+
+/** Where a call is open to, read from its words: "open to artists living in Ohio", "Texas residents only". */
+object Eligible {
+    val states = listOf("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois",
+        "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska",
+        "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island",
+        "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming")
+    private val abbr = mapOf("AL" to "Alabama", "AK" to "Alaska", "AZ" to "Arizona", "AR" to "Arkansas", "CA" to "California", "CO" to "Colorado", "CT" to "Connecticut", "DE" to "Delaware",
+        "FL" to "Florida", "GA" to "Georgia", "HI" to "Hawaii", "ID" to "Idaho", "IL" to "Illinois", "IN" to "Indiana", "IA" to "Iowa", "KS" to "Kansas", "KY" to "Kentucky", "LA" to "Louisiana",
+        "ME" to "Maine", "MD" to "Maryland", "MA" to "Massachusetts", "MI" to "Michigan", "MN" to "Minnesota", "MS" to "Mississippi", "MO" to "Missouri", "MT" to "Montana", "NE" to "Nebraska",
+        "NV" to "Nevada", "NH" to "New Hampshire", "NJ" to "New Jersey", "NM" to "New Mexico", "NY" to "New York", "NC" to "North Carolina", "ND" to "North Dakota", "OH" to "Ohio",
+        "OK" to "Oklahoma", "OR" to "Oregon", "PA" to "Pennsylvania", "RI" to "Rhode Island", "SC" to "South Carolina", "SD" to "South Dakota", "TN" to "Tennessee", "TX" to "Texas",
+        "UT" to "Utah", "VT" to "Vermont", "VA" to "Virginia", "WA" to "Washington", "WV" to "West Virginia", "WI" to "Wisconsin", "WY" to "Wyoming")
+
+    /** Your region as a full state name, from "TX", "Texas" or "texas". */
+    fun stateOf(region: String): String? = region.trim().let { r -> abbr[r.uppercase()] ?: states.firstOrNull { it.equals(r, true) } }
+
+    /**
+     * When the call is open only to artists in named states and yours is not one of them, the places it is open to; otherwise null.
+     * Only a clear limiting phrase counts (residents, living in, based in, open to artists in), so a venue's address alone never excludes you.
+     */
+    fun onlyFor(text: String, region: String): String? {
+        val mine = stateOf(region) ?: return null
+        val limit = Regex("(residents? of|resident artists of|living in|based in|reside in|residing in|open to artists (?:in|from)|artists (?:living|working|residing) in|open only to)\\s+([^.;]{0,120})", RegexOption.IGNORE_CASE)
+        val named = limit.findAll(text).flatMap { m -> states.filter { st -> Regex("\\b" + st + "\\b").containsMatchIn(m.groupValues[2]) } }.toSet() +
+            Regex("\\b(" + states.joinToString("|") + ") (?:residents|artists) only\\b").findAll(text).map { it.groupValues[1] }.toSet()
+        if (named.isEmpty() || mine in named) return null
+        return named.sorted().joinToString(", ")
+    }
+}
 
 object Scoring {
     fun tier(o: Opp): Int = when (o.scope.lowercase().trim()) {
@@ -154,6 +186,7 @@ object Scoring {
         val fits = p.routes.isEmpty() || p.routes.any { it == "physical" || (it == "print" && o.acceptsPrints) || (it == "screen" && o.acceptsNewMedia) }
         if (!fits) r += if (p.routes == listOf("screen")) "Does not accept screen-based work" else "Does not accept prints of digital work"
         if (o.guaranteed && o.fee > 0) r += "Pay-to-show"
+        Eligible.onlyFor(o.eligibility + " " + o.rawText.take(4000), p.region)?.let { r += "Open only to artists in $it" }
         return r
     }
 

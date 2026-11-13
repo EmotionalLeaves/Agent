@@ -104,7 +104,7 @@ object Engine {
         currency = st.currency,
         feeBudgetLeft = feeLeft(ledger),
         goals = st.goals, blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts(),
-        friends = st.friendlyVenues.split("\n").filter { it.isNotBlank() }
+        friends = st.friendlyVenues.split("\n").filter { it.isNotBlank() }, region = st.region
     )
 
     /** Remembers who said yes, so their next call is brought forward. */

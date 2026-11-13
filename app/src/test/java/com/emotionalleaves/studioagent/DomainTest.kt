@@ -317,6 +317,15 @@ class DomainTest {
         assertTrue(f.advice(8.0, 10.0).contains("12 × 16 in frame") && f.advice(8.0, 10.0).contains("7.75 × 9.75 in"))
     }
 
+    @Test fun aCallOnlyForOtherStatesIsHeldBack() {
+        val e = com.emotionalleaves.studioagent.domain.Eligible
+        assertEquals("Ohio", e.onlyFor("Open to artists living in Ohio. Entry fee $25.", "TX"))
+        assertEquals(null, e.onlyFor("Open to artists living in Ohio or Texas.", "Texas"))
+        assertEquals(null, e.onlyFor("Riverside Gallery, 12 Main St, Columbus, Ohio. Open to all artists.", "TX"))
+        assertEquals("California", e.onlyFor("California residents only.", "tx"))
+        assertEquals(null, e.onlyFor("Open to artists living in Ohio.", ""))
+    }
+
     @Test fun errorsReadAsPlainWords() {
         val off = com.emotionalleaves.studioagent.ui.plainError(java.net.UnknownHostException("Unable to resolve host \"api.anthropic.com\""))
         assertTrue(off.startsWith("No internet connection"))
