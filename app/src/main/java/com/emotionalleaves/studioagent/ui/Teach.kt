@@ -70,6 +70,11 @@ fun TeachScreen(nav: NavController) {
         val body = Workshop.email(st.fullName.ifBlank { "an artist" }, to?.let { it.venue.ifBlank { it.name } } ?: "", title.value.trim(), minutes, people, st.website, money(flat))
         Panel { Text(body, style = MaterialTheme.typography.bodyMedium) }
         Button(onClick = { Share.email(ctx, to?.email ?: "", "A beginner class: " + title.value.trim(), body) }, modifier = Modifier.fillMaxWidth()) { Text(if (to != null) "Send to ${to.venue.ifBlank { to.name }}" else "Write the email") }
+        val scopeH = androidx.compose.runtime.rememberCoroutineScope()
+        OutlinedButton(onClick = { scopeH.io {
+            val f = com.emotionalleaves.studioagent.work.Papers.classHandout(ctx, st, title.value.trim(), Workshop.outline(kind, minutes).map { it.minutes to it.what }, Workshop.homework(kind))
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
+        } }, modifier = Modifier.fillMaxWidth()) { Text("A handout for the people who come (PDF)") }
         OutlinedButton(onClick = { Share.text(ctx, title.value.trim() + "\n\n" + Workshop.outline(kind, minutes).joinToString("\n") { "${it.minutes} min: ${it.what}" } + "\n\nBring:\n" + Workshop.supplies(kind, people).joinToString("\n") { "- $it" }) }, modifier = Modifier.fillMaxWidth()) { Text("Share the outline and list") }
         // Once it has happened: a line on the CV, under Teaching and Talks.
         var taught by rememberSaveable { mutableStateOf(false) }

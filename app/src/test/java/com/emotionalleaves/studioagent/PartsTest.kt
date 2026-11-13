@@ -869,4 +869,16 @@ class PartsTest {
         s.offThisWeek = "2000-01-03:1"
         assertEquals(setOf(1, 2, 3, 4, 5, 6), E.workDaysNow())
     }
+
+    @Test fun aHandoutForTheClass() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"
+        val W = com.emotionalleaves.studioagent.domain.Workshop
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
+        val f = try { com.emotionalleaves.studioagent.work.Papers.classHandout(ctx, G.settings, "Drawing what is in front of you", W.outline("drawing", 90).map { it.minutes to it.what }, W.homework("drawing")) } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
+        assertEquals("Leaves_Class_handout.pdf", f.name)
+        assertTrue(File(docs, "Leaves_Class_handout_p1.png").length() > 1000)
+        assertEquals(3, W.homework("watercolor").size)
+    }
 }

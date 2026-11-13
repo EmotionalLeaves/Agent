@@ -1447,6 +1447,16 @@ object Workshop {
         }
     }
 
+    /** Three things to try at home after the class, small enough to actually do. */
+    fun homework(kind: String): List<String> = when (kind) {
+        "watercolor" -> listOf("Paint the same sky three times, wetter each time.", "Paint one piece of fruit in three colors only.", "Ten minutes, any evening: a postcard-size painting of your window.")
+        "painting" -> listOf("Paint one mug in three big shapes, then stop.", "Mix ten greens from blue and yellow alone.", "Paint the same small thing at three times of day.")
+        "printmaking" -> listOf("Carve a second block with only lines, no solid shapes.", "Print the same block in two colors, one over the other, slightly off.", "Make five cards and send one.")
+        "collage" -> listOf("Make a collage from one magazine page only.", "Tear (no scissors) a landscape from three papers.", "Make one a day for a week, five minutes each.")
+        "phone drawing" -> listOf("Draw your hand on your phone with one layer for darks.", "Trace a photo's light and dark, then hide the photo.", "Ten one-minute drawings of anything on your table.")
+        else -> listOf("Draw your shoe slowly, eyes on the shoe, not the paper.", "Three tiny thumbnails of your kitchen, light to dark.", "Ten minutes a day for a week, anything in front of you.")
+    }
+
     /** A fair fee: a flat rate for the time, the supplies on top. Libraries often pay flat; a cafe class can charge per person. */
     fun fee(minutes: Int, people: Int, hourly: Double = 40.0, perPersonSupplies: Double = 6.0): Pair<Double, Double> {
         val flat = (hourly * (minutes + 30) / 60.0 / 5).roundToInt() * 5.0 // the half hour to set up and clean up counts too

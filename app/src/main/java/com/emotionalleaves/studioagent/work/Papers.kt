@@ -271,6 +271,23 @@ object Papers {
         return pdf.save(out(ctx, docName(s, "Price_tags")))
     }
 
+    /** A one-page handout for the people in a class: what you will do, what to try at home, and where to find you. */
+    fun classHandout(ctx: Context, s: Settings, title: String, outline: List<Pair<Int, String>>, homework: List<String>): File {
+        val pdf = pdf(ctx, s, title)
+        pdf.newPage()
+        pdf.text(title, 26f, gap = 8f, face = Pdf.Face.DISPLAY)
+        pdf.text("With " + name(s), 13f, gap = 22f, grey = true)
+        pdf.text("Today", 15f, gap = 8f, face = Pdf.Face.BOLD)
+        outline.forEach { (m, what) -> pdf.hang("$m min", what) }
+        pdf.space(14f)
+        pdf.text("To try at home", 15f, gap = 8f, face = Pdf.Face.BOLD)
+        homework.forEach { pdf.text("•  $it", 11.5f, gap = 5f) }
+        pdf.space(14f)
+        pdf.text("Doing it badly is how everyone starts. Ten minutes a few times a week does more than one long afternoon.", 11f, grey = true, gap = 18f)
+        listOf(s.website, s.email).filter { it.isNotBlank() }.forEach { pdf.text(it, 12f, gap = 4f) }
+        return pdf.save(out(ctx, docName(s, "Class_handout")))
+    }
+
     /**
      * A sign for the market table: your name big enough to read from the aisle, what is for sale, how people can pay,
      * and codes to scan for paying (your payment link) and for your website.
