@@ -658,3 +658,4 @@ One real change per round. Pushed and built every ten rounds.
 651. Find anything shows a few questions it can answer on the phone while the box is empty ("What's on this week?", "What should I do today?", "How many entries have I sent this year?", "What does consignment mean?", "How do I meet other artists?"); a tap puts one in the box, ready to ask.
 652. Seen in the screenshot of Help: the newer plain answers had been added at the top, pushing "Do I need to know how the art world works?" and "What is an open call?" down. The first questions a beginner needs are first again; the newer ones follow at the end.
 653. Today, your way. Settings, Hours and calm has "What Today shows": the five-minute jobs at work, what the app did while you were away, the road to your first show, and Done this week can each be switched off on their own, between showing everything and Calm Today.
+654. "One of your finished pieces each day" joins the Today cards you can switch off.

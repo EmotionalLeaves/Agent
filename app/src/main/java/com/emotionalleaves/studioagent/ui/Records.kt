@@ -613,7 +613,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Toggle("Calm Today: show only the next step and Start", st.calmToday) { st.calmToday = it }
                 // Today, your way: each card can be switched off on its own.
                 Expand("What Today shows") {
-                    listOf("jobs" to "Five-minute jobs on a break at work", "fresh" to "What the app did while you were away", "road" to "The road to your first show", "wins" to "Done this week").forEach { (k, label) ->
+                    listOf("jobs" to "Five-minute jobs on a break at work", "fresh" to "What the app did while you were away", "road" to "The road to your first show", "wall" to "One of your finished pieces each day", "wins" to "Done this week").forEach { (k, label) ->
                         val hidden = st.todayHidden.split(",").filter { it.isNotBlank() }.toSet()
                         Toggle(label, k !in hidden) { on -> st.todayHidden = (if (on) hidden - k else hidden + k).joinToString(",") }
                     }

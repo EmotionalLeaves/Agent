@@ -330,7 +330,7 @@ fun Home(nav: NavController) {
 
             // From your own wall: one finished piece a day, a quiet reminder of what the work is for.
             val wall = works.filter { it.imagePath.isNotBlank() && it.status !in setOf("idea", "in_progress") }
-            if (wall.size >= 3) wall[(LocalDate.now().toEpochDay() % wall.size).toInt()].let { w ->
+            if (wall.size >= 3 && shows("wall")) wall[(LocalDate.now().toEpochDay() % wall.size).toInt()].let { w ->
                 Column(Modifier.fillMaxWidth().clickable { nav.navigate("work/${w.id}") }, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     PathImage(w.imagePath, Modifier.fillMaxWidth().height(180.dp), 700, description = "From your wall: " + w.title)
                     Small("From your wall: " + w.title.ifBlank { "Untitled" } + (if (w.year > 0) ", ${w.year}" else ""))
