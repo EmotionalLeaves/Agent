@@ -500,3 +500,4 @@ One real change per round. Pushed and built every ten rounds.
 494. The daily check never runs on a nearly flat battery; the reading waits for a charge.
 495. Your CV as plain text, ready to paste into the entry forms that ask for it in a box (next to the CV as a PDF).
 496. A distance limit in Your rules: the farthest you will take or ship work. Calls in towns past it are held back (with the reason, under All), while online calls are never held back by it.
+497. Help answers two more questions someone starting out meets: whether to donate a piece to a benefit auction (one small piece, a starting bid at your normal price, your name shown with it, what can be deducted), and whether you can show at your workplace.
