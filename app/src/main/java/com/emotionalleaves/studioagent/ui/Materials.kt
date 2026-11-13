@@ -167,10 +167,18 @@ fun Materials(nav: NavController) {
             }
         }
         if (works.none { Engine.documented(it) }) Small("The portfolio fills in once a piece has a photo and is marked Ready to send.")
+        if (facts.isEmpty()) Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("The CV holds only your CV facts, and there are none yet.", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            TextButton(onClick = { nav.navigate("facts") }) { Text("Add CV facts") }
+        }
         Panel {
             Text("Portfolio web page", fontWeight = FontWeight.SemiBold)
             Note("One plain page with your documented works, approved statement, CV and email. Published to your own GitHub Pages repo. No feed, no follower counts.")
-            Button(onClick = {
+            // Publishing needs the GitHub setup first; say so here instead of failing.
+            if (!st.ghReady) {
+                Small("This needs a free GitHub account connected first (You, Settings, Backup and web page). The PDF portfolio above works without it.")
+                OutlinedButton(onClick = { nav.navigate("settings/github") }) { Text("Set it up") }
+            } else Button(onClick = {
                 status = "Publishing… this uploads each image, so it can take a minute."
                 scope.io({ status = it }) { val url = Engine.publishPortfolio(ctx); status = "Published: $url (GitHub can take a few minutes to show changes)" }
             }) { Text("Publish or update") }

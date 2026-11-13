@@ -671,7 +671,11 @@ fun WebFill(nav: NavController, id: Long) {
                             val d = JSONObject().put("first", st.firstName).put("last", st.lastName).put("name", st.fullName).put("email", st.email)
                                 .put("phone", st.phone).put("website", st.website).put("city", st.city).put("region", st.region).put("statement", a.statement).put("bio", bio)
                                 .put("works", list)
-                            web?.evaluateJavascript(FILL_JS + "(" + d.toString() + ")") { r -> status = "Filled ${r ?: "0"} fields. Read each one, then press the site's own submit button." }
+                            web?.evaluateJavascript(FILL_JS + "(" + d.toString() + ")") { r ->
+                                val n = r?.trim('"')?.toIntOrNull() ?: 0
+                                status = if (n == 0) "No boxes on this page matched. If the form is on another page, open it and tap Fill in again, or tap Copy lines and paste by hand."
+                                    else "Filled ${Texts.count(n, "box", "boxes")}. Read each one, then press the site's own submit button."
+                            }
                         }
                     }) { Text("Fill in") }
                     TextButton(onClick = { copying = !copying }) { Text(if (copying) "Hide lines" else "Copy lines") }
@@ -780,14 +784,15 @@ fun Sources(nav: NavController) {
         }
         H("Add a source")
         Choice("Kind", listOf("email", "url"), kind, names = { if (it == "email") "Email alerts" else "Listing page" }) { kind = it }
-        Field("Name", name)
         Field(if (kind == "email") "Sender address or domain" else "Page address", value)
-        // Appears once there is something to add, like Park it.
-        if (name.value.isNotBlank() && value.value.isNotBlank()) Button(onClick = {
+        Field("Name (optional)", name)
+        // Appears once there is something to add, like Park it. The name, if left out, is the site's own.
+        if (value.value.isNotBlank()) Button(onClick = {
             val raw = value.value.trim()
             // "artcall.org/calls" works as typed: the web address gets its https:// added.
             val url = if (kind == "url" && !raw.startsWith("http")) "https://$raw" else raw
-            val s = Source(name = name.value.trim(), kind = kind, url = url); name.value = ""; value.value = ""
+            val named = name.value.trim().ifBlank { (if (kind == "email") raw.substringAfter('@') else (try { java.net.URI(url).host.orEmpty() } catch (e: Exception) { raw })).removePrefix("www.") }
+            val s = Source(name = named, kind = kind, url = url); name.value = ""; value.value = ""
             scope.io { dao.put(s) }
         }) { Text("Add source") }
         Status(status)

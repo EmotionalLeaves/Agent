@@ -230,6 +230,11 @@ fun Home(nav: NavController) {
             val deadlines = events.filter { it.type == "deadline" && !it.done && it.date > now() }.take(3)
             if (deadlines.isNotEmpty()) {
                 Section("Deadlines")
+                // With reminders blocked, a deadline only reaches you if you open the app: say so once, where it matters.
+                if (!Notifier.allowed(ctx)) Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Reminders are off on this phone, so these will not reach you on their own.", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton(onClick = { nav.navigate("settings/permissions") }) { Text("Turn on") }
+                }
                 deadlines.forEach { e ->
                     IconRow(Icons.Default.DateRange, e.title.removePrefix("Deadline: "), Planner.weekendsLeft(today, Engine.date(e.date)).replaceFirstChar { it.uppercase() }) {
                         e.applId.takeIf { it > 0 }?.let { nav.navigate("appl/$it") } ?: nav.navigate("calls")

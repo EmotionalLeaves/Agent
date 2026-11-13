@@ -94,7 +94,16 @@ fun WeekScreen(nav: NavController) {
                     }
                 }
             }
-            OutlinedButton(onClick = { counter++; slots.add(EditSlot(counter, 6, "10:00", "60")) }) { Text("Add a time") }
+            // A new time lands on the first day without one: a weekend morning, or else an evening after work and rest.
+            OutlinedButton(onClick = {
+                counter++
+                val used = slots.map { it.day }.toSet()
+                val workDays = Planner.days(st.workDays)
+                val day = (listOf(6, 7) + (1..5)).firstOrNull { it !in used } ?: 6
+                val evening = Planner.time(st.workEnd, LocalTime.of(15, 30)).plusMinutes(st.bufferMin.toLong()).let { t -> if (t.minute in 1..29) t.withMinute(30) else if (t.minute > 30) t.plusHours(1).withMinute(0) else t }
+                val time = if (day in workDays) evening.toString() else "10:00"
+                slots.add(EditSlot(counter, day, time, if (day in workDays) "40" else "90"))
+            }) { Text("Add a time") }
             val total = slots.sumOf { it.minutes.trim().toIntOrNull() ?: 0 }
             Note("Total: ${"%.1f".format(total / 60.0)} hours a week.")
             Button(modifier = Modifier.fillMaxWidth(), onClick = {
@@ -150,7 +159,6 @@ fun SessionsScreen(nav: NavController) {
     var kind by rememberSaveable { mutableStateOf("make") }
     var workId by remember { mutableStateOf(0L) }
     val active = works.filter { it.status != "sold" }.take(12)
-    fun name(id: Long) = works.firstOrNull { it.id == id }?.let { it.title.ifBlank { "Untitled #${it.id}" } }.orEmpty()
     Screen("Session history", nav) {
         if (sessions.isEmpty()) Empty("No sessions yet. Each one you finish is listed here.")
         sessions.take(60).forEach { s ->

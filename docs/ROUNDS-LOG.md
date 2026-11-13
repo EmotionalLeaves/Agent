@@ -252,3 +252,13 @@ One real change per round. Pushed and built every ten rounds.
 248. Reopening a sent application makes fresh reminders and calendar entries for its deadline.
 249. The ask-a-question email names the call itself when the venue and organizer are unknown.
 250. Not applying after all marks the call "You said no" rather than "not this year", which it was not.
+251. Entry form: when Fill in finds no matching boxes it says so and what to do next, instead of "Filled 0 fields".
+252. Adding a source needs only the address; the name is optional and defaults to the site's own.
+253. CV and portfolio: with no CV facts yet, it says the CV would be empty and offers Add CV facts.
+254. Portfolio web page: before GitHub is connected it says what is needed and offers Set it up, instead of failing on Publish.
+255. Today: when the phone blocks reminders and a deadline is coming, one line says so with Turn on.
+256. The writing help is told when a call's words were read off a flyer photo, so it allows for small misreadings and treats a printed bare address as the link.
+257. A call link the writing help returns without https (or an email with mailto:) is tidied so the buttons that use it work.
+258. Your week: Add a time lands on the first free day, at 10:00 on a weekend or after work plus rest on a work day, with a length that fits.
+259. Help explains what "Fee?" means on a call and what to do about it.
+260. Help answers "What do I do at my own opening?" in a few plain, low-pressure steps.

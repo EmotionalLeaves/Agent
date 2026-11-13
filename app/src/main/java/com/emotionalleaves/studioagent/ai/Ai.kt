@@ -192,7 +192,10 @@ class Ai(private val settings: Settings) {
             "url, email (submission address or \"\"), accepts_prints (bool: would an archival print of digital work be eligible), " +
             "accepts_new_media (bool), guaranteed_acceptance (bool: true if paying the fee guarantees a place), " +
             "rights_grab (bool: true if terms claim broad or perpetual rights to the images). " +
-            "Use \"\" or 0 when the source does not say. Do not guess. If there is no call for artists, reply []. Today is ${LocalDate.now()}."
+            "Use \"\" or 0 when the source does not say. Do not guess. If there is no call for artists, reply []. Today is ${LocalDate.now()}." +
+            // Words read off a photo come with small misreadings; the call itself is still there.
+            (if (text.startsWith("Words read from a photo")) " The text was read off a photo of a flyer, so expect small misreadings (O for 0, l for 1, broken lines); " +
+                "correct only the obvious ones. A flyer usually describes one call. A web address printed without https is still the url." else "")
         val out = complete(sys, "<data>\n${text.take(24000)}\n</data>", fast = true, imageJpeg = image, maxTokens = 4000)
         val arr = try { JSONArray(jsonSlice(out, '[', ']')) } catch (e: Exception) { JSONArray() }
         val now = System.currentTimeMillis()
@@ -208,7 +211,7 @@ class Ai(private val settings: Settings) {
                 mediums = o.optString("mediums"), minWorks = o.optInt("min_works"), maxWorks = o.optInt("max_works"),
                 imageSpecs = o.optString("image_specs"), statementLimit = o.optInt("statement_word_limit"), theme = o.optString("theme"),
                 jurors = o.optString("jurors"), exhibitionDates = o.optString("exhibition_dates"), delivery = o.optString("delivery"),
-                commission = o.optDouble("commission", 0.0).let { if (it.isNaN()) 0.0 else it }, url = o.optString("url"), email = o.optString("email"),
+                commission = o.optDouble("commission", 0.0).let { if (it.isNaN()) 0.0 else it }, url = o.optString("url").trim().let { u -> if (u.isBlank() || u.startsWith("http")) u else "https://" + u.removePrefix("//") }, email = o.optString("email").trim().removePrefix("mailto:"),
                 sourceName = sourceName, rawText = text.take(6000), guaranteed = o.optBoolean("guaranteed_acceptance"),
                 rightsGrab = o.optBoolean("rights_grab"), acceptsPrints = o.optBoolean("accepts_prints", true),
                 acceptsNewMedia = o.optBoolean("accepts_new_media"), createdAt = now,
