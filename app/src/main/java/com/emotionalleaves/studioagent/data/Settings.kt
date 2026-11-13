@@ -230,6 +230,8 @@ class Settings(ctx: Context) {
     var socialOn by B("socialOn", false)
     /** Days off from the app (1 = Monday .. 7 = Sunday): no notifications, and Today says so. */
     var daysOff by S("daysOff")
+    /** The farthest you will take or ship work, in miles; 0 means no limit. */
+    var maxMiles by I("maxMiles", 0)
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

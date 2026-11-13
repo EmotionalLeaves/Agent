@@ -124,7 +124,9 @@ data class Profile(
     /** How far (miles) each call's town is from you, by town name in lower case, where the map knows it. */
     val milesTo: Map<String, Int> = emptyMap(),
     /** What your work is about, in your words ("kitchens, night, labor"): calls on those themes come forward. */
-    val themes: List<String> = emptyList()
+    val themes: List<String> = emptyList(),
+    /** The farthest you will deliver or ship to, in miles (0: no limit). Online calls are never held back by it. */
+    val maxMiles: Int = 0
 )
 
 /** An existing CV, pasted as text, read into CV lines: section headings set the kind, a year at the start of a line sets the year. */
@@ -214,6 +216,7 @@ object Scoring {
         if (p.kinds.isNotEmpty() && o.kind.isNotBlank() && o.kind !in p.kinds) r += "You have ${o.kind} calls turned off"
         if (o.minWorks > p.availableWorks) r += "Needs ${o.minWorks} works, you have ${p.availableWorks} ready"
         if (p.blocked.any { it.isNotBlank() && o.organiser.contains(it.trim(), ignoreCase = true) }) r += "Organizer is on your blocked list"
+        if (p.maxMiles > 0 && !o.online) p.milesTo[o.city.substringBefore(",").trim().lowercase()]?.let { mi -> if (mi > p.maxMiles) r += "About $mi miles away, past your ${p.maxMiles}" }
         val fits = p.routes.isEmpty() || p.routes.any { it == "physical" || (it == "print" && o.acceptsPrints) || (it == "screen" && o.acceptsNewMedia) }
         if (!fits) r += if (p.routes == listOf("screen")) "Does not accept screen-based work" else "Does not accept prints of digital work"
         if (o.guaranteed && o.fee > 0) r += "Pay-to-show"

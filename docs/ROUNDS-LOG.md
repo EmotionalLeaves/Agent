@@ -499,3 +499,4 @@ One real change per round. Pushed and built every ten rounds.
 493. Print this week (from Your week): the next seven days on one page for the fridge or the studio wall, each day with its studio times, steps and deadlines as tick boxes, and this month's one goal at the top, seen without opening the phone.
 494. The daily check never runs on a nearly flat battery; the reading waits for a charge.
 495. Your CV as plain text, ready to paste into the entry forms that ask for it in a box (next to the CV as a PDF).
+496. A distance limit in Your rules: the farthest you will take or ship work. Calls in towns past it are held back (with the reason, under All), while online calls are never held back by it.

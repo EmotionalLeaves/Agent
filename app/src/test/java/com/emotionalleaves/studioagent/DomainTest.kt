@@ -613,4 +613,13 @@ class DomainTest {
         assertEquals("Bean There Cafe", r[1].name); assertEquals("www.beanthere.com", r[1].website)
         assertEquals("hello", r[2].name); assertEquals("hello@gallery4.art", r[2].email); assertEquals("", r[2].website)
     }
+
+    @Test fun aDistanceLimitHoldsFarCallsBack() {
+        val S = com.emotionalleaves.studioagent.domain.Scoring
+        val far = com.emotionalleaves.studioagent.data.Opp(title = "Far", city = "Portland, OR", scope = "local")
+        val p = com.emotionalleaves.studioagent.domain.Profile(level = 1, milesTo = mapOf("portland" to 1700), maxMiles = 150)
+        assertTrue(S.ineligible(far, p, 0).contains("About 1700 miles away, past your 150"))
+        assertTrue(S.ineligible(far.copy(online = true), p, 0).none { it.contains("miles") })
+        assertTrue(S.ineligible(far, p.copy(maxMiles = 0), 0).none { it.contains("miles") })
+    }
 }
