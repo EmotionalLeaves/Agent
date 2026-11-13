@@ -355,7 +355,7 @@ fun SettingsScreen(nav: NavController, section: String) {
     var weights by remember { mutableStateOf(st.weights.split(",").map { it.trim().toIntOrNull() ?: 2 }.let { l -> List(6) { l.getOrElse(it) { 2 } } }) }
     val perms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { status = "Permissions updated." }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
-        if (uri != null) scope.io({ status = it }) { Backup.export(ctx, st, uri); status = "Backup saved. Keys and passwords are not in it." }
+        if (uri != null) scope.io({ status = it }) { Backup.export(ctx, st, uri); st.lastManualBackup = now(); status = "Backup saved. Keys and passwords are not in it." }
     }
     val folder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
