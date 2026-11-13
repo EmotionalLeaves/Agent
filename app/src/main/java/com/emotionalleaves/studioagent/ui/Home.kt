@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.semantics.clearAndSetSemantics
+
 import androidx.compose.runtime.saveable.rememberSaveable
 import android.Manifest
 import android.os.Build
@@ -319,7 +321,7 @@ fun SessionScreen(nav: NavController) {
             Section("What kind?")
             // Three kinds as rows with a line each, so the choice explains itself.
             Column {
-                listOf("make" to ("Make" to "Work on a piece."), "skill" to ("Practise" to "A new medium or technique. Counts toward your week."),
+                listOf("make" to ("Make" to "Work on a piece."), "skill" to ("Practice" to "A new medium or technique. Counts toward your week."),
                     "light" to ("Light" to "Low effort: sort references, a 15-minute sketch, tidy up.")).forEach { (k, tl) ->
                     val on = kind == k
                     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (on) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
@@ -409,7 +411,9 @@ fun SessionScreen(nav: NavController) {
             val fill = MaterialTheme.colorScheme.primary
             val part = if (goal > 0) (secs / (goal * 60f)).coerceIn(0f, 1f) else 0f
             // A ring that fills as time passes: the whole session visible at a glance.
-            Box(Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
+            // A screen reader hears the time in words, not a ticking clock.
+            val spoken = "${Texts.count((secs / 60).toInt(), "minute")} in" + (if (goal > 0 && secs < goal * 60L) ", ${Texts.count(Math.ceil((goal * 60L - secs) / 60.0).toInt(), "minute")} to go" else "")
+            Box(Modifier.fillMaxWidth().padding(top = 8.dp).clearAndSetSemantics { contentDescription = spoken }, contentAlignment = Alignment.Center) {
                 val shown by animateFloatAsState(part, tween(900), label = "ring")
                 // Smaller when the phone is sideways, so the step under it stays in view.
                 val ringSize = minOf(250, (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.55f).toInt()).dp

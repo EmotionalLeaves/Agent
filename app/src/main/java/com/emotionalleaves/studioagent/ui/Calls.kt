@@ -418,7 +418,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                 Note("Shipping: box about 4 in larger than the work on every side, corner protectors, glassine over the face, never tape on the work. Take condition photos before it leaves.")
             }
             if (loaded.status == "submitted") Expand("Something really has to change") {
-                Note("Only for a real reason, such as the organiser asking you to resend. Reopening unlocks the pack and frees the works.")
+                Note("Only for a real reason, such as the organizer asking you to resend. Reopening unlocks the pack and frees the works.")
                 TextButton(onClick = { scope.io { Engine.reopen(loaded) } }) { Text("Reopen this application") }
             }
         }
@@ -536,7 +536,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                 scope.io { dao.put(Ledger(kind = "fee", amount = -o.fee, date = now(), note = o.title, oppId = o.id)) }
                 save(a.copy(feePaid = o.fee))
             }) { Text("I paid the ${money(o.fee)} fee") }
-            Note("The app never pays for you. You pay on the organiser's page; it keeps the record.")
+            Note("The app never pays for you. You pay on the organizer's page; it keeps the record.")
         }
         if (a.method == "email") {
             Field("To (their email address)", a.emailTo, { save(a.copy(emailTo = it.trim())) })
@@ -555,7 +555,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             }
         } else {
             Button(enabled = o.url.isNotBlank(), modifier = Modifier.fillMaxWidth(), onClick = { nav.navigate("web/${a.id}") }) { Text("Fill in the entry form") }
-            OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Submitted on the organiser's site on ${fmtDate(now())}.") } }) { Text("I submitted it") }
+            OutlinedButton(onClick = { buzz(); scope.io { Engine.markSubmitted(a, "Submitted on the organizer's site on ${fmtDate(now())}.") } }) { Text("I submitted it") }
         }
         if (!allGreen) Note("Sending unlocks when every check above passes.")
     }

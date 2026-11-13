@@ -200,7 +200,7 @@ fun Records(nav: NavController) {
         val quarterStart = today.withMonth((today.monthValue - 1) / 3 * 3 + 1).withDayOfMonth(1)
         val cutoff = Engine.millis(quarterStart.atStartOfDay())
         val decided = appls.filter { (it.status == "accepted" || it.status == "declined") && it.submittedAt in 1 until cutoff }
-        if (decided.isEmpty()) Note("Your first report appears at the start of a new quarter, once there are results from the one before. Until then there is nothing to analyse.")
+        if (decided.isEmpty()) Note("Your first report appears at the start of a new quarter, once there are results from the one before. Until then there is nothing to analyze.")
         else Panel {
             val acc = decided.count { it.status == "accepted" }
             Text("Up to ${quarterStart.minusDays(1)}: $acc accepted of ${decided.size} decided", fontWeight = FontWeight.SemiBold)
@@ -369,8 +369,8 @@ fun SettingsScreen(nav: NavController, section: String) {
                 SText("First name", st.firstName) { st.firstName = it }
                 SText("Last name", st.lastName) { st.lastName = it }
                 Section("Contact")
-                SText("Email", st.email) { st.email = it }
-                SText("Phone (only used to fill entry forms)", st.phone) { st.phone = it }
+                SText("Your email (for your signature and entry forms)", st.email) { st.email = it }
+                SText("Phone (optional: entry forms, your email signature, receipts)", st.phone) { st.phone = it }
                 SText("Website or portfolio page", st.website) { st.website = it }
                 SText("City", st.city) { st.city = it }
                 SText("State or region", st.region) { st.region = it }
@@ -379,7 +379,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 SText("Mediums", st.mediums) { st.mediums = it }
                 Multi("How your work is shown (pick every one that applies)", listOf("print", "physical", "screen"), st.routes) { st.route = it.joinToString(",") }
                 SText("Goals for the next 12 months", st.goals, lines = 2) { st.goals = it }
-                Choice("Sizes in", listOf("in", "cm"), units, names = { if (it == "in") "Inches" else "Centimetres" }) { units = it; st.units = it }
+                Choice("Sizes in", listOf("in", "cm"), units, names = { if (it == "in") "Inches" else "Centimeters" }) { units = it; st.units = it }
                 SText("Currency symbol", st.currency) { if (it.isNotBlank()) st.currency = it }
                 Num("Price rule: per square inch", st.pricePerSqIn) { st.pricePerSqIn = it }
             }

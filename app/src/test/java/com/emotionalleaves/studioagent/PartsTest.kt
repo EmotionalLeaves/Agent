@@ -162,8 +162,8 @@ class PartsTest {
             com.emotionalleaves.studioagent.media.Pdf.previewDir = File(ctx.cacheDir, "pack_preview")
             val dir = try { Engine.buildPack(ctx, a, opp) } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
             val names = dir.listFiles()!!.map { it.name }.sorted()
-            assertEquals(listOf("Leaves_01_Piece1_2026_Archivalpigmentprint_12x16in.jpg", "Leaves_02_Piece2_2026_Archivalpigmentprint_12x16in.jpg",
-                "Leaves_03_Piece3_2026_Archivalpigmentprint_12x16in.jpg", "Leaves_CV.pdf", "Leaves_Price_list.pdf", "Leaves_Statement.pdf"), names)
+            assertEquals(listOf("Leaves_01_Piece1_2026.jpg", "Leaves_02_Piece2_2026.jpg",
+                "Leaves_03_Piece3_2026.jpg", "Leaves_CV.pdf", "Leaves_Image_list.pdf", "Leaves_Statement.pdf"), names)
             val exif = android.media.ExifInterface(File(dir, names[0]).absolutePath)
             assertEquals("Jade Leaves", exif.getAttribute(android.media.ExifInterface.TAG_ARTIST))
             assertTrue(exif.getAttribute(android.media.ExifInterface.TAG_COPYRIGHT).orEmpty().contains("All rights reserved"))

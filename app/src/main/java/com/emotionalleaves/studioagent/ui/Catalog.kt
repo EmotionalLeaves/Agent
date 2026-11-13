@@ -218,7 +218,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             ImageTools.saveJpeg(b, main)
             val next = w.copy(originalPath = orig.absolutePath, imagePath = main.absolutePath, pixelW = pw, pixelH = ph)
             w = next; dao.put(next)
-            status = if (photo) "Photo added and colour-corrected. Straighten it next if the edges are not square." else "File imported at $pw x $ph px."
+            status = if (photo) "Photo added and color-corrected. Straighten it next if the edges are not square." else "File imported at $pw x $ph px."
         }
     }
 
@@ -276,7 +276,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             }
         }
         Field("Title", w.title, { save(w.copy(title = it)) })
-        Explain("How do I photograph work well?", "Daylight from the side, no flash. Put the work flat against a wall and hold the phone parallel to it, level with its centre. A sheet of plain grey card in one corner helps the app correct the colour. Then tap Straighten and crop.")
+        Explain("How do I photograph work well?", "Daylight from the side, no flash. Put the work flat against a wall and hold the phone parallel to it, level with its center. A sheet of plain grey card in one corner helps the app correct the color. Then tap Straighten and crop.")
         Status(status)
         if (w.imagePath.isNotBlank() && (w.status == "in_progress" || w.status == "finished"))
             Button(onClick = {
@@ -483,7 +483,7 @@ fun CropScreen(nav: NavController, id: Long) {
                     }
                 }
             }
-            Toggle("Also neutralise the colour cast (for photos of physical work)", fix) { fix = it }
+            Toggle("Also neutralize the color cast (for photos of physical work)", fix) { fix = it }
             Status(status)
             Button(modifier = Modifier.fillMaxWidth(), onClick = {
                 status = "Working…"
@@ -533,7 +533,9 @@ fun IdeasBody(nav: NavController) {
                             Small(fmtDate(i.createdAt))
                             TextButton(onClick = {
                                 scope.io {
-                                    val id = dao.put(newWork().copy(notes = i.text, nextStep = "Start: " + i.text.take(60)))
+                                    // A working title from the idea's first words; it can change any time.
+                                    val working = i.text.trim().split(Regex("\\s+")).take(5).joinToString(" ").trimEnd('.', ',', ';', ':').replaceFirstChar { it.uppercase() }
+                                    val id = dao.put(newWork().copy(title = working, notes = i.text, nextStep = "Start: " + i.text.take(60)))
                                     dao.put(i.copy(done = true))
                                     withContext(Dispatchers.Main) { nav.navigate("work/$id") }
                                 }

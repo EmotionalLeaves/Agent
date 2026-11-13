@@ -102,3 +102,13 @@ One real change per round. Pushed and built every ten rounds.
 98. The first-run "How it goes" says what the app really does: it finds calls every day.
 99. When calls fit you and you have not looked this week, Today's step says so ("3 calls fit you this week") and opens Calls.
 100. A test for "In plain words" without the writing help.
+101. A screen reader hears the session time in words ("12 minutes in, 13 minutes to go"), not a ticking clock.
+102. "Practice" spelled the American way everywhere.
+103. American spelling across all wording (color, center, organizer, analyze, centimeters), for a US artist sending to US venues.
+104. The bill of sale has a "Paid by" line for how the buyer paid.
+105. Certificates carry the artist's contact line, so a later owner can reach you.
+106. In an application pack the numbered list is called an Image list (what calls ask for), with prices for works for sale.
+107. Starting a piece from a parked idea gives it a working title from the idea's first words.
+108. Picture files are named the short way calls ask for (Leaves_01_BlueHour_2026.jpg); medium and size live in the image list.
+109. The phone box says where the number is used (entry forms, email signature, receipts) and keeps the number keyboard.
+110. The email box in About you says what it is for (your signature and entry forms).

@@ -140,8 +140,7 @@ object Papers {
      * Numbered list of works. The numbers match the numbered image files in an application folder,
      * so a juror can match each picture to its details.
      */
-    fun imageList(ctx: Context, s: Settings, works: List<Artwork>, withPrices: Boolean, dir: File? = null, files: List<String> = emptyList()): File {
-        val title = if (withPrices) "Price list" else "Image list"
+    fun imageList(ctx: Context, s: Settings, works: List<Artwork>, withPrices: Boolean, dir: File? = null, files: List<String> = emptyList(), title: String = if (withPrices) "Price list" else "Image list"): File {
         val pdf = pdf(ctx, s, title)
         pdf.text(title, 20f, face = Pdf.Face.DISPLAY, gap = 2f)
         pdf.text(name(s), 11f, grey = true, gap = 14f)
@@ -213,6 +212,8 @@ object Papers {
         pdf.text("The artist keeps the copyright and all reproduction rights to this work.", 10.5f, grey = true)
         pdf.space(40f)
         pdf.amount("Signature  ______________________________", "Date  ________________", 10.5f)
+        // Where to reach the artist years from now, if the work changes hands.
+        contactLine(s).takeIf { it.isNotBlank() }?.let { pdf.space(18f); pdf.text(it, 8.5f, grey = true, center = true) }
         return pdf.save(out(ctx, docName(s, "Certificate_" + Texts.clean(a.title).ifBlank { "Untitled" } + (if (a.editionSize > 0) "_$number" else ""))))
     }
 
@@ -235,6 +236,8 @@ object Papers {
         pdf.text(inventoryNo(s, a), 8.5f, grey = true)
         pdf.rule()
         pdf.amount("Total", money(s, price), 12f, Pdf.Face.BOLD)
+        pdf.space(6f)
+        pdf.row("Paid by", "______________________________  (cash, card, transfer, check)")
         pdf.space(14f)
         pdf.text("Received in full. Ownership of the physical work passes to the buyer on this date. " +
             "The artist keeps the copyright and reproduction rights, and may show images of the work in a portfolio with credit to the collection.", 10f)

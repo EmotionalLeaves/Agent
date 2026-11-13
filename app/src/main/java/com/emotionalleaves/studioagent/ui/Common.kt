@@ -217,9 +217,9 @@ fun Field(label: String, value: String, onValue: (String) -> Unit, lines: Int = 
     val kind = when {
         number -> KeyboardType.Decimal; secret -> KeyboardType.Password
         lines > 1 || l.startsWith("paste") || l.startsWith("first") -> KeyboardType.Text
+        l.startsWith("phone") -> KeyboardType.Phone
         Regex("\\bemail\\b|sender address").containsMatchIn(l) && !l.contains("email to") -> KeyboardType.Email
         Regex("website|web address|page address|\\blink\\b|\\burl\\b|their site").containsMatchIn(l) -> KeyboardType.Uri
-        Regex("\\bphone\\b").containsMatchIn(l) -> KeyboardType.Phone
         else -> KeyboardType.Text
     }
     if (above) Text(label, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp))

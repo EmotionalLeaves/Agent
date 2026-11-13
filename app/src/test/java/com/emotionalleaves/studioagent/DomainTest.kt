@@ -102,7 +102,7 @@ class DomainTest {
     }
 
     @Test fun fileNamesAndPrintChecks() {
-        assertEquals("Leaves_BlueHour_2026_Archivalpigmentprint_20x16in.jpg", Texts.fileName("Leaves", "Blue Hour", 2026, "Archival pigment print", 16.0, 20.0))
+        assertEquals("Leaves_BlueHour_2026.jpg", Texts.fileName("Leaves", "Blue Hour", 2026, "Archival pigment print", 16.0, 20.0))
         assertEquals(300, Texts.ppi(4800, 6000, 16.0, 20.0))
         assertTrue(Texts.printVerdict(4800, 6000, 16.0, 20.0).startsWith("Print-ready"))
         assertTrue(Texts.printVerdict(1200, 1500, 16.0, 20.0).startsWith("Too few pixels"))

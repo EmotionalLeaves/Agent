@@ -176,7 +176,7 @@ fun Guide(nav: NavController) {
 
 val basics = listOf(
     "Do I need to know how the art world works?" to "No. The app is built so you can start knowing nothing. Wherever it asks something you cannot answer, there is a \"not sure\" or \"decide for me\" choice, and it picks a safe default.",
-    "What is an open call?" to "An invitation from a gallery, art centre, library, magazine or fair for artists to send in work for a show. You apply by a deadline and they choose what goes in. It is the normal way to get a first exhibition.",
+    "What is an open call?" to "An invitation from a gallery, art center, library, magazine or fair for artists to send in work for a show. You apply by a deadline and they choose what goes in. It is the normal way to get a first exhibition.",
     "What does \"juried\" mean?" to "One or more named people, the jurors, pick the work. That is the good, normal kind. If paying a fee guarantees you a place, nobody is choosing, and it does little for you. The app holds those back.",
     "Do I have to pay to apply?" to "Sometimes. Many calls charge an entry fee and many are free. The app only shows you free ones at the start, and never pays anything for you.",
     "How does digital art end up on a wall?" to "It is printed with pigment inks on archival paper, often called an archival pigment print or giclee, and framed. Shows accept these all the time. A print lab does the printing; the app prepares the order.",
@@ -190,7 +190,7 @@ val basics = listOf(
     "What happens if I get in?" to "You deliver or ship the framed work by a date, it hangs for a few weeks, and you collect whatever does not sell. Venues usually keep a share of any sale, called commission. The app turns the acceptance into a checklist.",
     "What if I am not chosen?" to "That is the usual result for everyone, including artists who show a lot. It is not a verdict on the work. The app frees the pieces for the next call and does not make you go over it.",
     "What is pay-to-show, or a vanity gallery?" to "A place where the fee buys you a spot instead of a juror choosing the work: \"all artists accepted\", wall rental, hanging fees. It looks like a show but counts for little on a CV and costs a lot. The app marks these calls so you can say No without wondering.",
-    "What is a commission on sales?" to "The share of the price a venue keeps when your work sells there. Galleries usually take 30 to 50 percent; art centres and fairs often 20 to 30. Set your price so the part left after commission still feels fair to you.",
+    "What is a commission on sales?" to "The share of the price a venue keeps when your work sells there. Galleries usually take 30 to 50 percent; art centers and fairs often 20 to 30. Set your price so the part left after commission still feels fair to you.",
     "What rights do I give when I enter a call?" to "Normally only the right to show pictures of your work to promote that show, with your name on them. You keep the copyright. Be careful with words like perpetual, irrevocable, exclusive or commercial use: those take much more. The app flags them.",
     "What is an opening?" to "The free first evening of a show, open to anyone. People look at the work and talk. Going to openings, even just to look, is how people in local art slowly come to know your face. Nobody expects you to network.",
     "Where do the calls come from?" to "Once a day the app reads four public listing sites (ArtCall, Artwork Archive, ArtJobs and Artshow), opens each new call and picks out the title, deadline and fee. It skips calls already closed and sites that ask apps to stay out. You can add more sites, or email alerts, under Calls, All, Where calls come from. Anything you see yourself, share it into the app.",
@@ -239,7 +239,7 @@ fun LevelsBody() {
     val gate = com.emotionalleaves.studioagent.domain.Levels.gate(stats, rules)
     val steps = listOf(
         Triple("Foundation", "Make your first series, photograph or import it, write the statement.", "Opens Level 1: ${rules.gateWorks} finished pieces with images in one series, and an approved statement."),
-        Triple("First walls", "Free and low-fee local shows: campus, library, cafe, community centre, online.", "Opens Level 2: ${rules.gateShows1} exhibitions on your CV."),
+        Triple("First walls", "Free and low-fee local shows: campus, library, cafe, community center, online.", "Opens Level 2: ${rules.gateShows1} exhibitions on your CV."),
         Triple("Regional", "Regional juried shows with named jurors, artist-run spaces, small grants.", "Opens Level 3: ${rules.gateShows2} shows, plus an award or an invited show."),
         Triple("Recognised", "A solo show, residencies, competitive national calls, curators who know your work.", "Opens Level 4: a solo show, plus a residency or grant."),
         Triple("Established", "Gallery representation, museum group shows, major grants.", "")

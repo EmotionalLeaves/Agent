@@ -401,7 +401,7 @@ object Engine {
      */
     suspend fun suggestSteps(w: Artwork): List<String> {
         val plain = when (w.format) {
-            "print" -> listOf("Pick the final file and check its size", "Make a small test print", "Adjust colour from the test", "Order or make the final print", "Sign and number it")
+            "print" -> listOf("Pick the final file and check its size", "Make a small test print", "Adjust color from the test", "Order or make the final print", "Sign and number it")
             "screen" -> listOf("Choose the exact cut or loop", "Check it plays on a borrowed screen", "Export the final file", "Write the one-line installation note", "Record a short clip for calls")
             else -> listOf("Set out materials and one reference", "Block in the big shapes", "Work the main area for one session", "Refine the details that matter most", "Compare it with the finish line")
         }
@@ -566,7 +566,8 @@ object Engine {
         val (px, bytes) = ImageTools.parseSpecs(o.imageSpecs)
         val names = works.mapIndexed { i, w -> Texts.fileName(st.lastName.ifBlank { st.firstName }, w.title, w.year, Papers.medium(w), w.widthIn, w.heightIn, number = i + 1) }
         works.forEachIndexed { i, w -> ImageTools.export(w.imagePath, px, bytes, File(dir, names[i]), st.fullName, Papers.caption(w)) }
-        Papers.imageList(ctx, st, works, withPrices = true, dir = dir, files = names)
+        // Calls ask for an "image list": numbered like the picture files, with prices for anything for sale.
+        Papers.imageList(ctx, st, works, withPrices = true, dir = dir, files = names, title = "Image list")
         Papers.cv(ctx, st, dao.factsNow()).copyTo(File(dir, Papers.docName(st, "CV")), overwrite = true)
         if (a.statement.isNotBlank() || a.themeText.isNotBlank())
             Papers.textDoc(ctx, st, "Artist statement", listOfNotNull(a.statement.takeIf { it.isNotBlank() }?.let { "" to it }, a.themeText.takeIf { it.isNotBlank() }?.let { "On the theme" to it }), dir, Papers.docName(st, "Statement"))
@@ -665,7 +666,7 @@ object Engine {
             notes = "Many have a display wall or cases and a simple request form. Ask at the front desk who books it. Staff are usually welcome."),
         Contact(venue = "Your nearest public library", kind = "community", tier = "now", createdAt = now - 2,
             notes = "Public libraries often show local artists for a month at a time. Look for 'exhibits' or 'art display' on their site, or ask at the desk."),
-        Contact(venue = "A cafe or community art centre near you", kind = "community", tier = "now", createdAt = now - 3,
+        Contact(venue = "A cafe or community art center near you", kind = "community", tier = "now", createdAt = now - 3,
             notes = "Look at the walls: if there is local art with small labels, they show work. Ask who to speak to. Replace this name with the real place.")
     )
 
