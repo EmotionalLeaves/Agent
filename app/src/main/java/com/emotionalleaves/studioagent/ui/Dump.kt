@@ -97,7 +97,8 @@ fun DumpScreen(nav: NavController) {
                 putAway = listOfNotNull(
                     keep.count { it.kind == Dump.Kind.TASK }.takeIf { it > 0 }?.let { Texts.count(it, "to-do") + " in Records" },
                     keep.count { it.kind == Dump.Kind.SUPPLY }.takeIf { it > 0 }?.let { Texts.count(it, "thing") + " to buy in Supplies" },
-                    keep.count { it.kind == Dump.Kind.IDEA }.takeIf { it > 0 }?.let { Texts.count(it, "idea") + " in Ideas" }).joinToString(", ")
+                    keep.count { it.kind == Dump.Kind.IDEA && pieceFor(it.text) == null }.takeIf { it > 0 }?.let { Texts.count(it, "idea") + " in Ideas" },
+                    keep.count { it.kind == Dump.Kind.IDEA && pieceFor(it.text) != null }.takeIf { it > 0 }?.let { Texts.count(it, "idea") + " in a piece's notes" }).joinToString(", ")
                 text.value = ""; moved.clear()
             }, Modifier.fillMaxWidth()) { Text("Put them away") }
         }
