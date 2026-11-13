@@ -297,6 +297,18 @@ class DomainTest {
         assertTrue(Texts.feeStated(o.copy(fee = 25.0)))
     }
 
+    @Test fun thePlanLearnsWhenYouReallyWork() {
+        val today = java.time.LocalDate.of(2027, 3, 1) // a Monday
+        val plan = listOf(com.emotionalleaves.studioagent.domain.TemplateSlot(3, java.time.LocalTime.of(17, 30), 40), com.emotionalleaves.studioagent.domain.TemplateSlot(6, java.time.LocalTime.of(10, 0), 90))
+        // Four Saturdays at 10 (planned) and three Sundays around 7 pm (not planned); Wednesday never.
+        val sat = (1..4).map { today.minusDays(2 + 7L * (it - 1)).atTime(10, 5) }
+        val sun = (1..3).map { today.minusDays(1 + 7L * (it - 1)).atTime(19, 10) }
+        val (from, to) = Planner.betterSlot(plan, sat + sun, today)!!
+        assertEquals(3, from.day)
+        assertEquals(7, to.day); assertEquals(java.time.LocalTime.of(19, 0), to.time)
+        assertEquals(null, Planner.betterSlot(plan, sat, today))
+    }
+
     @Test fun errorsReadAsPlainWords() {
         val off = com.emotionalleaves.studioagent.ui.plainError(java.net.UnknownHostException("Unable to resolve host \"api.anthropic.com\""))
         assertTrue(off.startsWith("No internet connection"))

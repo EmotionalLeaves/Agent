@@ -318,3 +318,4 @@ One real change per round. Pushed and built every ten rounds.
 311. The screenshot and spoken-label checks now cover the new screens (places, plan a show, juror view, studio update), so their layout and labels are reviewed on every build.
 312. The tour says the app reads eight listing sites and finds real places near you.
 313. Applying for a grant, residency or commission starts with the questions those always ask (project and budget; what you will work on and why this residency; your idea for the site), each with Draft an answer.
+315. The plan learns your real week: when a planned studio time has never been used but you keep working at another time (three times or more in four weeks), the weekly look ahead offers to move it there, in one tap.

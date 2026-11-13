@@ -684,6 +684,7 @@ fun Review(nav: NavController) {
     val weekStart = Engine.millis(LocalDate.now().with(java.time.DayOfWeek.MONDAY).atStartOfDay())
     val mine = sessions.filter { it.start >= weekStart && it.end > it.start }
     val active = works.filter { it.status == "in_progress" }
+    val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
     // No studio times ahead and not paused: plan them now, instead of saying they come later.
     var planned by remember { mutableStateOf(false) }
@@ -695,6 +696,22 @@ fun Review(nav: NavController) {
         StageHead(1, "What you did", true)
         Text(if (mine.isEmpty()) "No sessions logged this week. That is information, not a verdict. If the plan did not fit your week, the plan is what should change."
         else "${mine.size} session" + (if (mine.size > 1) "s" else "") + ", ${mine.sumOf { (it.end - it.start) / 60000 }} minutes. That happened, and it counts.")
+        // The plan bends to your life: a planned time you never use, and a time you keep working anyway.
+        val plan = Planner.parseTemplate(st.weekTemplate).ifEmpty { Planner.suggestedTemplate(Planner.days(st.workDays), Planner.time(st.workEnd, LocalTime.of(15, 30)), st.bufferMin, Planner.time(st.bedtime, LocalTime.of(22, 30)), st.weeklyHours) }
+        val starts = sessions.filter { it.end > it.start }.map { java.time.Instant.ofEpochMilli(it.start).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime() }
+        var moved by remember { mutableStateOf(false) }
+        Planner.betterSlot(plan, starts, LocalDate.now())?.let { (from, to) ->
+            if (!moved) Panel(strong = true) {
+                val names = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+                val fmt = java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT)
+                Text("You never used ${names[from.day - 1]} at ${from.time.format(fmt)}, but you often work on ${names[to.day - 1]}s around ${to.time.format(fmt)}.")
+                Small("Moving the plan to match is not giving up; it is the plan learning your week.")
+                Button(onClick = {
+                    st.weekTemplate = Planner.formatTemplate(plan.map { if (it == from) to else it }); moved = true
+                    scope.io { Engine.replan(ctx) }
+                }) { Text("Move it to ${names[to.day - 1]}") }
+            }
+        }
         StageHead(2, "One piece for next week", st.focusWork > 0)
         if (active.isEmpty()) Empty("Nothing in progress. Start a new piece from Studio when you are ready.", "Open Studio") { nav.navigate("works") }
         else {

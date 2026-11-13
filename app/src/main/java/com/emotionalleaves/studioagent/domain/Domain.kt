@@ -234,6 +234,24 @@ object Planner {
 
     fun formatTemplate(l: List<TemplateSlot>): String = l.joinToString(";") { "${it.day}@${it.time}/${it.minutes}" }
 
+    /**
+     * Learns from when you really work. Over the last [weeks] weeks: a planned slot that never had a session near it,
+     * and a day and hour where sessions keep happening (at least three) that the plan does not cover. Returns the slot to move
+     * and where to move it, or null when the plan already matches your life.
+     */
+    fun betterSlot(plan: List<TemplateSlot>, sessionStarts: List<java.time.LocalDateTime>, today: LocalDate, weeks: Int = 4): Pair<TemplateSlot, TemplateSlot>? {
+        val since = today.minusWeeks(weeks.toLong()).atStartOfDay()
+        val recent = sessionStarts.filter { it.isAfter(since) }
+        if (recent.size < 3 || plan.isEmpty()) return null
+        fun near(s: TemplateSlot, t: java.time.LocalDateTime) = t.dayOfWeek.value == s.day && kotlin.math.abs(t.toLocalTime().toSecondOfDay() - s.time.toSecondOfDay()) <= 2 * 3600
+        val unused = plan.firstOrNull { s -> recent.none { near(s, it) } } ?: return null
+        val habit = recent.groupBy { it.dayOfWeek.value to it.hour }.filter { (k, v) -> v.size >= 3 && plan.none { p -> p.day == k.first && kotlin.math.abs(p.time.hour - k.second) <= 2 } }
+            .maxByOrNull { it.value.size } ?: return null
+        val minute = habit.value.map { it.minute }.average().toInt().let { if (it < 15) 0 else if (it < 45) 30 else 0 }
+        val hour = habit.key.second + if (habit.value.map { it.minute }.average() >= 45) 1 else 0
+        return unused to TemplateSlot(habit.key.first, LocalTime.of(hour.coerceIn(0, 23), minute), unused.minutes)
+    }
+
     fun planFromTemplate(from: LocalDate, template: List<TemplateSlot>): List<Slot> = (0..6).flatMap { i ->
         val date = from.plusDays(i.toLong())
         template.filter { it.day == date.dayOfWeek.value }.map { Slot(date.atTime(it.time), it.minutes) }
