@@ -1576,7 +1576,7 @@ object Firsts {
     data class First(val key: String, val title: String, val line: String)
 
     data class Counts(val pieces: Int, val pictured: Int, val finished: Int, val sessions: Int, val hourSession: Boolean,
-                      val sent: Int, val yes: Int, val sales: Int, val taught: Int, val openings: Int = 0, val venueEmails: Int = 0)
+                      val sent: Int, val yes: Int, val sales: Int, val taught: Int, val openings: Int = 0, val venueEmails: Int = 0, val foundationWeeks: Int = 0)
 
     private val all = listOf(
         First("piece", "Your first piece", "It is in the studio now, which is where every body of work starts."),
@@ -1586,6 +1586,8 @@ object Firsts {
         First("ten", "Ten sessions", "Ten times you sat down and started. That habit is the hard part, and you have it."),
         First("opening", "Your first opening", "You walked into a room full of art and the people who show it. That is how people start to know your face."),
         First("venue", "Your first email to a venue", "Most people never send the first one. Whatever they say, the next is easier."),
+        First("basics", "Twelve weeks of basics, done", "Shapes, values, edges, color, composition: the groundwork every exhibiting artist leans on. You did all of it."),
+        First("body", "Foundations: a body of work", "Eighteen weeks in, you have a series that belongs together. That is what shows are made of."),
         First("sent", "Your first entry sent", "It is out in the world now. Whatever the answer, it counts toward the year."),
         First("yes", "Your first yes", "A juror chose your work for a wall. Take a moment with that one."),
         First("sale", "Your first sale", "Someone wanted to live with your work enough to pay for it."),
@@ -1594,7 +1596,7 @@ object Firsts {
     fun reached(c: Counts): List<First> = all.filter {
         when (it.key) {
             "piece" -> c.pieces > 0; "picture" -> c.pictured > 0; "hour" -> c.hourSession; "finished" -> c.finished > 0
-            "ten" -> c.sessions >= 10; "opening" -> c.openings > 0; "venue" -> c.venueEmails > 0; "sent" -> c.sent > 0; "yes" -> c.yes > 0; "sale" -> c.sales > 0; "taught" -> c.taught > 0
+            "ten" -> c.sessions >= 10; "opening" -> c.openings > 0; "venue" -> c.venueEmails > 0; "basics" -> c.foundationWeeks >= 12; "body" -> c.foundationWeeks >= 18; "sent" -> c.sent > 0; "yes" -> c.yes > 0; "sale" -> c.sales > 0; "taught" -> c.taught > 0
             else -> false
         }
     }

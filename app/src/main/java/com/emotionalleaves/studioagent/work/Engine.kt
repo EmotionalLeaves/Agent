@@ -1198,7 +1198,8 @@ object Engine {
             works.count { it.status != "idea" }, works.count { it.imagePath.isNotBlank() }, works.count { it.status !in setOf("idea", "in_progress") },
             sessions.size, sessions.any { it.end - it.start >= 55 * 60_000L }, appls.count { it.submittedAt > 0 }, appls.count { it.status == "accepted" },
             dao.ledgerNow().count { it.kind == "sale" }, dao.factsNow().count { it.category == "teaching" },
-            dao.eventsNow().count { it.type == "opening" && it.done }, dao.contactsNow().count { it.sentAt > 0 && it.kind != "subscriber" }))
+            dao.eventsNow().count { it.type == "opening" && it.done }, dao.contactsNow().count { it.sentAt > 0 && it.kind != "subscriber" },
+            com.emotionalleaves.studioagent.domain.Foundations.done(st.foundationsDone).let { d -> com.emotionalleaves.studioagent.domain.Foundations.weeks.takeWhile { wk -> wk.exercises.all { it.id in d } }.size }))
     }
 
     /** To-dos whose day went by are spread over the next week (two days from now on), a few a day, so none shout "overdue". Deadlines stay put. */
