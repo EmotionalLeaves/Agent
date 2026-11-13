@@ -394,3 +394,4 @@ One real change per round. Pushed and built every ten rounds.
 388. Records shows how much of the work you showed this year sold, and says when it is over half, the usual point to raise prices.
 389. An email to a venue opens in your mail app with your three strongest pictures attached (in portfolio order, sized for any inbox, your name inside each file), since venues decide from the work.
 390. Venue emails the app sends for you (with email set up) carry the same three pictures; follow-ups go without them.
+391. When a venue asks for more (or says it is interested), its page has "Reply with all my materials attached": a short thank-you with the materials kit (portfolio, CV, statement and bio, image list, pictures) in one attachment.

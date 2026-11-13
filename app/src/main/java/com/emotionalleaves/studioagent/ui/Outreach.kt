@@ -315,6 +315,15 @@ fun ContactScreen(nav: NavController, id: Long) {
             pages.forEach { (t, u) -> TextButton(onClick = { Share.open(ctx, u) }, modifier = Modifier.offset(x = (-12).dp)) { Text(t) } }
         }
         kindTip(c.kind).takeIf { it.isNotBlank() }?.let { Small(it) }
+        // They asked for more: everything they could want in one attachment, with a short note.
+        if (c.status in setOf("more", "interested") && Texts.looksLikeEmail(c.email)) OutlinedButton(onClick = {
+            scope.io {
+                val kit = Engine.pressKit(ctx)
+                val body = "Hello" + (if (c.name.isNotBlank()) " ${c.name.substringBefore(' ')}" else "") + ",\n\nThank you for getting back to me. Attached are my portfolio, CV, statement and bio, " +
+                    "an image list with sizes and prices, and the pictures themselves. I would be glad to send anything else, or to bring work by.\n\n" + Papers.signature(st)
+                withContext(Dispatchers.Main) { Share.email(ctx, c.email, "My materials, as promised", body, listOf(kit)) }
+            }
+        }, modifier = Modifier.fillMaxWidth()) { Text("Reply with all my materials attached") }
         // Time to try again: a fresh draft, and the old exchange stays in the notes.
         if (c.status in setOf("followed_up", "not_now") && c.revisitAt in 1..now()) OutlinedButton(onClick = {
             save(c.copy(status = "research", draftSubject = "", draftBody = "", followUpBody = "", revisitAt = 0, notes = (c.notes + "\nWrote again from ${fmtDate(now())}.").trim()))
