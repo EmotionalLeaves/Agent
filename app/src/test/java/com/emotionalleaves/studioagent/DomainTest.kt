@@ -438,4 +438,13 @@ class DomainTest {
         // Already late: nothing is dated in the past.
         assertTrue(S.steps(d, java.time.LocalDate.of(2027, 3, 15)).all { !it.second.isBefore(java.time.LocalDate.of(2027, 3, 15)) })
     }
+
+    @Test fun readyToHangTicks() {
+        val H = com.emotionalleaves.studioagent.domain.HangReady
+        assertTrue(H.items("print", false).any { it.startsWith("Certificate") })
+        assertTrue(H.items("physical", false).none { it.startsWith("Frame") })
+        var s = H.set("", 5, 0, true); s = H.set(s, 5, 2, true); s = H.set(s, 9, 1, true)
+        assertEquals(5, H.bits(s, 5)); assertEquals(2, H.bits(s, 9)); assertEquals(0, H.bits(s, 50))
+        s = H.set(s, 5, 0, false); assertEquals(4, H.bits(s, 5))
+    }
 }

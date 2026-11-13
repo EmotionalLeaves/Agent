@@ -214,7 +214,39 @@ object Papers {
         return pdf.save(out(ctx, docName(s, "Wall_labels")))
     }
 
-    // ------------------------------------------------------------ certificate
+    // ------------------------------------------------------------ certificate    /**
+     * Labels for the back of each piece: who made it, what it is, which way is up, how it hangs, and how to reach you.
+     * A piece that goes astray at a show finds its way home.
+     */
+    fun backLabels(ctx: Context, s: Settings, works: List<Artwork>): File {
+        val pdf = pdf(ctx, s, "", margin = 36, footer = false)
+        val cols = 2; val rows = 4
+        val cw = pdf.width / cols.toFloat(); val ch = (pdf.pageHeight - 72) / rows.toFloat()
+        val guide = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFBDBEBA.toInt(); strokeWidth = 0.5f }
+        works.forEachIndexed { i, a ->
+            if (i % (cols * rows) == 0) pdf.newPage()
+            val c = pdf.canvas()
+            val col = (i % (cols * rows)) % cols; val row = (i % (cols * rows)) / cols
+            val x = pdf.left + col * cw; val y = 36f + row * ch
+            val m = 8f
+            listOf(x to y, x + cw to y, x to y + ch, x + cw to y + ch).forEach { (px, py) -> c.drawLine(px - m, py, px + m, py, guide); c.drawLine(px, py - m, px, py + m, guide) }
+            val pad = 18f; var ty = y + pad
+            fun put(t: CharSequence, size: Float, face: Pdf.Face = Pdf.Face.BODY, grey: Boolean = false, gap: Float = 3f) {
+                val l = pdf.layout(t, (cw - 2 * pad).toInt(), size, face, grey)
+                c.save(); c.translate(x + pad, ty); l.draw(c); c.restore(); ty += l.height + gap
+            }
+            put("TOP", 8f, Pdf.Face.BOLD, grey = true, gap = 4f)
+            put(name(s), 11f, Pdf.Face.BOLD, gap = 4f)
+            put(SpannableStringBuilder(pdf.em(a.title.ifBlank { "Untitled" })).append(if (a.year > 0) ", ${a.year}" else ""), 10.5f, gap = 4f)
+            details(a).forEach { put(it, 9f) }
+            ty += 3f
+            put(listOf(s.email, s.phone, s.website).filter { it.isNotBlank() }.joinToString("   "), 8.5f)
+            put(inventoryNo(s, a) + "   Please handle by the frame, not the surface.", 7.5f, grey = true)
+        }
+        return pdf.save(out(ctx, docName(s, "Back_labels")))
+    }
+
+
 
     fun certificate(ctx: Context, s: Settings, a: Artwork, number: Int): File {
         val pdf = pdf(ctx, s, "", margin = 72, footer = false)

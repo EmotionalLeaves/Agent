@@ -204,6 +204,8 @@ class Settings(ctx: Context) {
     var feedbackQuestions by S("feedbackQuestions")
     var feedbackVotes by S("feedbackVotes")
     var feedbackAskedAt by L("feedbackAskedAt", 0)
+    /** Ready-to-hang checks ticked per piece: "id:bits,id:bits". */
+    var hangChecks by S("hangChecks")
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")

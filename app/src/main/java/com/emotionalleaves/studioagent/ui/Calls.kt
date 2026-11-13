@@ -594,6 +594,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                         val f = Papers.flyer(ctx, st, o.title, listOf(o.venue, o.city).filter { it.isNotBlank() }.joinToString(", "), o.exhibitionDates, opening, chosen.firstOrNull())
                         withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Flyer") }
                     OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.imageList(ctx, st, chosen, true); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Price list") }
+                    OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.backLabels(ctx, st, chosen); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Back labels") }
                     OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, chosen)) }) { Text("Print and framing order") }
                 }
                 if (o.commission > 0) Note("Commission ${"%.0f".format(o.commission)}%: " + chosen.filter { it.price > 0 && !it.nfs }.joinToString("; ") { "${it.title}: you receive ${money(it.price * (1 - o.commission / 100))}" })

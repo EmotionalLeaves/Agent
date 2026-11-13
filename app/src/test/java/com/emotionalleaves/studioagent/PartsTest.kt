@@ -573,6 +573,17 @@ class PartsTest {
         assertEquals(pickup, get.date); assertEquals(wid, get.artworkId)
     }
 
+    @Test fun backLabelsAreMade() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"; G.settings.email = "jade@example.com"
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
+        val f = try { com.emotionalleaves.studioagent.work.Papers.backLabels(ctx, G.settings, (1..3).map { Artwork(id = it.toLong(), title = "Dish Pit $it", year = 2026, medium = "gouache", widthIn = 9.0, heightIn = 12.0) }) }
+            finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
+        assertEquals("Leaves_Back_labels.pdf", f.name)
+        assertTrue(File(docs, "Leaves_Back_labels_p1.png").length() > 1000)
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

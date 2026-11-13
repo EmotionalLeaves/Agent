@@ -507,6 +507,19 @@ fun WorkDetail(nav: NavController, id: Long) {
             }) { Text("Add these costs to my records") }
         }
 
+        // Before it leaves the studio: the physical checks for what it is, ticked once, and a label for its back.
+        if (w.status in setOf("finished", "documented", "available", "pending", "shown") && w.format != "digital") {
+            val tick by st.changed.collectAsState()
+            val items = com.emotionalleaves.studioagent.domain.HangReady.items(w.format, w.framed)
+            val bits = remember(tick, w.id) { com.emotionalleaves.studioagent.domain.HangReady.bits(st.hangChecks, w.id) }
+            val done = items.indices.count { bits and (1 shl it) != 0 }
+            Expand("Ready to hang ($done of ${items.size})") {
+                items.forEachIndexed { i, label ->
+                    Toggle(label, bits and (1 shl i) != 0) { on -> st.hangChecks = com.emotionalleaves.studioagent.domain.HangReady.set(st.hangChecks, w.id, i, on) }
+                }
+                OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.backLabels(ctx, st, listOf(w)); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Label for the back") }
+            }
+        }
         Expand("Price, edition and where it is") {
         var priceVersion by remember { mutableStateOf(0) }
         // The box is redrawn only when the rule fills it, so typing in it is never interrupted.

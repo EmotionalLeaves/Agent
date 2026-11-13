@@ -821,6 +821,27 @@ object CallReader {
 }
 
 
+/** The physical checks before a piece leaves the studio, by what it is. Ticks are kept as bits per piece. */
+object HangReady {
+    fun items(format: String, framed: Boolean): List<String> = buildList {
+        add("Signed (front or back)")
+        if (format == "print") { add("Printed on archival paper and checked in daylight"); add("Numbered, if it is an edition"); add("Certificate of authenticity printed") }
+        else add("Surface dry all the way through (and varnish cured, if varnished)")
+        if (framed || format == "print") add("Frame and glazing clean, nothing loose inside")
+        add("Hanging hardware on: D-rings and wire, or what the show asks for")
+        add("Label on the back")
+        add("Condition photo taken, front and back")
+    }
+
+    fun bits(stored: String, id: Long): Int = stored.split(",").firstOrNull { it.startsWith("$id:") }?.substringAfter(":")?.toIntOrNull() ?: 0
+
+    fun set(stored: String, id: Long, index: Int, on: Boolean): String {
+        val b = bits(stored, id).let { if (on) it or (1 shl index) else it and (1 shl index).inv() }
+        val rest = stored.split(",").filter { it.isNotBlank() && !it.startsWith("$id:") }
+        return (rest + (if (b != 0) listOf("$id:$b") else emptyList())).joinToString(",")
+    }
+}
+
 /** Sending work to a show far away: the box, the weight a carrier will charge for, and the steps, counted back from delivery. */
 object Shipping {
     /** Outside size of a double box: 2 inches of foam around the piece, then 2 more for the outer box. */
