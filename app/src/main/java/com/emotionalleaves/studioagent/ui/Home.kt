@@ -919,11 +919,11 @@ val lightPrompts = listOf(
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
 val whatsNew = listOf(
-    "Foundations: twelve weeks of short exercises, a practice session picks the next one, and a master to study from a museum's open collection.",
-    "Fresh eyes on any piece: flipped, no color, squinted, three or two values, thirds, its colors, and questions to look again with.",
-    "Selling: your prices in one place, commissions from quote to hand-over, selling at an opening, and Market day for a fair table.",
-    "Shows: group shows with other artists, an announcement for local listings, shipping help, back labels, and studio visits.",
-    "Calls say how far away they are; an entry can be split into 15-minute evenings; after a no, the same pieces go to the next call.",
-    "Being seen: post a piece, a series or how it was made; what people find when they look you up; and a check for offers that are too good to be true.",
-    "On You: Everything the app can do, in one list. Find anything takes a spoken question."
+    "Photograph every finished piece in one go, each checked and color-corrected, and start a new piece like any other with one tap.",
+    "Foundations now goes on to six weeks on building a body of work; Fresh eyes can compare a piece with its photo before.",
+    "Today: one goal a month (tell a friend), the art year's seasons, practice on quiet weeknights, and what the app did while you were away.",
+    "Is everything working? checks the daily run, listing sites, notifications, backups and the writing helper in plain words.",
+    "Posts vary week to week (a piece, how one was made, a series); a faint name on posted pictures if you like; post a show from its photos.",
+    "Each venue's page shows what has happened with them; your dates can go to another calendar; your hours and your prices side by side.",
+    "Sessions say when five minutes are left, and when bedtime is near. Ask answers common questions even without the writing helper."
 )
