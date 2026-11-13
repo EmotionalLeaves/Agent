@@ -332,6 +332,8 @@ fun WorkDetail(nav: NavController, id: Long) {
                 }
             }
         }
+        // Flip it, take the color away, squint: see it as a stranger would.
+        if (w.imagePath.isNotBlank() || w.status == "in_progress") TextButton(onClick = { nav.navigate("look/${w.id}") }) { Text("Look at it with fresh eyes") }
         // The piece at its real size on a gallery wall, framed, with a bench for scale.
         if (w.imagePath.isNotBlank() && w.widthIn > 0 && w.heightIn > 0) {
             var wall by remember(w.id) { mutableStateOf("") }

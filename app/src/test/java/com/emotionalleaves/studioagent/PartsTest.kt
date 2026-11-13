@@ -490,6 +490,23 @@ class PartsTest {
         assertTrue(com.emotionalleaves.studioagent.media.Post.caption("Study", 2026, "oil", "", "", "", available = false, inProgress = true).startsWith("In progress: Study"))
     }
 
+    @Test fun freshEyesViews() {
+        ctx
+        // Left half dark blue, right half light yellow.
+        val b = android.graphics.Bitmap.createBitmap(200, 100, android.graphics.Bitmap.Config.ARGB_8888)
+        for (x in 0 until 200) for (y in 0 until 100) b.setPixel(x, y, if (x < 100) android.graphics.Color.rgb(20, 30, 120) else android.graphics.Color.rgb(250, 240, 150))
+        val L = com.emotionalleaves.studioagent.media.Look
+        assertTrue(L.lum(L.flip(b).getPixel(10, 50)) > 200)
+        val g = L.gray(b).getPixel(150, 50); assertEquals(android.graphics.Color.red(g), android.graphics.Color.blue(g))
+        val two = L.values(b, 2); assertTrue(L.lum(two.getPixel(10, 50)) < 60 && L.lum(two.getPixel(190, 50)) > 200)
+        val pal = L.palette(b)
+        assertTrue(pal.take(2).sumOf { it.second } > 0.8)
+        assertTrue(pal.take(2).map { L.name(it.first) }.any { it.contains("blue") } && pal.take(2).map { L.name(it.first) }.any { it.contains("yellow") })
+        assertTrue(L.valueNotes(b).first().startsWith("A full range") || L.valueNotes(b).first().startsWith("A fair range"))
+        val flat = android.graphics.Bitmap.createBitmap(50, 50, android.graphics.Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.rgb(120, 120, 120)) }
+        assertTrue(L.valueNotes(flat).first().startsWith("The values sit close together"))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!
