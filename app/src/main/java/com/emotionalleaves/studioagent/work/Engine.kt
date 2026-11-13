@@ -313,7 +313,9 @@ object Engine {
         val planned = events.filter { it.type == "studio" && it.date >= now - DAY }.map { date(it.date) }.toMutableSet()
         val plannedStarts = events.filter { it.type == "studio" }.map { it.date }.toSet()
         val slots = if (custom) Planner.planFromTemplate(LocalDate.now(), template) else Planner.plan(
-            LocalDate.now(), Planner.days(st.workDays), Planner.time(st.workEnd, LocalTime.of(15, 30)), st.bufferMin,
+            // A week with different shifts: the days you are off work this week count as free days.
+            LocalDate.now(), Planner.days(st.workDays) - (if (st.offThisWeek.substringBefore(":") == weekId()) st.offThisWeek.substringAfter(":").split(",").mapNotNull { it.trim().toIntOrNull() }.toSet() else emptySet()),
+            Planner.time(st.workEnd, LocalTime.of(15, 30)), st.bufferMin,
             Planner.time(st.bedtime, LocalTime.of(22, 30)), st.weeklyHours
         )
         for (slot in slots) {

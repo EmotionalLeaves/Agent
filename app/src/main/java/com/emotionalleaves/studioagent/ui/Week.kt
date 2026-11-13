@@ -94,6 +94,11 @@ fun WeekScreen(nav: NavController) {
             com.emotionalleaves.studioagent.sys.Share.files(ctx, listOf(f), "text/calendar")
         }) { Text("Add these dates to another calendar") }
         Status(status)
+        // A week with different shifts: tick the days you are off work, and the studio times are planned again around them.
+        val wk = Engine.weekId()
+        DaysField("Off work this week (only this week)", if (st.offThisWeek.substringBefore(":") == wk) st.offThisWeek.substringAfter(":") else "") { d ->
+            st.offThisWeek = "$wk:$d"; scope.io { Engine.replan(ctx) }
+        }
         H("Studio times")
         if (!custom) {
             Small("The suggested week: two short evenings after work, the rest at the weekend.")

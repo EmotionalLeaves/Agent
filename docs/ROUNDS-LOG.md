@@ -524,3 +524,4 @@ One real change per round. Pushed and built every ten rounds.
 517. The page of a show you got into shows what you wrote after your last one ("Last time you wrote: ..."), so each show starts from the lesson of the one before.
 518. Today's "calls fit you this week" step opens Decide, one at a time, when there are two or more, and opening it counts as having looked.
 519. "New in this version" brought up to date with the rounds since 490.
+520. A week with different shifts: Your week has "Off work this week" days to tick; the studio times for this week are planned again around them, and next week goes back to your usual hours by itself.
