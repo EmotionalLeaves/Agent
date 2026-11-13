@@ -664,6 +664,21 @@ fun ApplScreen(nav: NavController, id: Long) {
             qa.forEachIndexed { i, (q, ans) ->
                 key(i, q) {
                     Field(q, ans, { v -> save(a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to v else p }), packDir = "")) }, lines = 3)
+                    // A budget question: add lines (what, how much) and the answer is written as a list with its total.
+                    if (q.contains("budget", ignoreCase = true)) Expand("Build the budget") {
+                        val item = rememberSaveable(i) { mutableStateOf("") }
+                        var cost by rememberSaveable(i) { mutableStateOf(0.0) }
+                        Field("What it pays for (for example: printing 10 works at 16 × 20 in)", item)
+                        key(ans) { Num("How much, " + st.currency, cost) { cost = it } }
+                        if (item.value.isNotBlank() && cost > 0) OutlinedButton(onClick = {
+                            val lines = ans.lines().filter { it.startsWith("- ") }.toMutableList()
+                            lines += "- " + item.value.trim() + ": " + money(cost)
+                            val total = lines.sumOf { l -> Regex("[0-9][0-9,]*(\\.[0-9]+)?").findAll(l.substringAfterLast(": ")).lastOrNull()?.value?.replace(",", "")?.toDoubleOrNull() ?: 0.0 }
+                            val text = lines.joinToString("\n") + "\nTotal: " + money(total)
+                            item.value = ""; cost = 0.0
+                            save(a.copy(answers = Engine.answersJson(qa.mapIndexed { j, p -> if (j == i) p.first to text else p }), packDir = ""))
+                        }) { Text("Add this line") }
+                    }
                     Row {
                         if (G.ai.ready) TextButton(enabled = !busy, onClick = {
                             busy = true; status = "Writing…"
