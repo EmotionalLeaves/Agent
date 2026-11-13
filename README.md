@@ -30,7 +30,19 @@ Four tabs, the same every time. Each thing has one place.
 - **Today**: the one next step, Start now, your week (tap it for the month calendar, studio times, pausing and session history), the next 7 days, the road to your first show, and anything waiting for your yes.
 - **Studio**: your pieces, series and parked ideas.
 - **Calls**: open calls this week, all of them (with a find box), and what you applied to as a board that follows each entry from chosen to the show and home again.
-- **You**, six rows: Statement, bio and CV; People and venues; Guide (with the five levels); Records (to-dos, money, sales, proof of what was sent); Settings; Help (the tour, plain answers, about).
+- **You**: Everything the app can do; Find anything (or ask a question);  Statement, bio and CV; People and venues; Guide (with the five levels); Records (to-dos, money, sales, proof of what was sent); Settings; Help (the tour, plain answers, about).
+
+## Everything else
+
+On You, **Everything the app can do** lists every tool, grouped by what you want to get done:
+
+- **Making the work**: sessions, Foundations (twelve weeks of basics, six on building a body of work, and a master to study from a museum's open collection), Fresh eyes (flip, no color, squint, values, thirds, colors, compare with the photo before, questions to look again with), planning a series, photographing every piece in one go, supplies.
+- **Showing it**: open calls with distance and your themes in the ranking, an entry prepared ahead for strong free calls (never sent without you), entries in 15-minute evenings, places near you, venue history, studio visits, group shows, announcements for local listings, shipping, labels, slides for a talk, an online show in one file.
+- **Selling it**: prices and raising them, commissions from quote to hand-over, selling at an opening, Market day with price tags, buyers thanked and kept in touch with.
+- **Being seen**: what jurors find when they search your name. Social media help is off unless you turn it on.
+- **Money and records**: receipts by photo, art trips by the mile, the year month by month and in one picture, insurance values, a tax page.
+
+Settings, Hours and calm has days off from the app, Calm Today, Wi-Fi-only checks, and the social media switch.
 
 ## Quick ways in
 
