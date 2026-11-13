@@ -563,6 +563,10 @@ fun ApplScreen(nav: NavController, id: Long) {
                 val key = "After: " + o.title
                 val note = docsAll.firstOrNull { it.type == "note" && it.title == key }
                 var lines by remember(id, note?.id) { mutableStateOf(note?.text.orEmpty()) }
+                // Last time's lesson, read before this show: the loop closes by itself.
+                docsAll.filter { it.type == "note" && it.title.startsWith("After: ") && it.title != key && it.text.isNotBlank() }.maxByOrNull { it.updatedAt }?.let { last ->
+                    Note("Last time (" + last.title.removePrefix("After: ") + ") you wrote: " + last.text.take(240))
+                }
                 Expand("After the show: two lines for next time") {
                     var noteId by remember(id) { mutableStateOf(note?.id ?: 0L) }
                     Field("What went well, and one thing to do differently", lines, { t -> lines = t; val nid = noteId
