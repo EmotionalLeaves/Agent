@@ -47,6 +47,12 @@ fun HealthScreen(nav: NavController) {
                 ai = if (t.isNotBlank()) "Working: the writing helper (${G.ai.who()}) answered." else "The writing helper gave an empty answer. Try again in a minute."
             }
         }) { Text("Check the writing helper") }
+        // Space on the phone: your pictures are kept; the files made for sending (PDFs, exports) can be cleared and made again any time.
+        fun size(f: java.io.File): Long = if (f.isDirectory) (f.listFiles()?.sumOf { size(it) } ?: 0L) else f.length()
+        val media = remember { size(com.emotionalleaves.studioagent.media.ImageTools.mediaDir(ctx)) }
+        var exports by remember { mutableStateOf(size(com.emotionalleaves.studioagent.media.ImageTools.exportDir(ctx))) }
+        Small("Your pictures use ${com.emotionalleaves.studioagent.domain.Texts.fileSize(media)}. Files made for sending use ${com.emotionalleaves.studioagent.domain.Texts.fileSize(exports)}.")
+        if (exports > 5_000_000) TextButton(onClick = { com.emotionalleaves.studioagent.media.ImageTools.exportDir(ctx).listFiles()?.forEach { it.deleteRecursively() }; exports = 0 }) { Text("Clear the files made for sending (they are made again when needed)") }
         Button(onClick = { nav.navigate("receipts") }) { Text("What the app did on its own") }
     }
 }
