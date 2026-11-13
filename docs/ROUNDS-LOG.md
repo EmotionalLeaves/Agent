@@ -399,3 +399,4 @@ One real change per round. Pushed and built every ten rounds.
 393. A series with nothing written about what ties it together has "Suggest a first try": one or two plain sentences from its works' titles and materials and your statement, to change into your own words.
 394. Venues from the map show how far away they are in the People list.
 395. People lists nearer places first within each group.
+396. The weekend suggestion to go and look picks the nearest place you have not visited, the easiest to actually go to.

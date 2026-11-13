@@ -1163,8 +1163,9 @@ object Engine {
         }
         // A weekend with nothing pressing: one real place near you to go and look at. Looking is the whole step.
         if (today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY)
-            dao.contactsNow().filter { it.status == "research" && it.revisitAt < now && it.kind != "subscriber" && it.notes.contains("OpenStreetMap") }
-                .maxByOrNull { it.createdAt }?.let { c ->
+            dao.contactsNow().filter { it.status == "research" && it.revisitAt < now && it.kind != "subscriber" && it.notes.contains("OpenStreetMap") && !it.notes.contains("Visited on") }
+                // The nearest one: the easiest to actually go to.
+                .minByOrNull { c -> Regex("(\\d+) (mi|km) away").find(c.notes)?.groupValues?.get(1)?.toIntOrNull() ?: (if (c.notes.contains("under 1")) 0 else 999) }?.let { c ->
                     val what = c.notes.substringBefore(".").ifBlank { "A place near you" }
                     return NextStep("Go and look at ${c.venue}", "$what. Look at the walls, pick up a card, ask who books shows if it feels easy. That is the whole step.", "contact/${c.id}")
                 }
