@@ -105,7 +105,7 @@ object Engine {
         currency = st.currency,
         feeBudgetLeft = feeLeft(ledger),
         goals = st.goals, blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts(),
-        friends = st.friendlyVenues.split("\n").filter { it.isNotBlank() }, region = st.region, milesTo = milesTo()
+        friends = st.friendlyVenues.split("\n").filter { it.isNotBlank() }, region = st.region, milesTo = milesTo(), themes = st.themes.split(",").map { it.trim() }.filter { it.isNotBlank() }
     )
 
     private fun geo(): Map<String, Pair<Double, Double>> = st.geoCache.lines().mapNotNull { l -> l.split("|").takeIf { it.size == 3 }?.let { (t, a, b) -> a.toDoubleOrNull()?.let { la -> b.toDoubleOrNull()?.let { lo -> t to (la to lo) } } } }.toMap()

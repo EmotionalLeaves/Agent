@@ -70,6 +70,8 @@ class Settings(ctx: Context) {
     var mediums by S("mediums", "digital, archival print")
     var route by S("route", "print")
     var goals by S("goals", "first group show")
+    /** What the work is about, in your own words, comma separated. */
+    var themes by S("themes")
     var blocked by S("blocked")
     var pricePerSqIn by D("pricePerSqIn", 1.5)
 

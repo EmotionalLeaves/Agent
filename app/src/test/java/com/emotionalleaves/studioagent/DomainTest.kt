@@ -559,4 +559,13 @@ class DomainTest {
         val t = com.emotionalleaves.studioagent.domain.Drafts.showTitles("Night Kitchen", "I draw the kitchen before the first shift starts. It is quiet then.", "Walk-in Cooler")
         assertEquals(listOf("Night Kitchen", "Before the first shift starts", "Walk-in Cooler and Other Pieces", "New Work"), t)
     }
+
+    @Test fun yourThemesComeForward() {
+        val S = com.emotionalleaves.studioagent.domain.Scoring
+        val o = com.emotionalleaves.studioagent.data.Opp(title = "Kitchen Stories: an open call", scope = "local")
+        val plain = S.score(o, com.emotionalleaves.studioagent.domain.Profile(level = 1)).first
+        val (score, why) = S.score(o, com.emotionalleaves.studioagent.domain.Profile(level = 1, themes = listOf("kitchens", "night")))
+        assertEquals(plain + 6, score); assertTrue(why.contains("About kitchens: one of your themes"))
+        assertEquals(plain, S.score(o, com.emotionalleaves.studioagent.domain.Profile(level = 1, themes = listOf("ocean"))).first)
+    }
 }

@@ -122,7 +122,9 @@ data class Profile(
     /** Your state or region, as you typed it, for calls open only to artists in certain places. */
     val region: String = "",
     /** How far (miles) each call's town is from you, by town name in lower case, where the map knows it. */
-    val milesTo: Map<String, Int> = emptyMap()
+    val milesTo: Map<String, Int> = emptyMap(),
+    /** What your work is about, in your words ("kitchens, night, labor"): calls on those themes come forward. */
+    val themes: List<String> = emptyList()
 )
 
 /** An existing CV, pasted as text, read into CV lines: section headings set the kind, a year at the start of a line sets the year. */
@@ -258,6 +260,9 @@ object Scoring {
         val w = base.mapIndexed { i, b -> b * p.rules.weights.getOrElse(i) { 2 }.coerceIn(1, 3) / 2.0 }
         val parts = listOf(theme, career, money, odds, effort, goal)
         var total = parts.indices.sumOf { parts[it] * w[it] } / w.sum()
+        // A call on one of your own themes: the work already answers it.
+        val callText = (o.title + " " + o.theme + " " + o.eligibility).lowercase()
+        p.themes.map { it.trim().lowercase() }.filter { it.length > 2 }.firstOrNull { t -> Regex("\\b" + Regex.escape(t.removeSuffix("s")) + "s?\\b").containsMatchIn(callText) }?.let { t -> total += 6; reasons += "About $t: one of your themes" }
         // Near enough to drive to and hang the work yourself: the easiest kind of first show. Far ones cost shipping.
         if (!o.online) p.milesTo[o.city.substringBefore(",").trim().lowercase()]?.let { mi ->
             when {
