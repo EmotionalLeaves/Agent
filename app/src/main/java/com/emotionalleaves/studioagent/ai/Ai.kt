@@ -253,6 +253,12 @@ class Ai(private val settings: Settings) {
             "Three short things to say about the work (one sentence each).\nThen: \"If they ask how you make it:\" and a one-sentence answer.\n" +
             "Then: \"If they ask what it is about:\" and a one-sentence answer.\nUse only these facts and the statement. No headings, no markdown.\n\nStatement:\n$statement\n\nFacts:\n$facts", maxTokens = 500))
 
+    /** One or two plain sentences on what ties a group of works together, from their titles and what the artist wrote. A starting point to edit. */
+    suspend fun seriesLine(name: String, works: String, statement: String): String =
+        clean(complete("You help an artist say what ties a series together. $dataRule One or two short, concrete sentences in the first person, plain words, no jargon. " +
+            "Use only what the titles, materials and the artist's words suggest; if unsure, describe what the works share on the surface.",
+            "<data>\nSeries: $name\nWorks: $works\nThe artist's statement: ${statement.take(800)}\n</data>", fast = true, maxTokens = 150))
+
     /** Five plain title ideas for a piece, from what the artist has written about it. Short, concrete, no art-speak. */
     suspend fun titles(notes: String, medium: String, series: String, statement: String): List<String> {
         val out = clean(complete("You suggest titles for an artwork. $dataRule Give five short titles (one to four words), concrete and plain, the way a working artist titles work: " +

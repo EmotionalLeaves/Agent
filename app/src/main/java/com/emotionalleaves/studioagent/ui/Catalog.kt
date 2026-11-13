@@ -222,6 +222,11 @@ fun Works(nav: NavController) {
                     Expand("Change this series") {
                     Field("Series name", name, { name = it; if (it.isNotBlank()) scope.io { dao.put(s.copy(name = it.trim(), notes = notes)) } })
                     Field("What ties these works together? (used for the series statement)", notes, { notes = it; scope.io { dao.put(s.copy(notes = it, name = name.trim().ifBlank { s.name })) } }, lines = 2, mic = true)
+                    // A blank box is the hardest part: a first try from the works' own titles and materials, to change into your words.
+                    if (notes.isBlank() && G.ai.ready && works.any { it.seriesId == s.id }) TextButton(onClick = { scope.io {
+                        val line = G.ai.seriesLine(name, works.filter { it.seriesId == s.id }.joinToString("; ") { w -> listOf(w.title, w.medium, w.year.takeIf { it > 0 }?.toString()).filterNotNull().filter { it.isNotBlank() }.joinToString(", ") }, Engine.pickStatement(150))
+                        if (line.isNotBlank()) { notes = line; dao.put(s.copy(notes = line, name = name.trim().ifBlank { s.name })) }
+                    } }) { Text("Suggest a first try") }
                     Whole("How many works you are aiming for", s.targetCount) { n -> if (n > 0) scope.io { dao.put(s.copy(targetCount = n, notes = notes, name = name.trim().ifBlank { s.name })) } }
                     DangerButton(onClick = { val members = works.filter { it.seriesId == s.id }; scope.remove("the series", { members.forEach { dao.put(it.copy(seriesId = 0)) }; dao.del(s) }, { dao.put(s); members.forEach { dao.put(it) } }) }) { Text("Delete this series (its works are kept)") }
                     }
