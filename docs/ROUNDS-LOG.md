@@ -603,3 +603,4 @@ One real change per round. Pushed and built every ten rounds.
 596. "New in this version" and the README catch up with rounds 571 to 595.
 597. Still sent, still safe. Opening a sent application a third time in one day, it says once, kindly, at the top: it is the same as last time, sent on that date, locked, nothing about it can change from here, and the answer will come to you. No counting shown, no scolding; just the fact that there is nothing left to check.
 598. Good enough to send. The third new picture of the same piece in a day, if it passes every check (light, sharpness, glare, size), ends with: "This picture is good enough to send; a juror will not see what a fourth would change."
+599. Asking "how many entries have I sent this year?" or "how many no's?" is answered on the phone: sent against the year's aim, yeses, no's and still to hear, with "every no counts toward the aim".

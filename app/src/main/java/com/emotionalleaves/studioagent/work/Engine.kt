@@ -1502,6 +1502,11 @@ object Engine {
             has("next show", "my show", "opening", "am i in") -> dao.eventsNow().filter { !it.done && it.date > now && it.type == "task" && it.title.startsWith("Go to the opening") }.minByOrNull { it.date }?.let { e ->
                 val t = dao.oppsNow().firstOrNull { it.id == e.oppId }?.title.orEmpty()
                 "Your next opening: ${t.ifBlank { "your show" }}, ${com.emotionalleaves.studioagent.ui.fmtDate(e.date)}.\nGO: calls" } ?: "No opening of yours is on the calendar yet. Calls that fit you are the way in.\nGO: calls"
+            has("sent this year", "entries this year", "applications this year", "how many entries", "how many applications", "rejection", "no's", "how many no") -> {
+                val y = LocalDate.now().year; val mine = dao.applsNow().filter { it.submittedAt > 0 && date(it.submittedAt).year == y }
+                val yes = mine.count { it.status == "accepted" }; val no = mine.count { it.status == "declined" }
+                "This year: ${Texts.count(mine.size, "entry", "entries")} sent of the ${st.yearSends} you aimed for; ${Texts.count(yes, "yes", "yeses")}, ${no} no${if (no == 1) "" else "'s"}, ${mine.size - yes - no} still to hear. Every no counts toward the aim.\nGO: calls"
+            }
             has("practice", "exercise", "foundation") -> com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone)?.let { "Next exercise: ${it.text}\nGO: session" } ?: "All the weeks of foundations are done. Any exercise from Practice is still there.\nGO: session"
             has("what should i do", "what next", "what do i do", "where do i start", "this weekend", "today") -> nextStep().let { "${it.title}. ${it.detail}" }
             // "What is a juried show?", "What does consignment mean?": the glossary, in plain words.
