@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -223,6 +225,8 @@ fun ContactScreen(nav: NavController, id: Long) {
         Field("Their submission instructions", c.submissionNotes, { save(c.copy(submissionNotes = it)) }, lines = 2)
         Field("Notes (what they show, who you met, openings you went to)", c.notes, { save(c.copy(notes = it)) }, lines = 3)
         }
+        // They said yes to a show of your own: one screen turns it into a dated plan.
+        if (c.status in setOf("sent", "followed_up", "interested", "more", "research")) OutlinedButton(onClick = { nav.navigate("plan/${c.id}") }, modifier = Modifier.fillMaxWidth()) { Text("They said yes to a show: plan it") }
         // A visit is real progress: log it in one tap, and the weekend suggestion moves on to the next place.
         if (c.status == "research") Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { save(c.copy(notes = (c.notes + "\nVisited on ${fmtDate(now())}.").trim(), revisitAt = now() + 120 * DAY)) }) { Text("I went and looked") }
@@ -379,5 +383,46 @@ fun UpdateScreen(nav: NavController) {
             }
         }) { Text("Open it in my mail app (${Texts.count(subs.size, "person", "people")}, blind copied)") }
         OutlinedButton(onClick = { st.lastNewsletter = now(); nav.popBackStack() }) { Text("I sent it") }
+    }
+}
+
+/** A venue agreed to show your work: the title, the opening date, how long it hangs, and which pieces. Everything else is planned from that. */
+@Composable
+fun PlanShow(nav: NavController, contactId: Long) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val contacts by dao.contacts().collectAsState(emptyList())
+    val works by dao.artworks().collectAsState(emptyList())
+    val c = contacts.firstOrNull { it.id == contactId }
+    if (c == null) { Screen("Plan the show", nav) { Loading() }; return }
+    val title = rememberSaveable { mutableStateOf("") }
+    var opening by rememberSaveable { mutableStateOf(java.time.LocalDate.now().plusWeeks(7).with(java.time.DayOfWeek.FRIDAY).toString()) }
+    var weeks by rememberSaveable { mutableStateOf(4) }
+    val picked = remember { androidx.compose.runtime.mutableStateListOf<Long>() }
+    var status by remember { mutableStateOf("") }
+    val ready = works.filter { Engine.available(it) }
+    Screen("Plan the show", nav) {
+        Intro("planshow", "A show of your own at ${c.venue.ifBlank { "this venue" }}. Give it a name and an opening date; every step is dated back from there and lands on Today when it is due.")
+        Field("Show title (for example: Before the First Shift)", title)
+        DateField("Opening day", opening) { opening = it }
+        Count("How long it hangs", weeks, 1, 16, 1, "weeks") { weeks = it }
+        Section("Which pieces")
+        if (ready.isEmpty()) Small("No pieces are marked Ready to send yet. You can plan now and choose them later on the show's page.")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            ready.forEach { w -> androidx.compose.material3.FilterChip(selected = w.id in picked, onClick = { if (w.id in picked) picked.remove(w.id) else picked.add(w.id) }, label = { Text(w.title.ifBlank { "Untitled #${w.id}" }) }) }
+        }
+        val day = try { java.time.LocalDate.parse(opening) } catch (e: Exception) { null }
+        if (day != null) {
+            Section("The plan")
+            Engine.ownShowSteps(day, weeks).forEach { (t, d) -> Row { Text(fmtDate(Engine.millis(d.atTime(12, 0))), Modifier.width(96.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(t, Modifier.weight(1f)) } }
+            if (day.isBefore(java.time.LocalDate.now().plusDays(21))) Small("That is soon. The early steps are already due; do them in order and skip what does not apply.")
+        }
+        Status(status)
+        Button(enabled = title.value.isNotBlank() && day != null, modifier = Modifier.fillMaxWidth(), onClick = {
+            scope.io({ status = it }) {
+                val id = Engine.planOwnShow(c, title.value.trim(), day!!, weeks, picked.toList())
+                withContext(Dispatchers.Main) { nav.navigate("appl/$id") { popUpTo("outreach") } }
+            }
+        }) { Text("Make the plan") }
     }
 }

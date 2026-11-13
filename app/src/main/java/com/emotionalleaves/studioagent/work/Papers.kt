@@ -279,6 +279,20 @@ object Papers {
         return pdf.save(File(dir, file))
     }
 
+    /** A one-page show flyer: the strongest image, the title, where and when, and the opening. Plain, so it reads from across a hall. */
+    fun flyer(ctx: Context, s: Settings, title: String, venue: String, dates: String, opening: String, image: Artwork?): File {
+        val pdf = pdf(ctx, s, "Flyer", margin = 54, footer = false)
+        image?.imagePath?.takeIf { it.isNotBlank() }?.let { pdf.image(it, pdf.pageHeight * 0.52f) }
+        pdf.text(title, 30f, face = Pdf.Face.DISPLAY, gap = 4f)
+        pdf.text(name(s), 16f, gap = 14f)
+        if (venue.isNotBlank()) pdf.text(venue, 14f, face = Pdf.Face.BOLD, gap = 2f)
+        if (dates.isNotBlank()) pdf.text(dates, 13f, gap = 10f)
+        if (opening.isNotBlank()) pdf.text("Opening: $opening. Free, all welcome.", 13f, gap = 10f)
+        image?.let { pdf.text(caption(it), 9f, grey = true, gap = 4f) }
+        listOf(s.website, s.email).filter { it.isNotBlank() }.forEach { pdf.text(it, 10f, grey = true, gap = 2f) }
+        return pdf.save(out(ctx, docName(s, "Flyer_" + title.filter { it.isLetterOrDigit() }.take(30))))
+    }
+
     /** A sheet for a clipboard at an opening or a table: name and email lines, and the one promise that makes people sign. */
     fun signupSheet(ctx: Context, s: Settings): File {
         val pdf = pdf(ctx, s, "Studio news", footer = false)

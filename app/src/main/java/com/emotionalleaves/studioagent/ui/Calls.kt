@@ -436,14 +436,27 @@ fun ApplScreen(nav: NavController, id: Long) {
         val chosen = works.filter { it.id in Engine.workIds(loaded) }
         Screen(o.title, nav) {
             Panel {
-                Text(when (loaded.status) { "accepted" -> "Accepted"; "declined" -> "Not this time"; else -> "Submitted. Done." }, fontWeight = FontWeight.SemiBold)
-                Text("Sent ${fmtDate(loaded.submittedAt)}.")
+                val own = o.sourceName == "Your own show"
+                Text(when { own -> "Your own show"; loaded.status == "accepted" -> "Accepted"; loaded.status == "declined" -> "Not this time"; else -> "Submitted. Done." }, fontWeight = FontWeight.SemiBold)
+                Text(if (own) (if (o.exhibitionDates.isNotBlank()) o.exhibitionDates + "." else "") else "Sent ${fmtDate(loaded.submittedAt)}.")
                 if (loaded.proofText.isNotBlank()) Note(loaded.proofText)
                 if (loaded.status == "submitted") Small("This application is locked. There is nothing left to check: the result comes to you" + (if (st.mailReady) " automatically." else " by email, and you record it below."))
                 if (loaded.status == "declined") Note("The works are free again and will be offered to the next call that fits.")
             }
             if (loaded.proofPath.isNotBlank()) PathImage(loaded.proofPath, Modifier.fillMaxWidth())
             chosen.forEach { Note(Papers.caption(it)) }
+            // A show planned before the pieces were ready: choose them here when they are.
+            if (loaded.status == "accepted" && o.sourceName == "Your own show") {
+                val more = works.filter { Engine.available(it) && it.id !in Engine.workIds(loaded) }
+                if (more.isNotEmpty()) {
+                    Small(if (chosen.isEmpty()) "Choose the pieces for this show:" else "Add a piece to the show:")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        more.forEach { w -> FilterChip(selected = false, onClick = { scope.io {
+                            dao.put(loaded.copy(workIds = (Engine.workIds(loaded) + w.id).joinToString(","))); dao.put(w.copy(status = "shown"))
+                        } }, label = { Text(w.title.ifBlank { "Untitled #${w.id}" }) }) }
+                    }
+                }
+            }
             Status(status)
             if (loaded.status == "submitted") {
                 H("Result")
@@ -461,6 +474,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                             dao.put(e.copy(done = c))
                             // Unsold work picked up: it is free for the next call.
                             if (c && e.title.startsWith("Pick up", ignoreCase = true)) { Engine.releaseShown(id); status = "Picked up. The unsold pieces can go out to the next call." }
+                            if (c && e.title.startsWith("Go to the opening", ignoreCase = true)) Engine.openingHappened(id)
                         } })
                         Column(Modifier.weight(1f)) { Text(e.title); if (e.date > 0) Note(fmtDate(e.date)) }
                         // A step with no day yet: give it one from the venue's email, so it reaches Today when due.
@@ -472,6 +486,11 @@ fun ApplScreen(nav: NavController, id: Long) {
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.labels(ctx, st, chosen); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Wall labels") }
+                    // A flyer with the first chosen piece: for a show of your own, or to pin up at work.
+                    OutlinedButton(onClick = { scope.io({ status = it }) {
+                        val opening = events.firstOrNull { it.applId == id && it.title.startsWith("Go to the opening", true) && it.date > 0 }?.let { fmtDate(it.date) + ", " + clock(it.date) }.orEmpty()
+                        val f = Papers.flyer(ctx, st, o.title, listOf(o.venue, o.city).filter { it.isNotBlank() }.joinToString(", "), o.exhibitionDates, opening, chosen.firstOrNull())
+                        withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Flyer") }
                     OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.imageList(ctx, st, chosen, true); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Price list") }
                     OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, chosen)) }) { Text("Print and framing order") }
                 }
