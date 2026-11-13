@@ -894,6 +894,8 @@ class PartsTest {
         assertEquals("letters", E.taskRoute("Email the library about the wall"))
         assertEquals("records", E.taskRoute("Call the framer"))
         assertEquals("people", E.taskRoute("Go again: Drop-in life drawing session"))
+        assertEquals("market", E.taskRoute("Market day: Eastside makers fair"))
+        assertEquals("market", E.taskRoute("Pack for the market (Market day has the list)"))
     }
 
     @Test fun aZineFromOneSheet() {

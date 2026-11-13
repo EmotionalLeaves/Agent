@@ -652,3 +652,4 @@ One real change per round. Pushed and built every ten rounds.
 645. An idea emptied from your head that names one of your pieces ("Night Shift could use a moon in the window") goes into that piece's notes as "Idea: ...", where you will see it while working on it, instead of the general ideas board. Undo puts the notes back as they were.
 646. "Put away" counts those ideas where they went: "1 idea in a piece's notes" beside the ones in Ideas.
 647. After closing a market day, "Another market coming up?" takes its date: the market and a packing evening two days before go on your to-dos, and both open Market day when they come up.
+648. The test of where to-dos open covers market days and packing evenings.
