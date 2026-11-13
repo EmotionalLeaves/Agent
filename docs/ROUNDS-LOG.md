@@ -470,3 +470,4 @@ One real change per round. Pushed and built every ten rounds.
 464. Foundations goes on past the basics: six more weeks on building a body of work (choosing a subject, a rule for the series, variation, editing down to the strongest, titles and words, and getting it ready to show), each with three weeknight-sized exercises, ending with saying yes to one call or place that suits the series.
 465. The daily check can wait for Wi-Fi and charging (Settings, Hours and calm), to save mobile data and battery; the change takes effect straight away.
 466. Your week can hand every coming date (deadlines, show steps, studio times, openings) to another calendar as one file to import, for a work or shared calendar the app cannot reach.
+467. Two new ready-made emails: asking an artist you admire for fifteen minutes of advice, and signing up for a portfolio review at an art center or college; and Help answers where to get honest feedback on your work.

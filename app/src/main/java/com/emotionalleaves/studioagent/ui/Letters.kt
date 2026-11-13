@@ -45,6 +45,11 @@ val letters = listOf(
             "Deposit: half when we agree, the rest when it is finished and you are happy with it\nTime: about [number] weeks from the deposit\n" +
             "Along the way: I will send you one sketch or draft to approve before I finish.\n\nI keep the copyright, as artists usually do; the piece itself is yours. " +
             "If that all sounds right, reply and I will send the details for the deposit.\n\n[ME]"),
+    Letter("Ask an artist you admire for a little advice", "Most artists remember being asked, and many say yes to fifteen minutes.", "A question from a newer artist",
+        "Hello [THEM],\n\nI have admired your work for a while, especially [one piece or show]. I am a newer artist, making [what you make] around my day job, and working toward my first shows.\n\n" +
+            "Would you have fifteen minutes, by phone or over coffee, for two or three questions about how you got started showing work? If not, I completely understand, and thank you for the work either way.\n\n[ME]\n[LINK]"),
+    Letter("Sign up for a portfolio review", "Art centers, colleges and some galleries hold review days where you show work and get frank advice.", "Portfolio review",
+        "Hello [THEM],\n\nI would like to sign up for a portfolio review at [PLACE] if there is a place open. I am an emerging artist working in [your medium]; my work is here: [LINK]\n\nCould you tell me the dates, any fee, and what to bring?\n\nThank you,\n\n[ME]"),
     Letter("Thank someone who bought your work", "The day after a sale. A buyer thanked is a buyer who comes back.", "Thank you",
         "Hello [THEM],\n\nThank you for giving my work a home. It means a great deal to me. If you ever send a photo of it where it hangs, I would love to see it, and I will let you know when I have new work or a show.\n\nWith thanks,\n\n[ME]"),
     Letter("New work, for someone who bought before", "Six months on. People who bought once are the likeliest to buy again.", "New work",
