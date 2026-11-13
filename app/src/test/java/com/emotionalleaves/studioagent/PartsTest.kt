@@ -881,4 +881,14 @@ class PartsTest {
         assertTrue(File(docs, "Leaves_Class_handout_p1.png").length() > 1000)
         assertEquals(3, W.homework("watercolor").size)
     }
+
+    @Test fun toDosOpenWhereTheyAreDone() {
+        ctx
+        val E = com.emotionalleaves.studioagent.work.Engine
+        assertEquals("teach", E.taskRoute("Teach: Drawing what is in front of you"))
+        assertEquals("supplies", E.taskRoute("Buy the supplies for \"Drawing\""))
+        assertEquals("outreach", E.taskRoute("Follow up with Gallery 4"))
+        assertEquals("letters", E.taskRoute("Email the library about the wall"))
+        assertEquals("records", E.taskRoute("Call the framer"))
+    }
 }
