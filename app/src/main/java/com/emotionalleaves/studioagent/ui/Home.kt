@@ -200,7 +200,7 @@ fun Home(nav: NavController) {
                 fun go(min: Int, tired: Boolean) {
                     buzz()
                     if (tired) { st.energy = "wiped"; st.energyDay = today.toString() }
-                    scope.io { Engine.quickStart(min); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } }
+                    scope.io { st.welcomedBack = now(); Engine.quickStart(min); if (st.dndInSession) Notifier.dnd(ctx, true); withContext(Dispatchers.Main) { nav.navigate("session") } }
                 }
                 Button(onClick = { go(st.defaultSessionMin, false) }, modifier = Modifier.fillMaxWidth().heightIn(min = 58.dp)) { Text("Start now, ${st.defaultSessionMin} minutes") }
                 FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {

@@ -1066,6 +1066,12 @@ object Engine {
         if (st.snoozeDay == today.toString()) return NextStep("Nothing else needs you today", "You set today's step aside. It will be back tomorrow.", "session")
         if (st.pausedUntil > now) return NextStep("Planning is paused", "Until ${date(st.pausedUntil)}. Nothing is being counted or missed. Start a session any time you feel like it.", "session")
         val works = dao.artworksNow(); val docs = dao.docsNow(); val series = dao.seriesNow()
+        // Back after a gap: no catching up, no list. Five minutes on the piece you were on is the whole step.
+        val lastSession = dao.sessionsNow().filter { it.end > it.start }.maxOfOrNull { it.end } ?: 0L
+        if (lastSession in 1..(now - 10 * DAY) && st.welcomedBack < lastSession) {
+            val piece = currentPiece(works)
+            return NextStep("Welcome back", "Nothing was missed and nothing needs catching up. " + (piece?.let { "Five minutes on ${it.title.ifBlank { "your piece" }} is the whole step." } ?: "Five minutes of anything is the whole step."), "session")
+        }
         val soon = dao.eventsNow().filter { it.type == "submit" && !it.done && it.date in (now - DAY)..(now + 4 * DAY) }
         val appls = dao.applsNow()
         soon.firstOrNull()?.let { e ->

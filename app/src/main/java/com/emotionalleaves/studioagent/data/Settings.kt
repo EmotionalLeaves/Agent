@@ -193,6 +193,8 @@ class Settings(ctx: Context) {
     var seenVersion by L("seenVersion", 0)
     /** Today shows only the next step and Start, for days when anything more is too much. */
     var calmToday by B("calmToday", false)
+    /** The last session end the "welcome back" step has been shown for, so it shows once per gap. */
+    var welcomedBack by L("welcomedBack", 0)
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")
