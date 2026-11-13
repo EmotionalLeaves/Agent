@@ -29,6 +29,8 @@ fun HealthScreen(nav: NavController) {
         val ran = st.lastDaily
         Check(ran > now - 2 * day, if (ran == 0L) "The daily check has not run yet. It runs once a day when the phone is online." else "Daily check: last ran ${fmtDate(ran)}, ${clock(ran)}." + (if (ran < now - 2 * day) " Phones sometimes pause apps to save battery: allow Studio Agent to run in the background in your phone's battery settings." else ""))
         if (st.wifiOnly) Small("It waits for Wi-Fi and charging, as you chose.")
+        // What went wrong last time, if anything, in the check's own words.
+        st.lastDailyStatus.split("; ").filter { it.contains(":") }.take(4).takeIf { it.isNotEmpty() }?.let { probs -> Small("Last time, these parts did not finish (each tries again tomorrow): " + probs.joinToString("; ")) }
         val on = sources.filter { it.enabled && it.kind == "url" }
         val ok = on.count { it.lastStatus.isNotBlank() && !it.lastStatus.startsWith("Could not read") }
         Check(on.isNotEmpty() && ok > 0, if (on.isEmpty()) "No listing sites are on. Turn some on in Calls, All, Where calls come from." else "Listing sites: $ok of ${on.size} read cleanly last time." + (if (ok == 0) " If none read, the phone may have been offline; it tries again tomorrow." else ""))
