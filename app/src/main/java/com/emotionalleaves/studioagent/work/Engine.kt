@@ -818,6 +818,14 @@ object Engine {
         return n
     }
 
+    /** A description of the piece's picture from its details and the colors actually in it (read on the phone). */
+    fun altTextFor(w: Artwork): String {
+        val b = if (w.imagePath.isNotBlank()) com.emotionalleaves.studioagent.media.ImageTools.decode(w.imagePath, 400) else null
+        val colors = b?.let { com.emotionalleaves.studioagent.media.Look.palette(it).filter { p -> p.second > 0.08 }.map { p -> com.emotionalleaves.studioagent.media.Look.name(p.first) } }.orEmpty().distinct()
+        val light = b?.let { com.emotionalleaves.studioagent.media.Look.valueNotes(it).firstOrNull() }?.let { n -> when { n.startsWith("A full range") -> "with strong darks and lights"; n.startsWith("The values sit close") -> "soft and even in tone"; else -> "" } }.orEmpty()
+        return com.emotionalleaves.studioagent.domain.Drafts.altText(w.title, Papers.medium(w), if (w.widthIn > 0) Texts.dims(w.widthIn, w.heightIn) else "", colors, light, w.notes)
+    }
+
     // ------------------------------------------------------------ commissions
 
     /** The steps of a piece made for someone, in order, with the day each falls on, counted from today to the promised day. */

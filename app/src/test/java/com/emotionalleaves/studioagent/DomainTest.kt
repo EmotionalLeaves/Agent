@@ -501,4 +501,10 @@ class DomainTest {
         val s = P.strays(listOf(a, b), 1.5)
         assertEquals(listOf(1L), s.map { it.first.id }); assertEquals(160.0, s[0].second, 0.0)
     }
+
+    @Test fun aPictureIsDescribed() {
+        val t = com.emotionalleaves.studioagent.domain.Drafts.altText("Walk-in Cooler", "Gouache on paper", "9 × 12 in", listOf("mid blue", "very light yellow", "dark gray"), "with strong darks and lights", "The cooler door at six in the morning, steam on the glass. Done in two sittings.")
+        assertEquals("A gouache on paper, 9 × 12 in, titled Walk-in Cooler. The cooler door at six in the morning, steam on the glass. Mostly mid blue, very light yellow and dark gray, with strong darks and lights.", t)
+        assertTrue(com.emotionalleaves.studioagent.domain.Drafts.altText("", "oil", "", emptyList(), "", "").startsWith("An oil."))
+    }
 }

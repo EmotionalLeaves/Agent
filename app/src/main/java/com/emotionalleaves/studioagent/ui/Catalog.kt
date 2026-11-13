@@ -576,6 +576,12 @@ fun WorkDetail(nav: NavController, id: Long) {
             }
         }
         OutlinedButton(onClick = { pickExtra.launch("image/*") }) { Text("Add a picture") }
+        // A description of the picture: web pages, Instagram and some entry forms ask for one, and screen readers read it.
+        if (w.imagePath.isNotBlank()) {
+            var alt by remember(w.id) { mutableStateOf(w.altText) }
+            Field("Description of the picture (for screen readers and forms)", alt, { alt = it; save(w.copy(altText = it)) }, lines = 3, mic = true)
+            if (alt.isBlank()) TextButton(onClick = { scope.io({ status = it }) { val t = Engine.altTextFor(w); withContext(Dispatchers.Main) { alt = t; save(w.copy(altText = t)) } } }) { Text("Write a first one for me") }
+        }
         Section("Files to send")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(enabled = w.imagePath.isNotBlank(), onClick = {

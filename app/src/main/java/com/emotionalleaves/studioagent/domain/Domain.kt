@@ -1059,6 +1059,18 @@ object Offers {
 
 /** Builds a first draft from the artist's own interview answers and CV facts. No AI, nothing invented. */
 object Drafts {
+    /**
+     * A description of the picture for people who cannot see it: what it is, its size, its main colors and
+     * light, and what it shows when your notes say. Nothing is guessed about the subject.
+     */
+    fun altText(title: String, medium: String, size: String, colors: List<String>, light: String, note: String): String {
+        val kind = medium.ifBlank { "artwork" }.lowercase()
+        val first = (if (kind.first() in "aeiou") "An " else "A ") + kind + (if (size.isNotBlank()) ", $size," else "") + (if (title.isNotBlank()) " titled $title." else ".")
+        val shows = note.split(Regex("(?<=[.!?])\\s+")).firstOrNull { it.length in 12..200 }?.trim()?.let { " " + sentence(it) }.orEmpty()
+        val col = if (colors.isNotEmpty()) " Mostly " + colors.take(3).let { if (it.size == 1) it[0] else it.dropLast(1).joinToString(", ") + " and " + it.last() } + (if (light.isNotBlank()) ", $light." else ".") else ""
+        return (first + shows + col).trim()
+    }
+
     /** A listing announcement: headline, what, when, where, free and open to all, a line about the artist, contact. */
     fun announcement(artist: String, title: String, venue: String, city: String, dates: String, opening: String, bio: String, media: String, count: Int, email: String, website: String): String {
         val who = artist.ifBlank { "A local artist" }

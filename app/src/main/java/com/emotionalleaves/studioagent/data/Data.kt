@@ -57,7 +57,9 @@ data class Artwork(
     val frameCost: Double = 0.0,
     /** A piece made for someone: the person (in People) and the day it is promised. */
     val clientId: Long = 0,
-    val dueDate: Long = 0
+    val dueDate: Long = 0,
+    /** A plain description of the picture, for screen readers, web pages and forms that ask for one. */
+    val altText: String = ""
 )
 
 @Entity
@@ -313,7 +315,7 @@ interface Dao {
 @Database(
     entities = [Artwork::class, Series::class, Sess::class, Idea::class, Doc::class, Fact::class, Opp::class,
         Appl::class, Contact::class, Evt::class, Ledger::class, Source::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class Db : RoomDatabase() {
@@ -341,7 +343,13 @@ abstract class Db : RoomDatabase() {
             }
         }
 
-        val MIGRATIONS: Array<Migration> get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Artwork ADD COLUMN altText TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        val MIGRATIONS: Array<Migration> get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
 
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {

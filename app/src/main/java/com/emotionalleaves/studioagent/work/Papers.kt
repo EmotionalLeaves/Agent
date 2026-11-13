@@ -489,7 +489,7 @@ object Papers {
             if (groups.size > 1) seriesNames[sid]?.takeIf { it.isNotBlank() }?.let { append("<h3 class=\"series\">${escape(it)}</h3>") } ?: if (sid == 0L && groups.size > 1) append("<h3 class=\"series\">Other work</h3>") else Unit
             list.forEach { (a, file) ->
                 val cap = "<em>${escape(a.title.ifBlank { "Untitled" })}</em>" + (if (a.year > 0) ", ${a.year}" else "") + details(a).joinToString("") { ", " + escape(it) }
-                append("<figure><img loading=\"lazy\" src=\"img/${escape(file)}\" alt=\"${escape(a.title.ifBlank { "Untitled" })} by $n\"><figcaption>$cap</figcaption></figure>")
+                append("<figure><img loading=\"lazy\" src=\"img/${escape(file)}\" alt=\"${escape(a.altText.ifBlank { a.title.ifBlank { "Untitled" } + " by " + n })}\"><figcaption>$cap</figcaption></figure>")
             }
         }
         if (installs.isNotEmpty()) {
