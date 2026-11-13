@@ -515,3 +515,4 @@ One real change per round. Pushed and built every ten rounds.
 509. Opening the app during work hours on a break shows "On a break? Five-minute jobs": saying yes or no to calls that fit, approving emails, parking an idea, reading a call in plain words, so the phone work is done in the day and the evening is for making.
 510. Decide, one at a time: the calls that fit you shown singly with what matters (where, when it closes, the fee, why it fits, the call in plain words) and big buttons for Yes (the entry is started), No, Not this year, or Skip, each with undo. From Calls when two or more fit, and from the five-minute jobs on a break.
      (The separate organizer-question button from round 484 is folded into the call page's existing "Ask them by email", so there is one way in.)
+511. Two more questions answered on the phone without the writing helper: how many hours you have made this week (against the hours you set), and when your next opening is.

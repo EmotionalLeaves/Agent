@@ -1450,6 +1450,14 @@ object Engine {
                 val w = dao.artworksNow()
                 "${Texts.count(w.count { available(it) }, "piece")} ready to send, ${w.count { it.status == "in_progress" }} in progress, ${w.count { it.status == "idea" }} ideas.\nGO: works"
             }
+            has("hours", "how long have i", "this week", "how much time") && !has("deadline") -> {
+                val monday = millis(LocalDate.now().with(DayOfWeek.MONDAY).atStartOfDay())
+                val h = dao.sessionsNow().filter { it.start >= monday && it.end > it.start }.sumOf { (it.end - it.start) / 3_600_000.0 }
+                "This week so far: ${"%.1f".format(h)} hours of making" + (if (st.weeklyHours > 0) " of the ${st.weeklyHours} you set." else ".") + "\nGO: week"
+            }
+            has("next show", "my show", "opening", "am i in") -> dao.eventsNow().filter { !it.done && it.date > now && it.type == "task" && it.title.startsWith("Go to the opening") }.minByOrNull { it.date }?.let { e ->
+                val t = dao.oppsNow().firstOrNull { it.id == e.oppId }?.title.orEmpty()
+                "Your next opening: ${t.ifBlank { "your show" }}, ${com.emotionalleaves.studioagent.ui.fmtDate(e.date)}.\nGO: calls" } ?: "No opening of yours is on the calendar yet. Calls that fit you are the way in.\nGO: calls"
             has("practice", "exercise", "foundation") -> com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone)?.let { "Next exercise: ${it.text}\nGO: session" } ?: "All twelve weeks of foundations are done. Any exercise from Practice is still there.\nGO: session"
             has("what should i do", "what next", "what do i do", "where do i start", "this weekend", "today") -> nextStep().let { "${it.title}. ${it.detail}" }
             else -> null
