@@ -866,9 +866,9 @@ val lightPrompts = listOf(
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
 val whatsNew = listOf(
-    "People: Find places near me shows real galleries, libraries, print labs and framers around you.",
-    "Calls now come from eight sites, including CaFÉ. Photograph a flyer in Calls to add one.",
-    "Applied is a board that follows each entry to the show and home again.",
-    "A venue said yes? Plan the show: dated steps, flyer, labels and an agreement.",
-    "Your week has a month calendar, and a Next step widget for your home screen."
+    "People: Find places near me shows real galleries, libraries, print labs and framers, and a walk past the ones you have not seen.",
+    "Calls come from eight sites, including CaFÉ. Photograph a flyer in Calls to add one; calls open only to other states are held back.",
+    "A venue said yes? Plan the show (or a one-day open studio): dated steps, flyer with a QR code, labels, an agreement, and a code to scan at the opening.",
+    "Your week has a month calendar that learns when you really work, and a Next step widget for your home screen.",
+    "Find anything, on You, finds a piece, a call, a person or a document by any word."
 )
