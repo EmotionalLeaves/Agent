@@ -12,6 +12,8 @@
         <intent><action android:name="android.media.action.IMAGE_CAPTURE" /></intent>
         <intent><action android:name="android.speech.action.RECOGNIZE_SPEECH" /></intent>
         <intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="mailto" /></intent>
+        <!-- Your focus app (a blocker such as Honest Lockout): listed so it can be chosen and opened when a session starts. -->
+        <intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent>
     </queries>
 
     <application

@@ -585,3 +585,4 @@ One real change per round. Pushed and built every ten rounds.
 578. Your entries as a spreadsheet, from Calls, Applied: every entry you have sent, with the date, the call, who ran it, the town, the kind, the fee, the works sent and what came of it. Your own record of where the work has gone, to keep or to hand to anyone who asks.
 579. Four more plain words for printing (PPI or DPI, TIFF, JPEG, bleed), and Photograph your pieces says that flat ones can be scanned, so "scan" finds it.
 580. Asking "what does DPI mean?" or "what is an honorarium?" finds words that share an entry with another ("PPI / DPI", "Stipend / honorarium", "Wire / D-rings").
+581. The Honest Lockout hand-off, from the first build's list. In Settings, Hours and calm, choose any app on the phone to open when a session starts (a blocker such as Honest Lockout, or any focus app); the session start screen then offers "Open Honest Lockout", so the lock goes on as the timer starts.

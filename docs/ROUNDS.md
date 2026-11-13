@@ -289,6 +289,7 @@ Simplicity
 | Corners are placed by hand (no automatic edge detection) | Round 571: flat pieces can be scanned with the phone's own scanner, which finds the edges and squares the picture up (hand cropping stays for canvases and framed work) |
 | Size is typed in, not measured | Round 573: a squared-up picture's shape is matched to standard paper and canvas sizes, offered with one tap |
 | "Odds" uses call tier, not yet your own history | Round 574: odds move toward your own yeses and no's at each kind of call |
+| Honest Lockout hand-off not built | Round 581: choose any installed app (Honest Lockout, for one) and the session screen opens it with one tap |
 | Studio playlist not built | Round 575: a playlist link, opened from the session screen |
 | JPEG exports only, no TIFF | Round 577: an uncompressed TIFF of the original for print labs, with the print resolution written in (still no colour-profile soft proof) |
 | No in-app glare check | Photos are checked for darkness, washed-out light, softness and glare spots as they come in |

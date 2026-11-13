@@ -252,6 +252,8 @@ class Settings(ctx: Context) {
     var buddy by S("buddy")
     /** A link to music for the studio, opened from the session screen. */
     var playlist by S("playlist")
+    /** A focus or blocker app to open when a session starts: "package|label". */
+    var focusApp by S("focusApp")
     /** Calls to send in a year; no's count toward it just the same. */
     var yearSends by I("yearSends", 24)
     /** The kinds of artist gathering you have been to, by key. */

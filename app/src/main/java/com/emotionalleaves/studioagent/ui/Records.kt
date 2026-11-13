@@ -435,7 +435,7 @@ val sectionNames = listOf(
 val settingIndex = listOf(
     "Your name, email, phone, website" to "you", "City and state" to "you", "Mediums, what your work is about" to "you", "Goals for the year" to "you", "Currency" to "you",
     "Days you work, work hours" to "hours", "Rest after work before studio time" to "hours", "Bedtime" to "hours", "Notifications a day" to "hours",
-    "Studio time in my calendar" to "hours", "Silence my phone during sessions (do not disturb)" to "hours", "A studio friend to text" to "hours", "Studio playlist, music" to "hours",
+    "Studio time in my calendar" to "hours", "Silence my phone during sessions (do not disturb)" to "hours", "A studio friend to text" to "hours", "Studio playlist, music" to "hours", "Focus or blocker app (Honest Lockout)" to "hours",
     "Calm Today" to "calm", "Days off from the app" to "calm", "Wi-Fi only, while charging" to "calm", "Social media help" to "calm", "Session length" to "calm",
     "Keep the screen on" to "calm", "Hide the gray explanations" to "calm",
     "Level and gates" to "rules", "Fee caps and monthly budget" to "rules", "Calls to send this year" to "rules", "Farthest distance for calls" to "rules",
@@ -558,6 +558,8 @@ fun SettingsScreen(nav: NavController, section: String) {
                 SText("A friend to text when you start (optional)", st.buddy) { st.buddy = it }
                 // The same music each time can become the cue that it is studio time.
                 SText("A studio playlist: paste its link (optional)", st.playlist) { st.playlist = it }
+                // A blocker or focus app of your own (Honest Lockout, for one): opened from the session screen, so the lock goes on as the timer starts.
+                FocusAppPicker()
                 Small("Your studio times themselves are on Today: tap Your week.")
             }
             "rules" -> {
@@ -757,3 +759,29 @@ fun SettingsScreen(nav: NavController, section: String) {
 val sectionIcons = mapOf("you" to Icons.Default.Person, "hours" to Icons.Default.Notifications, "rules" to Icons.Default.Build, "calm" to Icons.Default.Favorite,
     "writing" to Icons.Default.Edit, "ai" to Icons.Default.Star, "email" to Icons.Default.Email, "github" to Icons.Default.Share,
     "backup" to Icons.Default.Refresh, "permissions" to Icons.Default.Lock)
+
+/** Choose an installed app to open when a session starts, such as an app blocker. */
+@Composable
+fun FocusAppPicker() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var open by remember { mutableStateOf(false) }
+    val tick by st.changed.collectAsState()
+    val chosen = if (tick >= 0) st.focusApp.substringAfter("|", "") else ""
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(if (chosen.isBlank()) "A focus or blocker app to open when a session starts" else "Opened when a session starts: $chosen", Modifier.weight(1f))
+        TextButton(onClick = { open = true }) { Text(if (chosen.isBlank()) "Choose" else "Change") }
+    }
+    if (chosen.isNotBlank()) TextButton(onClick = { st.focusApp = "" }) { Text("None") }
+    if (open) {
+        val apps = remember {
+            val pm = ctx.packageManager
+            val i = android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_LAUNCHER)
+            try { pm.queryIntentActivities(i, 0).filter { it.activityInfo.packageName != ctx.packageName }
+                .map { it.activityInfo.packageName to it.loadLabel(pm).toString() }.distinctBy { it.first }.sortedBy { it.second.lowercase() } } catch (e: Exception) { emptyList() }
+        }
+        androidx.compose.material3.AlertDialog(onDismissRequest = { open = false }, confirmButton = { TextButton(onClick = { open = false }) { Text("Close") } },
+            title = { Text("Which app?") },
+            text = { androidx.compose.foundation.lazy.LazyColumn { items(apps.size) { k -> val (pkg, label) = apps[k]
+                TextButton(onClick = { st.focusApp = "$pkg|$label"; open = false }, modifier = Modifier.fillMaxWidth()) { Text(label, Modifier.fillMaxWidth()) } } } })
+    }
+}
