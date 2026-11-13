@@ -219,7 +219,7 @@ fun Home(nav: NavController) {
                             // When it is all too much: three quiet days, the step shrinks to five minutes, everything else waits.
                             DropdownMenuItem(text = { Text("It is all too much") }, onClick = { st.calmUntil = System.currentTimeMillis() + 3 * 86_400_000L; menu = false })
                             DropdownMenuItem(text = { Text("Pin my own step") }, onClick = { pinning = true; menu = false })
-                            DropdownMenuItem(text = { Text(if (calm) "Show everything on Today" else "Calm Today: just this step") }, onClick = { if calm { st.calmToday = false; st.calmUntil = 0 } else st.calmToday = true; menu = false })
+                            DropdownMenuItem(text = { Text(if (calm) "Show everything on Today" else "Calm Today: just this step") }, onClick = { if (calm) { st.calmToday = false; st.calmUntil = 0 } else st.calmToday = true; menu = false })
                         }
                     }
                 }
