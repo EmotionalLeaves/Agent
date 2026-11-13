@@ -527,9 +527,11 @@ fun SearchScreen(nav: NavController) {
         val todo = eventsAll.filter { it.type == "task" && !it.done && hit(it.title) }.take(5)
         val tl = toolGroups.flatMap { it.second }.filter { hit(it.first, it.second) }.take(4)
         if (tl.isNotEmpty()) { Section("Tools"); tl.forEach { (t, why, r) -> IconRow(Icons.Default.Menu, t, why) { nav.navigate(r) } } }
+        val plain = if (question) emptyList() else (basics + glossary).filter { hit(it.first) }.take(3)
+        if (plain.isNotEmpty()) { Section("Plain answers"); plain.forEach { (q0, a0) -> Panel { Text(q0, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold); Text(a0, style = androidx.compose.material3.MaterialTheme.typography.bodyMedium) } } }
         val setHits = settingIndex.filter { hit(it.first) }.take(4)
         if (setHits.isNotEmpty()) { Section("Settings"); setHits.forEach { (label, id) -> IconRow(Icons.Default.Settings, label, "Settings, " + (sectionNames.firstOrNull { it.first == id }?.second ?: "")) { nav.navigate("settings/$id") } } }
-        if (!question && words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty() && i.isEmpty() && sn.isEmpty() && todo.isEmpty() && tl.isEmpty() && setHits.isEmpty()) Small("Nothing matches that.")
+        if (!question && words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty() && i.isEmpty() && sn.isEmpty() && todo.isEmpty() && tl.isEmpty() && setHits.isEmpty() && plain.isEmpty()) Small("Nothing matches that.")
         if (todo.isNotEmpty()) { Section("To do"); todo.forEach { x -> IconRow(Icons.Default.DateRange, x.title, fmtDate(x.date)) { nav.navigate(if (x.artworkId > 0) "work/${x.artworkId}" else if (x.applId > 0) "appl/${x.applId}" else com.emotionalleaves.studioagent.work.Engine.taskRoute(x.title)) } } }
         if (w.isNotEmpty()) { Section("Pieces"); w.forEach { x -> IconRow(Icons.Default.Edit, x.title.ifBlank { "Untitled" }, statusWords(x.status)) { nav.navigate("work/${x.id}") } } }
         if (c.isNotEmpty()) { Section("Calls"); c.forEach { x -> IconRow(Icons.Default.DateRange, x.title, listOf(x.organiser, x.city).filter { it.isNotBlank() }.joinToString(", ")) { nav.navigate("call/${x.id}") } } }
