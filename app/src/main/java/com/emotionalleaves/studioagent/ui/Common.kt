@@ -505,7 +505,8 @@ fun SearchScreen(nav: NavController) {
         }) { Text("Ask") }
         if (answer.isNotBlank()) {
             val go = Regex("(?m)^\\s*GO:\\s*(\\w+)\\s*$").find(answer)?.groupValues?.get(1)?.lowercase()
-            val places = mapOf("calls" to "Open Calls", "week" to "This week", "works" to "Your pieces", "materials" to "Your materials", "outreach" to "People and venues", "nearby" to "Places near you", "records" to "Records", "guide" to "Help", "session" to "Start a session")
+            val places = mapOf("calls" to "Open Calls", "week" to "This week", "works" to "Your pieces", "materials" to "Your materials", "outreach" to "People and venues", "nearby" to "Places near you", "records" to "Records", "guide" to "Help", "session" to "Start a session", "glossary" to "Words calls use") +
+                toolGroups.flatMap { it.second }.associate { it.third to it.first }
             Panel {
                 Text(answer.replace(Regex("(?m)^\\s*GO:.*$"), "").trim())
                 if (go != null && go in places) androidx.compose.material3.TextButton(onClick = { nav.navigate(go) }) { Text("Go to " + places[go]) }

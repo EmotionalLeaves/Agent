@@ -1484,8 +1484,28 @@ object Engine {
                 "Your next opening: ${t.ifBlank { "your show" }}, ${com.emotionalleaves.studioagent.ui.fmtDate(e.date)}.\nGO: calls" } ?: "No opening of yours is on the calendar yet. Calls that fit you are the way in.\nGO: calls"
             has("practice", "exercise", "foundation") -> com.emotionalleaves.studioagent.domain.Foundations.next(st.foundationsDone)?.let { "Next exercise: ${it.text}\nGO: session" } ?: "All twelve weeks of foundations are done. Any exercise from Practice is still there.\nGO: session"
             has("what should i do", "what next", "what do i do", "where do i start", "this weekend", "today") -> nextStep().let { "${it.title}. ${it.detail}" }
+            // "What is a juried show?", "What does consignment mean?": the glossary, in plain words.
+            has("what is", "what's", "what are", "what does", "mean", "define", "meaning of") -> glossaryAnswer(q) ?: toolAnswer(q)
+            // "How do I price my work?", "Where can I make postcards?": the tool that does it.
+            has("how do i", "how can i", "where do i", "where can i", "can the app", "is there a way", "help me") -> toolAnswer(q) ?: glossaryAnswer(q)
             else -> null
         }
+    }
+
+    /** The glossary entry a question names: its main words or the words in brackets ("Call for art (open call)"). */
+    fun glossaryAnswer(q: String): String? = com.emotionalleaves.studioagent.ui.glossary.firstOrNull { (term, _) ->
+        val t = term.lowercase()
+        (listOf(t.substringBefore(" (")) + Regex("\\(([^)]*)\\)").findAll(t).map { it.groupValues[1] }.toList()).any { k -> k.length > 2 && Regex("\\b" + Regex.escape(k) + "s?\\b").containsMatchIn(q) }
+    }?.let { (term, def) -> "$term: $def\nGO: glossary" }
+
+    /** The tool whose name or description shares the question's main words, best match first. */
+    fun toolAnswer(q: String): String? {
+        val skip = setOf("how", "can", "where", "what", "the", "app", "there", "way", "help", "make", "my", "your", "with", "for", "about", "this", "that", "does", "should", "would", "could", "into", "from", "some", "work", "piece", "pieces")
+        val words = q.split(Regex("[^a-z]+")).filter { it.length > 3 && it !in skip }.map { it.removeSuffix("s") }
+        if (words.isEmpty()) return null
+        val best = com.emotionalleaves.studioagent.ui.toolGroups.flatMap { it.second }.map { t -> t to words.count { w -> (t.first + " " + t.second).lowercase().contains(w) } }
+            .filter { it.second > 0 }.maxByOrNull { it.second }?.first ?: return null
+        return "${best.first}: ${best.second}.\nGO: ${best.third}"
     }
 
     private fun statusWord(s: String) = when (s) { "in_progress" -> "in progress"; "documented", "available" -> "ready to send"; "pending" -> "out on a call"; else -> s.replace('_', ' ') }

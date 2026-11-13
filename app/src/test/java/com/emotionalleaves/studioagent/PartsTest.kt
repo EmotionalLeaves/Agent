@@ -810,4 +810,15 @@ class PartsTest {
         // Two sheets: fronts and backs each.
         assertTrue(File(docs, "Leaves_Postcards_p4.png").length() > 1000)
     }
+
+    @Test fun plainAnswersWithoutTheHelper() {
+        ctx
+        val E = com.emotionalleaves.studioagent.work.Engine
+        assertTrue(E.glossaryAnswer("what does consignment mean?")!!.startsWith("Consignment:"))
+        assertTrue(E.glossaryAnswer("what is an open call")!!.startsWith("Call for art (open call):"))
+        assertEquals(null, E.glossaryAnswer("what is the weather"))
+        assertTrue(E.toolAnswer("how do i make postcards")!!.endsWith("GO: market"))
+        assertTrue(E.toolAnswer("where can i teach a class")!!.endsWith("GO: teach"))
+        assertEquals(null, E.toolAnswer("how do i"))
+    }
 }
