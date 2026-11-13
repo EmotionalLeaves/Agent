@@ -680,9 +680,9 @@ class DomainTest {
     @Test fun anAnswerWrittenOnceIsOfferedAgain() {
         val B = com.emotionalleaves.studioagent.domain.AnswerBank
         val past = listOf(
-            B.Past("Tell us about your practice (100 words)", "I draw the kitchen at five in the morning.", "Winter Open"),
-            B.Past("What are your influences?", "Degas's laundresses.", "Spring Show"),
-            B.Past("Describe your artwork", "", "Blank one"))
+            com.emotionalleaves.studioagent.domain.AnswerBank.Past("Tell us about your practice (100 words)", "I draw the kitchen at five in the morning.", "Winter Open"),
+            com.emotionalleaves.studioagent.domain.AnswerBank.Past("What are your influences?", "Degas's laundresses.", "Spring Show"),
+            com.emotionalleaves.studioagent.domain.AnswerBank.Past("Describe your artwork", "", "Blank one"))
         assertEquals("Winter Open", B.best("Describe your work", past)?.from)
         assertEquals("Spring Show", B.best("Who or what inspires you?", past)?.from)
         assertEquals(null, B.best("Will you need help hanging?", past))
