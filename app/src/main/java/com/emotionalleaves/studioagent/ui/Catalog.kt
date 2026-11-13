@@ -137,7 +137,6 @@ fun Works(nav: NavController) {
                 Button(enabled = !adding, onClick = { adding = true; scope.io({ adding = false }) { val id = dao.put(newWork()); withContext(Dispatchers.Main) { adding = false; nav.navigate("work/$id") } } }, modifier = Modifier.weight(1f)) { Text("Add a piece") }
                 OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("From my files", maxLines = 1) }
             }
-            TextButton(onClick = { nav.navigate("commission") }) { Text("Someone wants a piece made for them") }
             val unphotographed = works.count { it.imagePath.isBlank() && it.status in setOf("finished", "documented", "available") && it.format != "digital" }
             if (unphotographed >= 2) TextButton(onClick = { nav.navigate("photoshoot") }) { Text("Photograph ${Texts.count(unphotographed, "finished piece")} in one go") }
             Status(importStatus)
@@ -205,6 +204,8 @@ fun Works(nav: NavController) {
                 val f = Papers.valueList(ctx, st, works.sortedWith(compareBy({ it.location }, { it.title })))
                 withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
             } }) { Text("For insurance: everything and its value (PDF)") }
+            // Rarely needed at the start, so it waits at the bottom with the other occasional things.
+            TextButton(onClick = { nav.navigate("commission") }) { Text("Someone wants a piece made for them") }
 
         } else {
             Note("A series is a group of works that belong together. Most calls and every solo show want one. Ten documented works in one series opens Level 1.")

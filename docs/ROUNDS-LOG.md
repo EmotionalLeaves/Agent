@@ -598,3 +598,4 @@ One real change per round. Pushed and built every ten rounds.
 591. Then and now, in Foundations: once a month separates them, your first practice photo sits beside your newest, large, with their dates: "Same hands, 9 weeks of practice apart."
 592. Everything the app can do had grown to thirty tools in one long list. It now opens folded: five groups, each one line with how many tools and their names, opened one at a time; and the three tools you used last sit at the top under "Used lately".
 593. Settings, Hours and calm is grouped under three headings (Work and sleep; Notifications and calendar; Starting a session), and the optional helpers for starting (a friend, music, a focus app) are folded into one line until one is used.
+594. Studio leads with your pieces: "Someone wants a piece made for them", rarely needed at the start, moved from the top of the list to the bottom with the other occasional things (the catalogue, the insurance list).
