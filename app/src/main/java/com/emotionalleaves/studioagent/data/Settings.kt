@@ -173,6 +173,8 @@ class Settings(ctx: Context) {
     var lastNewsletter by L("lastNewsletter", 0)
     /** The next step as the home-screen widget shows it. */
     var widgetTitle by S("widgetTitle")
+    /** Strong, soon-closing calls already mentioned once, so none is announced twice. */
+    var urgentTold by S("urgentTold")
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")

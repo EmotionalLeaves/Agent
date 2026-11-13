@@ -558,6 +558,20 @@ object Engine {
         zip
     }
 
+    /** Every piece's history in one line each: the shows it was in and where it sold, oldest first. */
+    suspend fun workHistory(): Map<Long, List<String>> {
+        val opps = dao.oppsNow().associateBy { it.id }
+        val out = mutableMapOf<Long, MutableList<String>>()
+        dao.applsNow().filter { it.status == "accepted" }.sortedBy { it.submittedAt }.forEach { a ->
+            val o = opps[a.oppId] ?: return@forEach
+            workIds(a).forEach { id -> out.getOrPut(id) { mutableListOf() } += "Shown: " + listOf(o.title, o.venue, o.city).filter { it.isNotBlank() }.joinToString(", ") + (if (o.exhibitionDates.isNotBlank()) ", ${o.exhibitionDates}" else "") }
+        }
+        dao.ledgerNow().filter { it.kind == "sale" && it.artworkId > 0 }.sortedBy { it.date }.forEach { l ->
+            out.getOrPut(l.artworkId) { mutableListOf() } += "Sold ${com.emotionalleaves.studioagent.ui.fmtDate(l.date)}" + l.note.substringAfter(", to ", "").let { if (it.isBlank()) "" else " to $it" }
+        }
+        return out
+    }
+
     /** The covering email for an application: short, formal, and naming exactly what is attached. */
     fun applicationEmail(opp: Opp, chosen: List<Artwork>, statement: String): String = buildString {
         val to = listOf(opp.organiser, opp.venue).firstOrNull { it.isNotBlank() }
@@ -1189,6 +1203,14 @@ object Engine {
             dao.eventsNow().firstOrNull { it.type == "submit" && !it.done && it.date in (now - DAY)..(now + 2 * DAY) }?.let {
                 Notifier.post(ctx, st, 101, it.title, "This one has a deadline this week.", "appl/${it.applId}")
             }
+            // A strong call that closes before the weekend notice would reach you: said once, the day it is found.
+            val told = st.urgentTold.split(",").filter { it.isNotBlank() }.toMutableSet()
+            shortlist(dao.oppsNow(), profile(), now, stretchOk(now), 20).filter { it.fitScore >= 75 && it.deadline in (now + DAY)..(now + 10 * DAY) && it.id.toString() !in told }
+                .minByOrNull { it.deadline }?.let { o ->
+                    if (Notifier.post(ctx, st, 104, "A strong fit closes soon", "${o.title}: closes ${com.emotionalleaves.studioagent.ui.fmtDate(o.deadline)}. Yes or No takes a minute.", "call/${o.id}")) {
+                        told += o.id.toString(); st.urgentTold = told.toList().takeLast(50).joinToString(",")
+                    }
+                }
             // A show step due today or tomorrow (hang the work, the opening, pick-up): the one reminder that must not be missed.
             dao.eventsNow().filter { it.type == "task" && !it.done && it.date in now..(now + 2 * DAY) &&
                 Regex("deliver|hang|opening|pick up|ship", RegexOption.IGNORE_CASE).containsMatchIn(it.title) }.minByOrNull { it.date }?.let { e ->

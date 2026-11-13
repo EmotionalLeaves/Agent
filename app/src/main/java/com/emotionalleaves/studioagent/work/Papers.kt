@@ -134,6 +134,30 @@ object Papers {
         return pdf.save(out(ctx, docName(s, "Portfolio")))
     }
 
+    /**
+     * Your catalogue: every piece, two to a page, with its picture, full details, inventory number, edition, where it is,
+     * and its history (shows it was in, where it sold). The record a gallery or an estate would ask for.
+     */
+    fun catalogue(ctx: Context, s: Settings, works: List<Artwork>, history: Map<Long, List<String>>): File {
+        val pdf = pdf(ctx, s, "Catalogue")
+        pdf.text("Catalogue of works", 24f, face = Pdf.Face.DISPLAY, gap = 4f)
+        pdf.text(name(s) + ", " + LocalDate.now().year + ". " + works.size + (if (works.size == 1) " work." else " works."), 11f, grey = true, gap = 16f)
+        works.forEachIndexed { i, a ->
+            if (i > 0 && i % 2 == 0) pdf.newPage()
+            if (a.imagePath.isNotBlank()) pdf.image(a.imagePath, 250f)
+            pdf.text(caption(pdf, a), 11f, gap = 2f)
+            pdf.text(listOfNotNull(inventoryNo(s, a),
+                if (a.editionSize > 1) "edition of ${a.editionSize}, ${a.editionUsed} made" else null,
+                if (a.nfs) "not for sale" else if (a.price > 0) money(s, a.price) else null,
+                a.location.takeIf { it.isNotBlank() && it != "Studio" }?.let { "at $it" }
+            ).joinToString(". ") + ".", 9.5f, grey = true, gap = 2f)
+            history[a.id].orEmpty().forEach { pdf.text(it, 9.5f, gap = 1f) }
+            pdf.space(14f)
+            if (i % 2 == 0 && i < works.lastIndex) pdf.rule()
+        }
+        return pdf.save(out(ctx, docName(s, "Catalogue")))
+    }
+
     // ------------------------------------------------------------ image list and price list
 
     /**

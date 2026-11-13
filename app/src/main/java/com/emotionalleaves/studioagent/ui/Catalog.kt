@@ -162,6 +162,15 @@ fun Works(nav: NavController) {
                     withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "text/csv") }
                 }
             }) { Text("Export my inventory as a spreadsheet file") }
+            // The full record, with pictures and each piece's history of shows and sales.
+            if (works.any { it.imagePath.isNotBlank() }) TextButton(onClick = {
+                importStatus = "Making your catalogue…"
+                scope.io({ importStatus = it }) {
+                    val f = Papers.catalogue(ctx, st, works.filter { it.status != "idea" }.sortedWith(compareBy({ -it.year }, { it.title })), Engine.workHistory())
+                    importStatus = ""
+                    withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
+                }
+            }) { Text("Make my catalogue of works (PDF)") }
 
         } else {
             Note("A series is a group of works that belong together. Most calls and every solo show want one. Ten documented works in one series opens Level 1.")
