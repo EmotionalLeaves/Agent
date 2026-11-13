@@ -859,6 +859,14 @@ object CallReader {
 }
 
 
+/** Hours of making in each of the last [weeks] weeks (Monday to Sunday), oldest first. */
+object HoursByWeek {
+    fun of(today: LocalDate, sessions: List<Pair<LocalDate, Double>>, weeks: Int = 8): List<Double> {
+        val monday = today.with(java.time.DayOfWeek.MONDAY)
+        return (weeks - 1 downTo 0).map { k -> val start = monday.minusWeeks(k.toLong()); val end = start.plusDays(6); sessions.filter { !it.first.isBefore(start) && !it.first.isAfter(end) }.sumOf { it.second } }
+    }
+}
+
 /** Dates as a calendar file (.ics) any calendar app can import: deadlines, show steps and studio times. */
 object Ics {
     private fun stamp(ms: Long): String = java.time.Instant.ofEpochMilli(ms).atZone(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))

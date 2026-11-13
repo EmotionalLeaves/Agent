@@ -185,6 +185,19 @@ fun SessionsScreen(nav: NavController) {
     fun name(id: Long) = works.firstOrNull { it.id == id }?.let { it.title.ifBlank { "Untitled #${it.id}" } }.orEmpty()
     Screen("Session history", nav) {
         if (sessions.isEmpty()) Empty("No sessions yet. Each one you finish is listed here.")
+        // The last eight weeks at a glance, against the hours you set: steady beats heroic.
+        val hours = com.emotionalleaves.studioagent.domain.HoursByWeek.of(LocalDate.now(), sessions.filter { it.end > it.start }.map { Engine.date(it.start) to (it.end - it.start) / 3_600_000.0 })
+        if (hours.any { it > 0 }) Panel {
+            Text("The last eight weeks", fontWeight = FontWeight.SemiBold)
+            val top = maxOf(hours.max(), st.weeklyHours.toDouble(), 1.0)
+            val bar = MaterialTheme.colorScheme.primary; val goal = MaterialTheme.colorScheme.outline
+            androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(110.dp).semantics { contentDescription = hours.joinToString(", ") { "%.1f hours".format(it) } }) {
+                val w = size.width / hours.size
+                hours.forEachIndexed { i, h -> val bh = (h / top * size.height * 0.95).toFloat(); drawRect(bar, androidx.compose.ui.geometry.Offset(i * w + w * 0.2f, size.height - bh), androidx.compose.ui.geometry.Size(w * 0.6f, bh)) }
+                if (st.weeklyHours > 0) { val y = (size.height - st.weeklyHours / top * size.height * 0.95).toFloat(); drawLine(goal, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), 2f) }
+            }
+            Small("This week on the right." + (if (st.weeklyHours > 0) " The line is the ${st.weeklyHours} hours you set; a week under it still counts." else ""))
+        }
         sessions.take(60).forEach { s ->
             Panel {
                 Text(fmtDate(s.start) + ", ${((s.end - s.start) / 60000).coerceAtLeast(0)} min, ${mapOf("make" to "Make", "skill" to "Practice", "light" to "Light")[s.kind] ?: s.kind}" + name(s.artworkId).let { if (it.isNotBlank()) ", $it" else "" }, fontWeight = FontWeight.SemiBold)

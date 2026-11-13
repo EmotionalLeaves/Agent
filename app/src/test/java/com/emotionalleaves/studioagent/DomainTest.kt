@@ -587,4 +587,10 @@ class DomainTest {
         assertEquals(listOf("I make paintings of the kitchen..."), com.emotionalleaves.studioagent.domain.Texts.longSentences(long))
         assertTrue(com.emotionalleaves.studioagent.domain.Texts.longSentences("Short. Also short.").isEmpty())
     }
+
+    @Test fun hoursByWeek() {
+        val today = java.time.LocalDate.of(2027, 3, 10) // a Wednesday
+        val h = com.emotionalleaves.studioagent.domain.HoursByWeek.of(today, listOf(java.time.LocalDate.of(2027, 3, 8) to 1.5, java.time.LocalDate.of(2027, 3, 7) to 2.0, java.time.LocalDate.of(2027, 1, 1) to 9.0), 3)
+        assertEquals(listOf(0.0, 2.0, 1.5), h)
+    }
 }
