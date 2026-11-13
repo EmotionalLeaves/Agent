@@ -205,7 +205,7 @@ private fun PicCalm() {
             Hair()
             Check(true, "No streaks to break")
             Check(true, "Quiet during work and after 9 pm")
-            Check(true, "Works without any AI key or account")
+            Check(true, "Writing help is free and needs no key or account")
         }
     }
 }

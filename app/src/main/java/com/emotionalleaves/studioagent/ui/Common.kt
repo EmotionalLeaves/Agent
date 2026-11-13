@@ -209,6 +209,16 @@ fun Field(label: String, value: String, onValue: (String) -> Unit, lines: Int = 
     val speak = if (mic) rememberMic { said -> onValue((value + " " + said).trim()) } else null
     // Short labels float inside the box; long ones (a question, a hint) sit above it so they never wrap into the border.
     val above = label.length > 40
+    // The keyboard fits the box: @ for email, / and .com for web addresses, digits for phone numbers.
+    val l = label.lowercase()
+    val kind = when {
+        number -> KeyboardType.Decimal; secret -> KeyboardType.Password
+        lines > 1 || l.startsWith("paste") || l.startsWith("first") -> KeyboardType.Text
+        Regex("\\bemail\\b|sender address").containsMatchIn(l) && !l.contains("email to") -> KeyboardType.Email
+        Regex("website|web address|page address|\\blink\\b|\\burl\\b|their site").containsMatchIn(l) -> KeyboardType.Uri
+        Regex("\\bphone\\b").containsMatchIn(l) -> KeyboardType.Phone
+        else -> KeyboardType.Text
+    }
     if (above) Text(label, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp))
     OutlinedTextField(
         value = value, onValueChange = onValue, label = if (above || label.isBlank()) null else ({ Text(label) }), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
@@ -219,8 +229,8 @@ fun Field(label: String, value: String, onValue: (String) -> Unit, lines: Int = 
         singleLine = lines == 1, minLines = lines,
         trailingIcon = if (speak != null) ({ IconButton(onClick = speak) { MicIcon() } }) else null,
         keyboardOptions = KeyboardOptions(
-            keyboardType = if (number) KeyboardType.Decimal else if (secret) KeyboardType.Password else KeyboardType.Text,
-            capitalization = if (number || secret) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
+            keyboardType = kind,
+            capitalization = if (number || secret || kind != KeyboardType.Text) KeyboardCapitalization.None else KeyboardCapitalization.Sentences,
             imeAction = if (lines == 1) androidx.compose.ui.text.input.ImeAction.Next else androidx.compose.ui.text.input.ImeAction.Default
         ),
         visualTransformation = if (secret) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None

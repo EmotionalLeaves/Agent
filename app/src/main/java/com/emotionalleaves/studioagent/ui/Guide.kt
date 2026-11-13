@@ -189,6 +189,10 @@ val basics = listOf(
     "What is an artist CV?" to "A plain list of your education, exhibitions, awards and similar. A short one is completely normal when you start. The app adds a line each time you get into something.",
     "What happens if I get in?" to "You deliver or ship the framed work by a date, it hangs for a few weeks, and you collect whatever does not sell. Venues usually keep a share of any sale, called commission. The app turns the acceptance into a checklist.",
     "What if I am not chosen?" to "That is the usual result for everyone, including artists who show a lot. It is not a verdict on the work. The app frees the pieces for the next call and does not make you go over it.",
+    "What is pay-to-show, or a vanity gallery?" to "A place where the fee buys you a spot instead of a juror choosing the work: \"all artists accepted\", wall rental, hanging fees. It looks like a show but counts for little on a CV and costs a lot. The app marks these calls so you can say No without wondering.",
+    "What is a commission on sales?" to "The share of the price a venue keeps when your work sells there. Galleries usually take 30 to 50 percent; art centres and fairs often 20 to 30. Set your price so the part left after commission still feels fair to you.",
+    "What rights do I give when I enter a call?" to "Normally only the right to show pictures of your work to promote that show, with your name on them. You keep the copyright. Be careful with words like perpetual, irrevocable, exclusive or commercial use: those take much more. The app flags them.",
+    "What is an opening?" to "The free first evening of a show, open to anyone. People look at the work and talk. Going to openings, even just to look, is how people in local art slowly come to know your face. Nobody expects you to network.",
     "What are the levels in this app?" to "A way to keep the next step small. Level 0 is making your first series. Each level opens slightly bigger opportunities. You can ignore them, or set your level yourself in You, Settings, Your rules."
 )
 

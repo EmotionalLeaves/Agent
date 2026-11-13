@@ -145,6 +145,7 @@ fun Works(nav: NavController) {
             val shownWorks = works.filter { w ->
                 (show == "all" || w.status == show) && (q.isBlank() || listOf(w.title, w.tags, w.medium, w.status, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).any { it.lowercase().contains(q) })
             }
+            if (works.isNotEmpty() && shownWorks.isEmpty()) Empty("Nothing matches that.", "Show everything") { search.value = ""; show = "all" }
             shownWorks.take(limit).chunked(2).forEach { pair ->
                 // Hung like a wall: picture, then a small label underneath with title, year and size.
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {

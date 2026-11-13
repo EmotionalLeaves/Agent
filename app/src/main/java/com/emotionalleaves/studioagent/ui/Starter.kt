@@ -48,6 +48,6 @@ object Starter {
         val host = try { java.net.URI(url).host.orEmpty() } catch (e: Exception) { "" }.removePrefix("www.")
         val name = host.substringBefore('.').split('-', '_').filter { it.isNotBlank() }.joinToString(" ") { w -> w.replaceFirstChar { it.uppercase() } }
         val email = Regex("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}").find(pageText)?.value.orEmpty()
-        return Contact(venue = name, email = email, website = url, kind = "community", notes = "Added from their website without AI. Check the name and email.", createdAt = now)
+        return Contact(venue = name, email = email, website = url, kind = "community", notes = "Read from their website. Check the name and email.", createdAt = now)
     }
 }

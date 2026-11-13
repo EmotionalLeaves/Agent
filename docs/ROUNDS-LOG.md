@@ -12,3 +12,13 @@ One real change per round. Pushed and built every ten rounds.
 8. Number boxes read "$1,200", "12,5" and "16 in" correctly instead of saving zero.
 9. Dates follow the phone's own order with the weekday first ("Tue, Dec 22, 2026" in the US).
 10. Money in the app has thousands separators ($1,300.00).
+11. The keyboard fits the box: @ for email boxes, web keys for addresses, digits for phone, and no capital letter forced at the start.
+12. A Studio search with no matches says so and offers Show everything.
+13. All calls: open calls first, soonest deadline at the top; closed calls sink to the bottom.
+14. "Show 50 more" says how many, the same as Studio.
+15. The weekly calls notice waits for Sunday if Saturday's check falls in quiet hours, and is only marked sent once it really shows.
+16. When nothing fits your level, Calls says how many open calls are held back and opens All with one tap.
+17. Leftover "AI key" wording removed: the tour now says writing help is free and needs no key or account.
+18. Plain answers: what pay-to-show (a vanity gallery) is, and how the app marks it.
+19. Plain answers: commission on sales, with usual ranges.
+20. Plain answers: what rights you give when you enter, and what an opening is.

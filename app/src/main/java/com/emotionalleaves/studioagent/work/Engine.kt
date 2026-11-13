@@ -162,7 +162,7 @@ object Engine {
         return added
     }
 
-    /** Text (or a flyer photo) in, call records out. Needs an AI key. */
+    /** Text (or a flyer photo) in, call records out, read by the writing help and checked by the plain reader. */
     suspend fun ingest(text: String, sourceName: String, image: ByteArray? = null): Int {
         val raw = ai.extractCalls(text, sourceName, image)
         // A free model can miss or misread a date. When the page holds one call, the plain reader checks its work and fills gaps.
@@ -896,13 +896,14 @@ object Engine {
             if (LocalDate.now().dayOfWeek == DayOfWeek.SUNDAY && pend.isNotEmpty())
                 Notifier.post(ctx, st, 100, "Waiting for your yes", "${pend.size} " + (if (pend.size == 1) "thing" else "things") + ", about 10 minutes. One tap each.", "admin")
             // Once a week, on Saturday, one calm line if calls fit you: the app found them, you decide.
-            if (LocalDate.now().dayOfWeek == DayOfWeek.SATURDAY && now - st.lastCallsNotice > 5 * DAY) {
+            // If the check runs during quiet hours on Saturday, Sunday gets the notice instead; never both.
+            if (LocalDate.now().dayOfWeek in setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) && now - st.lastCallsNotice > 5 * DAY) {
                 val fit = shortlist(dao.oppsNow(), profile(), now, stretchOk(now), st.shortlistSize)
                 if (fit.isNotEmpty()) {
                     val soonest = fit.filter { it.deadline > 0 }.minByOrNull { it.deadline }
-                    Notifier.post(ctx, st, 102, if (fit.size == 1) "A call fits you this week" else "${fit.size} calls fit you this week",
+                    val sent = Notifier.post(ctx, st, 102, if (fit.size == 1) "A call fits you this week" else "${fit.size} calls fit you this week",
                         "Yes or No on each takes a minute." + (soonest?.let { " Nearest deadline: ${com.emotionalleaves.studioagent.ui.fmtDate(it.deadline)}." } ?: ""), "calls")
-                    st.lastCallsNotice = now
+                    if (sent) st.lastCallsNotice = now
                 }
             }
             dao.eventsNow().firstOrNull { it.type == "submit" && !it.done && it.date in (now - DAY)..(now + 2 * DAY) }?.let {

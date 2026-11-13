@@ -131,7 +131,10 @@ fun Calls(nav: NavController) {
                     else -> "Competitive calls, judged case by case."
                 })
                 if (list.isEmpty()) {
-                    Empty("No calls waiting. The app looks once a day on its own. When you see one anywhere, tap Share and choose Studio Agent, or paste it below.")
+                    val held = opps.count { it.status == "new" && it.deadline > now() }
+                    Empty(if (held > 0) "Nothing fits your level this week. ${Texts.count(held, "open call")} " + (if (held == 1) "is" else "are") + " under All, with the reason each is held back."
+                        else "No calls waiting. The app looks once a day on its own. When you see one anywhere, tap Share and choose Studio Agent, or paste it below.",
+                        if (held > 0) "Show all" else "") { tab = "all" }
                     var looking by remember { mutableStateOf(false) }
                     OutlinedButton(enabled = !looking, onClick = {
                         looking = true; status = "Looking at the listing sites. This takes a minute or two…"
@@ -199,7 +202,9 @@ fun Calls(nav: NavController) {
                 Small("Everything found, including calls your rules hold back, and why.")
                 IconRow(Icons.Default.Notifications, "Where calls come from", "Email alerts and pages the app checks each day") { nav.navigate("sources") }
                 var allLimit by rememberSaveable { mutableStateOf(50) }
+                // Open calls first, the soonest deadline at the top; closed ones sink to the bottom.
                 val everything = opps.filter { it.status in setOf("new", "later", "no", "expired") && kindOk(it) }
+                    .sortedWith(compareBy<Opp>({ it.status == "expired" || (it.deadline in 1 until now()) }, { if (it.deadline > 0) it.deadline else Long.MAX_VALUE }))
                 if (everything.size > allLimit) Small("Showing the first $allLimit of ${everything.size}.")
                 everything.take(allLimit).forEach { o ->
                     val why = Scoring.ineligible(o, p, now())
@@ -210,7 +215,7 @@ fun Calls(nav: NavController) {
                         Flags(o)
                     }
                 }
-                if (everything.size > allLimit) OutlinedButton(onClick = { allLimit += 50 }, modifier = Modifier.fillMaxWidth()) { Text("Show more") }
+                if (everything.size > allLimit) OutlinedButton(onClick = { allLimit += 50 }, modifier = Modifier.fillMaxWidth()) { Text("Show ${minOf(50, everything.size - allLimit)} more") }
             }
             else -> {
                 if (appls.isEmpty()) Empty("Nothing applied to yet. Say Yes to a call and the app builds the application.")
