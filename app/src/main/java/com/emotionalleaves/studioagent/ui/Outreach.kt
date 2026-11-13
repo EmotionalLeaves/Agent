@@ -216,6 +216,30 @@ fun Outreach(nav: NavController) {
             }) { Text("Add to my email list") }
             if (subs.isNotEmpty()) OutlinedButton(onClick = { Share.text(ctx, subs.joinToString(", ") { it.email }) }) { Text("Copy all addresses") }
         }
+        // The paper sign-up sheet, photographed: the emails on it are read on the phone and added to the list.
+        var sheetStatus by remember { mutableStateOf("") }
+        fun readSheet(path: String) {
+            sheetStatus = "Reading the sheet…"
+            scope.io({ sheetStatus = it }) {
+                val text = com.emotionalleaves.studioagent.media.Ocr.read(ctx, path)
+                val known = dao.contactsNow().map { it.email.lowercase() }.toMutableSet()
+                var added = 0
+                text.lines().forEach { line ->
+                    Regex("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}").find(line.replace(" @", "@").replace("@ ", "@"))?.let { m ->
+                        val mail = m.value.trimEnd('.', ',').lowercase()
+                        if (mail !in known) {
+                            known += mail; added++
+                            dao.put(Contact(name = line.substring(0, m.range.first).trim().trim(',', '-', ' '), email = mail, kind = "subscriber", status = "subscriber", notes = "From the sign-up sheet, ${fmtDate(now())}.", createdAt = now()))
+                        }
+                    }
+                }
+                sheetStatus = if (text.isBlank()) "No words could be read from that photo. Try again in good light, straight on." else if (added == 0) "No new email addresses found on the sheet." else "Added ${Texts.count(added, "person", "people")} from the sheet. Check the spelling of each below; handwriting is hard to read."
+            }
+        }
+        val sheetFile = remember { java.io.File(ctx.cacheDir, "signup_sheet.jpg") }
+        val sheetShot = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.TakePicture()) { ok -> if (ok) readSheet(sheetFile.absolutePath) }
+        OutlinedButton(onClick = { try { sheetShot.launch(Share.uri(ctx, sheetFile)) } catch (e: Exception) { sheetStatus = "The camera did not open." } }) { Text("Add from a photo of the sign-up sheet") }
+        if (sheetStatus.isNotBlank()) Small(sheetStatus)
         if (subs.isNotEmpty()) Button(onClick = { nav.navigate("update") }, modifier = Modifier.fillMaxWidth()) { Text("Write a studio update to them") }
         // The list grows in person: a sheet on a clipboard at an opening, a table, a studio visit.
         OutlinedButton(onClick = { scope.io { val f = Papers.signupSheet(ctx, st); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Print a sign-up sheet") }
