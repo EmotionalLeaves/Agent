@@ -659,6 +659,24 @@ class PartsTest {
         com.emotionalleaves.studioagent.ui.toolGroups.flatMap { it.second }.forEach { (name, _, route) -> assertTrue("$name -> $route", nav.contains("composable(\"$route\")") || nav.contains("\"$route\" ->") || nav.contains("route = \"$route\"")) }
     }
 
+    @Test fun autopilotPreparesOneStrongFreeEntry() = kotlinx.coroutines.runBlocking {
+        ctx
+        val now = System.currentTimeMillis(); val day = 86_400_000L
+        G.dao.put(Artwork(title = "Ready", status = "documented", imagePath = "/x/r.jpg", widthIn = 9.0, heightIn = 12.0, year = 2026))
+        G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Strong Free", scope = "local", rawText = "Free to enter. No entry fee.", fitScore = 85, deadline = now + 20 * day, status = "new"))
+        G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Strong Paid", scope = "local", fee = 25.0, rawText = "Entry fee $25.", fitScore = 95, deadline = now + 20 * day, status = "new"))
+        G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Too Soon", scope = "local", rawText = "Free to enter.", fitScore = 99, deadline = now + 5 * day, status = "new"))
+        val E = com.emotionalleaves.studioagent.work.Engine
+        G.settings.lastAutopilot = 0
+        val id = E.autopilot(ctx, now)
+        assertTrue(id > 0)
+        assertEquals("Strong Free", G.dao.oppsNow().single { o -> o.id == G.dao.applsNow().single { it.id == id }.oppId }.title)
+        assertEquals("draft", G.dao.applsNow().single { it.id == id }.status)
+        // Once a week at most, and never when switched off.
+        assertEquals(0L, E.autopilot(ctx, now + day))
+        G.settings.autopilot = false; assertEquals(0L, E.autopilot(ctx, now + 8 * day))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

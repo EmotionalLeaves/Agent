@@ -198,6 +198,9 @@ class Settings(ctx: Context) {
     var geoCache by S("geoCache")
     /** A flagged email's words, waiting to be shown on the offer check. */
     var checkText by S("checkText")
+    /** The daily check may prepare an entry by itself for a strong, free call (never sends it). At most one a week. */
+    var autopilot by B("autopilot", true)
+    var lastAutopilot by L("lastAutopilot", 0)
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

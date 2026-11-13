@@ -775,6 +775,26 @@ object Engine {
         }
     }
 
+    /**
+     * The non-creative work done ahead: for one strong, free call a week that you have the pieces for and at least ten days
+     * to look at, the entry is prepared in full (pieces chosen, statement, files). Nothing is sent: it waits for your look.
+     * Returns the entry's id, or 0.
+     */
+    suspend fun autopilot(ctx: Context, now: Long): Long {
+        if (!st.autopilot || now - st.lastAutopilot < 6 * DAY) return 0
+        val works = dao.artworksNow(); val ready = works.count { available(it) }
+        if (ready == 0) return 0
+        val entered = dao.applsNow().map { it.oppId }.toSet()
+        val o = shortlist(dao.oppsNow(), profile(), now, false, 7)
+            .filter { it.status == "new" && it.id !in entered && it.fee <= 0.0 && Texts.feeStated(it) && it.fitScore >= 80 && it.deadline > now + 10 * DAY && !it.guaranteed && !it.rightsGrab && ready >= maxOf(1, it.minWorks) }
+            .maxByOrNull { it.fitScore } ?: return 0
+        val id = createApplication(ctx, o)
+        st.lastAutopilot = now
+        st.log("Prepared an entry for ${o.title} (free, strong fit). Nothing was sent.")
+        Notifier.post(ctx, st, 120, "An entry is ready for your look", "${o.title}: free, a strong fit, closes ${com.emotionalleaves.studioagent.ui.fmtDate(o.deadline)}. Look it over and send, or say no.", "appl/$id")
+        return id
+    }
+
     // ------------------------------------------------------------ selling at a show
 
     /** The show a piece is in right now (an accepted entry it is part of, not yet released), or null. */
@@ -1679,6 +1699,7 @@ object Engine {
         // A few towns found on the map each day, so calls can say how far away they are.
         step("towns") { locateTowns() }
         step("rescore") { rescore() }
+        step("autopilot") { autopilot(ctx, now) }
         // Applications whose checks all pass get their files made overnight, so sending is one look and one tap.
         step("packs") {
             val works = dao.artworksNow(); val left = feeLeft(dao.ledgerNow())
