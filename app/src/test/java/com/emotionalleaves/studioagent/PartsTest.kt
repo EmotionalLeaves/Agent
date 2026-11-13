@@ -531,6 +531,30 @@ class PartsTest {
         assertTrue(E.planMaking(a, o).startsWith("Already planned"))
     }
 
+    @Test fun aCommissionStartToFinish() = kotlinx.coroutines.runBlocking {
+        ctx
+        val E = com.emotionalleaves.studioagent.work.Engine
+        G.settings.pricePerSqIn = 2.0
+        assertEquals(200.0, E.commissionPrice(8.0, 10.0), 0.01)
+        val due = java.time.LocalDate.now().plusWeeks(6)
+        val id = E.startCommission("Sam Rivera", "sam@example.com", "", "The diner on Fifth at night", 8.0, 10.0, 240.0, due)
+        val w = G.dao.artworksNow().single { it.id == id }
+        assertEquals("For Sam Rivera", w.title); assertEquals("idea", w.status); assertTrue(w.clientId > 0)
+        assertEquals("client", G.dao.contactsNow().single { it.id == w.clientId }.kind)
+        val steps = G.dao.eventsNow().filter { it.artworkId == id }.sortedBy { it.date }
+        assertEquals(listOf("Send the quote", "Deposit received", "Show them a draft", "Finish the piece", "Final payment received", "Hand it over"), steps.map { it.title })
+        val (subj, body) = E.commissionQuote(w, "Sam")
+        assertTrue(subj.contains("quote") && body.contains("Deposit: ") && body.contains("The diner on Fifth") && body.contains("copyright"))
+        E.commissionPaid(w, deposit = true)
+        E.commissionPaid(w, deposit = false)
+        val paid = G.dao.ledgerNow().filter { it.artworkId == id }
+        assertEquals(240.0, paid.sumOf { it.amount }, 0.01); assertEquals(2, paid.size)
+        E.commissionDelivered(G.dao.artworksNow().single { it.id == id })
+        assertEquals("sold", G.dao.artworksNow().single { it.id == id }.status)
+        assertTrue(G.dao.eventsNow().filter { it.artworkId == id }.all { it.done })
+        assertTrue(G.dao.factsNow().any { it.text == "Private collection" })
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

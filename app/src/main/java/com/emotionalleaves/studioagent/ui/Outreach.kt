@@ -60,7 +60,7 @@ fun kindTip(k: String): String = when (k) {
 
 /** A kind of venue in plain words. */
 fun kindWords(k: String): String = mapOf("campus" to "On your campus", "community" to "Community space", "artist_run" to "Artist-run space", "juror" to "Juror",
-    "nonprofit" to "Nonprofit art center", "university" to "University gallery", "curator" to "Curator", "commercial" to "Commercial gallery")[k] ?: k.replace('_', ' ').replaceFirstChar { it.uppercase() }
+    "nonprofit" to "Nonprofit art center", "university" to "University gallery", "curator" to "Curator", "commercial" to "Commercial gallery", "client" to "Commission client")[k] ?: k.replace('_', ' ').replaceFirstChar { it.uppercase() }
 
 fun statusWords(c: Contact): String = when (c.status) {
     "research" -> if (c.email.isBlank()) "Researched, no email address yet" else "Researched, no email written yet"
@@ -73,6 +73,7 @@ fun statusWords(c: Contact): String = when (c.status) {
     "not_now" -> "Not now"
     "no" -> "Said no"
     "subscriber" -> "On your email list"
+    "client" -> "Commission client"
     else -> c.status.replace('_', ' ').replaceFirstChar { it.uppercase() }
 }
 

@@ -183,6 +183,7 @@ class ScreensTest {
         shot("67_crop", "crop/${ids["work"]}", "Drag each dot")
         shot("67b_look", "look/${ids["work"]}", "Three values")
         shot("67c_feedback", "feedback", "The questions")
+        shot("67d_commission", "commission", "Promised by")
         shot("68_web", "web/${ids["draft"]}", "Fill")
         shot("69_basics", "basics", "What is an open call?")
     }

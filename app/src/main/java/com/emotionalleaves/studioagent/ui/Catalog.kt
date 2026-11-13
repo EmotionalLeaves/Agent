@@ -136,6 +136,7 @@ fun Works(nav: NavController) {
                 Button(enabled = !adding, onClick = { adding = true; scope.io({ adding = false }) { val id = dao.put(newWork()); withContext(Dispatchers.Main) { adding = false; nav.navigate("work/$id") } } }, modifier = Modifier.weight(1f)) { Text("Add a piece") }
                 OutlinedButton(onClick = { many.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Add from my files") }
             }
+            TextButton(onClick = { nav.navigate("commission") }) { Text("Someone wants a piece made for them") }
             Status(importStatus)
             // Where the work is right now: pieces out at shows, by place, so nothing is forgotten on a wall.
             val out = works.filter { it.status in setOf("shown", "pending") && it.location.isNotBlank() && it.location != "Studio" }.groupBy { it.location }
@@ -317,6 +318,7 @@ fun WorkDetail(nav: NavController, id: Long) {
     }
 
     Screen(w.title.ifBlank { "Untitled" }, nav) {
+        if (w.clientId > 0 || w.tags.split(",").any { it.trim() == "commission" }) CommissionPanel(nav, w)
         // The picture comes first, on a white sheet, the way it will be seen.
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(3.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(if (w.imagePath.isNotBlank()) 12.dp else 22.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)) {

@@ -54,7 +54,10 @@ data class Artwork(
     /** 0 not started, then file ready, proof ordered, proof checked, final print made, 5 framed and ready to hang. */
     val printStage: Int = 0,
     val printCost: Double = 0.0,
-    val frameCost: Double = 0.0
+    val frameCost: Double = 0.0,
+    /** A piece made for someone: the person (in People) and the day it is promised. */
+    val clientId: Long = 0,
+    val dueDate: Long = 0
 )
 
 @Entity
@@ -223,7 +226,9 @@ data class Evt(
     val oppId: Long = 0,
     val applId: Long = 0,
     val done: Boolean = false,
-    val calendarId: Long = 0
+    val calendarId: Long = 0,
+    /** A step that belongs to one piece (a commission's quote, deposit, draft, hand-over). */
+    val artworkId: Long = 0
 )
 
 /** kind: fee, sale, commission, shipping, print, framing, other. Money out is negative, money in is positive. */
@@ -308,7 +313,7 @@ interface Dao {
 @Database(
     entities = [Artwork::class, Series::class, Sess::class, Idea::class, Doc::class, Fact::class, Opp::class,
         Appl::class, Contact::class, Evt::class, Ledger::class, Source::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class Db : RoomDatabase() {
@@ -327,7 +332,16 @@ abstract class Db : RoomDatabase() {
             }
         }
 
-        val MIGRATIONS: Array<Migration> get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+        /** Commissions: a piece knows who it is for and when it is promised; a step can belong to a piece. Columns only. */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE Artwork ADD COLUMN clientId INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Artwork ADD COLUMN dueDate INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE Evt ADD COLUMN artworkId INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATIONS: Array<Migration> get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
 
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {

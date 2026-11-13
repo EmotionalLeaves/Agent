@@ -712,6 +712,73 @@ object Engine {
             (if (tight) " That is more than a piece a weekend. A smaller size, or a later call, may be kinder." else "")
     }
 
+    // ------------------------------------------------------------ commissions
+
+    /** The steps of a piece made for someone, in order, with the day each falls on, counted from today to the promised day. */
+    fun commissionSteps(today: LocalDate, due: LocalDate): List<Pair<String, LocalDate>> {
+        val span = java.time.temporal.ChronoUnit.DAYS.between(today, due).coerceAtLeast(7)
+        fun at(f: Double) = today.plusDays((span * f).toLong())
+        return listOf(
+            "Send the quote" to today,
+            "Deposit received" to today.plusDays(3),
+            "Show them a draft" to at(0.5),
+            "Finish the piece" to due.minusDays(3).let { if (it.isBefore(today)) today else it },
+            "Final payment received" to due,
+            "Hand it over" to due
+        )
+    }
+
+    /** Price for a commission: your own rule for the size, plus a quarter for the back-and-forth, rounded to 5. */
+    fun commissionPrice(widthIn: Double, heightIn: Double): Double {
+        val base = if (widthIn > 0 && heightIn > 0) Texts.price(widthIn, heightIn, st.pricePerSqIn) else 0.0
+        return if (base <= 0) 0.0 else Math.round(base * 1.25 / 5.0) * 5.0
+    }
+
+    /**
+     * Someone wants a piece made: the person goes in People, the piece in Studio (as an idea with its brief,
+     * size, price and promised day), and its six steps on your week. Returns the piece's id.
+     */
+    suspend fun startCommission(name: String, email: String, phone: String, brief: String, widthIn: Double, heightIn: Double, price: Double, due: LocalDate): Long {
+        val now = System.currentTimeMillis()
+        val cid = dao.contactsNow().firstOrNull { email.isNotBlank() && it.email.equals(email, true) }?.id
+            ?: dao.put(Contact(name = name, email = email, kind = "client", status = "client", notes = listOf(if (phone.isNotBlank()) "Phone: $phone" else "", "Commission asked for on ${LocalDate.now()}.").filter { it.isNotBlank() }.joinToString(" "), createdAt = now))
+        val id = dao.put(Artwork(title = "For " + name.ifBlank { "a client" }, status = "idea", notes = brief, widthIn = widthIn, heightIn = heightIn, price = price,
+            tags = "commission", format = "physical", clientId = cid, dueDate = millis(due.atTime(12, 0)), createdAt = now))
+        commissionSteps(LocalDate.now(), due).forEach { (t, d) -> dao.put(Evt(type = "task", title = t, date = millis(d.atTime(18, 0)), artworkId = id)) }
+        return id
+    }
+
+    /** The quote, ready to send: what, size, price, deposit, time, and the copyright line. */
+    fun commissionQuote(w: Artwork, clientName: String): Pair<String, String> {
+        val dep = Math.round(w.price / 2.0).toDouble()
+        val subject = "Your commission: a quote"
+        val body = "Hi ${clientName.ifBlank { "there" }},\n\nThank you for asking me to make this. Here is what I have in mind:\n\n" +
+            (if (w.notes.isNotBlank()) "The piece: ${w.notes.trim()}\n" else "") +
+            (if (w.widthIn > 0) "Size: ${Texts.dims(w.widthIn, w.heightIn)}\n" else "") +
+            (if (w.price > 0) "Price: ${money(w.price)}\nDeposit: ${money(dep)} when we agree, the rest (${money(w.price - dep)}) when it is finished and you are happy with it\n" else "") +
+            (if (w.dueDate > 0) "Ready by: ${date(w.dueDate)}\n" else "") +
+            "\nI will show you a draft along the way, so there are no surprises. I keep the copyright, so I can show the piece in my portfolio; it is yours to keep and enjoy.\n\n" +
+            "If that all sounds right, reply yes and I will send the deposit details.\n\n${st.fullName}"
+        return subject to body
+    }
+
+    private fun money(d: Double) = st.currency + (if (d == Math.floor(d)) "%,.0f".format(d) else "%,.2f".format(d))
+
+    /** Money in for a commission: the deposit or the rest. Recorded as art income, against the piece. */
+    suspend fun commissionPaid(w: Artwork, deposit: Boolean) {
+        val paid = dao.ledgerNow().filter { it.artworkId == w.id && it.kind == "sale" }.sumOf { it.amount }
+        val amount = if (deposit) Math.round(w.price / 2.0).toDouble() else (w.price - paid).coerceAtLeast(0.0)
+        if (amount > 0) dao.put(Ledger(kind = "sale", amount = amount, date = System.currentTimeMillis(), note = (if (deposit) "Deposit on " else "Final payment on ") + w.title, artworkId = w.id))
+        dao.eventsNow().firstOrNull { it.artworkId == w.id && it.title == (if (deposit) "Deposit received" else "Final payment received") }?.let { dao.put(it.copy(done = true)) }
+    }
+
+    /** Handed over: the piece is sold (to a private collection on your CV), the step ticked. */
+    suspend fun commissionDelivered(w: Artwork) {
+        dao.put(w.copy(status = "sold", location = "Sold", year = if (w.year == 0) LocalDate.now().year else w.year))
+        dao.eventsNow().filter { it.artworkId == w.id && !it.done }.forEach { dao.put(it.copy(done = true)) }
+        if (dao.factsNow().none { it.category == "collection" && it.text == "Private collection" }) dao.put(Fact(category = "collection", year = LocalDate.now().year, text = "Private collection"))
+    }
+
     fun workIds(a: Appl): List<Long> = a.workIds.split(",").mapNotNull { it.trim().toLongOrNull() }
 
     /** The steps of putting up your own show, counted back from the opening (days before it), then the show and the take-down. */
@@ -1166,9 +1233,10 @@ object Engine {
         }
         // A show you got into: a dated step (delivery, the opening, pick-up) in the next three days comes before anything else.
         dao.eventsNow().filter { it.type == "task" && !it.done && it.date in (now - DAY)..(now + 3 * DAY) }.minByOrNull { it.date }?.let { e ->
-            val title = dao.oppsNow().firstOrNull { it.id == e.oppId }?.title.orEmpty()
+            val title = if (e.artworkId > 0) works.firstOrNull { it.id == e.artworkId }?.let { w -> "the commission " + w.title.replaceFirstChar { it.lowercase() } }.orEmpty()
+                else dao.oppsNow().firstOrNull { it.id == e.oppId }?.title?.let { "for $it" }.orEmpty()
             val day = date(e.date); val whenWord = when (day) { today -> "Today"; today.plusDays(1) -> "Tomorrow"; else -> if (day.isBefore(today)) "Yesterday" else day.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) }
-            return NextStep(e.title, "$whenWord" + (if (title.isNotBlank()) ", for $title" else "") + ". Tick it off when it is done.", "appl/${e.applId}")
+            return NextStep(e.title, "$whenWord" + (if (title.isNotBlank()) ", $title" else "") + ". Tick it off when it is done.", if (e.artworkId > 0) "work/${e.artworkId}" else "appl/${e.applId}")
         }
         if ((today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY) && works.isNotEmpty() && st.lastReviewWeek != weekId())
             return NextStep("Look at next week (3 minutes)", "Pick one piece and glance at your studio times. That is all of it.", "review")

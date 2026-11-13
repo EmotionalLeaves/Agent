@@ -272,7 +272,7 @@ fun MonthView(events: List<com.emotionalleaves.studioagent.data.Evt>, nav: NavCo
             }
         }
         items.forEach { e ->
-            Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).clickable(enabled = e.applId > 0) { nav.navigate("appl/${e.applId}") }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).clickable(enabled = e.applId > 0 || e.artworkId > 0) { nav.navigate(if (e.artworkId > 0) "work/${e.artworkId}" else "appl/${e.applId}") }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape).background(markColors[evtKind(e.type)]))
                 Text(e.title.ifBlank { if (e.type == "studio") "Studio time" else e.type }, Modifier.weight(1f))
                 if (e.type == "studio") Text(clock(e.date), color = cs.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
