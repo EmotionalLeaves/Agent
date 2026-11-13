@@ -190,6 +190,8 @@ class Settings(ctx: Context) {
     var marketItems by S("marketItems")
     var marketTally by S("marketTally")
     var marketFee by D("marketFee", 0.0)
+    /** Listing places ticked per show ("applId:index"). */
+    var announced by S("announced")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

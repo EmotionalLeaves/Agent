@@ -400,8 +400,12 @@ class PartsTest {
         val opening = java.time.LocalDate.now().plusWeeks(8)
         val applId = Engine.planOwnShow(c, "Before the First Shift", opening, 4, emptyList())
         val tasks = G.dao.eventsNow().filter { it.applId == applId && it.type == "task" }
-        assertEquals(13, tasks.size)
+        assertEquals(14, tasks.size)
         assertEquals("accepted", G.dao.applsNow().first { it.id == applId }.status)
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"; G.settings.email = "jade@example.com"
+        val news = Engine.announcement(G.dao.applsNow().first { it.id == applId })
+        assertTrue(news, news.startsWith("Before the First Shift: new work by Jade Leaves at Central Library"))
+        assertTrue(news.contains("Free and open to everyone.") && news.contains("jade@example.com"))
         assertEquals(opening.minusDays(42), Engine.date(tasks.minOf { it.date }))
         assertTrue(G.dao.factsNow().none { it.text.contains("Before the First Shift") })
         Engine.openingHappened(applId)

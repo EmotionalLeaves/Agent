@@ -565,6 +565,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                                     t.startsWith("confirm") -> "Write the yes" to { letter("Say yes after being accepted") }
                                     t.startsWith("thank") -> "Write the thank-you" to { letter("Thank you after a show") }
                                     t.contains("email list") -> "Write the note" to { nav.navigate("update") }
+                                    t.contains("listings") -> "Write the announcement" to { nav.navigate("announce/$id") }
                                     t.contains("label") -> "Make the labels" to { scope.io({ status = it }) { val f = Papers.labels(ctx, st, chosen); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }
                                     t.contains("flyer") -> "Make the flyer" to { scope.io({ status = it }) { val f = Papers.flyer(ctx, st, o.title, listOf(o.venue, o.city).filter { it.isNotBlank() }.joinToString(", "), o.exhibitionDates, "", chosen.firstOrNull()); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }
                                     t.contains("prints and frames") || t.startsWith("order print") -> "Find a lab" to { nav.navigate("nearby/labs") }

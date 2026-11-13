@@ -1015,6 +1015,32 @@ object Offers {
 
 /** Builds a first draft from the artist's own interview answers and CV facts. No AI, nothing invented. */
 object Drafts {
+    /** A listing announcement: headline, what, when, where, free and open to all, a line about the artist, contact. */
+    fun announcement(artist: String, title: String, venue: String, city: String, dates: String, opening: String, bio: String, media: String, count: Int, email: String, website: String): String {
+        val who = artist.ifBlank { "A local artist" }
+        val head = (if (title.isNotBlank()) "$title: " else "") + "new work by $who" + (if (venue.isNotBlank()) " at $venue" else "")
+        val body = buildList {
+            val show = "a show of " + (if (count > 0) "$count " else "") + "new " + (if (media.isNotBlank()) "$media " else "") + (if (count == 1) "work" else "works") + " by $who."
+            add(if (venue.isNotBlank()) "$venue presents " + (if (title.isNotBlank()) "\"$title,\" " else "") + show else show.replaceFirstChar { it.uppercase() })
+            if (dates.isNotBlank()) add("On view $dates" + (if (city.isNotBlank()) ", in $city" else "") + ".")
+            if (opening.isNotBlank()) add("Opening reception $opening. Free and open to everyone.")
+            else add("Free and open to everyone.")
+            if (bio.isNotBlank()) add(bio.trim())
+            add("For more: " + listOf(email, website).filter { it.isNotBlank() }.joinToString(", ").ifBlank { "contact the venue" } + ".")
+        }
+        return head + "\n\n" + body.joinToString("\n\n")
+    }
+
+    /** Where a small show's news goes, with what each wants. Most take a short form or an email two to three weeks ahead. */
+    val listingPlaces = listOf(
+        "The local newspaper's arts or events calendar" to "Look for 'submit an event' on their site. Two to three weeks ahead.",
+        "The alt-weekly or city magazine" to "They often run free listings; some pick a show to write about.",
+        "Community or college radio" to "Many read out local events; send the announcement by email.",
+        "The venue itself" to "Ask them to post it on their site and social accounts, and to their own email list.",
+        "Your campus or workplace newsletter" to "Staff and student shows are exactly what they want to share.",
+        "Library and coffee shop boards" to "Pin the flyer; take a photo of it for your records.",
+        "An event on Facebook, Instagram or a local events site" to "One post with the picture, the date and the address.")
+
     fun sentence(s: String): String {
         val t = s.trim().replace(Regex("\\s+"), " ")
         if (t.isBlank()) return ""

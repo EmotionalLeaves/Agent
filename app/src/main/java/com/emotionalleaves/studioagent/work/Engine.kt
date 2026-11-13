@@ -793,6 +793,18 @@ object Engine {
         return total
     }
 
+    /** The show's announcement, ready for a newspaper calendar, a radio listing or a community board. Your words, no AI. */
+    suspend fun announcement(a: Appl): String {
+        val o = dao.oppsNow().firstOrNull { it.id == a.oppId } ?: return ""
+        val evts = dao.eventsNow().filter { it.applId == a.id }
+        val opening = evts.firstOrNull { it.title.startsWith("Go to the opening", true) && it.date > 0 }?.date ?: 0L
+        val bio = dao.docsNow().filter { it.type == "bio" && it.text.isNotBlank() }.sortedByDescending { if (it.approved) 1 else 0 }.minByOrNull { it.text.length }?.text.orEmpty()
+        val works = dao.artworksNow().filter { it.id in workIds(a) }
+        return com.emotionalleaves.studioagent.domain.Drafts.announcement(st.fullName, o.title, o.venue.ifBlank { o.organiser }, o.city, o.exhibitionDates,
+            if (opening > 0) com.emotionalleaves.studioagent.ui.fmtDate(opening) + ", " + com.emotionalleaves.studioagent.ui.clock(opening) else "", bio,
+            works.mapNotNull { it.medium.ifBlank { null } }.distinct().take(2).joinToString(" and "), works.size, st.email, st.website)
+    }
+
     // ------------------------------------------------------------ commissions
 
     /** The steps of a piece made for someone, in order, with the day each falls on, counted from today to the promised day. */
@@ -881,6 +893,7 @@ object Engine {
         "Order prints and frames (labs take one to two weeks)" to opening.minusDays(30),
         "Print the flyer and put it up where people will see it" to opening.minusDays(21),
         "Tell your email list" to opening.minusDays(18),
+        "Send the news to local listings" to opening.minusDays(17),
         "Print wall labels and the price list" to opening.minusDays(7),
         "Take condition photos of each work" to opening.minusDays(3),
         "Pack the hanging kit (Help has the list)" to opening.minusDays(3),
