@@ -1726,6 +1726,8 @@ object Engine {
             val tip = when (m) {
                 9 -> Triple("Holiday markets book up now", "Tables at December markets and craft fairs fill in September and October. Look for 'holiday market' or 'makers fair' calls, and plan a few prints and cards to sell.", "calls")
                 1 -> Triple("Spring calls are opening", "January and February are when many spring shows and summer residencies open their calls. A good month to say yes to one or two.", "calls")
+                3 -> Triple("Photograph in spring light", "Longer, brighter days: a good weekend to photograph everything finished over the winter, by a big window, so the spring calls get your best pictures.", "photoshoot")
+                7 -> Triple("Autumn calls are opening", "July and August are when many autumn shows open their calls, and the year's open studios start booking. A good month to say yes to one.", "calls")
                 11 -> Triple("Market season", "Holiday markets and open studios run from now to Christmas. Market day has a packing list for the table and postcards to print; small prints and cards sell best.", "market")
                 12 -> Triple("The year, on one page", "Before the year closes: Records makes the one page a tax preparer asks for (money in and out by kind), and the year in a picture to keep.", "records")
                 5 -> Triple("Summer is for making", "Fewer calls close in summer. It is a good stretch to finish the series for the autumn round.", "works")

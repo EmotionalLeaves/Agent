@@ -619,3 +619,4 @@ One real change per round. Pushed and built every ten rounds.
 612. Foundations lets you move on: the week you are on has "Move on to the next week", which ticks off what is left of it. Doing every exercise is not the point; moving on is part of practice.
 613. The first day of a break from work, Today says so once: every day until then is free, a good stretch for a bigger piece, a few Foundations weeks, or more studio hours if you want them (opening Your week).
 614. Empty your head reads dates written out too: "deliver the work Nov 20", "opening 3 December", "renew by 1/5", "pay it on the 20th" each land on that day (the next one that has not passed).
+615. Two more seasons: in March, photograph in spring light (everything finished over the winter, before the spring calls), and in July, autumn calls are opening.
