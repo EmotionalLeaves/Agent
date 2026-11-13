@@ -99,6 +99,10 @@ fun WeekScreen(nav: NavController) {
         DaysField("Off work this week (only this week)", if (st.offThisWeek.substringBefore(":") == wk) st.offThisWeek.substringAfter(":") else "") { d ->
             st.offThisWeek = "$wk:$d"; scope.io { Engine.replan(ctx) }
         }
+        // And the other way round: an extra shift on a day you are usually off.
+        DaysField("Working extra this week (only this week)", if (st.extraThisWeek.substringBefore(":") == wk) st.extraThisWeek.substringAfter(":") else "") { d ->
+            st.extraThisWeek = "$wk:$d"; scope.io { Engine.replan(ctx) }
+        }
         H("Studio times")
         if (!custom) {
             Small("The suggested week: two short evenings after work, the rest at the weekend.")

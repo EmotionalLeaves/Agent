@@ -314,7 +314,7 @@ object Engine {
         val plannedStarts = events.filter { it.type == "studio" }.map { it.date }.toSet()
         val slots = if (custom) Planner.planFromTemplate(LocalDate.now(), template) else Planner.plan(
             // A week with different shifts: the days you are off work this week count as free days.
-            LocalDate.now(), Planner.days(st.workDays) - (if (st.offThisWeek.substringBefore(":") == weekId()) st.offThisWeek.substringAfter(":").split(",").mapNotNull { it.trim().toIntOrNull() }.toSet() else emptySet()),
+            LocalDate.now(), Planner.days(st.workDays) - thisWeek(st.offThisWeek) + thisWeek(st.extraThisWeek),
             Planner.time(st.workEnd, LocalTime.of(15, 30)), st.bufferMin,
             Planner.time(st.bedtime, LocalTime.of(22, 30)), st.weeklyHours
         )
@@ -1179,6 +1179,9 @@ object Engine {
             .setInputData(workDataOf("title" to title, "route" to route, "minutes" to 0)).build()
         try { WorkManager.getInstance(ctx).enqueueUniqueWork("later", ExistingWorkPolicy.REPLACE, req) } catch (e: Exception) { }
     }
+
+    /** Days (1 = Monday) from a "weekId:1,3" setting, when it is about this week; otherwise none. */
+    fun thisWeek(v: String): Set<Int> = if (v.substringBefore(":") == weekId()) v.substringAfter(":").split(",").mapNotNull { it.trim().toIntOrNull() }.toSet() else emptySet()
 
     fun cancelGoal(ctx: Context) { try { listOf("goal", "goal-warn", "goal-bed").forEach { WorkManager.getInstance(ctx).cancelUniqueWork(it) } } catch (e: Exception) { } }
 

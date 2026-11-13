@@ -236,6 +236,8 @@ class Settings(ctx: Context) {
     var stuckTold by S("stuckTold")
     /** Days off work this week only: "weekId:1,3". */
     var offThisWeek by S("offThisWeek")
+    /** "weekId:1,3": extra work days this week only (an extra shift on a usual day off). */
+    var extraThisWeek by S("extraThisWeek")
     /** Quiet until then: Today shows only a five-minute step. */
     var calmUntil by L("calmUntil", 0)
     /** A friend's name: one tap tells them a session is starting, and that it is done. */
