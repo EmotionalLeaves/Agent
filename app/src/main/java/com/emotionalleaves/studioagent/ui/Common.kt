@@ -1,5 +1,8 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.DropdownMenuItem
 
 import androidx.compose.material3.MenuAnchorType
@@ -467,5 +470,29 @@ fun Segments(options: List<String>, selected: String, onSelect: (String) -> Unit
                     fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, color = if (on) cs.onSurface else cs.onSurfaceVariant)
             }
         }
+    }
+}
+
+/** One box that finds anything in the app: a piece, a call, a venue or person, a document. Each result opens where it lives. */
+@Composable
+fun SearchScreen(nav: NavController) {
+    val q = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+    val works by dao.artworks().collectAsState(emptyList())
+    val opps by dao.opps().collectAsState(emptyList())
+    val contacts by dao.contacts().collectAsState(emptyList())
+    val docs by dao.docs().collectAsState(emptyList())
+    Screen("Find anything", nav) {
+        Field("A title, a venue, a person, a word", q)
+        val words = q.value.trim().lowercase().split(Regex("\\s+")).filter { it.length > 1 }
+        fun hit(vararg parts: String) = words.isNotEmpty() && words.all { w -> parts.any { it.lowercase().contains(w) } }
+        val w = works.filter { hit(it.title, it.medium, it.tags, it.notes) }.take(8)
+        val c = opps.filter { hit(it.title, it.organiser, it.venue, it.city, it.theme) }.take(8)
+        val p = contacts.filter { hit(it.venue, it.name, it.email, it.notes) }.take(8)
+        val d = docs.filter { it.type != "interview" && hit(it.title, it.text) }.take(5)
+        if (words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty()) Small("Nothing matches that.")
+        if (w.isNotEmpty()) { Section("Pieces"); w.forEach { x -> IconRow(Icons.Default.Edit, x.title.ifBlank { "Untitled" }, statusWords(x.status)) { nav.navigate("work/${x.id}") } } }
+        if (c.isNotEmpty()) { Section("Calls"); c.forEach { x -> IconRow(Icons.Default.DateRange, x.title, listOf(x.organiser, x.city).filter { it.isNotBlank() }.joinToString(", ")) { nav.navigate("call/${x.id}") } } }
+        if (p.isNotEmpty()) { Section("People and venues"); p.forEach { x -> IconRow(Icons.Default.Person, x.venue.ifBlank { x.name.ifBlank { x.email } }, if (x.kind == "subscriber") "On your email list" else kindWords(x.kind)) { nav.navigate("contact/${x.id}") } } }
+        if (d.isNotEmpty()) { Section("Writing"); d.forEach { x -> IconRow(Icons.Default.Edit, x.title.ifBlank { x.type.replaceFirstChar { it.uppercase() } }, x.text.take(60)) { nav.navigate("doc/${x.id}") } } }
     }
 }

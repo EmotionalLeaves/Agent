@@ -377,3 +377,4 @@ One real change per round. Pushed and built every ten rounds.
 371. CV facts: "Paste a CV you already have". Each line lands under its heading (education, solo and group shows, awards, residencies, collections…) with its year, ready to check; lines already there are skipped.
 372. Good calls come back every year: one that closed is remembered as "Watch for: Winter Open" a month before it closed last year, on your calendar and in Today's next seven days, linking to last year's call.
 373. A screen for something that no longer exists (an old call, a removed piece) says so after a moment instead of loading forever.
+374. New: Find anything (on You). One box finds a piece, a call, a venue or person, or a document by any word, each opening where it lives.

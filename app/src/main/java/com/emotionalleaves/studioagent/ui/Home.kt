@@ -719,6 +719,7 @@ fun More(nav: NavController) {
                 Tile(Modifier.weight(1f), if (sold.isEmpty()) "0" else money(sold.sumOf { it.amount }), if (sold.isEmpty()) "sales in $year" else Texts.count(sold.size, "sale") + " in $year") { nav.navigate("records") }
             }
         }
+        IconRow(Icons.Default.Search, "Find anything", "A piece, a call, a venue, a person, a document") { nav.navigate("search") }
         val statementOk = docs.any { it.type == "statement" && it.approved && it.text.isNotBlank() }
         IconRow(Icons.Default.Edit, "Statement, bio and CV", (if (statementOk) "Statement approved" else "Statement not approved yet") + ", " + Texts.count(facts.size, "CV line")) { nav.navigate("materials") }
         IconRow(Icons.Default.Person, "People and venues", if (venues == 0) "Find real places near you to show" else "Places to show, and emails to them") { nav.navigate("outreach") }
