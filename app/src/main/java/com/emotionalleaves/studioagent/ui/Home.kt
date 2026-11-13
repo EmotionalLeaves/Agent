@@ -298,7 +298,7 @@ fun Home(nav: NavController) {
             }
         }
 
-        if (st.onboarded && !calm) {
+        if (st.onboarded && !calm && shows("week")) {
             // The week as seven marks: filled for a day you made something, a ring for a block still ahead.
             val hours = Engine.hoursThisWeek(sessions)
             val cs = MaterialTheme.colorScheme
