@@ -1819,6 +1819,13 @@ object Engine {
                     if (dao.eventsNow().none { it.type == "watch" && it.title == title }) dao.put(Evt(type = "watch", title = title, date = at, oppId = o.id))
                 }
             }
+            // Calls you entered come back too: a no is worth another go with a year's more work, and a yes is worth returning to.
+            val sentTo = dao.applsNow().filter { it.submittedAt > 0 }.map { it.oppId }.toSet()
+            val watching = dao.eventsNow().filter { it.type == "watch" }.map { it.oppId }.toSet()
+            dao.oppsNow().filter { it.id in sentTo && it.id !in watching && it.deadline in (now - 60 * DAY)..now && it.sourceName != "Your own show" }.forEach { o ->
+                val title = "Watch for: " + o.title.replace(Regex("\\b(19|20)\\d\\d\\b"), "").replace(Regex("\\s{2,}"), " ").trim().trimEnd(':', '-', ',')
+                if (dao.eventsNow().none { it.type == "watch" && it.title == title }) dao.put(Evt(type = "watch", title = title, date = o.deadline + 335 * DAY, oppId = o.id))
+            }
             // Calls you never acted on are cleared three months after closing, so the lists stay quick. Anything you applied to is kept.
             val applied = dao.applsNow().map { it.oppId }.toSet()
             dao.oppsNow().filter { it.id !in applied && it.status in setOf("expired", "no") && it.deadline in 1..(now - 90 * DAY) }.forEach { dao.del(it) }
