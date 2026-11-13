@@ -164,11 +164,13 @@ fun Works(nav: NavController) {
                 (show == "all" || w.status == show) && (q.isBlank() || listOf(w.title, w.tags, w.medium, w.status, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty()).any { it.lowercase().contains(q) })
             }
             if (works.isNotEmpty() && shownWorks.isEmpty()) Empty("Nothing matches that.", "Show everything") { search.value = ""; show = "all" }
-            shownWorks.take(limit).chunked(2).forEach { pair ->
+            // A few pieces hang large; a growing body of work hangs three across, so more of it is seen at once.
+            val across = if (shownWorks.size > 6) 3 else 2
+            shownWorks.take(limit).chunked(across).forEach { row ->
                 // Hung like a wall: picture, then a small label underneath with title, year and size.
-                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    pair.forEach { w -> Box(Modifier.weight(1f)) { WorkTile(w, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty(), tick >= 0 && st.focusWork == w.id) { nav.navigate("work/${w.id}") } } }
-                    if (pair.size == 1) Spacer(Modifier.weight(1f))
+                Row(horizontalArrangement = Arrangement.spacedBy(if (across == 3) 10.dp else 14.dp)) {
+                    row.forEach { w -> Box(Modifier.weight(1f)) { WorkTile(w, series.firstOrNull { it.id == w.seriesId }?.name.orEmpty(), tick >= 0 && st.focusWork == w.id, compact = across == 3) { nav.navigate("work/${w.id}") } } }
+                    repeat(across - row.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
             if (shownWorks.size > limit) OutlinedButton(onClick = { limit += 40 }, modifier = Modifier.fillMaxWidth()) { Text("Show ${minOf(40, shownWorks.size - limit)} more") }
@@ -733,20 +735,20 @@ fun IdeasBody(nav: NavController) {
 
 /** One piece on the wall: the picture (or its initial on a blank sheet) and a wall label. */
 @Composable
-fun WorkTile(w: Artwork, seriesName: String, focus: Boolean, onClick: () -> Unit) {
+fun WorkTile(w: Artwork, seriesName: String, focus: Boolean, compact: Boolean = false, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Box(Modifier.fillMaxWidth().aspectRatio(0.8f).clip(RoundedCornerShape(3.dp)).background(cs.surfaceContainerLowest), contentAlignment = Alignment.Center) {
             // The whole picture, never cropped, on a white mat: artists need to see their edges.
             if (w.imagePath.isNotBlank() && File(w.imagePath).exists()) PathImage(w.imagePath, Modifier.fillMaxSize().padding(10.dp), 500, ContentScale.Fit)
-            else Text(w.title.trim().take(1).uppercase().ifBlank { "?" }, style = MaterialTheme.typography.displayLarge, color = cs.outlineVariant)
+            else Text(w.title.trim().take(1).uppercase().ifBlank { "?" }, style = if (compact) MaterialTheme.typography.displaySmall else MaterialTheme.typography.displayLarge, color = cs.outlineVariant)
             if (focus) TapeStrip(Modifier.align(Alignment.TopCenter).offset(y = (-6).dp), 2f)
         }
         Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            Text(w.title.ifBlank { "Untitled" }, style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             val facts = listOfNotNull(w.year.takeIf { it > 0 }?.toString(), if (w.widthIn > 0 && w.heightIn > 0) Texts.dims(w.widthIn, w.heightIn) else null)
-            if (facts.isNotEmpty()) Small(facts.joinToString(", "))
-            Text(statusWords(w.status) + (if (seriesName.isNotBlank()) ", $seriesName" else ""), style = MaterialTheme.typography.labelMedium,
+            if (facts.isNotEmpty() && !compact) Small(facts.joinToString(", "))
+            Text(statusWords(w.status) + (if (seriesName.isNotBlank() && !compact) ", $seriesName" else ""), style = MaterialTheme.typography.labelMedium,
                 color = if (w.status == "in_progress") cs.primary else cs.onSurfaceVariant, maxLines = 2)
         }
     }
