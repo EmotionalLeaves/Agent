@@ -280,6 +280,18 @@ class Ai(private val settings: Settings) {
         return com.emotionalleaves.studioagent.domain.Planner.pieceLines(out).take(n)
     }
 
+    /**
+     * Three questions a good teacher might ask about a piece, from what can be measured in its picture (values, colors)
+     * and the artist's own words about it. Questions only, never verdicts, since the picture itself is not seen.
+     */
+    suspend fun teacherQuestions(title: String, medium: String, measured: String, notes: String): List<String> {
+        val out = clean(complete("You are a kind, practical painting teacher. $dataRule You cannot see the picture; you only know what was measured from it and what the artist wrote. " +
+            "Ask exactly three short questions that help the artist look at their own piece again (values, edges, where the eye goes, color temperature, what to leave out). " +
+            "Questions only: no praise, no verdicts, no instructions. One per line.",
+            "<data>\nTitle: $title\nMedium: $medium\nMeasured from the picture: $measured\nThe artist's notes: ${notes.take(800)}\n</data>", fast = true, maxTokens = 200))
+        return out.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "") }.filter { it.endsWith("?") && it.length in 10..200 }.take(3)
+    }
+
     /** The same text cut to at most [words] words: the artist's own sentences kept, the least needed cut. Nothing added. */
     suspend fun shorten(text: String, words: Int): String =
         clean(complete("You shorten an artist's own text to at most $words words. Keep their sentences and wording wherever possible; cut whole phrases and sentences " +

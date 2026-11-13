@@ -512,6 +512,8 @@ class PartsTest {
         assertTrue("notes $notes", notes.first().startsWith("A full range") || notes.first().startsWith("A fair range"))
         val flat = android.graphics.Bitmap.createBitmap(50, 50, android.graphics.Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.rgb(120, 120, 120)) }
         assertTrue("flat", L.valueNotes(flat).first().startsWith("The values sit close together"))
+        val qs = L.questions(L.valueNotes(flat))
+        assertEquals(3, qs.size); assertTrue(qs.first().startsWith("Where is the darkest dark")); assertTrue(qs.all { it.endsWith("?") })
     }
 
     @Test fun missingPiecesGetASaturdayEach() = kotlinx.coroutines.runBlocking {

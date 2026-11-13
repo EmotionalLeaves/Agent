@@ -147,6 +147,19 @@ object Look {
         return out
     }
 
+    /** Questions to ask yourself without any help: chosen from what the picture's values and colors show. */
+    fun questions(notes: List<String>): List<String> {
+        val q = mutableListOf<String>()
+        if (notes.any { it.startsWith("The values sit close") }) q += "Where is the darkest dark, and is it next to the lightest light where you want the eye to go?"
+        if (notes.any { it.startsWith("Most of the picture is middle values") }) q += "In the three-value view, can you still tell the main shapes apart?"
+        if (notes.any { it.startsWith("Mostly warm") }) q += "Is there one small cool note to set the warm colors off?"
+        if (notes.any { it.startsWith("Mostly cool") }) q += "Is there one small warm note to set the cool colors off?"
+        q += "Squinting, where does your eye land first? Is that where you meant it to?"
+        q += "Flipped, does anything look off: a lean, a heavy side, a shape too close to the edge?"
+        q += "What could you leave out?"
+        return q.take(3)
+    }
+
     /** How far apart two values are, 0..255: for a quick check that the focal point has the strongest contrast. */
     fun contrastAt(b: Bitmap, cx: Float, cy: Float): Int {
         val r = max(2, min(b.width, b.height) / 12)

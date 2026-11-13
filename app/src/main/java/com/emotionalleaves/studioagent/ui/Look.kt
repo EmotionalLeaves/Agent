@@ -89,6 +89,18 @@ fun LookScreen(nav: NavController, id: Long) {
             else -> "Tap a view above to look again."
         })
         if (notes.isNotEmpty()) { Section("What the values say"); notes.forEach { Text(it) } }
+        // Three questions to look again with: from a teacher-like helper when it is on, otherwise from what the picture shows.
+        if (notes.isNotEmpty()) {
+            val asked by produceState<List<String>>(emptyList(), notes, path) {
+                value = Look.questions(notes)
+                if (G.ai.ready) try {
+                    val measured = notes.joinToString(" ") + " Main colors: " + palette.take(4).joinToString(", ") { Look.name(it.first) + " " + (it.second * 100).toInt() + "%" } + "."
+                    G.ai.teacherQuestions(w.title, w.medium, measured, w.notes).takeIf { it.size >= 2 }?.let { value = it }
+                } catch (e: Exception) { }
+            }
+            Section("Questions to look again with")
+            asked.forEach { Text("• $it") }
+        }
         if (palette.isNotEmpty()) {
             Section("The colors it uses")
             palette.forEach { (c, share) ->
