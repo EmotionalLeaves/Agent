@@ -29,6 +29,19 @@ fun FoundationsScreen(nav: NavController) {
         // Your practice so far, as pictures: the clearest sign that it is working.
         val practice by com.emotionalleaves.studioagent.G.dao.sessions().collectAsState(emptyList())
         val shots = practice.filter { it.kind == "skill" && it.photoPath.isNotBlank() && java.io.File(it.photoPath).exists() }.take(9)
+        // Then and now: the first practice photo beside the newest, once there is a month between them.
+        val all = practice.filter { it.kind == "skill" && it.photoPath.isNotBlank() && java.io.File(it.photoPath).exists() }
+        val first = all.minByOrNull { it.start }; val last = all.maxByOrNull { it.start }
+        if (first != null && last != null && last.start - first.start >= 28 * 86_400_000L) Panel(strong = true) {
+            Text("Then and now", fontWeight = FontWeight.SemiBold)
+            androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                listOf(first to "Then", last to "Now").forEach { (x, label) -> androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.weight(1f)) {
+                    PathImage(x.photoPath, androidx.compose.ui.Modifier.fillMaxWidth().height(180.dp), 700, androidx.compose.ui.layout.ContentScale.Crop)
+                    Small("$label, " + fmtDate(x.start))
+                } }
+            }
+            Small("Same hands, ${(last.start - first.start) / (7 * 86_400_000L)} weeks of practice apart.")
+        }
         if (shots.isNotEmpty()) Panel {
             Text("Your practice so far", fontWeight = FontWeight.SemiBold)
             shots.chunked(3).forEach { row -> androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {

@@ -595,3 +595,4 @@ One real change per round. Pushed and built every ten rounds.
 588. Two Foundations milestones join the firsts noticed on the day: the twelve weeks of basics done, and eighteen weeks in, a body of work.
 589. After teaching a class, what you were paid can go in with the CV line: it is filed in Records as teaching income, and the tax page lists it as Teaching.
 590. Two more seasons on a Saturday's step: in November, market season (the packing list and postcards in Market day), and in December, the year on one page (the tax page and the year in a picture, from Records).
+591. Then and now, in Foundations: once a month separates them, your first practice photo sits beside your newest, large, with their dates: "Same hands, 9 weeks of practice apart."
