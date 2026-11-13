@@ -1056,8 +1056,12 @@ object Engine {
         val soon = dao.eventsNow().filter { it.type == "submit" && !it.done && it.date in (now - DAY)..(now + 4 * DAY) }
         val appls = dao.applsNow()
         soon.firstOrNull()?.let { e ->
-            appls.firstOrNull { it.id == e.applId && it.status in setOf("draft", "ready") }?.let {
-                return NextStep(e.title, Planner.weekendsLeft(today, date(e.date + 3 * DAY)) + " to the deadline. The pack is waiting for one look.", "appl/${it.id}")
+            appls.firstOrNull { it.id == e.applId && it.status in setOf("draft", "ready") }?.let { a ->
+                // Say exactly what is left, so the step is a task and not a worry.
+                val o = dao.oppsNow().firstOrNull { it.id == a.oppId }
+                val open = if (o == null) emptyList() else checklist(a, o, works, feeLeft(dao.ledgerNow()), now).filter { !it.second }.map { it.first.substringBefore(" (").lowercase() }
+                val left = Planner.weekendsLeft(today, date(e.date + 3 * DAY)) + " to the deadline. "
+                return NextStep(e.title, left + if (open.isEmpty()) "The pack is waiting for one look." else "Still to fix: " + open.take(2).joinToString("; ") + (if (open.size > 2) ", and ${open.size - 2} more." else "."), "appl/${a.id}")
             }
         }
         // A show you got into: a dated step (delivery, the opening, pick-up) in the next three days comes before anything else.

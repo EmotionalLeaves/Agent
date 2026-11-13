@@ -369,3 +369,4 @@ One real change per round. Pushed and built every ten rounds.
 363. An untitled piece has "Suggest titles": five short, plain title ideas from what you have written about it (notes, medium, series, statement), one tap to use one.
 364. A call open only to artists in other states ("open to artists living in Ohio", "California residents only") is held back as "Open only to artists in Ohio" when your state is set; a venue's address alone never counts.
 365. Finding places near you also fills in your state when it is not set, from the map, so state-limited calls are judged correctly.
+366. Today's step for an application close to its deadline names what is still to fix ("Still to fix: statement within 150 words; submission email address known") instead of a general reminder.
