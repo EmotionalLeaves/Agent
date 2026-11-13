@@ -763,11 +763,14 @@ object Engine {
         for (m in msgs) {
             val contact = dao.contactsNow().firstOrNull { it.email.isNotBlank() && it.email.equals(m.from, true) && it.status in setOf("sent", "followed_up") }
             if (contact != null) { applyReply(contact, m.subject + "\n" + m.text); continue }
-            val appl = dao.applsNow().firstOrNull { a ->
+            val submitted = dao.applsNow().filter { it.status == "submitted" }
+            val appl = submitted.firstOrNull { a ->
                 val o = opps[a.oppId]
-                a.status == "submitted" && ((a.emailTo.isNotBlank() && a.emailTo.equals(m.from, true)) ||
-                    (o != null && o.title.length > 6 && (m.subject + " " + m.text).contains(o.title, ignoreCase = true)))
+                (a.emailTo.isNotBlank() && a.emailTo.equals(m.from, true)) ||
+                    (o != null && o.title.length > 6 && (m.subject + " " + m.text).contains(o.title, ignoreCase = true))
             }
+                // Results from a web-form entry come from the organizer's own domain. Used only when it points to exactly one entry.
+                ?: submitted.filter { a -> Texts.sameSite(m.from.substringAfter('@'), opps[a.oppId]?.url.orEmpty()) }.singleOrNull()
             if (appl != null) {
                 when (classify(m.subject + "\n" + m.text)) {
                     "accepted" -> { recordResult(ctx, appl, true, m.text); Notifier.post(ctx, st, 300 + appl.id.toInt(), "Accepted", "${opps[appl.oppId]?.title.orEmpty()}: your checklist is ready.", "appl/${appl.id}") }
@@ -895,6 +898,12 @@ object Engine {
             return NextStep("Generate your statement", "It is written from your interview. You approve it in one tap.", "materials")
         if (best < st.gateWorks) return NextStep("Start the next piece", "$best of ${st.gateWorks} in your series so far.", "works")
         if (pend.isNotEmpty()) return NextStep("${pend.size} to approve", pend.first().title, "admin")
+        // An entry with no result six weeks on: one gentle ask, at the weekend, since results do not always arrive by email.
+        if (today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY)
+            appls.filter { it.status == "submitted" && it.submittedAt in (now - 90 * DAY)..(now - 42 * DAY) }.minByOrNull { it.submittedAt }?.let { a ->
+                val t = dao.oppsNow().firstOrNull { it.id == a.oppId }?.title.orEmpty().ifBlank { "an entry" }
+                return NextStep("Heard back from $t?", "Six weeks since you sent it. If a result came, one tap records it. If not, there is nothing to do; this stops asking after three months.", "appl/${a.id}")
+            }
         // Calls that fit, once a week at most, and only when you have not looked already.
         if (now - st.lastCallsLook > 6 * DAY) {
             val fit = shortlist(dao.oppsNow(), profile(), now, stretchOk(now), st.shortlistSize)

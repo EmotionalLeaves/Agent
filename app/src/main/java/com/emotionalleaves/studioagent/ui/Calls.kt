@@ -241,7 +241,7 @@ fun Calls(nav: NavController) {
                     Panel(onClick = { nav.navigate("appl/${a.id}") }) {
                         Text(o?.title ?: "Application", style = MaterialTheme.typography.titleSmall)
                         Small(when (a.status) {
-                            "submitted" -> "Submitted ${fmtDate(a.submittedAt)}. Done. The result will come to you."
+                            "submitted" -> "Submitted ${fmtDate(a.submittedAt)}. " + (if (st.mailReady) "The result email is picked up for you." else "When you hear back, open it and tap Accepted or Not this time.")
                             // Accepted: the one thing to do next, with its day, so the show does not slip.
                             "accepted" -> "Accepted. " + (evts.filter { it.applId == a.id && it.type == "task" && !it.done }.sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.firstOrNull()
                                 ?.let { "Next: " + it.title + (if (it.date > 0) ", " + fmtDate(it.date) else "") } ?: "Everything on its list is done.")
@@ -823,7 +823,8 @@ fun FlyerButtons(nav: NavController, onStatus: (String) -> Unit) {
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) { val f = File(ctx.cacheDir, "flyer_picked.jpg"); if (ImageTools.copyUri(ctx, uri, f)) read(f.absolutePath) }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // Wraps onto two lines with large text instead of squeezing.
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(enabled = !busy, onClick = { try { take.launch(com.emotionalleaves.studioagent.sys.Share.uri(ctx, shot)) } catch (e: Exception) { onStatus("The camera did not open. Try A saved photo instead.") } }) { Text("Photo of a flyer") }
         TextButton(enabled = !busy, onClick = { pick.launch("image/*") }) { Text("A saved photo") }
     }

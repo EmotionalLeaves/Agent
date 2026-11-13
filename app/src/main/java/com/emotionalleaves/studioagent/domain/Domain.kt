@@ -468,6 +468,14 @@ object Texts {
     fun isLink(t: String): Boolean = Regex("^(https?://)?([\\w-]+\\.)+[a-zA-Z]{2,}(:\\d+)?(/\\S*)?$").matches(t.trim()) && !t.trim().contains('@')
 
     /** A quick check that an address could be an email: something@somewhere.tld, no spaces. */
+    /** True when an email domain and a web address belong to the same organization: "news.riverside.org" and "https://www.riverside.org/call". */
+    fun sameSite(emailDomain: String, url: String): Boolean {
+        fun base(h: String) = h.lowercase().trim().removePrefix("www.").split('.').filter { it.isNotBlank() }.takeLast(2).joinToString(".")
+        val host = url.substringAfter("://", url).substringBefore('/').substringBefore(':')
+        val a = base(emailDomain); val b = base(host)
+        return a.contains('.') && a == b && a !in setOf("gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com", "aol.com")
+    }
+
     fun looksLikeEmail(e: String): Boolean = Regex("^[^@\\s]+@[^@\\s]+\\.[a-zA-Z]{2,}$").matches(e.trim())
 
     /** 850 KB, 1.4 MB: a file size the way people read it. */

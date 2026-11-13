@@ -278,6 +278,14 @@ class DomainTest {
         assertEquals("", com.emotionalleaves.studioagent.domain.CallReader.read("Send to entries@riverside.org", java.time.LocalDate.of(2027, 1, 10), java.time.ZoneOffset.UTC, "x", 0L).url)
     }
 
+    @Test fun aResultEmailIsMatchedToTheOrganizersSite() {
+        assertTrue(Texts.sameSite("news.riverside.org", "https://www.riverside.org/call"))
+        assertTrue(Texts.sameSite("riverside.org", "riverside.org"))
+        assertFalse(Texts.sameSite("gmail.com", "https://gmail.com"))
+        assertFalse(Texts.sameSite("other.org", "https://riverside.org/call"))
+        assertFalse(Texts.sameSite("riverside.org", ""))
+    }
+
     @Test fun errorsReadAsPlainWords() {
         val off = com.emotionalleaves.studioagent.ui.plainError(java.net.UnknownHostException("Unable to resolve host \"api.anthropic.com\""))
         assertTrue(off.startsWith("No internet connection"))

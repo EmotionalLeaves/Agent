@@ -208,3 +208,7 @@ One real change per round. Pushed and built every ten rounds.
 204. Bare web addresses printed on flyers (riversideprints.org/call) are kept as the call's link.
 205. The flyer reader now comes from Google Play services instead of being packed into the app: the app stays about 9 MB instead of 53 MB.
 206. The daily check asks Play services to fetch the reader ahead of time, so the first flyer photo is read straight away.
+207. A result email for a web-form entry is matched by the organizer's own domain when it fits exactly one entry, so acceptances are picked up without the title in the email.
+208. Applied: a submitted entry says how its result arrives: picked up from email when it is connected, otherwise one tap when you hear.
+209. Six weeks after an entry with no result, the weekend's next step gently asks whether you heard back.
+210. The flyer buttons wrap onto two lines with large text instead of squeezing.
