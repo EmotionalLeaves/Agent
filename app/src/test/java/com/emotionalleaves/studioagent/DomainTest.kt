@@ -643,4 +643,19 @@ class DomainTest {
         assertEquals("Pay the entry fee tomorrow", lines[4].text); assertEquals(fri.plusDays(1), lines[4].day)
         assertEquals(fri.plusDays(7), D.dayIn("frame it friday", fri))
     }
+
+    @Test fun aClassAddsUpAndIsPricedFairly() {
+        val W = com.emotionalleaves.studioagent.domain.Workshop
+        assertEquals("watercolor", W.kindOf("Watercolor on paper"))
+        assertEquals("phone drawing", W.kindOf("digital, archival print"))
+        assertEquals("drawing", W.kindOf("graphite"))
+        listOf(45, 60, 90, 120, 180).forEach { m -> assertEquals(m, W.outline("drawing", m).sumOf { it.minutes }) }
+        assertTrue(W.supplies("drawing", 10).first().startsWith("12 "))
+        val (flat, per) = W.fee(90, 10)
+        assertEquals(80.0, flat, 0.01) // two hours at 40, set-up included
+        assertTrue(per >= 10.0 && per % 5.0 == 0.0)
+        val mail = W.email("Jade Leaves", "Eastside Library", "Drawing what is in front of you", 90, 10, "", "$80")
+        assertTrue(mail.contains("90 minutes") && mail.contains("Eastside Library") && mail.contains("$80"))
+        assertTrue(W.email("J", "", "T", 120, 8, "").contains("about 2 hours"))
+    }
 }

@@ -37,6 +37,7 @@ val toolGroups: List<Pair<String, List<Triple<String, String, String>>>> = listO
         Triple("Your prices", "A rule, the strays, and raising them", "pricing"),
         Triple("A piece made for someone", "A commission from quote to hand-over", "commission"),
         Triple("Market day", "A fair table: one tap a sale, the day's total", "market"),
+        Triple("Teach a class", "A beginner class at a library: outline, supplies, fee, the email", "teach"),
         Triple("At the opening", "A code to scan, and selling a piece tonight", "opening")
     ),
     "Being seen" to listOf(

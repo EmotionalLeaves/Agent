@@ -1366,3 +1366,77 @@ object Dump {
         return null
     }
 }
+
+// ---------------------------------------------------------------- teaching a class
+/**
+ * A beginner class at a library, community center or cafe: an outline that fits the time, what to bring for the
+ * number of people, a fair fee, and the short email that offers it. Teaching pays, and it puts your name in front of
+ * a room of people who now care about your work.
+ */
+object Workshop {
+    data class Part(val minutes: Int, val what: String)
+
+    fun kindOf(medium: String): String = medium.lowercase().let { m ->
+        when {
+            listOf("watercolor", "watercolour").any { it in m } -> "watercolor"
+            listOf("acrylic", "oil", "gouache", "paint").any { it in m } -> "painting"
+            listOf("print", "lino", "block").any { it in m } && "digital" !in m && "archival" !in m -> "printmaking"
+            listOf("collage", "paper").any { it in m } -> "collage"
+            listOf("digital", "procreate", "ipad", "tablet").any { it in m } -> "phone drawing"
+            else -> "drawing"
+        }
+    }
+
+    fun title(kind: String): String = when (kind) {
+        "watercolor" -> "Loose watercolor for complete beginners"
+        "painting" -> "Your first small painting"
+        "printmaking" -> "Carve and print a card"
+        "collage" -> "Collage from what is in your recycling"
+        "phone drawing" -> "Drawing on your phone"
+        else -> "Drawing what is in front of you"
+    }
+
+    /** The class in parts that add up to [minutes]: a welcome, a demo, guided work, free work, a look at everyone's. */
+    fun outline(kind: String, minutes: Int): List<Part> {
+        val m = minutes.coerceIn(45, 180)
+        val welcome = 5; val demo = (m * 0.15).toInt().coerceAtLeast(8); val share = (m * 0.12).toInt().coerceAtLeast(8)
+        val guided = ((m - welcome - demo - share) * 0.55).toInt(); val free = m - welcome - demo - share - guided
+        val doing = when (kind) {
+            "watercolor" -> "a three-color sky, then one simple object" to "a small postcard painting of their own"
+            "painting" -> "blocking in three big shapes" to "one small piece from a photo they brought"
+            "printmaking" -> "carving a simple shape and inking it" to "a card or two to take home"
+            "collage" -> "tearing and arranging by value" to "a small collage from a theme they choose"
+            "phone drawing" -> "layers, a pencil, and tracing light and dark" to "a drawing of something on the table"
+            else -> "seeing big shapes, then light and dark" to "a drawing of a still life on the table"
+        }
+        return listOf(Part(welcome, "Welcome, names, and what everyone hopes to make"), Part(demo, "You show it once, slowly: " + doing.first),
+            Part(guided, "Everyone tries it with you, step by step"), Part(free, "Their own: " + doing.second),
+            Part(share, "Everyone's on one table, one kind thing about each"))
+    }
+
+    /** What to bring for [people], plus a couple spare. */
+    fun supplies(kind: String, people: Int): List<String> {
+        val n = people + 2
+        return when (kind) {
+            "watercolor" -> listOf("$n watercolor pads or postcard blocks", "$n travel watercolor sets", "$n round brushes, size 8", "${(n + 1) / 2} water jars", "Paper towels")
+            "painting" -> listOf("$n small canvas boards, 8 x 10", "Acrylics: white, black and the three primaries, shared", "$n brushes, flat and round", "${(n + 1) / 2} palettes or paper plates", "Paper towels and aprons")
+            "printmaking" -> listOf("$n soft carving blocks", "${(n + 1) / 2} carving tools", "Block ink and ${(n + 2) / 3} brayers", "$n blank cards", "A wooden spoon each")
+            "collage" -> listOf("A stack of magazines and colored paper", "$n glue sticks", "$n pairs of scissors", "$n card bases, 8 x 10")
+            "phone drawing" -> listOf("A free drawing app everyone installs before", "A few simple objects to draw", "Optional: $n cheap styluses")
+            else -> listOf("$n sketchbooks or sheets of good paper", "$n pencils (2B and 4B)", "$n kneaded erasers", "A few simple objects to draw, lit from one side")
+        }
+    }
+
+    /** A fair fee: a flat rate for the time, the supplies on top. Libraries often pay flat; a cafe class can charge per person. */
+    fun fee(minutes: Int, people: Int, hourly: Double = 40.0, perPersonSupplies: Double = 6.0): Pair<Double, Double> {
+        val flat = (hourly * (minutes + 30) / 60.0 / 5).roundToInt() * 5.0 // the half hour to set up and clean up counts too
+        val perPerson = ((flat / people.coerceAtLeast(1)) + perPersonSupplies).let { (it / 5).roundToInt() * 5.0 }.coerceAtLeast(10.0)
+        return flat to perPerson
+    }
+
+    fun email(name: String, venue: String, title: String, minutes: Int, people: Int, website: String, feeText: String = ""): String =
+        "Hello,\n\nI'm $name, a local artist. I'd love to teach a beginner class at ${venue.ifBlank { "your space" }}: \"$title\", " +
+            "about ${if (minutes % 60 == 0) "${minutes / 60} hour${if (minutes > 60) "s" else ""}" else "$minutes minutes"}, for up to $people people, no experience needed. " +
+            "I bring every supply and set up and clear away myself." + (if (feeText.isNotBlank()) " My fee for a class like this is $feeText, supplies included." else "") + "\n\nCould we find an evening or a weekend afternoon that suits you? " +
+            "I'm happy to share an outline and a couple of pictures of my work" + (if (website.isNotBlank()) " (there are more at $website)" else "") + ".\n\nThank you,\n$name"
+}
