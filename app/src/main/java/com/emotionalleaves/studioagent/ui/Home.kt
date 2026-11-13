@@ -670,6 +670,12 @@ fun SessionScreen(nav: NavController) {
                     else { st.sessionPausedAt = now(); com.emotionalleaves.studioagent.media.Noise.stop() }
                 }) { Text(if (paused) "Resume" else "Pause") }
                 Text("Put the phone down. The timer keeps going.", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                // Every 45 minutes, for a couple of minutes: step back. Good for a back that stood all shift, and for the work.
+                val mins = (secs / 60).toInt()
+                if (!paused && mins >= 45 && mins % 45 < 3) Panel(strong = true) {
+                    Text("Step back", fontWeight = FontWeight.SemiBold)
+                    Text("Stand up and look at the piece from across the room for a minute. Your back gets a rest, and you will see it fresh.", style = MaterialTheme.typography.bodyMedium)
+                }
                 // A steady hum to settle into: on or off with one tap, remembered for next time.
                 var hum by remember { mutableStateOf(com.emotionalleaves.studioagent.media.Noise.playing) }
                 LaunchedEffect(Unit) { if (st.sessionNoise && !hum && !paused) { com.emotionalleaves.studioagent.media.Noise.start(); hum = true } }
