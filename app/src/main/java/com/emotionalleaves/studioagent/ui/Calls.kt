@@ -620,6 +620,18 @@ fun ApplScreen(nav: NavController, id: Long) {
                 val ledgerAll by dao.ledger().collectAsState(emptyList())
                 val guests = contactsAll.filter { it.kind == "artist" && it.notes.contains("Show:$id;") }
                 val guestPieces = guests.flatMap { g -> com.emotionalleaves.studioagent.domain.GroupShow.pieces(g.submissionNotes).map { it.copy(id = -(g.id * 100 + it.title.hashCode().toLong().mod(97L)), tags = "guest:" + g.name) } }
+                // The opening of your own show: a short list, so nothing is remembered at the last minute.
+                if (o.sourceName == "Your own show") Expand("The opening night") {
+                    listOf("Ask the venue what is allowed: drinks, food, music, how late" to "A week before",
+                        "Water and something simple to drink; cups and napkins" to "Most openings spend 30 to 60 on this",
+                        "Something small to eat that does not need plates" to "Optional",
+                        "The sign-up sheet and pens, by the door" to "In Documents above",
+                        "Price list, red dot stickers, a way to take payment" to "Ask the venue if they take it for you",
+                        "A friend to greet people while you talk" to "It frees you to talk about the work",
+                        "Photos of the room full of people" to "For your records and your next proposal")
+                        .forEach { (what, note) -> Text("• $what"); Small(note) }
+                    if (guests.isNotEmpty()) Small("With ${guests.size + 1} of you, costs are split; record them in Records for this show.")
+                }
                 if (o.sourceName == "Your own show") Expand(if (guests.isEmpty()) "Show with other artists" else "Showing with " + guests.joinToString(", ") { it.name.ifBlank { it.email } }) {
                     Small("Two to four artists share the work of a show and bring twice the visitors. Add them, send the invitation, and paste their list of pieces when it comes back.")
                     guests.forEach { g -> key(g.id) {
