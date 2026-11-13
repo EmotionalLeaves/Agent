@@ -152,7 +152,7 @@ class ScreensTest {
         val ids = seed()
         shot("27_ideas", "ideas", "Fridge light")
         shot("28_receipts", "receipts", "Staff Show")
-        shot("29_admin", "admin", "Approve statement")
+        shot("29_admin", "admin", "Approve the 150-word statement")
         shot("50_interview", "interview", "Done for now")
         shot("51_contact", "contact/${ids["contact"]}", "Details: who, where")
         shot("52_letters", "letters", "print lab")

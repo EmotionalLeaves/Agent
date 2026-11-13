@@ -128,7 +128,7 @@ class AppTest {
             mapOf("work" to work, "doc" to doc, "opp" to opp, "draft" to draft, "sent" to sent, "contact" to contact)
         }
         listOf(
-            "home" to "Start now", "startnow" to "Now: Block in the big shapes", "receipts" to "Application: Staff Show", "admin" to "Approve statement", "works" to "Blue Hour", "work/${ids["work"]}" to "Pictures and papers",
+            "home" to "Start now", "startnow" to "Now: Block in the big shapes", "receipts" to "Application: Staff Show", "admin" to "Approve the 150-word statement", "works" to "Blue Hour", "work/${ids["work"]}" to "Pictures and papers",
             "crop/${ids["work"]}" to "Drag each dot", "ideas" to "Fridge light series", "materials" to "Cover letter", "doc/${ids["doc"]}" to "Ready when these are all true",
             "facts" to "BFA, State University", "calls" to "Winter Open", "call/${ids["opp"]}" to "Details", "appl/${ids["draft"]}" to "Questions this call asks (1)",
             "appl/${ids["sent"]}" to "Submitted. Done.", "sources" to "CaFE alerts", "outreach" to "Campus Gallery", "contact/${ids["contact"]}" to "Details: who, where",
