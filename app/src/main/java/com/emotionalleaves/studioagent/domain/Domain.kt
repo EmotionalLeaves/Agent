@@ -558,6 +558,16 @@ object CallReader {
     }
 
     /** "Home | Winter Open 2027" and "Winter Open 2027 - Riverside Arts" read as "Winter Open 2027". */
+    /** Lines that say what a flyer is, not what it is called. */
+    private val genericLine = Regex("^(an? )?(open call|call for (artists|entries|submissions|art|work)|now accepting|submissions? (open|wanted)|artists wanted|words read from a photo.*|apply now|seeking artists)[!:.]*$", RegexOption.IGNORE_CASE)
+
+    /** The line that names the call: the first real line, skipping links, "OPEN CALL" style headings, and date or fee lines. */
+    fun titleLine(text: String): String {
+        val lines = text.lines().map { it.trim() }.filter { it.isNotBlank() && !it.startsWith("http") && !it.startsWith("Link:") }
+        return lines.firstOrNull { l -> !genericLine.matches(l) && !Regex("^(deadline|due|entry fee|fee|apply|submit|open to|eligib)", RegexOption.IGNORE_CASE).containsMatchIn(l) }
+            ?: lines.firstOrNull().orEmpty()
+    }
+
     fun cleanTitle(t: String): String {
         val parts = t.split(" | ", " – ", " — ").map { it.trim() }.filter { it.isNotBlank() && !it.equals("home", true) }
         return (parts.firstOrNull() ?: t).trim()
@@ -565,9 +575,12 @@ object CallReader {
 
     fun read(text: String, today: LocalDate, zone: java.time.ZoneId, sourceName: String, now: Long): Opp {
         val l = text.lowercase()
-        val url = Regex("https?://[^\\s)>\\]]+").find(text)?.value.orEmpty()
+        // Flyers print bare addresses ("riversideprints.org/call"), so those count as links too.
+        val url = Regex("https?://[^\\s)>\\]]+").find(text)?.value
+            ?: Regex("(?<![@\\w.])(?:www\\.)?[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.(?:org|com|net|edu|art|gallery|io|co|us|ca|uk)(?:/[^\\s)>\\]]*)?", RegexOption.IGNORE_CASE).find(text)?.value?.let { "https://" + it.trimEnd('.', ',') }
+            ?: ""
         val email = Regex("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}").find(text)?.value.orEmpty()
-        val title = cleanTitle(text.lines().map { it.trim() }.firstOrNull { it.isNotBlank() && !it.startsWith("http") && !it.startsWith("Link:") }.orEmpty()).take(120).ifBlank { "Shared call" }
+        val title = cleanTitle(titleLine(text)).take(120).ifBlank { "Shared call" }
         val d = deadline(text, today)
         val deadlineMs = d?.atTime(23, 59)?.atZone(zone)?.toInstant()?.toEpochMilli() ?: 0L
         // The kind is read from the title first, then the opening of the page, so a menu that mentions "residencies" does not decide it.

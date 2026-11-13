@@ -202,3 +202,9 @@ One real change per round. Pushed and built every ten rounds.
 198. Calls, Photo of a flyer: the words are read on the phone, then picked apart like a pasted call (name, deadline, fee, link).
 199. A picture shared into the app goes the same way, and any words typed beside it are kept with the call.
 200. The live check now lists which free services can see pictures at all, so the flyer path does not depend on them.
+201. README: flyer photos are read on the phone.
+202. One rule for the stand-in names the app gives unnamed calls, so a real name always replaces them and Details opens for them.
+203. A flyer's name is found past headings like OPEN CALL or CALL FOR ARTISTS, and past deadline and fee lines.
+204. Bare web addresses printed on flyers (riversideprints.org/call) are kept as the call's link.
+205. The flyer reader now comes from Google Play services instead of being packed into the app: the app stays about 9 MB instead of 53 MB.
+206. The daily check asks Play services to fetch the reader ahead of time, so the first flyer photo is read straight away.

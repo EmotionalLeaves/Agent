@@ -321,7 +321,7 @@ fun CallDetail(nav: NavController, id: Long) {
                     val merged = Engine.scored(o.copy(
                         deadline = if (o.deadline > 0) o.deadline else aiDate.takeIf { it > 0 } ?: r.deadline,
                         fee = if (o.fee > 0) o.fee else (found?.fee?.takeIf { it > 0 } ?: r.fee),
-                        title = if (o.title.isBlank() || o.title == "New call" || o.title == "Call from link") (found?.title ?: r.title).ifBlank { o.title } else o.title,
+                        title = if (placeholderTitle(o.title)) (found?.title ?: r.title).ifBlank { o.title } else o.title,
                         organiser = o.organiser.ifBlank { found?.organiser.orEmpty() }, venue = o.venue.ifBlank { found?.venue.orEmpty() }, city = o.city.ifBlank { found?.city.orEmpty() },
                         email = o.email.ifBlank { found?.email?.takeIf { it.isNotBlank() } ?: r.email }, maxWorks = if (o.maxWorks > 0) o.maxWorks else (found?.maxWorks?.takeIf { it > 0 } ?: r.maxWorks),
                         statementLimit = if (o.statementLimit > 0) o.statementLimit else (found?.statementLimit?.takeIf { it > 0 } ?: r.statementLimit),
@@ -335,7 +335,7 @@ fun CallDetail(nav: NavController, id: Long) {
                 }
             }) { Text("Read the page for me") }
         }
-        Expand("Details", startOpen = o.title.isBlank() || o.title == "New call" || o.deadline <= 0) {
+        Expand("Details", startOpen = placeholderTitle(o.title) || o.deadline <= 0) {
         Field("Title", o.title, { save(o.copy(title = it)) })
         Choice("Kind of call", Ai.callKinds, o.kind, names = { mapOf("fair" to "Art fair", "commission" to "Commission (a work made for them)")[it] ?: it.replaceFirstChar { c -> c.uppercase() } }) { save(o.copy(kind = it)) }
         DateField("Deadline", deadlineText) { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0) save(o.copy(deadline = ms)) }
@@ -828,3 +828,6 @@ fun FlyerButtons(nav: NavController, onStatus: (String) -> Unit) {
         TextButton(enabled = !busy, onClick = { pick.launch("image/*") }) { Text("A saved photo") }
     }
 }
+
+/** A stand-in title the app gave a call it could not name yet; it gives way to a real one. */
+fun placeholderTitle(t: String) = t.isBlank() || t in setOf("New call", "Call from link", "Shared call", "Call from a flyer photo")

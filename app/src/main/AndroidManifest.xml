@@ -21,6 +21,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.StudioAgent">
+        <!-- The text reader for flyer photos is fetched by Google Play services ahead of first use. -->
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="ocr" />
 
         <activity
             android:name=".ui.MainActivity"

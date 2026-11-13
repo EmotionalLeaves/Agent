@@ -36,7 +36,7 @@ Four tabs, the same every time. Each thing has one place.
 
 - Long-press the icon: Start now, Calls, Park an idea.
 - The Start now widget and quick-settings tile start a session in one tap.
-- Share a link, text or flyer into the app to add a call; share several pictures from the gallery to add them as pieces.
+- Share a link, text or flyer into the app to add a call, or photograph a flyer from Calls: its words are read on the phone (offline, no key). Share several pictures from the gallery to add them as pieces.
 
 ## Works with nothing set up
 

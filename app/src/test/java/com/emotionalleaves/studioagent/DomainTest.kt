@@ -267,6 +267,17 @@ class DomainTest {
         assertEquals(null, t("25:00")); assertEquals(null, t("soon")); assertEquals(null, t("13pm"))
     }
 
+    @Test fun aFlyerReadOnThePhoneGetsItsRealNameAndLink() {
+        val words = "Words read from a photo of a flyer or poster:\nOPEN CALL\nRiverside Print Biennial\nDeadline: March 3, 2027\nEntry fee: \$25 for up to 3 works\nOpen to artists in Ohio\nApply: riversideprints.org/call"
+        val o = com.emotionalleaves.studioagent.domain.CallReader.read(words, java.time.LocalDate.of(2027, 1, 10), java.time.ZoneOffset.UTC, "Flyer photo", 0L)
+        assertEquals("Riverside Print Biennial", o.title)
+        assertEquals("https://riversideprints.org/call", o.url)
+        assertEquals(25.0, o.fee, 0.0)
+        assertEquals("2027-03-03", java.time.Instant.ofEpochMilli(o.deadline).atZone(java.time.ZoneOffset.UTC).toLocalDate().toString())
+        // An email address is not mistaken for a link.
+        assertEquals("", com.emotionalleaves.studioagent.domain.CallReader.read("Send to entries@riverside.org", java.time.LocalDate.of(2027, 1, 10), java.time.ZoneOffset.UTC, "x", 0L).url)
+    }
+
     @Test fun errorsReadAsPlainWords() {
         val off = com.emotionalleaves.studioagent.ui.plainError(java.net.UnknownHostException("Unable to resolve host \"api.anthropic.com\""))
         assertTrue(off.startsWith("No internet connection"))

@@ -1017,6 +1017,8 @@ object Engine {
                 Notifier.post(ctx, st, 101, it.title, "This one has a deadline this week.", "appl/${it.applId}")
             }
         }
+        // Have the flyer reader ready before the first flyer photo, not after.
+        com.emotionalleaves.studioagent.media.Ocr.warmUp()
         st.lastDaily = now
         st.lastDailyStatus = if (log.isEmpty()) "All steps ran" else log.joinToString("; ")
         st.log("Daily check finished. " + (if (log.isEmpty()) "Everything ran." else "Some steps could not run: " + log.joinToString("; ")))
