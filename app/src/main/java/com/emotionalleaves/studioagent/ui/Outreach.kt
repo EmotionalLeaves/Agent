@@ -246,6 +246,10 @@ fun ContactScreen(nav: NavController, id: Long) {
             Small("Pages about showing work there, found by the daily check. Read these before writing.")
             pages.forEach { (t, u) -> TextButton(onClick = { Share.open(ctx, u) }, modifier = Modifier.offset(x = (-12).dp)) { Text(t) } }
         }
+        // Time to try again: a fresh draft, and the old exchange stays in the notes.
+        if (c.status in setOf("followed_up", "not_now") && c.revisitAt in 1..now()) OutlinedButton(onClick = {
+            save(c.copy(status = "research", draftSubject = "", draftBody = "", followUpBody = "", revisitAt = 0, notes = (c.notes + "\nWrote again from ${fmtDate(now())}.").trim()))
+        }, modifier = Modifier.fillMaxWidth()) { Text("Write to them again") }
         // They said yes to a show of your own: one screen turns it into a dated plan.
         if (c.status in setOf("sent", "followed_up", "interested", "more", "research")) OutlinedButton(onClick = { nav.navigate("plan/${c.id}") }, modifier = Modifier.fillMaxWidth()) { Text("They said yes to a show: plan it") }
         // A visit is real progress: log it in one tap, and the weekend suggestion moves on to the next place.

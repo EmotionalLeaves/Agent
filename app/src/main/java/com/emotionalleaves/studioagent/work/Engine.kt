@@ -887,7 +887,8 @@ object Engine {
         val status = when (classify(text)) {
             "interested", "accepted" -> "interested"; "not_now" -> "not_now"; "no", "declined" -> "no"; "more" -> "more"; else -> c.status
         }
-        dao.put(c.copy(status = status, lastReply = text.take(3000)))
+        // "Not now" is not "no": the venue comes back in six months.
+        dao.put(c.copy(status = status, lastReply = text.take(3000), revisitAt = if (status == "not_now") System.currentTimeMillis() + 180 * DAY else c.revisitAt))
     }
 
     private suspend fun sendOutreach(now: Long) {
@@ -1085,6 +1086,10 @@ object Engine {
                 val t = dao.oppsNow().firstOrNull { it.id == e.oppId }?.title.orEmpty().ifBlank { "your show" }
                 return NextStep("Tell your email list about $t", "${Texts.count(subs, "person", "people")} asked to hear about your shows. The note is drafted; read it and send.", "update")
             }
+        }
+        // Six months on from a venue that did not answer or said not now: one new note, with new work, is normal and welcome.
+        dao.contactsNow().filter { it.status in setOf("followed_up", "not_now") && it.revisitAt in 1..now }.minByOrNull { it.revisitAt }?.let { c ->
+            return NextStep("Write to ${c.venue.ifBlank { c.name }} again", "It has been months. A short note with what is new (a finished series, a show) is how most yeses happen.", "contact/${c.id}")
         }
         // A weekend with nothing pressing: one real place near you to go and look at. Looking is the whole step.
         if (today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY)
