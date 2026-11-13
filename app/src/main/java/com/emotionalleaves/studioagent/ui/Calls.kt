@@ -141,11 +141,13 @@ fun Calls(nav: NavController) {
                         looking = true; status = "Looking at the listing sites. This takes a minute or two…"
                         scope.io({ status = it; looking = false }) {
                             val n = Engine.scanSources(now()); Engine.rescore()
-                            status = if (n == 0) "Looked. Nothing new right now; the app checks again tomorrow." else "Found $n new " + (if (n == 1) "call" else "calls") + ". Ones that fit your level are above; the rest are under All."
+                            val on = dao.sourcesNow().count { it.kind == "url" && it.enabled }
+                            status = if (on == 0) "Every listing site is switched off. Turn one on under All, Where calls come from." else if (n == 0) "Looked. Nothing new right now; the app checks again tomorrow." else "Found $n new " + (if (n == 1) "call" else "calls") + ". Ones that fit your level are above; the rest are under All."
                             looking = false
                         }
                     }) { Text(if (looking) "Looking…" else "Look for calls now") }
                 }
+                if (list.isNotEmpty()) Text(if (list.size == 1) "One call fits you this week. Yes or No takes a minute." else "${list.size} calls fit you this week, best fit first. Yes or No on each takes a minute.", style = MaterialTheme.typography.bodyMedium)
                 list.forEach { o ->
                     key(o.id) {
                         Panel {

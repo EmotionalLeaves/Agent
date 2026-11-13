@@ -623,10 +623,8 @@ fun Review(nav: NavController) {
         if (st.pausedUntil > now()) Small("Planning is paused until ${fmtDate(st.pausedUntil)}.")
         else if (coming.isEmpty()) Small("None planned yet. They are added with the next daily check.")
         else coming.forEach { Check(false, fmtDate(it.date) + ", " + clock(it.date) + ", ${(it.endDate - it.date) / 60000} min", small = true) }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { nav.navigate("week") }) { Text("Change studio times") }
-            if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }) { Text("Look at ${Texts.count(pending, "thing")} waiting") }
-        }
+        OutlinedButton(onClick = { nav.navigate("week") }, modifier = Modifier.fillMaxWidth()) { Text("Change studio times") }
+        if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }, modifier = Modifier.fillMaxWidth()) { Text("Look at ${Texts.count(pending, "thing")} waiting for your yes") }
         Button(onClick = { st.lastReviewWeek = Engine.weekId(); nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Done for the week") }
     }
 }

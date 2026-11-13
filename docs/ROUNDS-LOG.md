@@ -112,3 +112,13 @@ One real change per round. Pushed and built every ten rounds.
 108. Picture files are named the short way calls ask for (Leaves_01_BlueHour_2026.jpg); medium and size live in the image list.
 109. The phone box says where the number is used (entry forms, email signature, receipts) and keeps the number keyboard.
 110. The email box in About you says what it is for (your signature and entry forms).
+111. The weekly review's buttons are full width, so "Look at 2 things waiting for your yes" never wraps into a tower.
+112. (design check) Screens reviewed from build 117: calls, call, application, records, week, writing, contact, letters, email, rules, review, approvals.
+113. Six or more choices become one dropdown (your level, for example) instead of three rows of chips.
+114. Waiting for your yes names drafts the way a person would: "Approve the 150-word statement", "23 words, written from your answers".
+115. Calls you never acted on are cleared three months after they close, so the lists stay quick; anything you applied to is kept.
+116. "Look for calls now" says so when every listing site is switched off, instead of "nothing new".
+117. An application waiting for your yes shows its deadline.
+118. Applications come first in Waiting for your yes, because they have deadlines.
+119. A test for how drafts are named.
+120. This week says how many calls fit and that a Yes or No takes a minute.

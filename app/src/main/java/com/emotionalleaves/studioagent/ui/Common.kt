@@ -250,7 +250,7 @@ fun Choice(label: String, options: List<String>, selected: String, names: ((Stri
     // Two or three short options that switch a view read best as one joined bar, like tabs.
     if (names == null && label.isBlank() && options.size in 2..3 && options.all { it.length <= 12 } && selected in options) { Segments(options, selected, onSelect); return }
     // Long lists become one box that opens a list, instead of a wall of chips.
-    if (options.size > 6) { Pick(label, options, selected, names, onSelect); return }
+    if (options.size > 5) { Pick(label, options, selected, names, onSelect); return }
     Column {
         if (label.isNotBlank()) Small(label)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

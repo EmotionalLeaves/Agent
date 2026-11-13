@@ -49,6 +49,12 @@ import java.util.concurrent.TimeUnit
 data class NextStep(val title: String, val detail: String, val route: String)
 data class Pending(val title: String, val detail: String, val route: String)
 
+/** "the 150-word statement", "the 50-word bio": a draft named the way a person would say it. */
+fun docWords(type: String, variant: String): String {
+    val what = mapOf("statement" to "statement", "bio" to "bio", "series" to "series statement")[type] ?: type
+    return if (variant.toIntOrNull() != null) "the $variant-word $what" else "the $what"
+}
+
 const val DAY = 86_400_000L
 
 /** The work the app does on its own. Screens and background workers both call into here. */
@@ -789,10 +795,11 @@ object Engine {
         val now = System.currentTimeMillis()
         val out = mutableListOf<Pending>()
         dao.docsNow().filter { it.type in setOf("statement", "bio", "proposal", "custom") && it.text.isNotBlank() && !it.approved && it.parkedUntil < now }
-            .forEach { out += Pending("Approve " + (if (it.type == "custom") it.title.ifBlank { "document" } else "${it.type} (${it.variant})"), "${Texts.words(it.text)} words", "doc/${it.id}") }
+            .forEach { out += Pending("Approve " + (if (it.type == "custom") it.title.ifBlank { "the document" } else docWords(it.type, it.variant)), "${Texts.count(Texts.words(it.text), "word")}, written from your answers", "doc/${it.id}") }
         val opps = dao.oppsNow().associateBy { it.id }
         dao.applsNow().filter { it.status == "draft" || it.status == "ready" }
-            .forEach { out += Pending("Application: ${opps[it.oppId]?.title.orEmpty()}", if (it.status == "ready") "Ready to send" else "Review the pack", "appl/${it.id}") }
+            .forEach { out += Pending("Application: ${opps[it.oppId]?.title.orEmpty()}", (if (it.status == "ready") "Ready to send" else "Review the pack") +
+                (opps[it.oppId]?.deadline?.takeIf { d -> d > 0 }?.let { d -> ". Deadline ${com.emotionalleaves.studioagent.ui.fmtDate(d)}" } ?: ""), "appl/${it.id}") }
         dao.contactsNow().forEach { c ->
             when {
                 c.status == "drafted" -> out += Pending("Approve email to ${c.venue.ifBlank { c.name }}", "First email and follow-up, one tap", "contact/${c.id}")
@@ -801,7 +808,8 @@ object Engine {
                 c.status == "interested" || c.status == "more" -> out += Pending("${c.venue.ifBlank { c.name }} replied", "They want to hear more", "contact/${c.id}")
             }
         }
-        return out
+        // Applications come first: they are the ones with deadlines.
+        return out.sortedBy { !it.route.startsWith("appl") }
     }
 
     /** The single thing shown on the home screen. */
@@ -930,7 +938,12 @@ object Engine {
         suspend fun step(name: String, block: suspend () -> Unit) {
             try { block() } catch (e: Exception) { log += "$name: ${com.emotionalleaves.studioagent.ui.plainError(e)}" }
         }
-        step("expire") { dao.oppsNow().filter { it.status in setOf("new", "later") && it.deadline in 1..now }.forEach { dao.put(it.copy(status = "expired")) } }
+        step("expire") {
+            dao.oppsNow().filter { it.status in setOf("new", "later") && it.deadline in 1..now }.forEach { dao.put(it.copy(status = "expired")) }
+            // Calls you never acted on are cleared three months after closing, so the lists stay quick. Anything you applied to is kept.
+            val applied = dao.applsNow().map { it.oppId }.toSet()
+            dao.oppsNow().filter { it.id !in applied && it.status in setOf("expired", "no") && it.deadline in 1..(now - 90 * DAY) }.forEach { dao.del(it) }
+        }
         step("plan week") { planWeek(ctx) }
         step("sources") { scanSources(now) }
         step("email") { withContext(Dispatchers.IO) { checkMail(ctx) } }
