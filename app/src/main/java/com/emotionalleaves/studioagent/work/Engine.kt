@@ -843,7 +843,10 @@ object Engine {
         val now = System.currentTimeMillis(); var total = 0.0
         val place = where.ifBlank { "a market" }
         tally.forEach { (k, n) ->
-            if (k.startsWith("m:")) items.firstOrNull { "m:" + it.name == k }?.let { i -> if (i.price > 0) { dao.put(Ledger(kind = "sale", amount = i.price * n, date = now, note = "$n x ${i.name}, at $place")); total += i.price * n } }
+            if (k.startsWith("m:")) items.firstOrNull { "m:" + it.name == k }?.let { i -> if (i.price > 0) { dao.put(Ledger(kind = "sale", amount = i.price * n, date = now, note = "$n x ${i.name}, at $place", artworkId = i.pieceId)); total += i.price * n }
+                // Prints of a piece in an edition: each one sold is counted against it.
+                if (i.pieceId > 0) dao.artworksNow().firstOrNull { it.id == i.pieceId }?.let { w -> dao.put(w.copy(editionUsed = w.editionUsed + n).let { x -> if (x.editionSize > 0 && x.editionUsed >= x.editionSize) x.copy(status = "sold", location = "Edition sold out") else x }) }
+            }
             if (k.startsWith("w:")) dao.artworksNow().firstOrNull { it.id == k.removePrefix("w:").toLongOrNull() }?.let { w ->
                 dao.put(Ledger(kind = "sale", amount = w.price, date = now, note = "${w.title}, at $place", artworkId = w.id)); total += w.price
                 dao.put(w.copy(status = "sold", location = "Sold"))

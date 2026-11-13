@@ -1001,10 +1001,11 @@ object StudioVisit {
 
 /** A day at a market or fair: prints and cards in multiples, originals one each, a tally, and the day's total. */
 object Market {
-    data class Item(val name: String, val price: Double, val qty: Int)
+    /** [pieceId]: prints of one of your pieces, so each one sold counts against its edition. */
+    data class Item(val name: String, val price: Double, val qty: Int, val pieceId: Long = 0)
 
-    fun items(stored: String): List<Item> = stored.lines().mapNotNull { l -> l.split("|").takeIf { it.size == 3 }?.let { (n, p, q) -> Item(n, p.toDoubleOrNull() ?: 0.0, q.toIntOrNull() ?: 0) } }.filter { it.name.isNotBlank() }
-    fun itemsText(items: List<Item>): String = items.joinToString("\n") { "${it.name.replace("|", "/")}|${it.price}|${it.qty}" }
+    fun items(stored: String): List<Item> = stored.lines().mapNotNull { l -> l.split("|").takeIf { it.size in 3..4 }?.let { p -> Item(p[0], p[1].toDoubleOrNull() ?: 0.0, p[2].toIntOrNull() ?: 0, p.getOrNull(3)?.toLongOrNull() ?: 0) } }.filter { it.name.isNotBlank() }
+    fun itemsText(items: List<Item>): String = items.joinToString("\n") { "${it.name.replace("|", "/")}|${it.price}|${it.qty}" + (if (it.pieceId > 0) "|${it.pieceId}" else "") }
 
     fun tally(stored: String): Map<String, Int> = stored.split(",").mapNotNull { p -> p.substringBeforeLast(":").takeIf { it.isNotBlank() }?.let { k -> p.substringAfterLast(":").toIntOrNull()?.let { k to it } } }.toMap()
     fun bump(stored: String, key: String, by: Int): String = tally(stored).toMutableMap().also { val n = ((it[key] ?: 0) + by).coerceAtLeast(0); if (n == 0) it.remove(key) else it[key] = n }.entries.joinToString(",") { "${it.key}:${it.value}" }

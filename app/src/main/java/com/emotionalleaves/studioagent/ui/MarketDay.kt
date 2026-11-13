@@ -87,7 +87,12 @@ fun MarketDay(nav: NavController) {
                 Column(Modifier.weight(1f)) { Num("Price, " + st.currency, price) { price = it } }
                 Column(Modifier.weight(1f)) { Whole("How many", qty) { qty = it } }
             }
-            if (name.value.isNotBlank() && price > 0) OutlinedButton(onClick = { st.marketItems = Market.itemsText(items + Market.Item(name.value.trim().replace(",", " ").replace(":", " "), price, qty)); name.value = "" }) { Text("Add") }
+            // Prints of one of your pieces: each sold counts against its edition.
+            val editions = works.filter { it.editionSize > 0 && it.status != "sold" }
+            var forPiece by rememberSaveable { mutableStateOf(0L) }
+            if (editions.isNotEmpty()) Choice("Prints of a piece (counts against its edition)", listOf("0") + editions.map { it.id.toString() }, forPiece.toString(),
+                names = { i -> if (i == "0") "Not prints of a piece" else editions.firstOrNull { it.id.toString() == i }?.let { w -> w.title + " (${w.editionSize - w.editionUsed} of ${w.editionSize} left)" } ?: i }) { forPiece = it.toLongOrNull() ?: 0L; if (name.value.isBlank() && forPiece > 0) name.value = "Prints of " + (editions.firstOrNull { it.id == forPiece }?.title ?: "") }
+            if (name.value.isNotBlank() && price > 0) OutlinedButton(onClick = { st.marketItems = Market.itemsText(items + Market.Item(name.value.trim().replace(",", " ").replace(":", " "), price, qty, forPiece)); name.value = ""; forPiece = 0L }) { Text("Add") }
             Num("Booth or table fee, " + st.currency, st.marketFee) { st.marketFee = it }
             if (items.isNotEmpty() || originals.isNotEmpty()) OutlinedButton(onClick = { scope.io {
                 val f = com.emotionalleaves.studioagent.work.Papers.priceTags(ctx, st, items.map { it.name to it.price } + originals.map { it.title.ifBlank { "Untitled" } to it.price })
