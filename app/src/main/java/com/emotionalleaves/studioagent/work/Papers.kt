@@ -296,6 +296,26 @@ object Papers {
         return pdf.save(out(ctx, docName(s, "Talk_slides")))
     }
 
+    /**
+     * Everything you own and its value, for renter's or home insurance and for your own records if work is lost or damaged:
+     * each piece with its number, size, where it is and its value (your price), and the total. Sold and idea pieces left out.
+     */
+    fun valueList(ctx: Context, s: Settings, works: List<Artwork>): File {
+        val pdf = pdf(ctx, s, "Works and their value")
+        pdf.text("Works and their value", 20f, gap = 4f, face = Pdf.Face.DISPLAY)
+        pdf.text(name(s) + ", " + com.emotionalleaves.studioagent.ui.fmtDate(System.currentTimeMillis()), 10.5f, gap = 14f, grey = true)
+        val list = works.filter { it.status !in setOf("sold", "idea") }
+        list.forEach { a ->
+            val where = a.location.ifBlank { "Studio" }
+            pdf.row(inventoryNo(s, a), SpannableStringBuilder(pdf.em(a.title.ifBlank { "Untitled" })).append((if (a.year > 0) ", ${a.year}" else "") + ". " + details(a).joinToString(". ") + ". " + where + "."),
+                labelWidth = 92f, size = 10f, gap = 5f, right = if (a.price > 0) money(s, a.price) else "no price")
+        }
+        pdf.rule(dark = true)
+        pdf.amount("Total, ${list.size} works", money(s, list.sumOf { it.price }), size = 12f, face = Pdf.Face.BOLD)
+        pdf.text("Values are the asking prices. Keep a copy somewhere other than your phone, with the pictures (your backup has them).", 9.5f, grey = true)
+        return pdf.save(out(ctx, docName(s, "Works_and_value")))
+    }
+
     // ------------------------------------------------------------ certificate
 
 

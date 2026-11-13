@@ -190,6 +190,10 @@ fun Works(nav: NavController) {
                     withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
                 }
             }) { Text("Make my catalogue of works (PDF)") }
+            if (works.any { it.price > 0 && it.status != "sold" }) TextButton(onClick = { scope.io({ importStatus = it }) {
+                val f = Papers.valueList(ctx, st, works.sortedWith(compareBy({ it.location }, { it.title })))
+                withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
+            } }) { Text("For insurance: everything and its value (PDF)") }
 
         } else {
             Note("A series is a group of works that belong together. Most calls and every solo show want one. Ten documented works in one series opens Level 1.")
