@@ -488,6 +488,7 @@ fun SessionScreen(nav: NavController) {
     val buzz = rememberBuzz()
     val scope = rememberCoroutineScope()
     val works by dao.artworks().collectAsState(emptyList())
+    val events by dao.events().collectAsState(emptyList())
     val sessions by dao.sessions().collectAsState(emptyList())
     val tick by st.changed.collectAsState()
     val start = remember(tick) { st.sessionStart }
@@ -684,6 +685,8 @@ fun SessionScreen(nav: NavController) {
                     TextButton(onClick = { scope.io { dao.put(work.copy(status = "finished")) } }, modifier = Modifier.offset(x = (-12).dp)) { Text("Call it finished") }
                 } else if (work.nextStep.isNotBlank()) Small("Where you left off: ${work.nextStep}")
                 if (work.doneWhen.isNotBlank() && (open >= 0 || steps.isEmpty())) Small("Finished when: ${work.doneWhen}")
+                // Anything else on this piece's list, so it is not forgotten while the piece is in front of you.
+                events.filter { it.artworkId == work.id && it.type == "task" && !it.done }.take(2).forEach { Small("Also for this piece: " + it.title) }
             }
             if (Planner.isWindDown(LocalDateTime.now(), Planner.time(st.bedtime, LocalTime.of(22, 30)))) Panel(strong = true) {
                 Text("Wind-down time. A good place to stop: write your next step so nothing is lost.")
