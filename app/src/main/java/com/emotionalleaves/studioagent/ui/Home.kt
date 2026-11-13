@@ -964,11 +964,11 @@ val lightPrompts = listOf(
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
 val whatsNew = listOf(
-    "Social media help is off unless you turn it on (Settings, Hours and calm); days off from the app are there too.",
-    "On a break at work, Today offers five-minute jobs, and calls can be decided one at a time with big buttons.",
-    "From your wall: one of your finished pieces on Today each day.",
-    "At an opening: keep the names of people you talked to, with a reminder to follow up; photograph an opening poster to put it on your calendar.",
-    "After a show, two lines for next time, shown again before the next one; a check that the venue paid you.",
-    "Print this week for the fridge; your CV as text; People as a spreadsheet; a portfolio page with no account.",
-    "A distance limit for calls, and Near me or online in All calls."
+    "When it is all too much: in the menu on Today's step, three quiet days with one five-minute step and no notifications. \"Remind me this evening\" is there too.",
+    "Empty your head: everything at once, one line each; it is sorted into jobs, things to buy and ideas, and put away.",
+    "Your people: life drawing, sketch groups and art leagues near you, and a hello for after.",
+    "Teach a class: a beginner class at a library, laid out minute by minute, with supplies, a fair fee and the email.",
+    "Postcards of your pieces to print, from Market day; packing for drop-off day on an accepted entry.",
+    "A studio friend to text when you start; no's that count toward the year's sends; answers you wrote before, offered again.",
+    "An extra shift this week moves your studio times; supplies you bought go into Records in one number."
 )
