@@ -229,7 +229,12 @@ fun Calls(nav: NavController) {
                 val find = rememberSaveable { mutableStateOf("") }
                 if (opps.size > 12) Field("Find a call (a word, a city, a medium)", find)
                 val words = find.value.trim().lowercase().split(Regex("\\s+")).filter { it.isNotBlank() }
-                val everything = opps.filter { it.status in setOf("new", "later", "no", "expired") && kindOk(it) &&
+                // Near me: towns within 60 miles, plus online calls (nothing to carry anywhere).
+                var nearOnly by rememberSaveable { mutableStateOf(false) }
+                val miles = remember(opps.size) { Engine.milesTo() }
+                if (miles.size > 1) androidx.compose.material3.FilterChip(selected = nearOnly, onClick = { nearOnly = !nearOnly }, label = { Text("Near me or online") })
+                fun near(o: Opp) = o.online || (miles[o.city.substringBefore(",").trim().lowercase()]?.let { it <= 60 } ?: false)
+                val everything = opps.filter { it.status in setOf("new", "later", "no", "expired") && kindOk(it) && (!nearOnly || near(it)) &&
                         words.all { w -> callWords(it).contains(w) } }
                     .sortedWith(compareBy<Opp>({ it.status == "expired" || (it.deadline in 1 until now()) }, { if (it.deadline > 0) it.deadline else Long.MAX_VALUE }))
                 if (everything.size > allLimit) Small("Showing the first $allLimit of ${everything.size}.")

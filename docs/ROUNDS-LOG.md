@@ -505,3 +505,4 @@ One real change per round. Pushed and built every ten rounds.
 499. Is everything working? also says which parts of the last daily check did not finish, in the check's own words, and that each tries again the next day.
 500. The README describes the app as it now stands, grouped the same way as Everything the app can do.
 501. A commission's "Show them a draft" step sends the newest progress photo of the piece with a short note asking for any change while it is still easy to make, and ticks the step.
+502. All calls can be narrowed to "Near me or online": calls in towns within sixty miles of yours, plus online ones, once the map knows the towns.
