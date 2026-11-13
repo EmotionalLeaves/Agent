@@ -500,6 +500,15 @@ fun WorkDetail(nav: NavController, id: Long) {
         Field("Notes", w.notes, { save(w.copy(notes = it)) }, lines = 2)
         }
 
+        // How it was made: the progress photos from its sessions, in order, with the time they took.
+        val made by dao.sessions().collectAsState(emptyList())
+        val mine = made.filter { it.artworkId == w.id && it.end > it.start }
+        val shots = mine.filter { it.photoPath.isNotBlank() && File(it.photoPath).exists() }.sortedBy { it.start }
+        if (mine.isNotEmpty()) Expand("How it was made (${Texts.count(mine.size, "session")}, ${"%.1f".format(mine.sumOf { (it.end - it.start) / 3_600_000.0 })} hours)") {
+            if (shots.isEmpty()) Small("Take a progress photo when you stop a session and it appears here, in order.")
+            shots.chunked(3).forEach { row -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { row.forEach { x -> Column(Modifier.weight(1f)) { PathImage(x.photoPath, Modifier.fillMaxWidth().height(96.dp), 400, ContentScale.Crop); Small(fmtDate(x.start)) } }; repeat(3 - row.size) { Spacer(Modifier.weight(1f)) } } }
+            mine.filter { it.note.isNotBlank() }.sortedBy { it.start }.takeLast(5).forEach { Small(fmtDate(it.start) + ": " + it.note) }
+        }
         Expand("Pictures and papers") {
         Note("More pictures of this piece: a detail, the back, the piece on a wall. Kept with it and backed up.")
         w.extraImages.split("|").filter { it.isNotBlank() }.let { extras ->

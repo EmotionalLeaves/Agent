@@ -387,3 +387,4 @@ One real change per round. Pushed and built every ten rounds.
 381. A second quick-settings tile, Park an idea, opens the idea box from anywhere (at work, on a break) in one pull-down and tap.
 382. Records: "One page for taxes", a PDF of the year's art income and costs by kind (sales, commissions, entry fees, printing, framing, shipping) and the net, for a tax preparer; the spreadsheet has every entry.
 383. The "New in this version" note is brought up to date with the biggest changes (places and walks, eight sources and flyers, shows of your own, the learning calendar and widget, Find anything).
+384. A piece shows how it was made: its sessions and hours, the progress photos from them in order, and your session notes.
