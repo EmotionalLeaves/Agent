@@ -517,4 +517,10 @@ class DomainTest {
         assertTrue(G.overdue(5, 2)); assertFalse(G.overdue(4, 2))
         assertFalse(G.overdue(50, 0))
     }
+
+    @Test fun aProfileLine() {
+        val l = com.emotionalleaves.studioagent.domain.Drafts.profileLine("gouache, pencil, ink", "Austin, TX", "I draw the kitchen at five in the morning. It is quiet then.")
+        assertEquals("Artist in Austin. Gouache and pencil. I draw the kitchen at five in the morning. Shows and news below.", l)
+        assertTrue(l.length <= 150)
+    }
 }

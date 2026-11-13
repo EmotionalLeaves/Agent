@@ -209,6 +209,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("foundations") { FoundationsScreen(nav) }
             composable("market") { MarketDay(nav) }
             composable("pricing") { PricingScreen(nav) }
+            composable("findable") { FindableScreen(nav) }
             composable("announce/{id}") { AnnounceScreen(nav, it.id()) }
             composable("ideas") { Ideas(nav) }
             composable("materials") { Materials(nav) }

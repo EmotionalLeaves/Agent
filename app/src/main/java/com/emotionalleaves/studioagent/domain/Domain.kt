@@ -1070,6 +1070,24 @@ object Offers {
 
 /** Builds a first draft from the artist's own interview answers and CV facts. No AI, nothing invented. */
 object Drafts {
+    /** A short profile line for Instagram and the like: what you make, where, and a hook from your own statement. Under 150 characters. */
+    fun profileLine(mediums: String, city: String, statement: String): String {
+        val what = mediums.split(",").map { it.trim() }.filter { it.isNotBlank() }.take(2).joinToString(" and ").ifBlank { "art" }
+        val hook = statement.split(Regex("(?<=[.!?])\\s+")).firstOrNull { it.length in 10..70 }?.trim()?.trimEnd('.').orEmpty()
+        val line = "Artist" + (if (city.isNotBlank()) " in ${city.substringBefore(",").trim()}" else "") + ". " + what.replaceFirstChar { it.uppercase() } + "." + (if (hook.isNotBlank()) " $hook." else "") + " Shows and news below."
+        return if (line.length <= 150) line else line.take(147).trimEnd() + "..."
+    }
+
+    /** What someone finds when they look you up before choosing your work: the checks, in the order that matters. */
+    val findable = listOf(
+        "Your name, spelled the same way everywhere (CV, labels, online)",
+        "A page with your name that shows your work (your web page, or a portfolio site)",
+        "An Instagram (or similar) with at least nine posts of finished work",
+        "A profile line that says what you make and where",
+        "Your web page or email in that profile",
+        "Your newest strong piece pinned or posted in the last month"
+    )
+
     /**
      * A description of the picture for people who cannot see it: what it is, its size, its main colors and
      * light, and what it shows when your notes say. Nothing is guessed about the subject.

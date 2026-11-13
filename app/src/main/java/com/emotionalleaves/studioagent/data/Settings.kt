@@ -192,6 +192,8 @@ class Settings(ctx: Context) {
     var marketFee by D("marketFee", 0.0)
     /** Listing places ticked per show ("applId:index"). */
     var announced by S("announced")
+    /** "Findable online" checks ticked, as indexes. */
+    var findableDone by S("findableDone")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

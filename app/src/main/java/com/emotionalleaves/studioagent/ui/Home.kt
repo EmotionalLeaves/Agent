@@ -759,6 +759,7 @@ fun More(nav: NavController) {
         IconRow(Icons.Default.Search, "Find anything", "A piece, a call, a person, or ask a question") { nav.navigate("search") }
         val statementOk = docs.any { it.type == "statement" && it.approved && it.text.isNotBlank() }
         IconRow(Icons.Default.Edit, "Statement, bio and CV", (if (statementOk) "Statement approved" else "Statement not approved yet") + ", " + Texts.count(facts.size, "CV line")) { nav.navigate("materials") }
+        IconRow(Icons.Default.Search, "When someone looks you up", "What jurors and venues find online") { nav.navigate("findable") }
         IconRow(Icons.Default.Person, "People and venues", if (venues == 0) "Find real places near you to show" else "Places to show, and emails to them") { nav.navigate("outreach") }
         com.emotionalleaves.studioagent.domain.Foundations.current(st.foundationsDone).let { wk -> IconRow(Icons.Default.Star, "Foundations", if (wk == null) "All twelve weeks done" else "Week ${wk.n} of 12: ${wk.skill}") { nav.navigate("foundations") } }
         IconRow(Icons.Default.AccountBox, "Records", "To-dos, money, sales, and proof of what was sent") { nav.navigate("records") }
