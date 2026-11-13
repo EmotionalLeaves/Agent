@@ -45,6 +45,10 @@ val letters = listOf(
             "Deposit: half when we agree, the rest when it is finished and you are happy with it\nTime: about [number] weeks from the deposit\n" +
             "Along the way: I will send you one sketch or draft to approve before I finish.\n\nI keep the copyright, as artists usually do; the piece itself is yours. " +
             "If that all sounds right, reply and I will send the details for the deposit.\n\n[ME]"),
+    Letter("Thank someone who bought your work", "The day after a sale. A buyer thanked is a buyer who comes back.", "Thank you",
+        "Hello [THEM],\n\nThank you for giving my work a home. It means a great deal to me. If you ever send a photo of it where it hangs, I would love to see it, and I will let you know when I have new work or a show.\n\nWith thanks,\n\n[ME]"),
+    Letter("New work, for someone who bought before", "Six months on. People who bought once are the likeliest to buy again.", "New work",
+        "Hello [THEM],\n\nI hope [PLACE] is still hanging happily. I wanted you to be among the first to see some new work: [LINK]\n\nIf anything catches your eye, just reply.\n\nWarmly,\n\n[ME]"),
     Letter("Ask about payment for a sale", "If a sale has not been paid a few weeks after a show ends.", "Payment for sold work",
         "Hello [THEM],\n\nI understand a piece of mine sold during the show at [PLACE]. Could you let me know when I can expect payment and whether you need anything from me?\n\nThank you,\n\n[ME]")
 )

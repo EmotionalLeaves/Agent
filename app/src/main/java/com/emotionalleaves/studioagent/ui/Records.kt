@@ -253,6 +253,7 @@ fun Records(nav: NavController) {
                 lastSale = w?.let { Triple(it.id, price, who) }
                 scope.io {
                     dao.put(Ledger(kind = "sale", amount = price, date = now(), note = w?.title.orEmpty() + (if (who.isNotBlank()) ", to $who" else ""), artworkId = w?.id ?: 0))
+                    if (w != null) Engine.followBuyer(who, mail, w)
                     if (pct > 0) dao.put(Ledger(kind = "commission", amount = -price * pct / 100, date = now(), note = "Commission on ${w?.title.orEmpty()}", artworkId = w?.id ?: 0))
                     if (w != null) dao.put(if (w.editionSize > 1) w.copy(editionUsed = w.editionUsed + 1).let { x -> if (x.editionUsed >= x.editionSize) x.copy(status = "sold", location = "Edition sold out") else x } else w.copy(status = "sold", location = "Sold"))
                     status = "Sale recorded. You keep ${money(price * (1 - pct / 100))}."

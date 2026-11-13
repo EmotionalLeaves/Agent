@@ -733,6 +733,19 @@ object Engine {
         return Planner.yearPlan(LocalDate.now(), have, piecesPerWeek(), level(), calls, again, plans)
     }
 
+    /**
+     * After a sale to someone you can write to: a thank-you the next day and news of new work six months on,
+     * both as steps on your week tied to the piece. People who bought once are the likeliest to buy again.
+     */
+    suspend fun followBuyer(buyer: String, email: String, w: Artwork) {
+        if (buyer.isBlank() && email.isBlank()) return
+        val who = buyer.ifBlank { email }
+        val now = System.currentTimeMillis()
+        listOf("Thank $who for buying ${w.title.ifBlank { "your piece" }}" to now + DAY, "Send $who news of new work" to now + 182 * DAY).forEach { (t, d) ->
+            if (dao.eventsNow().none { it.title == t }) dao.put(Evt(type = "task", title = t, date = d, artworkId = w.id))
+        }
+    }
+
     // ------------------------------------------------------------ selling at a show
 
     /** The show a piece is in right now (an accepted entry it is part of, not yet released), or null. */
@@ -757,6 +770,7 @@ object Engine {
         if (dao.factsNow().none { it.category == "collection" && it.text == "Private collection" }) dao.put(Fact(category = "collection", year = LocalDate.now().year, text = "Private collection"))
         if (joinList && Texts.looksLikeEmail(email) && dao.contactsNow().none { it.email.equals(email, true) })
             dao.put(Contact(name = buyer, email = email, kind = "subscriber", status = "subscriber", notes = "Bought ${w.title} on ${LocalDate.now()}.", createdAt = now))
+        followBuyer(buyer, email, w)
         val pickup = show?.let { (a, _) -> dao.eventsNow().filter { it.applId == a.id && it.type == "task" && Regex("pick.?up|take.?down|collect", RegexOption.IGNORE_CASE).containsMatchIn(it.title) }.maxOfOrNull { it.date } }
         val day = (pickup ?: (now + 14 * DAY)).coerceAtLeast(now + DAY)
         dao.put(Evt(type = "task", title = "Get ${w.title.ifBlank { "the piece" }} to ${buyer.ifBlank { "the buyer" }}", date = day, oppId = show?.second?.id ?: 0, applId = show?.first?.id ?: 0, artworkId = w.id))
@@ -1361,7 +1375,7 @@ object Engine {
         }
         // A show you got into: a dated step (delivery, the opening, pick-up) in the next three days comes before anything else.
         dao.eventsNow().filter { it.type == "task" && !it.done && it.date in (now - DAY)..(now + 3 * DAY) }.minByOrNull { it.date }?.let { e ->
-            val title = if (e.artworkId > 0) works.firstOrNull { it.id == e.artworkId }?.let { w -> "the commission " + w.title.replaceFirstChar { it.lowercase() } }.orEmpty()
+            val title = if (e.artworkId > 0) works.firstOrNull { it.id == e.artworkId }?.let { w -> if (w.clientId > 0) "the commission " + w.title.replaceFirstChar { it.lowercase() } else "" }.orEmpty()
                 else dao.oppsNow().firstOrNull { it.id == e.oppId }?.title?.let { "for $it" }.orEmpty()
             val day = date(e.date); val whenWord = when (day) { today -> "Today"; today.plusDays(1) -> "Tomorrow"; else -> if (day.isBefore(today)) "Yesterday" else day.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) }
             return NextStep(e.title, "$whenWord" + (if (title.isNotBlank()) ", $title" else "") + ". Tick it off when it is done.", if (e.artworkId > 0) "work/${e.artworkId}" else "appl/${e.applId}")

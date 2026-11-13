@@ -575,6 +575,9 @@ class PartsTest {
         assertTrue(G.dao.contactsNow().any { it.email == "ana@example.com" && it.kind == "subscriber" })
         val get = G.dao.eventsNow().single { it.title == "Get Dish Pit to Ana" }
         assertEquals(pickup, get.date); assertEquals(wid, get.artworkId)
+        // A buyer thanked tomorrow, and news of new work in six months.
+        assertTrue(G.dao.eventsNow().any { it.title == "Thank Ana for buying Dish Pit" })
+        assertTrue(G.dao.eventsNow().any { it.title == "Send Ana news of new work" && it.date > now + 150 * 86_400_000L })
     }
 
     @Test fun backLabelsAreMade() {
