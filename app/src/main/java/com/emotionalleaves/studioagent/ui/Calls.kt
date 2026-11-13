@@ -781,12 +781,18 @@ private const val FILL_JS = """
   return d.works[(i>=0&&i<d.works.length)?i:0]||{};}
  var person=[['first',d.first],['last',d.last],['surname',d.last],['family name',d.last],['email',d.email],['phone',d.phone],['mobile',d.phone],
   ['website',d.website],['portfolio',d.website],['url',d.website],['city',d.city],['statement',d.statement],['bio',d.bio]];
- var piece=['title','medium','materials','dimension','size','year','price','value'];
+ var piece=['title','medium','materials','dimension','size','width','height','depth','edition','year','price','value'];
+ function words(t){return t.toLowerCase().replace(/[^a-z ]/g,' ').split(/\s+/).filter(function(x){return x.length>3;});}
+ function answer(k){var best='',score=0; (d.answers||[]).forEach(function(qa){var q=words(qa[0]); var hit=q.filter(function(w){return k.indexOf(w)>=0;}).length;
+  if(q.length&&hit/q.length>score&&hit>=2){score=hit/q.length; best=qa[1];}}); return score>=0.5?best:'';}
  var n=0; var els=document.querySelectorAll('input[type=text],input[type=email],input[type=tel],input[type=url],input[type=number],input:not([type]),textarea');
  els.forEach(function(el){ if(el.value){return;} var k=key(el); var v='';
   for(var i=0;i<person.length&&!v;i++){ if(k.indexOf(person[i][0])>=0){ v=person[i][1]; } }
+  if(!v && el.tagName==='TEXTAREA'){ v=answer(k); }
   if(!v){ for(var j=0;j<piece.length&&!v;j++){ if(k.indexOf(piece[j])>=0){ var w=work(k);
-   v={title:w.title,medium:w.medium,materials:w.medium,dimension:w.dims,size:w.dims,year:w.year,price:w.price,value:w.price}[piece[j]]; } } }
+   v={title:w.title,medium:w.medium,materials:w.medium,dimension:w.dims,size:w.dims,width:w.width,height:w.height,depth:w.depth,edition:w.edition,year:w.year,price:w.price,value:w.price}[piece[j]]; } } }
+  if(!v && (k.indexOf('state')>=0||k.indexOf('province')>=0)){ v=d.region; }
+  if(!v && k.indexOf('country')>=0){ v=d.country; }
   if(!v && k.indexOf('name')>=0 && k.indexOf('title')<0){ v=d.name; }
   if(v){ setv(el,v); n++; } });
  document.querySelectorAll('select').forEach(function(el){ if(el.selectedIndex>0){return;} var k=key(el); var want='';
@@ -828,11 +834,17 @@ fun WebFill(nav: NavController, id: Long) {
                             val list = org.json.JSONArray()
                             works.filter { it.id in ids }.sortedBy { ids.indexOf(it.id) }.forEach { w ->
                                 list.put(JSONObject().put("title", w.title).put("medium", Papers.medium(w)).put("dims", Texts.dims(w.widthIn, w.heightIn, w.depthIn))
+                                    .put("width", w.widthIn.takeIf { it > 0 }?.let { "%.4g".format(it).trimEnd('0').trimEnd('.') }.orEmpty())
+                                    .put("height", w.heightIn.takeIf { it > 0 }?.let { "%.4g".format(it).trimEnd('0').trimEnd('.') }.orEmpty())
+                                    .put("depth", w.depthIn.takeIf { it > 0 }?.let { "%.4g".format(it).trimEnd('0').trimEnd('.') }.orEmpty())
+                                    .put("edition", if (w.editionSize > 1) "Edition of ${w.editionSize}" else "Original")
                                     .put("year", w.year.takeIf { it > 0 }?.toString().orEmpty()).put("price", if (w.nfs) "NFS" else w.price.takeIf { it > 0 }?.let { "%.0f".format(it) }.orEmpty()))
                             }
                             val d = JSONObject().put("first", st.firstName).put("last", st.lastName).put("name", st.fullName).put("email", st.email)
                                 .put("phone", st.phone).put("website", st.website).put("city", st.city).put("region", st.region).put("statement", a.statement).put("bio", bio)
-                                .put("works", list)
+                                .put("works", list).put("country", if (st.currency == "$") "United States" else "")
+                                // The call's own questions and your answers: a long box whose label matches a question gets its answer.
+                                .put("answers", org.json.JSONArray(Engine.answers(a).map { org.json.JSONArray().put(it.first).put(it.second) }))
                             web?.evaluateJavascript(FILL_JS + "(" + d.toString() + ")") { r ->
                                 val n = r?.trim('"')?.toIntOrNull() ?: 0
                                 status = if (n == 0) "No boxes on this page matched. If the form is on another page, open it and tap Fill in again, or tap Copy lines and paste by hand."
