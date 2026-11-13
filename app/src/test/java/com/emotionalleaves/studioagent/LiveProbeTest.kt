@@ -134,7 +134,7 @@ class LiveProbeTest {
         try {
             val found = com.emotionalleaves.studioagent.net.Museum.search("gouache")
             log("gouache: ${found.size} public-domain with pictures; first: ${found.firstOrNull()?.let { it.title + " / " + it.artist + " / " + it.imageUrl }}")
-            found.firstOrNull()?.let { p -> val f = com.emotionalleaves.studioagent.net.Museum.download(p, File("build/museum")); log("picture: ${f.length()} bytes") }
+            found.firstOrNull()?.let { p -> try { val f = com.emotionalleaves.studioagent.net.Museum.download(p, File("build/museum")); log("picture: ${f.length()} bytes") } catch (e: Exception) { log("picture: $e") } }
             log("drawing: ${com.emotionalleaves.studioagent.net.Museum.search(com.emotionalleaves.studioagent.net.Museum.termFor("digital, archival print")).size}")
         } catch (e: Exception) { log("museum failed: $e") }
         log("\n== Candidate listing sites (not yet in the app): readable, allowed, and how many calls")

@@ -53,19 +53,25 @@ fun StudyAMaster() {
     fun next() {
         status = "Looking in the collection…"
         scope.io({ status = it }) {
-            val list = pieces.ifEmpty { com.emotionalleaves.studioagent.net.Museum.search(com.emotionalleaves.studioagent.net.Museum.termFor(st.mediums)).shuffled() }
+            val list = pieces.ifEmpty {
+                val term = com.emotionalleaves.studioagent.net.Museum.termFor(st.mediums)
+                // A narrow medium can have few old works: drawings fill the list out.
+                (com.emotionalleaves.studioagent.net.Museum.search(term) + (if (term != "drawing") com.emotionalleaves.studioagent.net.Museum.search("drawing").take(20) else emptyList())).distinctBy { it.id }.shuffled()
+            }
             if (list.isEmpty()) { status = "Nothing came back just now. Try again later."; return@io }
             val p = list.first(); pieces = list.drop(1)
-            val f = com.emotionalleaves.studioagent.net.Museum.download(p, java.io.File(ctx.cacheDir, "museum"))
-            shown = p to f.absolutePath; status = ""
+            // When the picture cannot be brought into the app, the work still shows, with its page to open in your browser.
+            val path = try { com.emotionalleaves.studioagent.net.Museum.download(p, java.io.File(ctx.cacheDir, "museum")).absolutePath } catch (e: Exception) { "" }
+            shown = p to path; status = ""
         }
     }
     Panel {
         Text("Study a master", fontWeight = FontWeight.SemiBold)
         Small("A public-domain work in a medium near yours, from the Art Institute of Chicago's open collection. Copy one small part of it, the size of your palm, in 20 minutes: it is how painters have always learned. For practice only, never to show.")
         shown?.let { (p, path) ->
-            PathImage(path, androidx.compose.ui.Modifier.fillMaxWidth().heightIn(max = 360.dp), 900, description = p.title + ", " + p.artist)
+            if (path.isNotBlank()) PathImage(path, androidx.compose.ui.Modifier.fillMaxWidth().heightIn(max = 360.dp), 900, description = p.title + ", " + p.artist)
             Text(p.title, fontWeight = FontWeight.SemiBold); Small(p.credit + (if (p.medium.isNotBlank()) " " + p.medium + "." else ""))
+            androidx.compose.material3.TextButton(onClick = { com.emotionalleaves.studioagent.sys.Share.open(ctx, p.pageUrl) }) { Text(if (path.isBlank()) "See it on the museum's site" else "Larger, on the museum's site") }
         }
         if (status.isNotBlank()) Small(status)
         androidx.compose.material3.TextButton(onClick = { next() }) { Text(if (shown == null) "Show me one" else "Another") }
