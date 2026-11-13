@@ -362,4 +362,13 @@ class DomainTest {
             "more" to "more", "materials" to "more", "guide" to "more", "settings/ai" to "more", "records" to "more", "receipts" to "more", "basics" to "more", "tour" to "more")
         expect.forEach { (route, tab) -> assertEquals(route, tab, com.emotionalleaves.studioagent.ui.tabFor(route, tabs)) }
     }
+
+    @Test fun seriesPiecesAreReadAndPlanned() {
+        val p = com.emotionalleaves.studioagent.domain.Planner
+        val got = p.pieceLines("1. Walk-in Cooler | The cooler door at 6am, steam on the glass.\n- Prep Table - Knives laid out before service, from above.\nHere are some ideas:\n3) Dish Pit: The sink stacked high after lunch rush.")
+        assertEquals(listOf("Walk-in Cooler", "Prep Table", "Dish Pit"), got.map { it.first })
+        assertTrue(got[1].second.startsWith("Knives"))
+        val v = p.seriesVariations("The kitchen", 5)
+        assertEquals(5, v.size); assertTrue(v[0].second.startsWith("The kitchen"))
+    }
 }

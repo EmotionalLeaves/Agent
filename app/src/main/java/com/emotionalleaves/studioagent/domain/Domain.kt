@@ -401,6 +401,33 @@ object Planner {
      * Weeks until a series reaches its target at the artist's real pace, or null when there is nothing to go on yet.
      * [hoursPerPiece] comes from pieces already finished; [hoursPerWeek] from the last few weeks actually worked.
      */
+    /** "Title | what to make" lines, numbered or bulleted or not, into pairs. */
+    fun pieceLines(text: String): List<Pair<String, String>> = text.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "") }
+        .mapNotNull { l -> val parts = l.split(Regex("\\s*[|]\\s*|\\s+[-–—]\\s+|:\\s+"), limit = 2); if (parts.size == 2 && parts[0].length in 2..50 && parts[1].length > 8) parts[0].trim('"', ' ') to parts[1].trim() else null }
+        .distinctBy { it.first.lowercase() }
+
+    /**
+     * Without the writing helper: the way series are built, as plain prompts. Keep the subject, change one thing.
+     * [subject] is the series name or what ties it together.
+     */
+    fun seriesVariations(subject: String, n: Int): List<Pair<String, String>> {
+        val s = subject.ifBlank { "your subject" }
+        return listOf(
+            "Early" to "$s first thing in the morning, in that light.",
+            "Late" to "$s at night or at dusk: the same thing in the dark.",
+            "Close" to "$s from very close: one small part, filling the whole picture.",
+            "Far" to "$s from far away, small in a big space.",
+            "Twice the size" to "$s again, twice as big as your usual size.",
+            "Small" to "$s small and quick, in one sitting.",
+            "Another season" to "$s in another season or another weather.",
+            "From above" to "$s seen from above, or from below.",
+            "Two colors" to "$s in only two colors plus white.",
+            "Someone there" to "$s with a person or their trace (a coat, a cup, a shadow).",
+            "Empty" to "$s with everything else taken out.",
+            "Again" to "Your favorite piece in this series, made again from memory."
+        ).take(n.coerceIn(1, 12))
+    }
+
     fun weeksToFinish(done: Int, target: Int, hoursPerPiece: Double, hoursPerWeek: Double): Int? {
         if (done >= target) return 0
         if (hoursPerPiece <= 0 || hoursPerWeek <= 0) return null

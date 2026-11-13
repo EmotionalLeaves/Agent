@@ -267,6 +267,19 @@ class Ai(private val settings: Settings) {
         return out.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "").trim('"') }.filter { it.length in 2..40 }.distinct().take(5)
     }
 
+    /**
+     * The next pieces of a series, each a working title and one line on what to make: the same subject or idea held,
+     * one thing varied at a time (light, view, scale, season, crop), from the artist's own notes and ideas.
+     */
+    suspend fun seriesPieces(series: String, ties: String, medium: String, made: String, ideas: String, n: Int): List<Pair<String, String>> {
+        val out = clean(complete("You help an artist plan the next pieces of a series. $dataRule Suggest exactly $n pieces that clearly belong together: " +
+            "keep what ties the series together and vary one thing per piece (time of day, viewpoint, scale, season, crop, a different object of the same kind). " +
+            "Each must be something one person can make in a few evenings in their medium. Plain words, no jargon. " +
+            "One per line, as: Working title | what to make, in one short sentence.",
+            "<data>\nSeries: $series\nWhat ties it together: $ties\nMedium: $medium\nPieces already made: ${made.take(1500)}\nThe artist's own ideas: ${ideas.take(1500)}\n</data>", fast = true, maxTokens = 700))
+        return com.emotionalleaves.studioagent.domain.Planner.pieceLines(out).take(n)
+    }
+
     /** The same text cut to at most [words] words: the artist's own sentences kept, the least needed cut. Nothing added. */
     suspend fun shorten(text: String, words: Int): String =
         clean(complete("You shorten an artist's own text to at most $words words. Keep their sentences and wording wherever possible; cut whole phrases and sentences " +

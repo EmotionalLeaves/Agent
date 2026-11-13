@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.emotionalleaves.studioagent.G
 import com.emotionalleaves.studioagent.data.Artwork
+import com.emotionalleaves.studioagent.domain.Planner
 import com.emotionalleaves.studioagent.data.Idea
 import com.emotionalleaves.studioagent.data.Series
 import com.emotionalleaves.studioagent.data.Ledger
@@ -210,6 +211,30 @@ fun Works(nav: NavController) {
                             Small("About ${"%.0f".format(inches / 12)} feet of wall, framed, hung 6 inches apart.")
                             TextButton(onClick = { Share.files(ctx, listOf(File(wallPic)), "image/jpeg") }) { Text("Share this picture") }
                         }
+                    }
+                    // The pieces still to make, planned: one thing varied at a time, added as ideas in one tap.
+                    val left = (s.targetCount - works.count { it.seriesId == s.id }).coerceIn(0, 8)
+                    if (left > 0) Expand("Plan the next ${Texts.count(left, "piece")}") {
+                        var plan by remember(s.id) { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+                        var thinking by remember { mutableStateOf(false) }
+                        Small("A series holds one thing steady and changes one thing at a time. These are starting points: add the ones you would like to make.")
+                        if (plan.isEmpty()) TextButton(enabled = !thinking, onClick = {
+                            thinking = true
+                            scope.io({ thinking = false; plan = Planner.seriesVariations(s.notes.ifBlank { s.name }, left) }) {
+                                val mine = works.filter { it.seriesId == s.id }
+                                val got = if (G.ai.ready) try { G.ai.seriesPieces(s.name, s.notes, mine.firstOrNull { it.medium.isNotBlank() }?.medium ?: st.mediums,
+                                    mine.joinToString("; ") { it.title.ifBlank { "untitled" } + (if (it.notes.isNotBlank()) ": " + it.notes.take(80) else "") }, dao.ideasNow().filter { !it.done }.take(15).joinToString("; ") { it.text }, left) } catch (e: Exception) { emptyList() } else emptyList()
+                                plan = got.ifEmpty { Planner.seriesVariations(s.notes.ifBlank { s.name }, left) }; thinking = false
+                            }
+                        }) { Text(if (thinking) "Planning…" else "Suggest the pieces") }
+                        plan.forEach { (t, what) ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) { Text(t, fontWeight = FontWeight.SemiBold); Small(what) }
+                                TextButton(onClick = { plan = plan.filter { it.first != t }; scope.io { dao.put(Artwork(title = t, status = "idea", seriesId = s.id, notes = what, createdAt = now())) } }) { Text("Add") }
+                            }
+                        }
+                        if (plan.size > 1) Button(onClick = { val all = plan; plan = emptyList(); scope.io { all.forEach { (t, what) -> dao.put(Artwork(title = t, status = "idea", seriesId = s.id, notes = what, createdAt = now())) } } }) { Text("Add all ${plan.size} as ideas") }
+                        if (plan.isNotEmpty()) TextButton(onClick = { plan = emptyList() }) { Text("Different suggestions") }
                     }
                     Expand("Is this series ready to show?") {
                         val ready = works.filter { it.seriesId == s.id && Engine.documented(it) }
