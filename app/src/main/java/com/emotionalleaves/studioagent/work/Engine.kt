@@ -1581,7 +1581,8 @@ object Engine {
             return NextStep("An entry is ready for your look", "$t: free and a strong fit. The app chose the pieces and wrote it; look it over, then send it or say no.", "appl/${a.id}")
         }
         // The art year has seasons: holiday markets book their tables in early autumn, and spring calls open in January.
-        if (today.dayOfWeek == DayOfWeek.SATURDAY && st.seasonTold != "${today.year}-${today.monthValue}") {
+        // Shown all that Saturday, then not again that month.
+        if (today.dayOfWeek == DayOfWeek.SATURDAY && (st.seasonTold != "${today.year}-${today.monthValue}" || st.seasonDay == today.toString())) {
             val m = today.monthValue
             val tip = when (m) {
                 9 -> Triple("Holiday markets book up now", "Tables at December markets and craft fairs fill in September and October. Look for 'holiday market' or 'makers fair' calls, and plan a few prints and cards to sell.", "calls")
@@ -1589,7 +1590,7 @@ object Engine {
                 5 -> Triple("Summer is for making", "Fewer calls close in summer. It is a good stretch to finish the series for the autumn round.", "works")
                 else -> null
             }
-            if (tip != null) { st.seasonTold = "${today.year}-$m"; return NextStep(tip.first, tip.second, tip.third) }
+            if (tip != null) { st.seasonTold = "${today.year}-$m"; st.seasonDay = today.toString(); return NextStep(tip.first, tip.second, tip.third) }
         }
         // The first weekend of a month: one goal for it, set in a minute, told to one friend.
         if (today.dayOfMonth <= 7 && today.dayOfWeek in setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY) && st.monthGoalMonth != java.time.YearMonth.now().toString()) {
