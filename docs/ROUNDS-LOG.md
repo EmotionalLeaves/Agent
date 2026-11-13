@@ -295,3 +295,6 @@ One real change per round. Pushed and built every ten rounds.
 288. The daily check sends one reminder for a show step due today or tomorrow (hanging the work, the opening, picking it up), since those are the ones that must not be missed.
 289. Places near you can also look for printing and framing: photo labs, print shops and framers around you, with "Email them" opening a print quote request already listing your unprinted digital pieces (sizes, pixels, edition), and Call.
 290. Every place found has Map, which opens it in the phone's maps app for directions.
+291. A piece's printing steps link straight to the print lab and framer finder.
+292. You opens with your studio at a glance: four tappable counts (pieces ready to send, applications sent and got in, venues and people on your list, sales this year), each going to where it lives.
+293. The You rows say where you stand ("Statement approved, 6 CV lines"; "Find real places near you to show" when People is empty) instead of fixed descriptions.

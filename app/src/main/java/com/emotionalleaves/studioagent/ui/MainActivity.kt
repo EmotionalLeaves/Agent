@@ -213,6 +213,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("sources") { Sources(nav) }
             composable("outreach") { Outreach(nav) }
             composable("nearby") { Nearby(nav) }
+            composable("nearby/labs") { Nearby(nav, startWithLabs = true) }
             composable("update") { UpdateScreen(nav) }
             composable("plan/{id}") { PlanShow(nav, it.id()) }
             composable("jury/{id}") { JuryView(nav, it.id()) }

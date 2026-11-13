@@ -55,7 +55,7 @@ fun placeToContact(p: Places.Place, now: Long): Contact = Contact(
 )
 
 @Composable
-fun Nearby(nav: NavController) {
+fun Nearby(nav: NavController, startWithLabs: Boolean = false) {
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
     val contacts by dao.contacts().collectAsState(emptyList())
@@ -64,7 +64,7 @@ fun Nearby(nav: NavController) {
     val toPrint = works.filter { it.format == "print" && it.printStage < 5 && it.imagePath.isNotBlank() }.take(6)
     val town = rememberSaveable { mutableStateOf(listOf(st.city, st.region).filter { it.isNotBlank() }.joinToString(", ")) }
     var reach by rememberSaveable { mutableStateOf("25") }
-    var labs by rememberSaveable { mutableStateOf(false) }
+    var labs by rememberSaveable { mutableStateOf(startWithLabs) }
     var found by remember { mutableStateOf<List<Places.Place>>(emptyList()) }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }

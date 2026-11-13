@@ -622,8 +622,31 @@ fun More(nav: NavController) {
                 TextButton(onClick = { nav.navigate("guide") }) { Text("All steps") }
             }
         }
-        IconRow(Icons.Default.Edit, "Statement, bio and CV", "Written from your own answers; nothing made up") { nav.navigate("materials") }
-        IconRow(Icons.Default.Person, "People and venues", "Places to show, and emails to them") { nav.navigate("outreach") }
+        // The studio at a glance: four real counts, each opening the place it counts.
+        val works by dao.artworks().collectAsState(emptyList())
+        val appls by dao.appls().collectAsState(emptyList())
+        val contacts by dao.contacts().collectAsState(emptyList())
+        val docs by dao.docs().collectAsState(emptyList())
+        val facts by dao.facts().collectAsState(emptyList())
+        val ledger by dao.ledger().collectAsState(emptyList())
+        val year = LocalDate.now().year
+        val ready = works.count { Engine.available(it) }
+        val sent = appls.count { it.submittedAt > 0 }; val inShows = appls.count { it.status == "accepted" }
+        val venues = contacts.count { it.kind != "subscriber" }; val list = contacts.count { it.kind == "subscriber" }
+        val sold = ledger.filter { it.kind == "sale" && Engine.date(it.date).year == year }
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Tile(Modifier.weight(1f), "$ready", if (ready == 1) "piece ready to send" else "pieces ready to send") { nav.navigate("works") }
+                Tile(Modifier.weight(1f), "$sent", "sent" + if (inShows > 0) ", $inShows got in" else "") { nav.navigate("calls") }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Tile(Modifier.weight(1f), "$venues", (if (venues == 1) "venue" else "venues") + if (list > 0) ", $list on your list" else "") { nav.navigate("outreach") }
+                Tile(Modifier.weight(1f), if (sold.isEmpty()) "0" else money(sold.sumOf { it.amount }), if (sold.isEmpty()) "sales in $year" else Texts.count(sold.size, "sale") + " in $year") { nav.navigate("records") }
+            }
+        }
+        val statementOk = docs.any { it.type == "statement" && it.approved && it.text.isNotBlank() }
+        IconRow(Icons.Default.Edit, "Statement, bio and CV", (if (statementOk) "Statement approved" else "Statement not approved yet") + ", " + Texts.count(facts.size, "CV line")) { nav.navigate("materials") }
+        IconRow(Icons.Default.Person, "People and venues", if (venues == 0) "Find real places near you to show" else "Places to show, and emails to them") { nav.navigate("outreach") }
         IconRow(Icons.Default.AccountBox, "Records", "To-dos, money, sales, and proof of what was sent") { nav.navigate("records") }
         if (steps != null && next == null) IconRow(Icons.Default.CheckCircle, "Guide", "Set-up is done. The five levels, and where you are") { nav.navigate("guide") }
         IconRow(Icons.Default.Settings, "Settings", "Your details, hours, rules, writing help, email, backup") { nav.navigate("settings") }
@@ -671,5 +694,16 @@ fun Review(nav: NavController) {
         OutlinedButton(onClick = { nav.navigate("week") }, modifier = Modifier.fillMaxWidth()) { Text("Change studio times") }
         if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }, modifier = Modifier.fillMaxWidth()) { Text("Look at ${Texts.count(pending, "thing")} waiting for your yes") }
         Button(onClick = { st.lastReviewWeek = Engine.weekId(); nav.navigate("home") { popUpTo("home") { inclusive = true } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Done for the week") }
+    }
+}
+
+/** One count on the You page: a big number, what it counts, and a tap to where it lives. */
+@Composable
+fun Tile(modifier: Modifier, number: String, label: String, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Column(modifier.clip(RoundedCornerShape(14.dp)).background(cs.surfaceContainerLowest).clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }
+        .semantics(mergeDescendants = true) { }.padding(14.dp).heightIn(min = 72.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(number, style = MaterialTheme.typography.headlineMedium, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 2)
     }
 }

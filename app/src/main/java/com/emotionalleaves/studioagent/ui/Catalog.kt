@@ -388,6 +388,8 @@ fun WorkDetail(nav: NavController, id: Long) {
                 if (i == w.printStage) Text(how)
             }
             if (w.printStage < 5) Button(onClick = { save(w.copy(printStage = w.printStage + 1)) }) { Text("Done: " + Readiness.printSteps[w.printStage.coerceIn(0, 4)].first.lowercase()) }
+            // Not knowing where to get it printed is where most digital work stalls.
+            if (w.printStage < 5) TextButton(onClick = { nav.navigate("nearby/labs") }) { Text("Find a print lab or framer near me") }
             else Small("Printed and framed. This piece can hang.")
             if (w.printStage > 0) TextButton(onClick = { save(w.copy(printStage = w.printStage - 1)) }) { Text("Go back a step") }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
