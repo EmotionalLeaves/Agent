@@ -343,3 +343,4 @@ One real change per round. Pushed and built every ten rounds.
 337. Each milestone on the road to your first show opens where it is done (Studio, your statement, places near you, People, Calls).
 338. On Sunday, one calm notice with the week ahead: how many studio times, the first dated thing and its day, and how many more, so Monday holds no surprises.
 339. New: "See the series hung together". A series with sized pictures is drawn on one wall at real sizes, framed, 6 inches apart at gallery height, with how many feet of wall it needs: for judging whether it holds as a group and for proposals.
+340. Exhibition proposals include "As it would hang": the body of work drawn on one wall at real sizes, so a venue can picture the show.

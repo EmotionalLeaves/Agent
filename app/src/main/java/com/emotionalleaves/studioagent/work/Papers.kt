@@ -287,6 +287,11 @@ object Papers {
         pdf.space(8f)
         if (statement.isNotBlank()) { pdf.keep(60f); pdf.text("About the work", 13f, face = Pdf.Face.DISPLAY, gap = 4f); pdf.text(statement, 11f, gap = 10f) }
         if (bio.isNotBlank()) { pdf.keep(60f); pdf.text("About the artist", 13f, face = Pdf.Face.DISPLAY, gap = 4f); pdf.text(bio, 11f, gap = 10f) }
+        // How the body of work would hang: the whole series on one wall at real sizes.
+        val sized = works.filter { it.imagePath.isNotBlank() && it.widthIn > 0 && it.heightIn > 0 }
+        if (sized.size > 1) com.emotionalleaves.studioagent.media.Mockup.series(sized.map { Triple(it.imagePath, it.widthIn, it.heightIn) }, true, File(ctx.cacheDir, "proposal_wall.jpg"))?.let { f ->
+            pdf.keep(60f); pdf.text("As it would hang", 13f, face = Pdf.Face.DISPLAY, gap = 4f); pdf.image(f.absolutePath, 260f)
+        }
         pdf.keep(60f)
         pdf.text("Works", 13f, face = Pdf.Face.DISPLAY, gap = 6f)
         works.forEachIndexed { i, a -> pdf.hang("%02d".format(i + 1), caption(pdf, a), col = 30f) }
