@@ -107,7 +107,8 @@ object Engine {
         currency = st.currency,
         feeBudgetLeft = feeLeft(ledger),
         goals = st.goals, blocked = st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() }, noReasons = st.noReasonCounts(),
-        friends = st.friendlyVenues.split("\n").filter { it.isNotBlank() }, region = st.region, milesTo = milesTo(), themes = st.themes.split(",").map { it.trim() }.filter { it.isNotBlank() }, maxMiles = st.maxMiles
+        friends = st.friendlyVenues.split("\n").filter { it.isNotBlank() }, region = st.region, milesTo = milesTo(), themes = st.themes.split(",").map { it.trim() }.filter { it.isNotBlank() }, maxMiles = st.maxMiles,
+        record = com.emotionalleaves.studioagent.domain.Odds.parse(st.tierRecord)
     )
 
     private fun geo(): Map<String, Pair<Double, Double>> = st.geoCache.lines().mapNotNull { l -> l.split("|").takeIf { it.size == 3 }?.let { (t, a, b) -> a.toDoubleOrNull()?.let { la -> b.toDoubleOrNull()?.let { lo -> t to (la to lo) } } } }.toMap()
@@ -1214,6 +1215,8 @@ object Engine {
         if (accepted) dao.oppsNow().firstOrNull { it.id == a.oppId }?.let { rememberFriend(it.organiser, it.venue) }
         val opp = dao.oppsNow().firstOrNull { it.id == a.oppId }
         val works = dao.artworksNow().filter { it.id in workIds(a) }
+        // Counted once per entry, so a result recorded twice does not tip the odds.
+        if (a.status !in setOf("accepted", "declined")) opp?.let { st.tierRecord = com.emotionalleaves.studioagent.domain.Odds.add(st.tierRecord, com.emotionalleaves.studioagent.domain.Scoring.tier(it), accepted) }
         dao.put(a.copy(status = if (accepted) "accepted" else "declined", resultText = text.take(4000)))
         st.log("Result recorded for ${opp?.title ?: "an application"}: " + (if (accepted) "accepted." else "not this time. The works are free again."))
         opp?.let { dao.put(it.copy(status = if (accepted) "accepted" else "declined")) }
@@ -1891,6 +1894,15 @@ object Engine {
             // Calls you never acted on are cleared three months after closing, so the lists stay quick. Anything you applied to is kept.
             val applied = dao.applsNow().map { it.oppId }.toSet()
             dao.oppsNow().filter { it.id !in applied && it.status in setOf("expired", "no") && it.deadline in 1..(now - 90 * DAY) }.forEach { dao.del(it) }
+        }
+        // Once: results recorded before odds learned from them are counted, so your record starts complete.
+        step("record") {
+            if (!st.tierRecordInit) {
+                val opps = dao.oppsNow().associateBy { it.id }
+                var r = ""
+                dao.applsNow().filter { it.status in setOf("accepted", "declined") }.forEach { a -> opps[a.oppId]?.let { o -> r = com.emotionalleaves.studioagent.domain.Odds.add(r, com.emotionalleaves.studioagent.domain.Scoring.tier(o), a.status == "accepted") } }
+                st.tierRecord = r; st.tierRecordInit = true
+            }
         }
         step("plan week") { planWeek(ctx) }
         // The quick steps run before the long read of the listing sites, so a slow site can never crowd them out.

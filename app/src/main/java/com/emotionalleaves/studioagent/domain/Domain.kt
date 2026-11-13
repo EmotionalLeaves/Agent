@@ -126,7 +126,9 @@ data class Profile(
     /** What your work is about, in your words ("kitchens, night, labor"): calls on those themes come forward. */
     val themes: List<String> = emptyList(),
     /** The farthest you will deliver or ship to, in miles (0: no limit). Online calls are never held back by it. */
-    val maxMiles: Int = 0
+    val maxMiles: Int = 0,
+    /** Your own results by tier of call (1 local to 4 international): yeses and no's. */
+    val record: Map<Int, Pair<Int, Int>> = emptyMap()
 )
 
 /** An existing CV, pasted as text, read into CV lines: section headings set the kind, a year at the start of a line sets the year. */
@@ -246,7 +248,10 @@ object Scoring {
         if ((p.noReasons["fee"] ?: 0) >= 3 && o.fee > 0) money = (money - 20).coerceAtLeast(0)
         reasons += if (o.fee > 0.0) "Fee ${p.currency}${"%.0f".format(o.fee)}" else if (Texts.feeStated(o)) "Free to enter" else "Fee not stated: check before paying anything"
 
-        val odds = when (t) { 1 -> 80; 2 -> 60; else -> 40 }
+        // Odds start from the usual for this kind of call and move toward your own record once there is one to go on.
+        val baseOdds = when (t) { 1 -> 80; 2 -> 60; else -> 40 }
+        val odds = p.record[t]?.let { (yes, no) -> Odds.blend(baseOdds, yes, no) } ?: baseOdds
+        p.record[t]?.let { (yes, no) -> if (yes + no >= 3) reasons += "Your record at calls like this: " + Texts.count(yes, "yes", "yeses") + " from " + Texts.count(yes + no, "entry", "entries") }
 
         var effort = when {
             o.online -> 90
@@ -1642,5 +1647,25 @@ object PaperSizes {
         return common.map { (a, b) -> if (pw >= ph) b to a else a to b }
             .filter { (w, h) -> kotlin.math.abs(w / h - r) / r <= tolerance }
             .sortedBy { it.first * it.second }.take(max)
+    }
+}
+
+// ---------------------------------------------------------------- odds from your own history
+/** The usual odds for a kind of call, moved toward your own rate as results come in (three results weigh as much as the usual). */
+object Odds {
+    fun blend(base: Int, yes: Int, no: Int, priorWeight: Int = 3): Int {
+        val n = yes + no
+        if (n == 0) return base
+        return ((base * priorWeight + 100.0 * yes) / (priorWeight + n)).roundToInt().coerceIn(5, 95)
+    }
+
+    fun parse(stored: String): Map<Int, Pair<Int, Int>> = stored.split(";").mapNotNull { e ->
+        val p = e.split(":"); if (p.size != 3) null else p[0].toIntOrNull()?.let { t -> t to ((p[1].toIntOrNull() ?: 0) to (p[2].toIntOrNull() ?: 0)) }
+    }.toMap()
+
+    fun add(stored: String, tier: Int, yes: Boolean): String {
+        val m = parse(stored).toMutableMap(); val (y, n) = m[tier] ?: (0 to 0)
+        m[tier] = if (yes) (y + 1) to n else y to (n + 1)
+        return m.toSortedMap().entries.joinToString(";") { "${it.key}:${it.value.first}:${it.value.second}" }
     }
 }

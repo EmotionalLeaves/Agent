@@ -243,6 +243,9 @@ class Settings(ctx: Context) {
     /** Drop-off packing ticks: "applId:bits". */
     var packed by S("packed")
     var marketPacked by S("marketPacked")
+    /** Your results by tier of call: "1:2:3;2:0:4" (tier:yeses:no's). */
+    var tierRecord by S("tierRecord")
+    var tierRecordInit by B("tierRecordInit", false)
     /** Quiet until then: Today shows only a five-minute step. */
     var calmUntil by L("calmUntil", 0)
     /** A friend's name: one tap tells them a session is starting, and that it is done. */

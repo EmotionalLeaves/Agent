@@ -743,4 +743,14 @@ class DomainTest {
         assertTrue(P.guess(1000, 3000).isEmpty())
         assertTrue(P.guess(0, 10).isEmpty())
     }
+
+    @Test fun oddsLearnFromYourOwnResults() {
+        val O = com.emotionalleaves.studioagent.domain.Odds
+        assertEquals(60, O.blend(60, 0, 0))
+        assertEquals(36, O.blend(60, 0, 2)) // two no's: (180 + 0) / 5
+        assertEquals(80, O.blend(60, 3, 0)) // three yeses: (180 + 300) / 6
+        var s = O.add("", 2, true); s = O.add(s, 2, false); s = O.add(s, 1, false)
+        assertEquals("1:0:1;2:1:1", s)
+        assertEquals(mapOf(1 to (0 to 1), 2 to (1 to 1)), O.parse(s))
+    }
 }
