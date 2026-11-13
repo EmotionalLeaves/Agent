@@ -7,7 +7,14 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.emotionalleaves.studioagent.domain.Texts
 import androidx.navigation.NavController
 
 /**
@@ -56,14 +63,24 @@ val toolGroups: List<Pair<String, List<Triple<String, String, String>>>> = listO
 
 @Composable
 fun ToolsScreen(nav: NavController) {
+    val tick by st.changed.collectAsState()
+    // Groups start folded to one line each, so thirty tools never arrive at once; the ones you used lately sit on top.
+    var open by rememberSaveable { mutableStateOf("") }
     Screen("Everything the app can do", nav) {
-        Intro("tools", "Every tool in one list, grouped by what you are trying to get done. Today still shows the one thing that matters now.")
+        Intro("tools", "Every tool, folded into five groups by what you are trying to get done. Open one group at a time. Today still shows the one thing that matters now.")
+        val all = toolGroups.flatMap { it.second }
+        val recent = if (tick >= 0) st.recentTools.split(",").mapNotNull { r -> all.firstOrNull { it.third == r } } else emptyList()
+        fun go(route: String) { st.recentTools = (listOf(route) + st.recentTools.split(",").filter { it.isNotBlank() && it != route }).take(3).joinToString(","); nav.navigate(route) }
+        if (recent.isNotEmpty()) {
+            Section("Used lately")
+            recent.forEach { (name, what, route) -> IconRow(Icons.Default.Refresh, name, what) { go(route) } }
+        }
         toolGroups.forEach { (group, tools) ->
+            val icon = when (group) { "Making the work" -> Icons.Default.Edit; "Showing it" -> Icons.Default.Person; "Selling it" -> Icons.Default.Star; "Being seen" -> Icons.Default.Search; else -> Icons.Default.AccountBox }
+            val isOpen = open == group
             Section(group)
-            tools.forEach { (name, what, route) ->
-                val icon = when (group) { "Making the work" -> Icons.Default.Edit; "Showing it" -> Icons.Default.Person; "Selling it" -> Icons.Default.Star; "Being seen" -> Icons.Default.Search; else -> Icons.Default.AccountBox }
-                IconRow(icon, name, what) { nav.navigate(route) }
-            }
+            if (!isOpen) IconRow(icon, Texts.count(tools.size, "tool"), tools.joinToString(", ") { it.first }) { open = group }
+            else tools.forEach { (name, what, route) -> IconRow(icon, name, what) { go(route) } }
         }
     }
 }

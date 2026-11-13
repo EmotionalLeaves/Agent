@@ -255,6 +255,8 @@ class Settings(ctx: Context) {
     /** A focus or blocker app to open when a session starts: "package|label". */
     var focusApp by S("focusApp")
     var lastOpened by L("lastOpened", 0)
+    /** The last three tools opened from Everything the app can do, newest first. */
+    var recentTools by S("recentTools")
     /** Days away before this visit, when it was a week or more; cleared once greeted. */
     var awayDays by I("awayDays", 0)
     /** Calls to send in a year; no's count toward it just the same. */
