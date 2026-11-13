@@ -155,6 +155,8 @@ fun Materials(nav: NavController) {
         Status(status)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.cv(ctx, st, facts); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Open my CV as a PDF") }
+            // Many entry forms want the CV pasted into a box: the same CV as plain text, ready to paste.
+            TextButton(onClick = { Share.text(ctx, com.emotionalleaves.studioagent.domain.Texts.cvText(st.fullName, listOf(st.city, st.email, st.website).filter { it.isNotBlank() }.joinToString(" | "), facts)) }) { Text("My CV as text, to paste into a form") }
             // Only sizes you can actually fill: with 7 documented works there is one button, "7 works".
             val documented = works.count { Engine.documented(it) }
             (listOf(10, 15, 20).filter { it < documented } + listOf(documented.coerceAtMost(20))).distinct().filter { it > 0 }.forEach { n ->

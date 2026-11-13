@@ -498,3 +498,4 @@ One real change per round. Pushed and built every ten rounds.
 492. Days off from the app (Settings, Hours and calm): on the days you choose, no notifications arrive and Today simply says it is a day off and nothing is being counted; only a deadline within a day still comes through.
 493. Print this week (from Your week): the next seven days on one page for the fridge or the studio wall, each day with its studio times, steps and deadlines as tick boxes, and this month's one goal at the top, seen without opening the phone.
 494. The daily check never runs on a nearly flat battery; the reading waits for a charge.
+495. Your CV as plain text, ready to paste into the entry forms that ask for it in a box (next to the CV as a PDF).
