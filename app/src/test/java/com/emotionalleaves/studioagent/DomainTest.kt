@@ -371,4 +371,16 @@ class DomainTest {
         val v = p.seriesVariations("The kitchen", 5)
         assertEquals(5, v.size); assertTrue(v[0].second.startsWith("The kitchen"))
     }
+
+    @Test fun feedbackPicksAreCounted() {
+        val F = com.emotionalleaves.studioagent.domain.Feedback
+        var v = ""
+        v = F.addVote(v, 7); v = F.addVote(v, 9); v = F.addVote(v, 9)
+        assertEquals(mapOf(7L to 1, 9L to 2), F.votes(v))
+        assertEquals(listOf(9L, 7L, 3L), F.byVotes(listOf(3L, 7L, 9L), v))
+        assertEquals("Dish Pit was picked by 2 of 3 people.", F.summary(listOf(3L, 7L, 9L), mapOf(9L to "Dish Pit"), v))
+        assertTrue(F.summary(listOf(7L, 9L), emptyMap(), F.addVote(v, 7)).startsWith("No clear favorite"))
+        val m = F.message("Jade", listOf("Cooler", "Prep"), F.defaultQuestions)
+        assertTrue(m.contains("1. Cooler\n2. Prep") && m.endsWith("Jade") && m.contains("3) Does anything"))
+    }
 }

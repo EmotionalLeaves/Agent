@@ -635,6 +635,38 @@ object Texts {
 // ---------------------------------------------------------------- reading a call without AI
 
 /** Pulls the obvious facts out of a call's text with plain pattern matching, for when there is no AI key. */
+/** Asking a few people which pieces are strongest: the message, and counting their picks. */
+object Feedback {
+    val defaultQuestions = listOf(
+        "If you could hang only one of these on your wall, which number would it be?",
+        "In each one, what do you look at first?",
+        "Does anything look confusing or unfinished to you?"
+    )
+
+    fun message(name: String, titles: List<String>, questions: List<String>): String =
+        "Hi! I am choosing which of my pieces to send to shows, and I would love a quick, honest opinion. " +
+            "The pictures are numbered:\n" + titles.mapIndexed { i, t -> "${i + 1}. $t" }.joinToString("\n") +
+            "\n\n" + questions.filter { it.isNotBlank() }.mapIndexed { i, q -> "${i + 1}) $q" }.joinToString("\n") +
+            "\n\nA few words is plenty. Thank you!" + (if (name.isNotBlank()) "\n$name" else "")
+
+    fun votes(stored: String): Map<Long, Int> = stored.split(",").mapNotNull { p -> p.split(":").takeIf { it.size == 2 }?.let { (a, b) -> a.toLongOrNull()?.let { id -> b.toIntOrNull()?.let { id to it } } } }.toMap()
+
+    fun addVote(stored: String, id: Long): String = (votes(stored).toMutableMap().also { it[id] = (it[id] ?: 0) + 1 }).entries.joinToString(",") { "${it.key}:${it.value}" }
+
+    /** The order people picked, most picks first; pieces nobody picked keep their place after. */
+    fun byVotes(ids: List<Long>, stored: String): List<Long> { val v = votes(stored); return ids.sortedByDescending { v[it] ?: 0 } }
+
+    /** "No. 2 was picked by 3 of 4 people", or nothing until someone has answered. */
+    fun summary(ids: List<Long>, titles: Map<Long, String>, stored: String): String {
+        val v = votes(stored).filterKeys { it in ids }; val total = v.values.sum()
+        if (total == 0) return ""
+        val (top, n) = v.maxByOrNull { it.value }!!
+        val tied = v.count { it.value == n } > 1
+        return if (tied) "No clear favorite yet ($total ${if (total == 1) "answer" else "answers"}). Ask one or two more people."
+        else "${titles[top] ?: "One piece"} was picked by $n of ${Texts.count(total, "person", "people")}."
+    }
+}
+
 object CallReader {
     private val months = listOf("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december")
     private val monthPattern = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"

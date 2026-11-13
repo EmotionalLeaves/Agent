@@ -199,6 +199,11 @@ class Settings(ctx: Context) {
     var lastPosted by L("lastPosted", 0)
     /** Pieces already posted from the app (ids, comma separated), so the nudge suggests a new one. */
     var postedIds by S("postedIds")
+    /** Asking people for feedback: the pieces asked about, the questions, and their picks ("id:count,id:count"). */
+    var feedbackIds by S("feedbackIds")
+    var feedbackQuestions by S("feedbackQuestions")
+    var feedbackVotes by S("feedbackVotes")
+    var feedbackAskedAt by L("feedbackAskedAt", 0)
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")

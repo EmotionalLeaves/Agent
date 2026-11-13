@@ -1248,6 +1248,9 @@ object Engine {
                 return NextStep("Post ${w.title.ifBlank { "a piece" }} online", "Jurors and venues look you up. Open Pictures and papers on the piece and tap Post it online: the picture and the words are made for you.", "work/${w.id}")
             }
         }
+        // Four or more pieces and nobody asked yet: which is strongest is the question every entry turns on. A two-minute phone task.
+        if (st.feedbackAskedAt == 0L && today.dayOfWeek in setOf(DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY) && works.count { documented(it) } >= 4)
+            return NextStep("Ask three people which piece is strongest", "Pictures numbered, three short questions, sent by text. Their picks can set your portfolio order.", "feedback")
         // Calls that fit, once a week at most, and only when you have not looked already.
         if (now - st.lastCallsLook > 6 * DAY) {
             val fit = shortlist(dao.oppsNow(), profile(), now, stretchOk(now), st.shortlistSize)

@@ -482,6 +482,7 @@ fun PortfolioOrder(nav: NavController) {
     }
     Screen("Portfolio order", nav) {
         Intro("order", "Open with your strongest piece and close with one that stays with people. Works in a series sit together. This order is used for the PDF, the web page and the materials kit.")
+        TextButton(onClick = { nav.navigate("feedback") }) { Text("Not sure which is strongest? Ask a few people") }
         ordered.forEachIndexed { i, w ->
             Panel {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

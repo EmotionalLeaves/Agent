@@ -174,12 +174,17 @@ object Cal {
 object Share {
     fun uri(ctx: Context, f: File): Uri = FileProvider.getUriForFile(ctx, ctx.packageName + ".files", f)
 
-    fun files(ctx: Context, files: List<File>, mime: String = "*/*") {
+    fun files(ctx: Context, files: List<File>, mime: String = "*/*", text: String = "") {
         val existing = files.filter { it.exists() }
         if (existing.isEmpty()) return
         val i = if (existing.size == 1) Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uri(ctx, existing[0]))
         else Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(existing.map { uri(ctx, it) }))
         i.type = mime; i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        if (text.isNotBlank()) {
+            i.putExtra(Intent.EXTRA_TEXT, text)
+            // Some apps take only the pictures: the words are on the clipboard to paste.
+            try { (ctx.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).setPrimaryClip(android.content.ClipData.newPlainText("Message", text)) } catch (e: Exception) { }
+        }
         val uris = existing.map { uri(ctx, it) }
         if (uris.isNotEmpty()) i.clipData = android.content.ClipData.newRawUri("", uris.first()).apply { uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) } }
         start(ctx, Intent.createChooser(i, "Send").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))
