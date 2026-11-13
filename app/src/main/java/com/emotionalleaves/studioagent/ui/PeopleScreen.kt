@@ -13,6 +13,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -42,6 +43,17 @@ fun PeopleScreen(nav: NavController) {
                     Row(androidx.compose.ui.Modifier.toggleable(p.key in been, role = androidx.compose.ui.semantics.Role.Checkbox) { on -> st.peopleTried = (if (on) been + p.key else been - p.key).joinToString(",") }.padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = p.key in been, onCheckedChange = null); Text("I've been")
                     }
+                }
+                // Once is a visit; going again is how people start to know you. A reminder a week on, the same evening.
+                if (p.key in been) {
+                    var again by androidx.compose.runtime.saveable.rememberSaveable(p.key) { mutableStateOf(false) }
+                    val scope = androidx.compose.runtime.rememberCoroutineScope()
+                    if (!again) TextButton(onClick = {
+                        again = true
+                        scope.io { com.emotionalleaves.studioagent.G.dao.put(com.emotionalleaves.studioagent.data.Evt(type = "task", title = "Go again: " + p.name.removePrefix("A ").removePrefix("An ").replaceFirstChar { it.uppercase() },
+                            date = com.emotionalleaves.studioagent.work.Engine.millis(java.time.LocalDate.now().plusDays(7).atTime(17, 30)))) }
+                    }, modifier = androidx.compose.ui.Modifier.offset(x = (-12).dp)) { Text("Remind me to go again next week") }
+                    else Small("On your to-dos for a week from today.")
                 }
             }
         }

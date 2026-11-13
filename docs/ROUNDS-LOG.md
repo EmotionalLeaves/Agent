@@ -628,3 +628,4 @@ One real change per round. Pushed and built every ten rounds.
 621. Is everything working? checks two more things: that the focus app chosen for sessions is still on the phone, and that Google Play services is there for scanning flat pieces and reading flyers (taking photos works either way).
 622. An "Empty your head" widget for the home screen: one button that opens the box for everything on your mind, beside the Start session and Next step widgets.
 623. The README lists the Empty your head widget among the quick ways in.
+624. After ticking "I've been" in Your people, "Remind me to go again next week" puts it on your to-dos a week on. Once is a visit; going again is how people start to know you.
