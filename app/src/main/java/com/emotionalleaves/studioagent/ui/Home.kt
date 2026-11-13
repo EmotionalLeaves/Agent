@@ -712,6 +712,15 @@ fun Review(nav: NavController) {
     }
     Screen("Next week", nav) {
         StageHead(1, "What you did", true)
+        // The month so far, counted plainly: proof that it is moving, without streaks to break.
+        val monthStart = Engine.millis(LocalDate.now().withDayOfMonth(1).atStartOfDay())
+        val applsAll by dao.appls().collectAsState(emptyList())
+        val monthLine = listOfNotNull(
+            works.count { it.imagePath.isNotBlank() && it.createdAt >= monthStart }.takeIf { it > 0 }?.let { Texts.count(it, "piece") + " added with a picture" },
+            applsAll.count { it.submittedAt >= monthStart && it.status != "accepted" || (it.status == "accepted" && it.submittedAt >= monthStart) }.takeIf { it > 0 }?.let { Texts.count(it, "application") + " sent" },
+            sessions.filter { it.start >= monthStart && it.end > it.start }.let { l -> if (l.isEmpty()) null else "${l.sumOf { (it.end - it.start) / 60000 } / 60} hours of making" }
+        )
+        if (monthLine.isNotEmpty()) Small("This month: " + monthLine.joinToString(", ") + ".")
         Text(if (mine.isEmpty()) "No sessions logged this week. That is information, not a verdict. If the plan did not fit your week, the plan is what should change."
         else "${mine.size} session" + (if (mine.size > 1) "s" else "") + ", ${mine.sumOf { (it.end - it.start) / 60000 }} minutes. That happened, and it counts.")
         // The plan bends to your life: a planned time you never use, and a time you keep working anyway.
