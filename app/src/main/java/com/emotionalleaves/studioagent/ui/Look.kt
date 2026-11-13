@@ -59,6 +59,13 @@ fun LookScreen(nav: NavController, id: Long) {
     var useProgress by rememberSaveable(id) { mutableStateOf(w.status == "in_progress" || w.imagePath.isBlank()) }
     val path = if (useProgress && progress != null) progress.photoPath else w.imagePath.ifBlank { progress?.photoPath.orEmpty() }
     var view by rememberSaveable { mutableStateOf("As it is") }
+    // The photo before this one, to compare in the same view: what changed, and whether it got better.
+    val earlier = sessions.filter { it.artworkId == id && it.photoPath.isNotBlank() && it.photoPath != path && File(it.photoPath).exists() }.maxByOrNull { it.start }
+    var compare by rememberSaveable(id) { mutableStateOf(false) }
+    val before by produceState<Bitmap?>(null, earlier?.photoPath, view, compare) {
+        val p = earlier?.photoPath
+        value = if (!compare || p == null) null else withContext(Dispatchers.Default) { ImageTools.decode(p, 900)?.let { b -> when (view) { "Flipped" -> Look.flip(b); "No color" -> Look.gray(b); "Squint" -> Look.squint(b); "Three values" -> Look.values(b, 3); "Two values" -> Look.values(b, 2); "Thirds" -> Look.thirds(b); else -> b } } }
+    }
     val base by produceState<Bitmap?>(null, path) { value = withContext(Dispatchers.IO) { if (path.isBlank()) null else ImageTools.decode(path, 1200) } }
     val shown by produceState<Bitmap?>(null, base, view) {
         val b = base; value = if (b == null) null else withContext(Dispatchers.Default) {
@@ -76,7 +83,12 @@ fun LookScreen(nav: NavController, id: Long) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             lookViews.forEach { v -> FilterChip(selected = v == view, onClick = { view = v }, label = { Text(v) }) }
         }
-        shown?.let { b -> val img = remember(b) { b.asImageBitmap() }
+        if (earlier != null) androidx.compose.material3.TextButton(onClick = { compare = !compare }) { Text(if (compare) "Show this one alone" else "Compare with the photo before") }
+        val bb = before
+        if (compare && bb != null) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.foundation.layout.Column(Modifier.weight(1f)) { val i0 = remember(bb) { bb.asImageBitmap() }; Image(i0, "The photo before, ${view.lowercase()}", Modifier.fillMaxWidth().heightIn(max = 360.dp), contentScale = ContentScale.Fit); Small("Before" + (earlier?.let { ", " + fmtDate(it.start) } ?: "")) }
+            androidx.compose.foundation.layout.Column(Modifier.weight(1f)) { shown?.let { b -> val i1 = remember(b) { b.asImageBitmap() }; Image(i1, "Now, ${view.lowercase()}", Modifier.fillMaxWidth().heightIn(max = 360.dp), contentScale = ContentScale.Fit) }; Small("Now") }
+        } else shown?.let { b -> val img = remember(b) { b.asImageBitmap() }
             Image(img, "${w.title.ifBlank { "The piece" }}, ${view.lowercase()}", Modifier.fillMaxWidth().heightIn(max = 520.dp), contentScale = ContentScale.Fit)
         } ?: Small("Opening the picture…")
         Small(when (view) {
