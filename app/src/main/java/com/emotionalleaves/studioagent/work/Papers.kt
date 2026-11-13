@@ -186,6 +186,8 @@ object Papers {
         val cw = pdf.width / cols.toFloat()
         val ch = (pdf.pageHeight - 72) / rows.toFloat()
         val guide = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFBDBEBA.toInt(); strokeWidth = 0.5f }
+        // One small code in each label's corner: a visitor's phone opens your page, with prices and how to buy.
+        val qr = s.website.takeIf { it.isNotBlank() }?.let { com.emotionalleaves.studioagent.media.Qr.bitmap(if (it.startsWith("http")) it else "https://$it", 240) }
         works.forEachIndexed { i, a ->
             if (i % (cols * rows) == 0) pdf.newPage()
             val c = pdf.canvas()
@@ -207,6 +209,7 @@ object Papers {
             details(a).forEach { put(it, 9.5f) }
             if (!a.nfs && a.price > 0) { ty += 4f; put(money(s, a.price), 10.5f) }
             ty += 2f; put(inventoryNo(s, a), 7.5f, grey = true)
+            qr?.let { q -> val side = 40f; c.drawBitmap(q, null, android.graphics.RectF(x + cw - pad - side, y + ch - pad - side, x + cw - pad, y + ch - pad), Paint()) }
         }
         return pdf.save(out(ctx, docName(s, "Wall_labels")))
     }
