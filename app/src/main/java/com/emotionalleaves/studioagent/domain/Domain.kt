@@ -1322,3 +1322,47 @@ object Readiness {
         return out
     }
 }
+
+// ---------------------------------------------------------------- empty your head
+/**
+ * Everything in your head, one line each, sorted without a single decision from you: a job to do
+ * (with its day when the line names one), something to buy, or an idea for the work.
+ */
+object Dump {
+    enum class Kind(val label: String) { TASK("To do"), SUPPLY("To buy"), IDEA("Idea") }
+    data class Line(val text: String, val kind: Kind, val day: LocalDate?)
+
+    private val doing = listOf("email", "call", "text", "send", "ask", "finish", "apply", "ship", "frame", "pay", "book",
+        "print", "post", "varnish", "sign", "photograph", "measure", "write", "check", "deliver", "pick up", "drop off",
+        "enter", "register", "update", "reply", "answer", "return", "renew", "cancel", "order", "submit", "visit", "wrap",
+        "pack", "mail", "invoice", "remind", "tell", "thank", "fix", "clean", "sort", "scan", "upload", "fill in", "follow up")
+    private val buying = listOf("buy ", "get more ", "need more ", "out of ", "run out of ", "ran out of ", "almost out of ", "restock ")
+    private val days = DayOfWeek.values().associateBy { it.name.lowercase() }
+
+    fun sort(text: String, today: LocalDate = LocalDate.now()): List<Line> =
+        text.lines().map { it.trim().trimStart('-', '*', '•', ' ').trim() }.filter { it.length > 1 }.map { line(it, today) }
+
+    fun line(raw: String, today: LocalDate = LocalDate.now()): Line {
+        val low = raw.lowercase()
+        buying.firstOrNull { low.startsWith(it) }?.let { b ->
+            return Line(raw.substring(b.length).trim().replaceFirstChar { it.uppercase() }, Kind.SUPPLY, null)
+        }
+        val day = dayIn(low, today)
+        val isTask = doing.any { low.startsWith("$it ") || low == it } || day != null || low.startsWith("don't forget") || low.startsWith("remember to")
+        val clean = raw.replace(Regex("^(don't forget to|don't forget|remember to)\\s+", RegexOption.IGNORE_CASE), "").replaceFirstChar { it.uppercase() }
+        return Line(clean, if (isTask) Kind.TASK else Kind.IDEA, day)
+    }
+
+    /** "tomorrow", "today", "tonight", a weekday ("friday", "by friday", "on friday"), or "next week" (its Monday). */
+    fun dayIn(low: String, today: LocalDate): LocalDate? {
+        val words = low.split(Regex("[^a-z]+")).filter { it.isNotBlank() }
+        if ("today" in words || "tonight" in words) return today
+        if ("tomorrow" in words) return today.plusDays(1)
+        if (low.contains("next week")) return today.plusDays((8 - today.dayOfWeek.value).toLong())
+        words.firstNotNullOfOrNull { days[it] }?.let { d ->
+            val ahead = ((d.value - today.dayOfWeek.value) + 7) % 7
+            return today.plusDays(if (ahead == 0) 7L else ahead.toLong())
+        }
+        return null
+    }
+}
