@@ -345,3 +345,4 @@ One real change per round. Pushed and built every ten rounds.
 339. New: "See the series hung together". A series with sized pictures is drawn on one wall at real sizes, framed, 6 inches apart at gallery height, with how many feet of wall it needs: for judging whether it holds as a group and for proposals.
 340. Exhibition proposals include "As it would hang": the body of work drawn on one wall at real sizes, so a venue can picture the show.
 341. A statement over a call's word limit has "Shorten to fit": cut down from your own sentences to the limit (nothing added), or trimmed plainly without writing help.
+342. Recording a sale can take the buyer's email; with their yes, they join your email list (noted with what they bought), since people who buy once often buy again.

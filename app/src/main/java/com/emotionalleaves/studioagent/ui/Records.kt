@@ -85,6 +85,8 @@ fun Records(nav: NavController) {
     var saleCommission by remember { mutableStateOf(0.0) }
     var cutFromShow by remember { mutableStateOf(0) }
     val buyer = rememberSaveable { mutableStateOf("") }
+    val buyerEmail = rememberSaveable { mutableStateOf("") }
+    var buyerAgreed by rememberSaveable { mutableStateOf(false) }
     var lastSale by remember { mutableStateOf<Triple<Long, Double, String>?>(null) }
     var status by remember { mutableStateOf("") }
     val todo = rememberSaveable { mutableStateOf("") }
@@ -160,9 +162,15 @@ fun Records(nav: NavController) {
             key(saleWork, cutFromShow) { Num("Venue commission, %", saleCommission) { saleCommission = it } }
             if (salePrice > 0) Small("You receive ${money(salePrice * (1 - saleCommission.coerceIn(0.0, 100.0) / 100))}" + (if (saleCommission > 0) " after the venue's ${"%.0f".format(saleCommission)}%." else "."))
             Field("Buyer's name, for the bill of sale", buyer)
+            // People who bought once often buy again: with their yes, they hear about new work.
+            Field("Buyer's email (optional)", buyerEmail)
+            if (Texts.looksLikeEmail(buyerEmail.value)) Toggle("They said yes to hearing about new work", buyerAgreed) { buyerAgreed = it }
             Button(enabled = saleWork != 0L && salePrice > 0, onClick = {
                 val w = works.firstOrNull { it.id == saleWork }
                 val price = salePrice; val pct = saleCommission; val who = buyer.value.trim(); saleWork = 0L; buyer.value = ""
+                val mail = buyerEmail.value.trim(); val join = buyerAgreed && Texts.looksLikeEmail(mail); buyerEmail.value = ""; buyerAgreed = false
+                if (join) scope.io { if (dao.contactsNow().none { it.email.equals(mail, true) }) dao.put(com.emotionalleaves.studioagent.data.Contact(name = who, email = mail, kind = "subscriber", status = "subscriber",
+                    notes = "Bought ${w?.title.orEmpty()} on ${fmtDate(now())}.", createdAt = now())) }
                 lastSale = w?.let { Triple(it.id, price, who) }
                 scope.io {
                     dao.put(Ledger(kind = "sale", amount = price, date = now(), note = w?.title.orEmpty() + (if (who.isNotBlank()) ", to $who" else ""), artworkId = w?.id ?: 0))
