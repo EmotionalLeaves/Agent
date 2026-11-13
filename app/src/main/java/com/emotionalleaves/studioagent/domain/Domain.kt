@@ -868,6 +868,21 @@ object CallReader {
 }
 
 
+/** What has happened with a venue or person, in date order, read from the dates in their notes and the app's own records. */
+object Timeline {
+    private val iso = Regex("(\\d{4}-\\d{2}-\\d{2})")
+    private val us = Regex("([A-Z][a-z]{2}), ([A-Z][a-z]{2}) (\\d{1,2}), (\\d{4})")
+
+    fun dateIn(line: String): LocalDate? = iso.find(line)?.let { runCatching { LocalDate.parse(it.value) }.getOrNull() }
+        ?: us.find(line)?.let { m -> runCatching { LocalDate.parse("${m.groupValues[4]}-${m.groupValues[2]}-${m.groupValues[3].padStart(2, '0')}", java.time.format.DateTimeFormatter.ofPattern("yyyy-MMM-dd", java.util.Locale.US)) }.getOrNull() }
+
+    /** [notes] sentences with a date in them, plus the dated events given, newest first. */
+    fun of(notes: String, events: List<Pair<LocalDate, String>>): List<Pair<LocalDate, String>> {
+        val fromNotes = notes.split(Regex("(?<=[.!?])\\s+|\\n")).mapNotNull { l -> dateIn(l)?.let { it to l.trim() } }
+        return (fromNotes + events).distinctBy { it.second }.sortedByDescending { it.first }
+    }
+}
+
 /** Hours of making in each of the last [weeks] weeks (Monday to Sunday), oldest first. */
 object HoursByWeek {
     fun of(today: LocalDate, sessions: List<Pair<LocalDate, Double>>, weeks: Int = 8): List<Double> {

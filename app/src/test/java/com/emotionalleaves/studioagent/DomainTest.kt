@@ -599,4 +599,10 @@ class DomainTest {
         assertEquals("Night Shift II", T.nextTitle("Night Shift")); assertEquals("Night Shift III", T.nextTitle("Night Shift II"))
         assertEquals("Study 4", T.nextTitle("Study 3")); assertEquals("Untitled", T.nextTitle(" "))
     }
+
+    @Test fun aVenueTimeline() {
+        val T = com.emotionalleaves.studioagent.domain.Timeline
+        val t = T.of("Visited on 2027-02-03. Liked the back room.\nWrote again from Mon, Mar 1, 2027.", listOf(java.time.LocalDate.of(2027, 4, 9) to "Opening at Gallery 4"))
+        assertEquals(listOf("Opening at Gallery 4", "Wrote again from Mon, Mar 1, 2027.", "Visited on 2027-02-03."), t.map { it.second })
+    }
 }

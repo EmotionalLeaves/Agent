@@ -339,6 +339,16 @@ fun ContactScreen(nav: NavController, id: Long) {
             pages.forEach { (t, u) -> TextButton(onClick = { Share.open(ctx, u) }, modifier = Modifier.offset(x = (-12).dp)) { Text(t) } }
         }
         kindTip(c.kind).takeIf { it.isNotBlank() }?.let { Small(it) }
+        // Everything that has happened with them, newest first: emails, replies, visits, shows.
+        val evAll by dao.events().collectAsState(emptyList())
+        val history = remember(c, evAll) {
+            com.emotionalleaves.studioagent.domain.Timeline.of(c.notes, listOfNotNull(
+                c.createdAt.takeIf { it > 0 }?.let { Engine.date(it) to "Added to People" },
+                c.sentAt.takeIf { it > 0 }?.let { Engine.date(it) to "Email sent" },
+                c.followUpAt.takeIf { it > 0 && c.status == "followed_up" }?.let { Engine.date(it) to "Follow-up sent" }
+            ) + evAll.filter { it.title.contains(c.venue.ifBlank { "\u0000" }) || (c.name.isNotBlank() && it.title.contains(c.name)) }.filter { it.date > 0 }.map { Engine.date(it.date) to it.title + (if (it.done) " (done)" else "") })
+        }
+        if (history.size >= 2) Expand("What has happened (${history.size})") { history.take(15).forEach { (d, t) -> Small(fmtDate(Engine.millis(d.atTime(12, 0))) + ": " + t) } }
         // They want to see the work in person: the visit planned, what to have out, and what to ask.
         if (c.status in setOf("more", "interested") || c.notes.contains("Studio visit")) Expand("They want to see the work in person") {
             var day by rememberSaveable(c.id) { mutableStateOf(java.time.LocalDate.now().plusDays(7).toString()) }
