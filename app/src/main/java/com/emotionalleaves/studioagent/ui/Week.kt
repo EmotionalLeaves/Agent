@@ -76,6 +76,15 @@ fun WeekScreen(nav: NavController) {
         val opps by dao.opps().collectAsState(emptyList())
         MonthView(events, nav, opps.filter { it.status in setOf("new", "later") && it.deadline > now() && it.fitScore >= 50 })
         androidx.compose.material3.TextButton(onClick = { nav.navigate("year") }) { Text("The year ahead") }
+        // The week on paper, for the fridge or the studio wall: seen without opening the phone.
+        androidx.compose.material3.TextButton(onClick = { scope.io {
+            val today = LocalDate.now()
+            val days = (0..6).map { k -> val d = today.plusDays(k.toLong())
+                d to events.filter { !it.done && it.date > 0 && Engine.date(it.date) == d && it.type in setOf("studio", "task", "submit", "invite", "deadline") }.sortedBy { it.date }
+                    .map { e -> (if (e.type == "studio") "Studio time" else e.title) + " (" + clock(e.date) + ")" } }
+            val f = com.emotionalleaves.studioagent.work.Papers.weekSheet(ctx, st, days, if (st.monthGoalMonth == java.time.YearMonth.now().toString()) st.monthGoal else "")
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { com.emotionalleaves.studioagent.sys.Share.view(ctx, f, "application/pdf") }
+        } }) { Text("Print this week") }
         // For a calendar the app cannot reach (a work calendar, a shared one): every coming date in one file to import.
         androidx.compose.material3.TextButton(onClick = {
             val now0 = now()

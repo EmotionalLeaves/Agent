@@ -343,6 +343,20 @@ object Papers {
         return out(ctx, docName(s, "Online_show_" + Texts.clean(title).take(24), "html")).apply { writeText(html) }
     }
 
+    /** The week on one page for the fridge or the studio wall: each day with its studio time and steps, and the dates that matter. */
+    fun weekSheet(ctx: Context, s: Settings, days: List<Pair<java.time.LocalDate, List<String>>>, focus: String): File {
+        val pdf = pdf(ctx, s, "This week", footer = false)
+        pdf.text("This week", 26f, gap = 4f, face = Pdf.Face.DISPLAY)
+        if (focus.isNotBlank()) pdf.text("One thing: $focus", 13f, gap = 14f)
+        days.forEach { (d, items) ->
+            pdf.keep(40f)
+            pdf.text(d.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.US) + ", " + d.month.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.US) + " " + d.dayOfMonth, 13f, gap = 3f, face = Pdf.Face.BOLD)
+            if (items.isEmpty()) pdf.text("Free.", 11f, gap = 10f, grey = true)
+            else { items.forEach { pdf.text("[  ]  $it", 11f, gap = 3f) }; pdf.space(8f) }
+        }
+        return pdf.save(out(ctx, docName(s, "This_week")))
+    }
+
     // ------------------------------------------------------------ certificate
 
 

@@ -754,6 +754,18 @@ class PartsTest {
         assertEquals(listOf("White paint" to true, "Paper / 9x12" to false), com.emotionalleaves.studioagent.ui.supplies(com.emotionalleaves.studioagent.ui.suppliesText(l)))
     }
 
+    @Test fun theWeekOnPaper() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
+        val today = java.time.LocalDate.now()
+        val f = try { com.emotionalleaves.studioagent.work.Papers.weekSheet(ctx, G.settings, (0..6).map { today.plusDays(it.toLong()) to (if (it % 2 == 0) listOf("Studio time (6:00 PM)", "Submit: Winter Open (7:00 PM)") else emptyList()) }, "finish two pieces") }
+            finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
+        assertEquals("Leaves_This_week.pdf", f.name)
+        assertTrue(File(docs, "Leaves_This_week_p1.png").length() > 1000)
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!
