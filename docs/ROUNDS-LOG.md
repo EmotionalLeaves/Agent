@@ -142,3 +142,13 @@ One real change per round. Pushed and built every ten rounds.
 138. A test that robots.txt rules are read for every bot and not for other named bots.
 139. robots.txt Allow lines are honoured too (the longest matching rule wins), so a site that opens only its calls pages can still be read there.
 140. A question you add to the interview opens straight away, ready to answer.
+141. Call details: "Link to the call's page" (with the web keyboard) and "Organizer".
+142. Call details: the most works you can send can be set by hand; the checklist and the works choice use it.
+143. Call details: the commission on sales can be set by hand; "In plain words" mentions it.
+144. The kind of call reads "Art fair" and "Commission (a work made for them)", which are otherwise easy to misread; seven kinds now open as one dropdown.
+145. The kind filter on Calls reads Exhibitions, Residencies, Art fairs and so on.
+146. Settings: how your work is shown reads "Printed (digital work on paper)", "Made by hand", "On a screen".
+147. Settings: the kinds of call to show read as plain plurals (Exhibitions, Residencies).
+148. A piece's format reads "To be printed", "Made by hand", "On a screen", "Digital file", the same words as Settings.
+149. The format explanation uses the same words as the choices.
+150. The piece details fold is named for everything in it: "Size, year, medium, format, series"; the Guide matches.

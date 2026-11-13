@@ -344,11 +344,11 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
         Explain("What do these mean?", "Idea: not started. In progress: still making it. Finished: done, not photographed yet. Ready to send: has its picture and details and can go to calls. Out on a call, Shown and Sold are set by the app when they happen.")
         // The rest only matters once a piece is heading out, so it stays folded until then.
-        Expand("Size, year, medium, series", startOpen = w.widthIn <= 0 && w.status in setOf("finished", "documented")) {
+        Expand("Size, year, medium, format, series", startOpen = w.widthIn <= 0 && w.status in setOf("finished", "documented")) {
             Whole("Year", w.year) { save(w.copy(year = it)) }
             Field("Medium (blank uses the default for its format)", w.medium, { save(w.copy(medium = it)) })
-            Choice("Format", listOf("print", "physical", "screen", "digital"), w.format) { save(w.copy(format = it)) }
-            Explain("Not sure which format?", "Print: a digital file that will be printed and framed. Physical: made by hand. Screen: shown on a monitor. Digital: a file with no plan yet. If unsure, leave it on print.")
+            Choice("Format", listOf("print", "physical", "screen", "digital"), w.format, names = { mapOf("print" to "To be printed", "physical" to "Made by hand", "screen" to "On a screen", "digital" to "Digital file")[it] ?: it }) { save(w.copy(format = it)) }
+            Explain("Not sure which format?", "To be printed: a digital file that will be printed and framed. Made by hand: paint, drawing, sculpture and the like. On a screen: shown on a monitor or projector. Digital file: no plan for showing it yet. If unsure, leave it on To be printed.")
             var sizeVersion by remember { mutableStateOf(0) }
             key(sizeVersion) { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(Modifier.weight(1f)) { Dim("Width", w.widthIn) { save(w.copy(widthIn = it)) } }

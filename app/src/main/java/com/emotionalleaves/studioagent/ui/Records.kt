@@ -276,13 +276,13 @@ private fun SText(label: String, initial: String, secret: Boolean = false, lines
 
 /** Chips where several can be on at once. */
 @Composable
-private fun Multi(label: String, options: List<String>, initial: List<String>, onChange: (List<String>) -> Unit) {
+private fun Multi(label: String, options: List<String>, initial: List<String>, names: (String) -> String = { it.replaceFirstChar { c -> c.uppercase() } }, onChange: (List<String>) -> Unit) {
     var picked by remember { mutableStateOf(initial) }
     Column {
         Note(label)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             options.forEach { o ->
-                FilterChip(selected = o in picked, onClick = { picked = if (o in picked) picked - o else picked + o; onChange(picked) }, label = { Text(o) })
+                FilterChip(selected = o in picked, onClick = { picked = if (o in picked) picked - o else picked + o; onChange(picked) }, label = { Text(names(o)) })
             }
         }
     }
@@ -391,7 +391,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 SText("Born (optional, for your CV, like \"b. 1998, Chicago\")", st.born) { st.born = it }
                 Section("Your work")
                 SText("Mediums", st.mediums) { st.mediums = it }
-                Multi("How your work is shown (pick every one that applies)", listOf("print", "physical", "screen"), st.routes) { st.route = it.joinToString(",") }
+                Multi("How your work is shown (pick every one that applies)", listOf("print", "physical", "screen"), st.routes, names = { mapOf("print" to "Printed (digital work on paper)", "physical" to "Made by hand", "screen" to "On a screen")[it] ?: it }) { st.route = it.joinToString(",") }
                 SText("Goals for the next 12 months", st.goals, lines = 2) { st.goals = it }
                 Choice("Sizes in", listOf("in", "cm"), units, names = { if (it == "in") "Inches" else "Centimeters" }) { units = it; st.units = it }
                 SText("Currency symbol", st.currency) { if (it.isNotBlank()) st.currency = it }
@@ -427,7 +427,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                     Num("Fee cap per entry at Level 2", st.feeCap2) { st.feeCap2 = it }
                     Num("Fee budget a month", st.feeBudget) { st.feeBudget = it }
                     Note("A call with a fee is only shown when it is under your level's cap and this month's budget still covers it. Budget 0 means free calls only.")
-                    Multi("Kinds of call to show", Ai.callKinds, st.kinds) { st.callKinds = it.joinToString(",") }
+                    Multi("Kinds of call to show", Ai.callKinds, st.kinds, names = { mapOf("fair" to "Art fairs", "exhibition" to "Exhibitions", "residency" to "Residencies", "grant" to "Grants", "publication" to "Publications", "commission" to "Commissions", "other" to "Other")[it] ?: it }) { st.callKinds = it.joinToString(",") }
                 }
                 Count("Calls on the weekly short list", st.shortlistSize, 1, 10) { st.shortlistSize = it }
                 SText("Blocked organisers (comma separated)", st.blocked) { st.blocked = it }

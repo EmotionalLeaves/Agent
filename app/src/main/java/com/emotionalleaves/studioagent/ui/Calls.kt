@@ -118,7 +118,7 @@ fun Calls(nav: NavController) {
         Intro("calls", "Open calls you could apply to. The app checks each one against your level, budget and work, and shows the few worth a look. You only answer Yes or No.")
         LaunchedEffect(Unit) { st.lastCallsLook = now() }
         Choice("", listOf("this week", "all", "applied"), tab) { tab = it }
-        if (kindsPresent.size > 1 && tab != "applied") Choice("", listOf("every kind") + kindsPresent, kindFilter) { kindFilter = it }
+        if (kindsPresent.size > 1 && tab != "applied") Choice("", listOf("every kind") + kindsPresent, kindFilter, names = { mapOf("every kind" to "Every kind", "fair" to "Art fairs", "exhibition" to "Exhibitions", "residency" to "Residencies", "grant" to "Grants", "publication" to "Publications", "commission" to "Commissions", "other" to "Other")[it] ?: it }) { kindFilter = it }
         Status(status)
         when (tab) {
             "this week" -> {
@@ -328,14 +328,14 @@ fun CallDetail(nav: NavController, id: Long) {
         }
         Expand("Details", startOpen = o.title.isBlank() || o.title == "New call" || o.deadline <= 0) {
         Field("Title", o.title, { save(o.copy(title = it)) })
-        Choice("Kind of call", Ai.callKinds, o.kind) { save(o.copy(kind = it)) }
+        Choice("Kind of call", Ai.callKinds, o.kind, names = { mapOf("fair" to "Art fair", "commission" to "Commission (a work made for them)")[it] ?: it.replaceFirstChar { c -> c.uppercase() } }) { save(o.copy(kind = it)) }
         DateField("Deadline", deadlineText) { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0) save(o.copy(deadline = ms)) }
         Num("Entry fee, " + st.currency, o.fee) { save(o.copy(fee = it)) }
         Choice("Who can enter", listOf("campus", "local", "online", "regional", "national", "international"), o.scope, names = { mapOf("campus" to "My campus", "local" to "My city", "online" to "Online", "regional" to "My region", "national" to "The whole country", "international" to "Anywhere")[it] ?: it }) { save(o.copy(scope = it)) }
-        Field("Link", o.url, { save(o.copy(url = it.trim())) })
+        Field("Link to the call's page", o.url, { save(o.copy(url = it.trim())) })
         SavedLine()
 
-        Field("Organiser", o.organiser, { save(o.copy(organiser = it)) })
+        Field("Organizer", o.organiser, { save(o.copy(organiser = it)) })
         Field("Venue", o.venue, { save(o.copy(venue = it)) })
         Field("City", o.city, { save(o.copy(city = it)) })
         Toggle("Online only", o.online) { save(o.copy(online = it)) }
@@ -348,6 +348,10 @@ fun CallDetail(nav: NavController, id: Long) {
         }
         Field("Image rules (for example: JPEG, 1920 px, under 5 MB)", o.imageSpecs, { save(o.copy(imageSpecs = it)) })
         Whole("Statement word limit", o.statementLimit) { save(o.copy(statementLimit = it)) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.weight(1f)) { Whole("Most works you can send", o.maxWorks) { save(o.copy(maxWorks = it)) } }
+            Column(Modifier.weight(1f)) { Num("Commission on sales, %", o.commission) { save(o.copy(commission = it)) } }
+        }
         Field("Send entries to (email, if entries go by email)", o.email, { save(o.copy(email = it.trim())) })
         if (o.email.isNotBlank() && !Texts.looksLikeEmail(o.email)) Small("That does not look like a full email address yet (name@place.org).")
         Toggle("Accepts prints of digital work", o.acceptsPrints) { save(o.copy(acceptsPrints = it)) }

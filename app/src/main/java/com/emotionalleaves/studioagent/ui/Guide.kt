@@ -63,7 +63,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
             "works", "Open Studio", series.isNotEmpty()),
         GuideStep("piece", a, "Add one piece with its image",
             "The catalog is what every application, label and portfolio is built from.",
-            listOf("Open Studio and tap Add a piece.", "Give it a title.", "Digital work: tap Choose a file. Physical work: tap Take a photo.", "Pick its series (under Size, year, medium, series).", "When it is done and photographed, set Where it stands to Ready to send."),
+            listOf("Open Studio and tap Add a piece.", "Give it a title.", "Digital work: tap Choose a file. Physical work: tap Take a photo.", "Pick its series (under Size, year, medium, format, series).", "When it is done and photographed, set Where it stands to Ready to send."),
             "works", "Open Studio", works.any { it.imagePath.isNotBlank() }),
         GuideStep("session", a, "Run one session",
             "This is the part that matters most. The app only needs to be told when you start and when you stop.",
