@@ -1101,7 +1101,7 @@ object Engine {
         return b.toString().take(6000)
     }
 
-    private fun statusWord(s: String) = when (s) { "in_progress" -> "in progress"; "ready" -> "ready to show"; "shown" -> "out at a show"; "sold" -> "sold"; else -> s.replace('_', ' ') }
+    private fun statusWord(s: String) = when (s) { "in_progress" -> "in progress"; "documented", "available" -> "ready to send"; "pending" -> "out on a call"; else -> s.replace('_', ' ') }
 
     /** The single thing shown on the home screen. */
     suspend fun nextStep(): NextStep {

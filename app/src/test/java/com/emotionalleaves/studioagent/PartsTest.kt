@@ -451,10 +451,10 @@ class PartsTest {
 
     @Test fun theSnapshotForQuestionsNamesPiecesAndCalls() = kotlinx.coroutines.runBlocking {
         ctx
-        G.dao.put(Artwork(title = "Walk-in Cooler", medium = "gouache", widthIn = 9.0, heightIn = 12.0, status = "ready"))
+        G.dao.put(Artwork(title = "Walk-in Cooler", medium = "gouache", widthIn = 9.0, heightIn = 12.0, status = "documented"))
         G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Spring Small Works", deadline = System.currentTimeMillis() + 9 * 86_400_000L, fitScore = 80))
         val s = com.emotionalleaves.studioagent.work.Engine.snapshot()
-        assertTrue(s.contains("Walk-in Cooler (gouache, 9x12 in), ready to show"))
+        assertTrue(s.contains("Walk-in Cooler (gouache, 9x12 in), ready to send"))
         assertTrue(s.contains("Spring Small Works, closes"))
         assertTrue(s.contains("Today's step in the app:"))
         assertTrue(!s.contains("@"))
@@ -463,7 +463,7 @@ class PartsTest {
     @Test fun afterANoTheSamePiecesGoToTheNextCall() = kotlinx.coroutines.runBlocking {
         ctx
         val day = 86_400_000L; val now = System.currentTimeMillis()
-        val a = G.dao.put(Artwork(title = "First", status = "ready")); val b = G.dao.put(Artwork(title = "Second", status = "ready")); G.dao.put(Artwork(title = "Third", status = "ready"))
+        val a = G.dao.put(Artwork(title = "First", status = "documented", imagePath = "/x/1.jpg")); val b = G.dao.put(Artwork(title = "Second", status = "documented", imagePath = "/x/2.jpg")); G.dao.put(Artwork(title = "Third", status = "documented", imagePath = "/x/3.jpg"))
         val old = G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Old", deadline = now - day))
         val no = com.emotionalleaves.studioagent.data.Appl(id = G.dao.put(com.emotionalleaves.studioagent.data.Appl(oppId = old, workIds = "$b,$a", status = "declined")), oppId = old, workIds = "$b,$a", status = "declined")
         G.dao.put(com.emotionalleaves.studioagent.data.Opp(title = "Too soon", deadline = now + day, fitScore = 99))
