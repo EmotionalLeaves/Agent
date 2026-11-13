@@ -582,7 +582,12 @@ object Engine {
         val works = dao.artworksNow().filter { available(it) }
         val bySeries = works.groupBy { it.seriesId }.values.maxByOrNull { it.size }.orEmpty()
         val want = when { opp.maxWorks > 0 -> opp.maxWorks; opp.minWorks > 0 -> opp.minWorks; else -> 3 }
-        val chosen = (bySeries + works.filter { it !in bySeries }).take(want)
+        var chosen = (bySeries + works.filter { it !in bySeries }).take(want)
+        // A themed call: the pieces that answer the theme, not just the biggest series.
+        if (ai.ready && opp.theme.isNotBlank() && works.size > want) try {
+            val ids = ai.pickWorks(opp, works, dao.seriesNow().associate { it.id to it.name }, want)
+            if (ids.size >= minOf(want, works.size).coerceAtLeast(1)) chosen = ids.mapNotNull { i -> works.firstOrNull { it.id == i } }
+        } catch (e: Exception) { }
         val statement = pickStatement(opp.statementLimit)
         val list = chosen.mapIndexed { i, a -> "${i + 1}. ${Papers.caption(a)}" }.joinToString("\n")
         val body = applicationEmail(opp, chosen, statement)

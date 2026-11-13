@@ -73,7 +73,8 @@ fun WeekScreen(nav: NavController) {
 
     Screen("Your week", nav) {
         Intro("week", "These are the times the app books for making work. They are a plan, not a test: skip one and nothing is marked missed. Change anything here to fit your real life.")
-        MonthView(events, nav)
+        val opps by dao.opps().collectAsState(emptyList())
+        MonthView(events, nav, opps.filter { it.status in setOf("new", "later") && it.deadline > now() && it.fitScore >= 50 })
         Status(status)
         H("Studio times")
         if (!custom) {
@@ -209,14 +210,16 @@ private fun evtKind(type: String): Int = when (type) { "studio" -> 0; "deadline"
  * Tap a day to see what is on it; tap an item to open it.
  */
 @Composable
-fun MonthView(events: List<com.emotionalleaves.studioagent.data.Evt>, nav: NavController) {
+fun MonthView(events: List<com.emotionalleaves.studioagent.data.Evt>, nav: NavController, calls: List<com.emotionalleaves.studioagent.data.Opp> = emptyList()) {
     val cs = MaterialTheme.colorScheme
     val today = LocalDate.now()
     var month by remember { mutableStateOf(today.withDayOfMonth(1)) }
     var picked by remember { mutableStateOf(today) }
     val open = events.filter { !it.done && it.date > 0 }
     val byDay = open.groupBy { Engine.date(it.date) }
-    val markColors = listOf(cs.primary, cs.error, cs.tertiary)
+    // Calls you have not decided on yet, by the day they close: so a good one is not found too late.
+    val callsByDay = calls.groupBy { Engine.date(it.deadline) }
+    val markColors = listOf(cs.primary, cs.error, cs.tertiary, cs.outline)
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(cs.surfaceContainerLowest).padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { month = month.minusMonths(1) }) { Text("Earlier") }
@@ -234,7 +237,7 @@ fun MonthView(events: List<com.emotionalleaves.studioagent.data.Evt>, nav: NavCo
                     if (n < 1 || n > days) Spacer(Modifier.weight(1f).height(44.dp))
                     else {
                         val d = month.withDayOfMonth(n)
-                        val marks = byDay[d].orEmpty().map { evtKind(it.type) }.distinct().sorted()
+                        val marks = (byDay[d].orEmpty().map { evtKind(it.type) } + (if (callsByDay[d].isNullOrEmpty()) emptyList() else listOf(3))).distinct().sorted()
                         val sel = d == picked
                         Column(Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(8.dp)).background(if (sel) cs.secondaryContainer else androidx.compose.ui.graphics.Color.Transparent)
                             .clickable(onClickLabel = "Show this day") { picked = d }
@@ -250,8 +253,8 @@ fun MonthView(events: List<com.emotionalleaves.studioagent.data.Evt>, nav: NavCo
                 }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            listOf("Making time", "Deadlines", "Shows").forEachIndexed { k, label ->
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf("Making time", "Deadlines", "Shows", "Calls closing").forEachIndexed { k, label ->
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     Box(Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape).background(markColors[k])); Text(label, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
                 }
@@ -260,7 +263,14 @@ fun MonthView(events: List<com.emotionalleaves.studioagent.data.Evt>, nav: NavCo
         Hair()
         val items = byDay[picked].orEmpty().sortedBy { it.date }
         Text(fmtDate(Engine.millis(picked.atTime(12, 0))), style = MaterialTheme.typography.titleSmall)
-        if (items.isEmpty()) Small("Nothing on this day.")
+        val closing = callsByDay[picked].orEmpty()
+        if (items.isEmpty() && closing.isEmpty()) Small("Nothing on this day.")
+        closing.forEach { o ->
+            Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).clickable { nav.navigate("call/${o.id}") }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape).background(markColors[3]))
+                Text("Call closes: " + o.title, Modifier.weight(1f))
+            }
+        }
         items.forEach { e ->
             Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).clickable(enabled = e.applId > 0) { nav.navigate("appl/${e.applId}") }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape).background(markColors[evtKind(e.type)]))

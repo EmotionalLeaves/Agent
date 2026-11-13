@@ -298,3 +298,6 @@ One real change per round. Pushed and built every ten rounds.
 291. A piece's printing steps link straight to the print lab and framer finder.
 292. You opens with your studio at a glance: four tappable counts (pieces ready to send, applications sent and got in, venues and people on your list, sales this year), each going to where it lives.
 293. The You rows say where you stand ("Statement approved, 6 CV lines"; "Find real places near you to show" when People is empty) instead of fixed descriptions.
+294. Saying yes to a call with a theme: the writing help picks the pieces that answer the theme (strongest first, coherent as a group) from their titles, mediums, series and your notes, instead of just the biggest series.
+295. The calendar also marks the days good-fit calls you have not decided on yet close, so a strong call is seen in time; tap it to open the call.
+296. Today's Deadlines became Next 7 days: deadlines, the steps of shows you got into, and good-fit calls closing that you have not decided on, in date order with Today, Tomorrow or the weekday.

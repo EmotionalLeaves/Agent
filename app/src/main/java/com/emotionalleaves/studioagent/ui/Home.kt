@@ -227,18 +227,26 @@ fun Home(nav: NavController) {
                 else events.firstOrNull { it.type == "studio" && it.date > now() }?.let { Small("Next studio time: ${fmtDate(it.date)}, ${clock(it.date)}") }
             }
 
-            val deadlines = events.filter { it.type == "deadline" && !it.done && it.date > now() }.take(3)
-            if (deadlines.isNotEmpty()) {
-                Section("Deadlines")
+            // The next seven days in one list: deadlines, show steps you got into, and good calls closing.
+            val horizon = now() + 7 * com.emotionalleaves.studioagent.work.DAY
+            val opps by dao.opps().collectAsState(emptyList())
+            data class Ahead(val at: Long, val title: String, val detail: String, val route: String)
+            val ahead = (events.filter { !it.done && it.date in now()..horizon && it.type in setOf("deadline", "task") }.map { e ->
+                    Ahead(e.date, e.title.removePrefix("Deadline: "), if (e.type == "deadline") "Deadline" else (opps.firstOrNull { it.id == e.oppId }?.title ?: "Your show"),
+                        if (e.applId > 0) "appl/${e.applId}" else "calls") } +
+                opps.filter { it.status == "new" && it.fitScore >= 60 && it.deadline in now()..horizon }.map { o -> Ahead(o.deadline, o.title, "Call closes; you have not decided yet", "call/${o.id}") })
+                .sortedBy { it.at }.take(5)
+            if (ahead.isNotEmpty()) {
+                Section("Next 7 days")
                 // With reminders blocked, a deadline only reaches you if you open the app: say so once, where it matters.
                 if (!Notifier.allowed(ctx)) Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Reminders are off on this phone, so these will not reach you on their own.", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     TextButton(onClick = { nav.navigate("settings/permissions") }) { Text("Turn on") }
                 }
-                deadlines.forEach { e ->
-                    IconRow(Icons.Default.DateRange, e.title.removePrefix("Deadline: "), Planner.weekendsLeft(today, Engine.date(e.date)).replaceFirstChar { it.uppercase() }) {
-                        e.applId.takeIf { it > 0 }?.let { nav.navigate("appl/$it") } ?: nav.navigate("calls")
-                    }
+                ahead.forEach { a ->
+                    val d = Engine.date(a.at)
+                    val dayWord = when (d) { today -> "Today"; today.plusDays(1) -> "Tomorrow"; else -> d.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) }
+                    IconRow(Icons.Default.DateRange, a.title, "$dayWord. ${a.detail}") { nav.navigate(a.route) }
                 }
             }
         }

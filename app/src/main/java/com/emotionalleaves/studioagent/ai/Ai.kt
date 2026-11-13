@@ -229,6 +229,21 @@ class Ai(private val settings: Settings) {
         return try { val j = JSONObject(jsonSlice(out, '{', '}')); j.optInt("fit", 50).coerceIn(0, 100) to j.optString("reason") } catch (e: Exception) { 50 to "" }
     }
 
+    /**
+     * For a call with a theme: which of the ready pieces answer it best, strongest first, from their titles,
+     * mediums, series and the artist's own notes. Returns ids only; anything unrecognized is dropped.
+     */
+    suspend fun pickWorks(o: Opp, works: List<com.emotionalleaves.studioagent.data.Artwork>, seriesNames: Map<Long, String>, count: Int): List<Long> {
+        if (works.isEmpty()) return emptyList()
+        val sys = "You help an artist choose which works to enter in an open call. $dataRule Choose the $count works that best answer the call's theme, " +
+            "strongest first, keeping them coherent as a group. Reply with only a JSON array of the chosen id numbers."
+        val list = works.joinToString("\n") { w -> "id ${w.id}: \"${w.title}\", ${w.medium}, ${w.year}" + (seriesNames[w.seriesId]?.let { ", series \"$it\"" } ?: "") +
+            (if (w.tags.isNotBlank()) ", tags: ${w.tags}" else "") + (if (w.notes.isNotBlank()) ", notes: ${w.notes.take(160)}" else "") }
+        val out = complete(sys, "<data>\nCall: ${o.title}\nTheme: ${o.theme}\nMediums wanted: ${o.mediums}\n\nWorks:\n$list\n</data>", fast = true, maxTokens = 200)
+        val known = works.map { it.id }.toSet()
+        return try { val a = JSONArray(jsonSlice(out, '[', ']')); (0 until a.length()).map { a.optLong(it) }.filter { it in known }.distinct().take(count) } catch (e: Exception) { emptyList() }
+    }
+
     private fun writerSystem(voice: String) =
         "You write short professional texts for a working artist, in the artist's own plain voice. " +
             "Rules: use only facts given to you; never invent exhibitions, awards, education, dates or claims. " +
