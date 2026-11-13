@@ -320,6 +320,17 @@ class SessionTile : TileService() {
     }
 }
 
+/** Quick-settings tile: park an idea from anywhere (at work, on a break) without hunting for the screen. */
+class IdeaTile : TileService() {
+    override fun onClick() {
+        val i = Intent(this, MainActivity::class.java).putExtra("route", "ideas").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        try {
+            if (Build.VERSION.SDK_INT >= 34) startActivityAndCollapse(PendingIntent.getActivity(this, 11, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+            else { @Suppress("DEPRECATION", "StartActivityAndCollapseDeprecated") startActivityAndCollapse(i) }
+        } catch (e: Exception) { }
+    }
+}
+
 /** Home-screen widget: a single Start session button. */
 class SessionWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
