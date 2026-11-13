@@ -55,7 +55,13 @@ val letters = listOf(
     Letter("New work, for someone who bought before", "Six months on. People who bought once are the likeliest to buy again.", "New work",
         "Hello [THEM],\n\nI hope [PLACE] is still hanging happily. I wanted you to be among the first to see some new work: [LINK]\n\nIf anything catches your eye, just reply.\n\nWarmly,\n\n[ME]"),
     Letter("Ask about payment for a sale", "If a sale has not been paid a few weeks after a show ends.", "Payment for sold work",
-        "Hello [THEM],\n\nI understand a piece of mine sold during the show at [PLACE]. Could you let me know when I can expect payment and whether you need anything from me?\n\nThank you,\n\n[ME]")
+        "Hello [THEM],\n\nI understand a piece of mine sold during the show at [PLACE]. Could you let me know when I can expect payment and whether you need anything from me?\n\nThank you,\n\n[ME]"),
+    Letter("Ask whether the entry fee can be waived", "When a call fits but the fee is a stretch. Many smaller organizers have a quiet waiver or a reduced fee; asking costs nothing.", "Entry fee question",
+        "Hello [THEM],\n\nI'm an early-career artist and would love to enter the call at [PLACE]. Is there a fee waiver or a reduced fee for artists in my position? If not, I completely understand.\n\nThank you,\n\n[ME]"),
+    Letter("Arrange to get work back", "When a show has ended and the pick-up details are not clear yet.", "Collecting my work",
+        "Hello [THEM],\n\nThank you again for including my work at [PLACE]. Now that the show has closed, when would be a good time to collect the pieces that did not sell? I'm free most afternoons after 4 and on weekends.\n\nThank you,\n\n[ME]"),
+    Letter("Tell an organizer you made a mistake on an entry", "Only for something that changes what they see or read: the wrong image, a wrong size or price, a missing file. A small typo is fine to leave; jurors do not notice it. Organizers get these emails all the time.", "A correction to my entry",
+        "Hello [THEM],\n\nI sent my entry to [PLACE] and have noticed a mistake: [what was wrong]. Could you use the corrected version below (or attached) instead? I'm sorry for the extra step.\n\nThank you,\n\n[ME]")
 )
 
 fun fillLetter(text: String, them: String, place: String): String =
