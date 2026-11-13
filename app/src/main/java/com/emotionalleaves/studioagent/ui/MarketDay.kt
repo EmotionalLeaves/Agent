@@ -37,7 +37,7 @@ import kotlinx.coroutines.withContext
  */
 @Composable
 fun MarketDay(nav: NavController) {
-    val scope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope(); val ctx = androidx.compose.ui.platform.LocalContext.current
     val tick by st.changed.collectAsState()
     val works by G.dao.artworks().collectAsState(emptyList())
     val items = remember(tick) { Market.items(st.marketItems) }
@@ -89,6 +89,10 @@ fun MarketDay(nav: NavController) {
             }
             if (name.value.isNotBlank() && price > 0) OutlinedButton(onClick = { st.marketItems = Market.itemsText(items + Market.Item(name.value.trim().replace(",", " ").replace(":", " "), price, qty)); name.value = "" }) { Text("Add") }
             Num("Booth or table fee, " + st.currency, st.marketFee) { st.marketFee = it }
+            if (items.isNotEmpty() || originals.isNotEmpty()) OutlinedButton(onClick = { scope.io {
+                val f = com.emotionalleaves.studioagent.work.Papers.priceTags(ctx, st, items.map { it.name to it.price } + originals.map { it.title.ifBlank { "Untitled" } to it.price })
+                withContext(Dispatchers.Main) { com.emotionalleaves.studioagent.sys.Share.view(ctx, f, "application/pdf") }
+            } }) { Text("Price tags to print") }
             Small("A mix sells best: something under 10, something under 30, and a few originals. Price everything, in plain view.")
         }
         Field("Where (for the records)", where, { where = it })

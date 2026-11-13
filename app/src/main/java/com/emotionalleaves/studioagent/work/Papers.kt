@@ -246,6 +246,31 @@ object Papers {
         return pdf.save(out(ctx, docName(s, "Back_labels")))
     }
 
+    /** Small price tags for a market table: what it is and the price, large and clear, with a code to your page. Twelve to a page. */
+    fun priceTags(ctx: Context, s: Settings, tags: List<Pair<String, Double>>): File {
+        val pdf = pdf(ctx, s, "", margin = 36, footer = false)
+        val cols = 3; val rows = 4
+        val cw = pdf.width / cols.toFloat(); val ch = (pdf.pageHeight - 72) / rows.toFloat()
+        val guide = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFBDBEBA.toInt(); strokeWidth = 0.5f }
+        val qr = s.website.takeIf { it.isNotBlank() }?.let { com.emotionalleaves.studioagent.media.Qr.bitmap(if (it.startsWith("http")) it else "https://$it", 200) }
+        tags.forEachIndexed { i, (what, price) ->
+            if (i % (cols * rows) == 0) pdf.newPage()
+            val c = pdf.canvas()
+            val col = (i % (cols * rows)) % cols; val row = (i % (cols * rows)) / cols
+            val x = pdf.left + col * cw; val y = 36f + row * ch
+            listOf(x to y, x + cw to y, x to y + ch, x + cw to y + ch).forEach { (px, py) -> c.drawLine(px - 6f, py, px + 6f, py, guide); c.drawLine(px, py - 6f, px, py + 6f, guide) }
+            val pad = 14f; var ty = y + pad
+            fun put(t: CharSequence, size: Float, face: Pdf.Face = Pdf.Face.BODY, grey: Boolean = false) {
+                val l = pdf.layout(t, (cw - 2 * pad).toInt(), size, face, grey); c.save(); c.translate(x + pad, ty); l.draw(c); c.restore(); ty += l.height + 4f
+            }
+            put(money(s, price), 22f, Pdf.Face.BOLD)
+            put(what, 10.5f)
+            put(name(s), 8.5f, grey = true)
+            qr?.let { q -> val side = 34f; c.drawBitmap(q, null, android.graphics.RectF(x + cw - pad - side, y + ch - pad - side, x + cw - pad, y + ch - pad), Paint()) }
+        }
+        return pdf.save(out(ctx, docName(s, "Price_tags")))
+    }
+
     // ------------------------------------------------------------ certificate
 
 

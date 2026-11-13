@@ -677,6 +677,16 @@ class PartsTest {
         G.settings.autopilot = false; assertEquals(0L, E.autopilot(ctx, now + 8 * day))
     }
 
+    @Test fun priceTagsForAMarket() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
+        val f = try { com.emotionalleaves.studioagent.work.Papers.priceTags(ctx, G.settings, listOf("Cards" to 5.0, "Small prints (5 x 7)" to 15.0, "Walk-in Cooler" to 240.0)) } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
+        assertEquals("Leaves_Price_tags.pdf", f.name)
+        assertTrue(File(docs, "Leaves_Price_tags_p1.png").length() > 1000)
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

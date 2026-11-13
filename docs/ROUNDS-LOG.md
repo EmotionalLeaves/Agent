@@ -447,3 +447,4 @@ One real change per round. Pushed and built every ten rounds.
 441. Records counts art trips: miles one way (or there and back) for delivering work, pick-ups, supplies or openings, at the rate per mile you set (with a note to check it each year), added as a cost and shown on the tax page as art trips.
 442. Amounts read the way prices are written: whole amounts without cents ($55, $1,295), others with them ($23.25). Foundations no longer repeats an exercise's length when the exercise already says it.
 443. A show's deliver and pick-up steps offer "Log the trip, 48 mi" when the map knows the venue's town: the miles there and back go to Records as an art trip in one tap.
+444. Market day prints price tags: twelve to a page, the price large, what it is, your name, and a small code to your page, for everything you are bringing (prints, cards and originals).
