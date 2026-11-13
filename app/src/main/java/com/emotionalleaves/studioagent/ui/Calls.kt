@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.Spacer
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -484,6 +485,20 @@ fun ApplScreen(nav: NavController, id: Long) {
                 }
             }
             if (loaded.status == "accepted") {
+                // Photos of the work on the wall: the record of the show, for your portfolio and your next proposal.
+                val showDir = ImageTools.mediaDir(ctx)
+                var shots by remember(id) { mutableStateOf(showDir.listFiles { f -> f.name.startsWith("show_${id}_") }?.sortedBy { it.name }.orEmpty()) }
+                var shotFile by remember { mutableStateOf<java.io.File?>(null) }
+                val takeShot = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+                    shotFile?.let { f -> if (ok && f.exists()) shots = shots + f else f.delete() }
+                }
+                H("Photos of the show")
+                if (shots.isEmpty()) Small("Once it is up, photograph the work on the wall, a wide view of the room, and the label. Installation shots are what venues ask for next time.")
+                shots.chunked(2).forEach { pair -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { pair.forEach { f -> PathImage(f.absolutePath, Modifier.weight(1f).height(140.dp), 600, androidx.compose.ui.layout.ContentScale.Crop) }; if (pair.size == 1) Spacer(Modifier.weight(1f)) } }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { val f = java.io.File(showDir, "show_${id}_${now()}.jpg"); shotFile = f; try { takeShot.launch(Share.uri(ctx, f)) } catch (e: Exception) { status = "No camera app found." } }) { Text("Take a photo") }
+                    if (shots.isNotEmpty()) TextButton(onClick = { Share.files(ctx, shots, "image/jpeg") }) { Text("Share them") }
+                }
                 H("Checklist")
                 events.filter { it.applId == id && it.type == "task" }.sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.forEach { e ->
                     Row(verticalAlignment = Alignment.CenterVertically) {

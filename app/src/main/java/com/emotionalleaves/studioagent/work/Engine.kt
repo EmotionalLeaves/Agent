@@ -988,7 +988,16 @@ object Engine {
         }
         val upcoming = dao.applsNow().filter { it.status == "accepted" }.mapNotNull { a -> dao.oppsNow().firstOrNull { it.id == a.oppId } }
             .filter { o -> dao.eventsNow().any { e -> e.oppId == o.id && e.type == "task" && !e.done && e.title.startsWith("Pick up", true) } }
-        val html = Papers.portfolioHtml(st, pairs, statement, bio, dao.factsNow(), upcoming, dao.seriesNow().associate { it.id to it.name })
+        // Installation views: up to six photos from shows you were in, captioned with the show.
+        val opps = dao.oppsNow().associateBy { it.id }
+        val installs = dao.applsNow().filter { it.status == "accepted" }.flatMap { a ->
+            ImageTools.mediaDir(ctx).listFiles { f -> f.name.startsWith("show_${a.id}_") }.orEmpty().sortedBy { it.name }.take(2).map { f -> f to (opps[a.oppId]?.let { o -> listOf(o.title, o.venue, o.city).filter { it.isNotBlank() }.joinToString(", ") }.orEmpty()) }
+        }.takeLast(6).mapNotNull { (f, cap) ->
+            val name = "install_" + f.name
+            val out = File(tmp, name)
+            if (ImageTools.export(f.absolutePath, 1600, 900_000, out, st.fullName, "Installation view, $cap")) { GitHub.putFile(st.ghPagesRepo, "img/$name", out.readBytes(), "Add installation view", st.ghToken); name to cap } else null
+        }
+        val html = Papers.portfolioHtml(st, pairs, statement, bio, dao.factsNow(), upcoming, dao.seriesNow().associate { it.id to it.name }, installs)
         GitHub.putFile(st.ghPagesRepo, "index.html", html.toByteArray(), "Update portfolio", st.ghToken)
         GitHub.enablePages(st.ghPagesRepo, st.ghToken)
         val url = GitHub.pagesUrl(st.ghPagesRepo)

@@ -380,7 +380,8 @@ object Papers {
 
     /** A single static page: works, statement, CV, contact. No feeds, no trackers, no scripts. */
     fun portfolioHtml(s: Settings, works: List<Pair<Artwork, String>>, statement: String, bio: String, facts: List<Fact>,
-                      upcoming: List<com.emotionalleaves.studioagent.data.Opp> = emptyList(), seriesNames: Map<Long, String> = emptyMap()): String = buildString {
+                      upcoming: List<com.emotionalleaves.studioagent.data.Opp> = emptyList(), seriesNames: Map<Long, String> = emptyMap(),
+                      installs: List<Pair<String, String>> = emptyList()): String = buildString {
         val n = escape(name(s))
         val desc = escape(bio.ifBlank { "Artworks by ${name(s)}" }.take(160))
         append("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
@@ -425,6 +426,10 @@ object Papers {
                 val cap = "<em>${escape(a.title.ifBlank { "Untitled" })}</em>" + (if (a.year > 0) ", ${a.year}" else "") + details(a).joinToString("") { ", " + escape(it) }
                 append("<figure><img loading=\"lazy\" src=\"img/${escape(file)}\" alt=\"${escape(a.title.ifBlank { "Untitled" })} by $n\"><figcaption>$cap</figcaption></figure>")
             }
+        }
+        if (installs.isNotEmpty()) {
+            append("<h2 id=\"shown\">Installation views</h2>")
+            installs.forEach { (file, cap) -> append("<figure><img loading=\"lazy\" src=\"img/${escape(file)}\" alt=\"Installation view${if (cap.isNotBlank()) ", " + escape(cap) else ""}\"><figcaption>${escape(cap)}</figcaption></figure>") }
         }
         if (statement.isNotBlank()) append("<h2 id=\"statement\">Statement</h2><div class=\"text\">" + statement.split(Regex("\\n\\s*\\n")).joinToString("") { "<p>${escape(it.trim()).replace("\n", "<br>")}</p>" } + "</div>")
         val sections = Texts.cvSections(facts)

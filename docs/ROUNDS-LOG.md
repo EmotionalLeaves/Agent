@@ -326,3 +326,5 @@ One real change per round. Pushed and built every ten rounds.
 320. Light sessions (the tired-day kind) also offer one small, real thing to do (photograph a piece, sort references, write the next step, read one call), with Another one.
 321. Calls, All: a find box (a word, a city, a medium, a venue) once there are more than a dozen calls, searching each call's own words.
 322. People: with more than ten venues (easy after Places near you), a find box and a kind filter (galleries, libraries, campus…), drawn 25 at a time.
+323. A show you got into has Photos of the show: take installation shots (the work on the wall, the room, the label) right on its page, kept with it and backed up, and share them; venues ask for these next time.
+324. The portfolio web page shows up to six installation views from your shows, captioned with the show and venue.
