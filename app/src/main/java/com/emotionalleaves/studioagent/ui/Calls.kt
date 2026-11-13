@@ -557,6 +557,17 @@ fun ApplScreen(nav: NavController, id: Long) {
                 ).forEach { Text("• $it") }
                 Small("If something is missing or unclear, asking is normal and polite. Ready-made emails has a note for questions about delivery and payment.")
             }
+            // After the show: two lines for next time, kept with your writing and found by Find anything.
+            if (loaded.status == "accepted") {
+                val docsAll by dao.docs().collectAsState(emptyList())
+                val key = "After: " + o.title
+                val note = docsAll.firstOrNull { it.type == "note" && it.title == key }
+                var lines by remember(id, note?.id) { mutableStateOf(note?.text.orEmpty()) }
+                Expand("After the show: two lines for next time") {
+                    Field("What went well, and one thing to do differently", lines, { t -> lines = t; scope.io { dao.put((note ?: com.emotionalleaves.studioagent.data.Doc(type = "note", title = key)).copy(text = t, updatedAt = now())) } }, lines = 3, mic = true)
+                    Small("Read it before the next show. It is how each one gets easier.")
+                }
+            }
             if (loaded.status == "accepted") {
                 // On the night: the phone becomes the sign-up sheet.
                 OutlinedButton(onClick = { nav.navigate("opening") }) { Text("At the opening: a code to scan") }

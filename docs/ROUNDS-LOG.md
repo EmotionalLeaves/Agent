@@ -520,3 +520,4 @@ One real change per round. Pushed and built every ten rounds.
 513. People can photograph a poster for an opening (in a cafe window, on a board at work): it is read on the phone and the opening goes on your calendar as an invitation, since openings are free and going is the whole step.
 514. A No in Decide, one at a time, asks why in one tap (too far, the fee, not my kind of show, no reason), so the ranking learns from it just as it does in the Calls list.
 515. Everyone in People can be saved as a spreadsheet file (name, venue, email, website, kind, where things stand, notes), to keep or open anywhere.
+516. A show you are in has "After the show: two lines for next time": what went well and one thing to do differently (by voice if easier), kept with your writing and found by Find anything, to read before the next show.
