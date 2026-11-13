@@ -167,6 +167,13 @@ fun Materials(nav: NavController) {
                 }) { Text("Portfolio PDF, $n " + (if (n == 1) "work" else "works")) }
             }
         }
+        // Asked to give a talk (a library, a class, an opening): slides from the same portfolio order.
+        if (works.count { Engine.documented(it) } >= 3) OutlinedButton(onClick = {
+            scope.io({ status = it }) {
+                val f = Papers.talkSlides(ctx, st, "", Engine.portfolioOrdered(works).take(15), Engine.pickStatement(150))
+                withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") }
+            }
+        }) { Text("Slides for a talk") }
         if (works.none { Engine.documented(it) }) Small("The portfolio fills in once a piece has a photo and is marked Ready to send.")
         if (works.count { Engine.documented(it) } > 1) TextButton(onClick = { nav.navigate("order") }) { Text("Set the order of my portfolio") }
         // When a gallery says "send me your materials": one file, ready to attach.

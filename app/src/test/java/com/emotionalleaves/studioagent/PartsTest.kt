@@ -687,6 +687,19 @@ class PartsTest {
         assertTrue(File(docs, "Leaves_Price_tags_p1.png").length() > 1000)
     }
 
+    @Test fun slidesForATalk() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"; G.settings.email = "jade@example.com"
+        val img = picture("talk.jpg")
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
+        val f = try { com.emotionalleaves.studioagent.work.Papers.talkSlides(ctx, G.settings, "Night Kitchen", (1..3).map { Artwork(id = it.toLong(), title = "Piece $it", year = 2026, medium = "gouache", widthIn = 9.0, heightIn = 12.0, imagePath = img.absolutePath) }, "I draw the kitchen at five in the morning. It is quiet then.") }
+            finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
+        assertEquals("Leaves_Talk_slides.pdf", f.name)
+        // A title page, three pieces, and a thank-you page.
+        assertTrue(File(docs, "Leaves_Talk_slides_p5.png").exists()); assertTrue(!File(docs, "Leaves_Talk_slides_p6.png").exists())
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

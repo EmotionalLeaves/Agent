@@ -449,3 +449,4 @@ One real change per round. Pushed and built every ten rounds.
 443. A show's deliver and pick-up steps offer "Log the trip, 48 mi" when the map knows the venue's town: the miles there and back go to Records as an art trip in one tap.
 444. Market day prints price tags: twelve to a page, the price large, what it is, your name, and a small code to your page, for everything you are bringing (prints, cards and originals).
 445. Find anything also searches your own notes: ideas, and what you wrote at the end of sessions ("where was that note about the blue?"), each opening where it belongs.
+446. Slides for a talk (in Statement, bio and CV): asked to speak at a library, a class or an opening, the app makes landscape slides from your portfolio order, one piece a page with its label, a title page with two sentences of your statement, and a last page with how to reach you. Opens on any phone, laptop or projector.

@@ -271,6 +271,31 @@ object Papers {
         return pdf.save(out(ctx, docName(s, "Price_tags")))
     }
 
+    /**
+     * Slides for a talk (a library, a class, an opening): landscape pages, one piece each, large on a quiet page with its
+     * label underneath; a title page first and a last page with how to reach you. Opens on any phone, laptop or projector.
+     */
+    fun talkSlides(ctx: Context, s: Settings, title: String, works: List<Artwork>, statement: String): File {
+        val pdf = Pdf(ctx, "", "", 792, 612, 40)
+        pdf.coverPage = true; pdf.newPage()
+        pdf.space(150f)
+        pdf.text(title.ifBlank { name(s) }, 34f, gap = 12f, face = Pdf.Face.DISPLAY)
+        pdf.text(name(s), 16f, gap = 18f, grey = true)
+        statement.split(Regex("(?<=[.!?])\\s+")).take(2).joinToString(" ").takeIf { it.isNotBlank() }?.let { pdf.text(it, 13f) }
+        pdf.coverPage = false
+        works.forEach { a ->
+            pdf.newPage()
+            if (a.imagePath.isNotBlank()) pdf.image(a.imagePath, 470f)
+            pdf.text(SpannableStringBuilder(pdf.em(a.title.ifBlank { "Untitled" })).append(if (a.year > 0) ", ${a.year}" else ""), 14f, gap = 2f)
+            details(a).take(2).forEach { pdf.text(it, 10.5f, gap = 2f, grey = true) }
+        }
+        pdf.newPage()
+        pdf.space(170f)
+        pdf.text("Thank you", 30f, gap = 14f, face = Pdf.Face.DISPLAY)
+        listOf(s.website, s.email).filter { it.isNotBlank() }.forEach { pdf.text(it, 14f, gap = 6f) }
+        return pdf.save(out(ctx, docName(s, "Talk_slides")))
+    }
+
     // ------------------------------------------------------------ certificate
 
 
