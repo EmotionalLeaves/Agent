@@ -568,4 +568,9 @@ class DomainTest {
         assertEquals(plain + 6, score); assertTrue(why.contains("About kitchens: one of your themes"))
         assertEquals(plain, S.score(o, com.emotionalleaves.studioagent.domain.Profile(level = 1, themes = listOf("ocean"))).first)
     }
+
+    @Test fun themeWordsFromAStatement() {
+        val w = com.emotionalleaves.studioagent.domain.Drafts.themeWords("I paint kitchens at night. The kitchen before the shift, steam and steel, night after night. Kitchens are where I work.")
+        assertEquals(listOf("kitchen", "night", "before"), w.take(3))
+    }
 }

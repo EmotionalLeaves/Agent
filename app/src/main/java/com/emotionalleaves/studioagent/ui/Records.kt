@@ -524,7 +524,8 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Section("Your work")
                 SText("Mediums", st.mediums) { st.mediums = it }
                 Multi("How your work is shown (pick every one that applies)", listOf("print", "physical", "screen"), st.routes, names = { mapOf("print" to "Printed (digital work on paper)", "physical" to "Made by hand", "screen" to "On a screen")[it] ?: it }) { st.route = it.joinToString(",") }
-                SText("What your work is about (a few words, commas between: kitchens, night, work)", st.themes) { st.themes = it }
+                key(st.themes.isBlank()) { SText("What your work is about (a few words, commas between: kitchens, night, work)", st.themes) { st.themes = it } }
+                if (st.themes.isBlank()) TextButton(onClick = { scope.io { val stmt = Engine.pickStatement(250); val w = com.emotionalleaves.studioagent.domain.Drafts.themeWords(stmt); if (w.isNotEmpty()) st.themes = w.joinToString(", ") } }) { Text("Suggest from my statement") }
                 SText("Goals for the next 12 months", st.goals, lines = 2) { st.goals = it }
                 Choice("Sizes in", listOf("in", "cm"), units, names = { if (it == "in") "Inches" else "Centimeters" }) { units = it; st.units = it }
                 SText("Currency symbol", st.currency) { if (it.isNotBlank()) st.currency = it }

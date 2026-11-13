@@ -462,3 +462,4 @@ One real change per round. Pushed and built every ten rounds.
 456. Fresh eyes can compare: "Compare with the photo before" shows the previous progress photo beside this one, in whichever view is on (flipped, no color, three values...), so you can see what changed and whether it got better.
 457. Your themes: a few words for what your work is about (in Settings, Your details: "kitchens, night, work"). Calls on one of them come forward in the ranking and say so ("About kitchens: one of your themes"), since the work already answers them.
 458. All calls are grouped by the month they close (with how many in each), then those with no deadline given and those closed, so the year of calls reads like a calendar.
+459. Your themes can start from your own statement: "Suggest from my statement" picks the words it leans on most (kitchen, night...), leaving out the small and general ones, to keep or change.

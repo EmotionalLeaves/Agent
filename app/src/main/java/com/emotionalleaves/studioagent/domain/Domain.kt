@@ -1108,6 +1108,13 @@ object Offers {
 
 /** Builds a first draft from the artist's own interview answers and CV facts. No AI, nothing invented. */
 object Drafts {
+    /** The words your statement leans on most (not the small ones), as a start for your themes. */
+    fun themeWords(statement: String, n: Int = 4): List<String> {
+        val stop = setOf("about", "after", "again", "always", "because", "before", "being", "between", "could", "every", "first", "people", "really", "something", "their", "there", "these", "thing", "things", "those", "through", "where", "which", "while", "would", "work", "works", "making", "make", "piece", "pieces", "paint", "painting", "drawing", "draw", "artist", "other", "still", "around", "often", "never", "until", "small", "large", "little")
+        return Regex("[a-z]{5,}").findAll(statement.lowercase()).map { it.value }.filter { it !in stop }
+            .groupingBy { it.removeSuffix("s") }.eachCount().entries.sortedWith(compareBy({ -it.value }, { statement.lowercase().indexOf(it.key) })).map { it.key }.take(n)
+    }
+
     /** Show titles without help: the series name, a phrase from the statement, and the strongest piece's title. */
     fun showTitles(series: String, statement: String, firstTitle: String): List<String> {
         val phrase = statement.split(Regex("(?<=[.!?])\\s+")).firstOrNull()?.let { s -> Regex("\\b(at|in|before|after|during|from) [a-z ]{3,30}", RegexOption.IGNORE_CASE).find(s)?.value }?.trim()?.replaceFirstChar { it.uppercase() }
