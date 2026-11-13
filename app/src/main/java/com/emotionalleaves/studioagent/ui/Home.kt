@@ -1060,11 +1060,11 @@ val lightPrompts = listOf(
 
 /** The few changes worth knowing about, shown once after an update. Kept short: the newest and most useful first. */
 val whatsNew = listOf(
-    "Scan a flat piece: the phone finds the edges and squares it up, from the piece's page or the photoshoot. Its size is then offered from its shape.",
-    "A TIFF for the print lab, and Fresh eyes \"On matte paper\" to see where shadows may lose detail in print.",
-    "The call ranking's odds learn from your own yeses and no's; your entries can be exported as a spreadsheet.",
-    "Open Honest Lockout (or any focus app) from the session screen, and put on a studio playlist.",
-    "Back after a week away: a kind welcome, and slipped to-dos spread over the coming week.",
-    "Foundations: then and now, your first practice photo beside your newest; milestones noticed on the day.",
-    "Everything the app can do is folded into groups, with the tools you used lately on top."
+    "On a break from work (winter, summer)? Your week takes a date, and every day until then is planned as free.",
+    "Teach a class: book the date (the class, a shopping day and the supplies go on your lists), a handout for the people who come, and what you were paid into Records.",
+    "Market day: a sign for the table with a code to pay by; closing the day names what sold best.",
+    "Still sent, still safe: a sent entry opened again and again says there is nothing left to check. A third good photo is called good enough.",
+    "Can't choose? Pick one for me, in Ideas and in the weekly look ahead. Foundations lets you move on to the next week.",
+    "To-dos open where they are done; Empty your head reads dates like \"Nov 20\" and \"the 20th\".",
+    "Your people adds museum sketching days; more seasons on Saturdays (market season, the year on one page, spring light)."
 )
