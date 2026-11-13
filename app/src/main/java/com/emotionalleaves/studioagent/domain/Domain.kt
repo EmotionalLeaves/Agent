@@ -1619,3 +1619,28 @@ object PieceMoney {
 
     fun kept(entries: List<Pair<String, Double>>): Double = entries.sumOf { it.second }
 }
+
+// ---------------------------------------------------------------- size from the shape of the picture
+/**
+ * Paper and canvas come in standard sizes, each with its own shape. A squared-up picture of a flat piece has the same
+ * shape, so its likely real size can be offered instead of measured.
+ */
+object PaperSizes {
+    /** Width x height in inches, portrait; the common pads, sheets and canvases. */
+    val common = listOf(4.0 to 6.0, 5.0 to 7.0, 5.5 to 8.5, 5.83 to 8.27, 6.0 to 6.0, 8.0 to 8.0, 8.0 to 10.0, 8.27 to 11.69, 8.5 to 11.0,
+        9.0 to 12.0, 10.0 to 10.0, 11.0 to 14.0, 11.0 to 15.0, 11.69 to 16.54, 12.0 to 12.0, 12.0 to 16.0, 14.0 to 17.0, 16.0 to 20.0, 18.0 to 24.0, 22.0 to 30.0, 24.0 to 36.0)
+
+    private val names = mapOf((5.83 to 8.27) to "A5", (8.27 to 11.69) to "A4", (11.69 to 16.54) to "A3", (8.5 to 11.0) to "letter",
+        (11.0 to 15.0) to "a quarter sheet of watercolor paper", (22.0 to 30.0) to "a full sheet of watercolor paper")
+
+    fun name(p: Pair<Double, Double>): String? = names[p.first.coerceAtMost(p.second) to p.first.coerceAtLeast(p.second)]
+
+    /** Sizes whose shape is within [tolerance] of the picture's, turned to match it, smallest first; at most [max]. */
+    fun guess(pw: Int, ph: Int, tolerance: Double = 0.02, max: Int = 3): List<Pair<Double, Double>> {
+        if (pw <= 0 || ph <= 0) return emptyList()
+        val r = pw.toDouble() / ph
+        return common.map { (a, b) -> if (pw >= ph) b to a else a to b }
+            .filter { (w, h) -> kotlin.math.abs(w / h - r) / r <= tolerance }
+            .sortedBy { it.first * it.second }.take(max)
+    }
+}

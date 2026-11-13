@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.AssistChip
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -530,6 +531,18 @@ fun WorkDetail(nav: NavController, id: Long) {
                 Column(Modifier.weight(1f)) { Dim("Height", w.heightIn) { save(w.copy(heightIn = it)) } }
                 Column(Modifier.weight(1f)) { Dim("Depth", w.depthIn) { save(w.copy(depthIn = it)) } }
             } }
+            // No size yet, but a squared-up picture of a flat piece: its shape usually matches a standard paper or canvas.
+            if (w.widthIn <= 0 && w.format == "physical" && w.pixelW > 0) {
+                val guesses = com.emotionalleaves.studioagent.domain.PaperSizes.guess(w.pixelW, w.pixelH)
+                if (guesses.isNotEmpty()) {
+                    Small("Its shape matches " + (if (guesses.size == 1) "a common size" else "these common sizes") + ". Tap the one it is on to fill in the size:")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        guesses.forEach { g -> AssistChip(onClick = { save(w.copy(widthIn = g.first, heightIn = g.second)); sizeVersion++ }, label = {
+                            Text(Texts.dims(g.first, g.second) + (com.emotionalleaves.studioagent.domain.PaperSizes.name(g)?.let { " ($it)" } ?: ""))
+                        }) }
+                    }
+                }
+            }
             if (w.format == "print" || w.format == "digital") {
                 Panel { Text("Print check", fontWeight = FontWeight.SemiBold); Text(Texts.printVerdict(w.pixelW, w.pixelH, w.widthIn, w.heightIn)) }
                 val size = Texts.suggestedPrintSize(w.pixelW, w.pixelH)
