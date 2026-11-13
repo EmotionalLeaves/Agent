@@ -310,3 +310,4 @@ One real change per round. Pushed and built every ten rounds.
 303. New: "See it on a wall at its real size". The piece hangs on a plain gallery wall at its true size (framed and matted when it will be), at gallery height, with a 4-foot bench for scale. For choosing a print size, and shareable to show someone before printing.
 304. A strong-fit call that closes within ten days is announced once, the day it is found, instead of waiting for the weekend notice that would come too late.
 305. New: a catalogue of works (PDF) from Studio: every piece two to a page with its picture, full details, inventory number, edition, price and where it is, and its history of shows and sales. The record a gallery asks for.
+306. A show's checklist steps each open their ready-made part in one tap: the yes email, the thank-you, the note to your list, the wall labels, the flyer, the print lab finder, or the delivery question.

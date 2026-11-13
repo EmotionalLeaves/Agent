@@ -488,7 +488,26 @@ fun ApplScreen(nav: NavController, id: Long) {
                             if (c && e.title.startsWith("Pick up", ignoreCase = true)) { Engine.releaseShown(id); status = "Picked up. The unsold pieces can go out to the next call." }
                             if (c && e.title.startsWith("Go to the opening", ignoreCase = true)) Engine.openingHappened(id)
                         } })
-                        Column(Modifier.weight(1f)) { Text(e.title); if (e.date > 0) Note(fmtDate(e.date)) }
+                        Column(Modifier.weight(1f)) {
+                            Text(e.title); if (e.date > 0) Note(fmtDate(e.date))
+                            // Each step that has a ready-made part opens it: the email, the list note, the labels, the flyer.
+                            if (!e.done) {
+                                val place = o.venue.ifBlank { o.organiser }.ifBlank { o.title }
+                                fun letter(name: String) { letters.firstOrNull { it.title == name }?.let { l -> Share.email(ctx, o.email.ifBlank { loaded.emailTo }, fillLetter(l.subject, "", place), fillLetter(l.body, "", place)) } }
+                                val t = e.title.lowercase()
+                                val act: Pair<String, () -> Unit>? = when {
+                                    t.startsWith("confirm") -> "Write the yes" to { letter("Say yes after being accepted") }
+                                    t.startsWith("thank") -> "Write the thank-you" to { letter("Thank you after a show") }
+                                    t.contains("email list") -> "Write the note" to { nav.navigate("update") }
+                                    t.contains("label") -> "Make the labels" to { scope.io({ status = it }) { val f = Papers.labels(ctx, st, chosen); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }
+                                    t.contains("flyer") -> "Make the flyer" to { scope.io({ status = it }) { val f = Papers.flyer(ctx, st, o.title, listOf(o.venue, o.city).filter { it.isNotBlank() }.joinToString(", "), o.exhibitionDates, "", chosen.firstOrNull()); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }
+                                    t.contains("prints and frames") || t.startsWith("order print") -> "Find a lab" to { nav.navigate("nearby/labs") }
+                                    t.contains("deliver") || t.contains("ask about delivery") -> "Ask about delivery" to { letter("Ask about delivery details") }
+                                    else -> null
+                                }
+                                act?.let { (label, go) -> TextButton(onClick = go, modifier = Modifier.offset(x = (-12).dp)) { Text(label) } }
+                            }
+                        }
                         // A step with no day yet: give it one from the venue's email, so it reaches Today when due.
                         if (!e.done) TextButton(onClick = {
                             val d = if (e.date > 0) Engine.date(e.date) else LocalDate.now().plusDays(7)
