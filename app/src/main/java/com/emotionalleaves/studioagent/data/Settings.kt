@@ -232,6 +232,8 @@ class Settings(ctx: Context) {
     var daysOff by S("daysOff")
     /** The farthest you will take or ship work, in miles; 0 means no limit. */
     var maxMiles by I("maxMiles", 0)
+    /** Pieces already asked about after a month untouched ("w12,w15"). */
+    var stuckTold by S("stuckTold")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

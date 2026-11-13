@@ -1603,6 +1603,14 @@ object Engine {
                 return NextStep("Three no's in a row", "Every working artist has runs like this; most work is turned down many times first. One change helps most: ask three people which piece is strongest, check the photos, or try a few local calls before the bigger ones.", "feedback")
             }
         }
+        // A piece waiting a month with no session is weighing on you: decide it, in one tap, without guilt.
+        if (today.dayOfWeek in setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)) {
+            val made = dao.sessionsNow()
+            works.filter { w -> w.status == "in_progress" && w.createdAt < now - 30 * DAY && (made.filter { it.artworkId == w.id }.maxOfOrNull { it.start } ?: w.createdAt) < now - 30 * DAY && "w${w.id}" !in st.stuckTold.split(",") }
+                .minByOrNull { it.createdAt }?.let { w ->
+                    return NextStep("${w.title.ifBlank { "A piece" }} has waited a month", "Decide it in one tap: one small next step, call it finished, or park it as an idea for later. All three are fine.", "work/${w.id}")
+                }
+        }
         // The art year has seasons: holiday markets book their tables in early autumn, and spring calls open in January.
         // Shown all that Saturday, then not again that month.
         if (today.dayOfWeek == DayOfWeek.SATURDAY && (st.seasonTold != "${today.year}-${today.monthValue}" || st.seasonDay == today.toString())) {

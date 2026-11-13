@@ -351,6 +351,18 @@ fun WorkDetail(nav: NavController, id: Long) {
 
     Screen(w.title.ifBlank { "Untitled" }, nav) {
         if (w.clientId > 0 || w.tags.split(",").any { it.trim() == "commission" }) CommissionPanel(nav, w)
+        // Waiting a month: three ways to decide it, each fine, each one tap.
+        val touched by dao.sessions().collectAsState(emptyList())
+        val lastTouch = touched.filter { it.artworkId == w.id }.maxOfOrNull { it.start } ?: w.createdAt
+        if (w.status == "in_progress" && w.createdAt in 1 until now() - 30 * 86_400_000L && lastTouch < now() - 30 * 86_400_000L && "w${w.id}" !in st.stuckTold.split(",")) Panel(strong = true) {
+            Text("This one has waited a month", fontWeight = FontWeight.SemiBold)
+            Small("Unfinished pieces weigh on you. Decide it, and it stops weighing. All three are fine.")
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { st.stuckTold = st.stuckTold + ",w${w.id}"; save(w.copy(nextStep = w.nextStep.ifBlank { "Look at it for five minutes and decide the next mark" })); nav.navigate("session") }) { Text("One small step") }
+                TextButton(onClick = { st.stuckTold = st.stuckTold + ",w${w.id}"; save(w.copy(status = "finished")) }) { Text("It is finished") }
+                TextButton(onClick = { st.stuckTold = st.stuckTold + ",w${w.id}"; save(w.copy(status = "idea")) }) { Text("Park it for later") }
+            }
+        }
         // The picture comes first, on a white sheet, the way it will be seen.
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(3.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(if (w.imagePath.isNotBlank()) 12.dp else 22.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)) {
