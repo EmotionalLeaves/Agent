@@ -340,6 +340,26 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
     }
 
+    // Scanning a flat piece: Google's scanner on the phone finds the four edges and squares the picture, so there is nothing to straighten.
+    val scanned = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { r ->
+        val uri = if (r.resultCode == android.app.Activity.RESULT_OK) com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult.fromActivityResultIntent(r.data)?.pages?.firstOrNull()?.imageUri else null
+        if (uri != null) scope.io({ status = it }) {
+            if (!ImageTools.copyUri(ctx, uri, orig)) throw Exception("Could not copy the scan.")
+            withContext(Dispatchers.Main) { attached(true) }
+        }
+    }
+    fun scan() {
+        val act = generateSequence(ctx) { (it as? android.content.ContextWrapper)?.baseContext }.firstOrNull { it is android.app.Activity } as? android.app.Activity
+        if (act == null) { status = "The scanner could not open here. Take a photo instead, then straighten it."; return }
+        val opts = com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.Builder()
+            .setGalleryImportAllowed(true).setPageLimit(1)
+            .setResultFormats(com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
+            .setScannerMode(com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.SCANNER_MODE_BASE).build()
+        com.google.mlkit.vision.documentscanner.GmsDocumentScanning.getClient(opts).getStartScanIntent(act)
+            .addOnSuccessListener { sender -> scanned.launch(androidx.activity.result.IntentSenderRequest.Builder(sender).build()) }
+            .addOnFailureListener { status = "The scanner is not available on this phone yet (it comes with Google Play services). Take a photo instead, then straighten it." }
+    }
+
     val pickExtra = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) scope.io({ status = it }) {
             val f = File(dir, "work_${id}_x_${now()}.jpg")
@@ -386,6 +406,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             }
             if (w.imagePath.isBlank()) Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }, modifier = Modifier.fillMaxWidth()) { Text("Take a photo") }
+                OutlinedButton(onClick = { scan() }, modifier = Modifier.fillMaxWidth()) { Text("Scan a flat piece (edges found for you)") }
                 OutlinedButton(onClick = { pick.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text("Choose a file") }
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -397,6 +418,7 @@ fun WorkDetail(nav: NavController, id: Long) {
                         TextButton(onClick = { replace = true }) { Text("Replace the picture") }
                         DropdownMenu(expanded = replace, onDismissRequest = { replace = false }) {
                             DropdownMenuItem(text = { Text("Take a new photo") }, onClick = { replace = false; try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } })
+                            DropdownMenuItem(text = { Text("Scan it (flat pieces)") }, onClick = { replace = false; scan() })
                             DropdownMenuItem(text = { Text("Choose a file") }, onClick = { replace = false; pick.launch("image/*") })
                         }
                     }

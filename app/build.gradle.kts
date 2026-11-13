@@ -94,6 +94,8 @@ dependencies {
     implementation("org.jsoup:jsoup:1.18.3")
     // Reads the words on a flyer photo on the phone itself: free, no account. The reading model comes with Google Play services, so the app stays small.
     implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+    // Flat pieces (drawings, prints, paper): the phone finds the edges and squares the picture up, offline.
+    implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0")
     // QR codes on flyers, labels and the sign-up sheet, drawn on the phone.
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.sun.mail:android-mail:1.6.7")
