@@ -211,6 +211,8 @@ class Settings(ctx: Context) {
     var activitySeen by L("activitySeen", 0)
     /** The day Today suggested practice, so the session opens on it. */
     var suggestPractice by S("suggestPractice")
+    /** The daily check waits for Wi-Fi and charging, to save mobile data and battery. */
+    var wifiOnly by B("wifiOnly", false)
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

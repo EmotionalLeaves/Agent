@@ -72,10 +72,11 @@ object Engine {
     /** What is left of this month's fee budget. No budget set means only your level's fee cap applies. */
     fun feeLeft(ledger: List<Ledger>): Double = if (st.feeBudget <= 0) Double.MAX_VALUE else (st.feeBudget - feesThisMonth(ledger)).coerceAtLeast(0.0)
 
-    fun schedule(ctx: Context) {
-        val req = PeriodicWorkRequestBuilder<DailyWorker>(1, TimeUnit.DAYS)
-            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build()
-        WorkManager.getInstance(ctx).enqueueUniquePeriodicWork("daily", ExistingPeriodicWorkPolicy.KEEP, req)
+    /** The daily check: on any connection, or only on Wi-Fi and while charging when you would rather save data and battery. */
+    fun schedule(ctx: Context, changed: Boolean = false) {
+        val c = Constraints.Builder().setRequiredNetworkType(if (st.wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED).apply { if (st.wifiOnly) setRequiresCharging(true) }.build()
+        val req = PeriodicWorkRequestBuilder<DailyWorker>(1, TimeUnit.DAYS).setConstraints(c).build()
+        WorkManager.getInstance(ctx).enqueueUniquePeriodicWork("daily", if (changed) ExistingPeriodicWorkPolicy.UPDATE else ExistingPeriodicWorkPolicy.KEEP, req)
     }
 
     // ------------------------------------------------------------ career level
