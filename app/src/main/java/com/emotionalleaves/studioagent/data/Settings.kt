@@ -181,6 +181,8 @@ class Settings(ctx: Context) {
     var sessionNoise by B("sessionNoise", false)
     /** Organizers and venues that have shown your work. */
     var friendlyVenues by S("friendlyVenues")
+    /** The exercise a practice session is on. */
+    var practiceText by S("practiceText")
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")

@@ -362,6 +362,21 @@ fun SessionScreen(nav: NavController) {
                 }
                 TextButton(onClick = { scope.io { workId = dao.put(newWork()) } }) { Text("Start a new piece") }
             }
+            // Practice without deciding what to practice: one exercise, and another if that one does not appeal.
+            var n by rememberSaveable { mutableStateOf((java.time.LocalDate.now().toEpochDay() % practicePrompts.size).toInt()) }
+            if (kind == "light") Panel {
+                // A low-energy day still moves things: one of these, and stopping after it is a complete session.
+                Small("Something small")
+                Text(lightPrompts[n % lightPrompts.size], style = MaterialTheme.typography.titleMedium)
+                TextButton(onClick = { n = (n + 1) % practicePrompts.size }, modifier = Modifier.offset(x = (-12).dp)) { Text("Another one") }
+            }
+            if (kind == "skill") {
+                Panel {
+                    Small("Today's exercise")
+                    Text(practicePrompts[n], style = MaterialTheme.typography.titleMedium)
+                    TextButton(onClick = { n = (n + 1) % practicePrompts.size }, modifier = Modifier.offset(x = (-12).dp)) { Text("Another one") }
+                }
+            }
             val left = work?.let { Engine.firstStep(it) }.orEmpty().ifBlank { sessions.firstOrNull { it.artworkId == workId && it.nextStep.isNotBlank() }?.nextStep.orEmpty() }
             Panel(strong = true) {
                 Text("Two-minute start", fontWeight = FontWeight.SemiBold)
@@ -382,6 +397,7 @@ fun SessionScreen(nav: NavController) {
                 st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
                 st.sessionGoalMin = length.substringBefore(" ").toIntOrNull() ?: st.defaultSessionMin
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
+                st.practiceText = when (kind) { "skill" -> practicePrompts[n]; "light" -> lightPrompts[n % lightPrompts.size]; else -> "" }
                 // Working on an idea makes it a piece in progress.
                 if (kind == "make" && work?.status == "idea") scope.io { dao.put(work.copy(status = "in_progress")) }
                 if (st.dndInSession) Notifier.dnd(ctx, true)
@@ -455,7 +471,8 @@ fun SessionScreen(nav: NavController) {
                 }
             }
             if (goal > 0 && secs >= goal * 60L) Panel(strong = true) { Text("That is your $goal minutes. Stopping now is a complete session. Keep going only if you want to.") }
-            Text(work?.title?.ifBlank { "Untitled" } ?: (if (st.sessionKind == "skill") "Practice" else "Light session"), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+            Text(work?.title?.ifBlank { "Untitled" } ?: (if (st.sessionKind == "skill") "Practice" else "Light session"), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)            if (work == null && st.sessionKind in setOf("skill", "light") && st.practiceText.isNotBlank()) Text(st.practiceText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
+
             if (work != null) {
                 val steps = Texts.steps(work.steps)
                 val open = steps.indexOfFirst { !it.first }
@@ -742,3 +759,44 @@ fun Tile(modifier: Modifier, number: String, label: String, onClick: () -> Unit)
         Text(label, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 2)
     }
 }
+
+/**
+ * Short exercises for practice sessions, chosen for an artist moving from screens to paper and paint:
+ * each is one sitting, needs little, and is fine to do badly.
+ */
+val practicePrompts = listOf(
+    "Ten one-minute drawings of the same mug from ten angles. Speed over neatness.",
+    "A value study: one object in pencil, using only three tones (light, middle, dark).",
+    "Mix a chart of one color with white in five steps, then with its opposite in five steps.",
+    "Draw your hand five times without lifting the pen.",
+    "Copy one small part of a painting you love, as closely as you can, in 20 minutes.",
+    "Cut five shapes from paper scraps and arrange them three different ways. Photograph each.",
+    "Draw the view from a window in 15 minutes, then again in 5.",
+    "Paint a small square of something in the kitchen at the color it really is, not the color you know it is.",
+    "Make a page of textures with one pen: hatching, stippling, scribbles, dashes.",
+    "Draw something in the dark corners of a room: only the shadows, not the outlines.",
+    "Print one of your digital pieces small on plain paper and draw over it by hand.",
+    "Ten thumbnails (thumbnail-sized sketches) of compositions for your next piece.",
+    "Draw with your other hand for ten minutes. Notice what you see instead of what you know.",
+    "A one-color painting: one paint plus water or white, nothing else.",
+    "Fill a page with one shape repeated, changing it a little each time.",
+    "Draw a coworker's tools, a pan, a knife, a ladle, from memory. Then from life, if you can.",
+    "Make a small collage from a magazine page or packaging. Fifteen minutes, no undo.",
+    "Trace the shadows of a plant on paper with a lamp, then fill them in.",
+    "Draw the same object at three sizes: tiny, hand-sized, as big as the page.",
+    "Look at one of your finished pieces for five minutes and write three things you would keep and one you would change."
+)
+
+/** Small things for a tired day: real progress, little energy, nothing to decide. */
+val lightPrompts = listOf(
+    "Photograph one finished piece for the catalog, by a window.",
+    "Sort ten reference pictures into keep and delete.",
+    "Write the next small step for the piece you are on.",
+    "Tidy the desk so tomorrow starts with a clear surface.",
+    "Look through your ideas and park one more.",
+    "Sketch for fifteen minutes. Anything. Throw it away if you like.",
+    "Measure one finished piece and type its size into the app.",
+    "Read one open call in Calls and say Yes or No.",
+    "Prime or prepare three surfaces for later.",
+    "Put on music and look at your series side by side for ten minutes."
+)
