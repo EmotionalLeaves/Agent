@@ -696,4 +696,16 @@ class DomainTest {
         assertTrue(three.first().startsWith("All 3 pieces") && three.any { it.contains("corners") } && three.any { it.startsWith("Asked whether") })
         assertTrue(three.size <= 31) // ticks are kept as bits
     }
+
+    @Test fun aYearOfMaking() {
+        val A = com.emotionalleaves.studioagent.domain.Anniversary
+        val first = java.time.LocalDate.parse("2025-11-13")
+        assertEquals(1, A.years(first, java.time.LocalDate.parse("2026-11-13")))
+        assertEquals(0, A.years(first, java.time.LocalDate.parse("2026-11-14")))
+        assertEquals(0, A.years(first, first))
+        assertEquals(1, A.years(java.time.LocalDate.parse("2024-02-29"), java.time.LocalDate.parse("2025-02-28")))
+        assertEquals("2 years of making", A.title(2))
+        assertEquals("A year ago today was your first session. Since then: 80 sessions, 52 hours of making, 9 pieces, 6 entries sent. Every one of them was you showing up.", A.line(1, 80, 52, 9, 6))
+        assertTrue(A.line(1, 1, 0, 0, 0).contains("Since then: 1 session. Every"))
+    }
 }

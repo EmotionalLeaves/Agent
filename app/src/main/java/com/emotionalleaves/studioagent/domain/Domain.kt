@@ -1527,3 +1527,23 @@ object Packing {
         add("The pick-up date and time, on your calendar before you leave")
     }
 }
+
+// ---------------------------------------------------------------- a year of making
+/** The day, once a year, that you started: what has happened since, counted plainly. */
+object Anniversary {
+    /** How many years ago [first] was, when [today] is its anniversary (Feb 29 is kept on Feb 28 in other years); otherwise 0. */
+    fun years(first: LocalDate, today: LocalDate): Int {
+        val y = today.year - first.year
+        if (y < 1) return 0
+        val day = if (first.monthValue == 2 && first.dayOfMonth == 29 && !today.isLeapYear) LocalDate.of(today.year, 2, 28) else first.withYear(today.year)
+        return if (day == today) y else 0
+    }
+
+    fun title(years: Int): String = if (years == 1) "A year of making" else "$years years of making"
+
+    fun line(years: Int, sessions: Int, hours: Int, pieces: Int, sends: Int): String =
+        (if (years == 1) "A year ago today" else "$years years ago today") + " was your first session. Since then: " +
+            listOfNotNull(Texts.count(sessions, "session"), if (hours > 0) Texts.count(hours, "hour") + " of making" else null,
+                if (pieces > 0) Texts.count(pieces, "piece") else null, if (sends > 0) Texts.count(sends, "entry", "entries") + " sent" else null).joinToString(", ") +
+            ". Every one of them was you showing up."
+}

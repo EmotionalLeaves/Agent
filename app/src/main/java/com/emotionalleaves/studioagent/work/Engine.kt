@@ -1630,6 +1630,15 @@ object Engine {
                 return NextStep("Three no's in a row", "Every working artist has runs like this; most work is turned down many times first. One change helps most: ask three people which piece is strongest, check the photos, or try a few local calls before the bigger ones.", "feedback")
             }
         }
+        // Once a year, the day you started: what has happened since, shown all that day.
+        dao.sessionsNow().filter { it.end > it.start }.minByOrNull { it.start }?.let { first ->
+            val years = com.emotionalleaves.studioagent.domain.Anniversary.years(date(first.start), today)
+            if (years > 0) {
+                val all = dao.sessionsNow().filter { it.end > it.start }
+                return NextStep(com.emotionalleaves.studioagent.domain.Anniversary.title(years), com.emotionalleaves.studioagent.domain.Anniversary.line(years, all.size,
+                    (all.sumOf { it.end - it.start } / 3_600_000L).toInt(), works.count { it.status != "idea" }, dao.applsNow().count { it.submittedAt > 0 }), "year")
+            }
+        }
         // A piece waiting a month with no session is weighing on you: decide it, in one tap, without guilt.
         if (today.dayOfWeek in setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)) {
             val made = dao.sessionsNow()
