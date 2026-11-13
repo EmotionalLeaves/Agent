@@ -95,6 +95,9 @@ object Places {
             val t = e.optJSONObject("tags") ?: continue
             val name = t.optString("name").trim()
             if (name.isBlank()) continue
+            // "Arts centre" on the map also covers theaters, rehearsal rooms and music venues: not places that hang pictures.
+            if (t.optString("amenity") == "arts_centre" && t.optString("tourism") != "gallery" &&
+                Regex("theat(re|er)|rehearsal|dance|music|opera|playhouse|stage|ballet|symphony|cinema", RegexOption.IGNORE_CASE).containsMatchIn(name + " " + t.optString("arts_centre"))) continue
             val plat = if (e.has("lat")) e.optDouble("lat") else e.optJSONObject("center")?.optDouble("lat") ?: continue
             val plon = if (e.has("lon")) e.optDouble("lon") else e.optJSONObject("center")?.optDouble("lon") ?: continue
             val (kind, what) = when {

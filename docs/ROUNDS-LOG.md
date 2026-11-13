@@ -380,3 +380,4 @@ One real change per round. Pushed and built every ten rounds.
 374. New: Find anything (on You). One box finds a piece, a call, a venue or person, or a document by any word, each opening where it lives.
 375. The screenshot and spoken-label checks cover Find anything and Portfolio order.
 376. New: At the opening. Your phone shows a big code people scan to join your list (or see your page), and a two-box form to add someone on the spot; from any show's page.
+377. Places near you leaves out theaters, rehearsal rooms and music venues that the map files under arts centers, since they do not hang pictures.
