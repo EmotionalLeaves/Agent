@@ -166,7 +166,7 @@ fun SessionsScreen(nav: NavController) {
             DateField("Day", date.value) { date.value = it }
             Count("Minutes", minutes.value.toIntOrNull() ?: 30, 5, 600, 5, "min") { minutes.value = it.toString() }
             Choice("Kind", listOf("make", "practise", "light"), if (kind == "skill") "practise" else kind, names = { mapOf("make" to "Make", "practise" to "Practice", "light" to "Light")[it] ?: it }) { kind = if (it == "practise") "skill" else it }
-            if (kind == "make" && active.isNotEmpty()) Choice("Piece (optional)", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, name(workId)) { t -> workId = active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == t }?.id ?: 0L }
+            if (kind == "make" && active.isNotEmpty()) Choice("Piece (optional)", active.map { it.id.toString() }, workId.toString(), names = { i -> active.firstOrNull { it.id.toString() == i }?.let { it.title.ifBlank { "Untitled #${it.id}" } } ?: i }) { i -> workId = i.toLongOrNull() ?: 0L }
             Field("Note (optional)", note)
             Button(enabled = (minutes.value.trim().toIntOrNull() ?: 0) > 0, onClick = {
                 val day = try { LocalDate.parse(date.value.trim()) } catch (e: Exception) { LocalDate.now() }

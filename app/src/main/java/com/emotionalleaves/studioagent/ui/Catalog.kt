@@ -223,7 +223,9 @@ fun WorkDetail(nav: NavController, id: Long) {
             ImageTools.saveJpeg(b, main)
             val next = w.copy(originalPath = orig.absolutePath, imagePath = main.absolutePath, pixelW = pw, pixelH = ph)
             w = next; dao.put(next)
-            status = if (photo) "Photo added and color-corrected. Straighten it next if the edges are not square." else "File imported at $pw x $ph px."
+            status = (if (photo) "Photo added and color-corrected. Straighten it next if the edges are not square." else "File imported at $pw × $ph px.") +
+                // Juries usually ask for 1920 px or more on the long side; say so now, not on the day of a deadline.
+                (if (maxOf(pw, ph) in 1..1599) " It is small for calls, which often want 1920 px on the long side. The original file or a closer photo will look better to a juror." else "")
         }
     }
 
@@ -537,6 +539,13 @@ fun IdeasBody(nav: NavController) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Field("New idea", text, lines = 2, mic = true)
         if (text.value.isNotBlank()) Button(onClick = { val t = text.value.trim(); text.value = ""; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
+        // A picture that sparked it (a screenshot, a photo of a wall, a color) parks the same way, with any words typed above.
+        val ctx = LocalContext.current
+        val pic = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null) { val t = text.value.trim(); text.value = ""
+                scope.io { val f = File(ImageTools.mediaDir(ctx), "idea_${now()}.jpg"); if (ImageTools.copyUri(ctx, uri, f)) dao.put(Idea(text = t, photoPath = f.absolutePath, createdAt = now())) } }
+        }
+        TextButton(onClick = { pic.launch("image/*") }) { Text("Park a picture") }
         val open = ideas.filter { !it.done }
         if (open.isEmpty()) Empty("Nothing parked. When an idea keeps circling while you work, put it here and let it go.")
         // A pinboard: each idea a small sheet with a pin, two across.

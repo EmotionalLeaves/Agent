@@ -348,6 +348,10 @@ object Engine {
         val orig = File(dir, "work_${id}_orig.jpg"); val main = File(dir, "work_${id}_main.jpg")
         if (!ImageTools.copyUri(ctx, uri, orig)) { dao.artworksNow().firstOrNull { it.id == id }?.let { dao.del(it) }; throw Exception("Could not read $fileName") }
         val (pw, ph) = ImageTools.size(orig.absolutePath)
+        // Picking the same file twice does not make two pieces.
+        if (pw > 0 && dao.artworksNow().any { it.id != id && it.pixelW == pw && it.pixelH == ph && it.title == titleFromFileName(fileName) }) {
+            orig.delete(); dao.artworksNow().firstOrNull { it.id == id }?.let { dao.del(it) }; throw Exception("already in Studio")
+        }
         val bmp = ImageTools.decode(orig.absolutePath, 2400)
         if (bmp == null) { orig.delete(); dao.artworksNow().firstOrNull { it.id == id }?.let { dao.del(it) }; throw Exception("$fileName is not an image the app can open") }
         ImageTools.saveJpeg(bmp, main)

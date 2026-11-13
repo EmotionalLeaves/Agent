@@ -145,8 +145,8 @@ fun Records(nav: NavController) {
         val sellable = works.filter { it.status != "sold" && it.status != "idea" && it.status != "in_progress" }
         if (sellable.isEmpty()) Small("No finished works to sell yet.")
         else {
-            Choice("Which work", sellable.map { it.title.ifBlank { "Untitled #${it.id}" } }, sellable.firstOrNull { it.id == saleWork }?.title?.ifBlank { "Untitled #$saleWork" }.orEmpty()) { t ->
-                sellable.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == t }?.let { saleWork = it.id; if (salePrice == 0.0) salePrice = it.price }
+            Choice("Which work", sellable.map { it.id.toString() }, saleWork.toString(), names = { i -> sellable.firstOrNull { it.id.toString() == i }?.let { it.title.ifBlank { "Untitled #${it.id}" } } ?: i }) { i ->
+                sellable.firstOrNull { it.id.toString() == i }?.let { saleWork = it.id; if (salePrice == 0.0) salePrice = it.price }
             }
             key(saleWork) { Num("Sale price, " + st.currency, salePrice) { salePrice = it } }
             Num("Venue commission, %", saleCommission) { saleCommission = it }

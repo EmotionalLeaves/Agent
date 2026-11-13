@@ -222,3 +222,13 @@ One real change per round. Pushed and built every ten rounds.
 218. A call with no deadline but an email address offers "Ask them by email": the question about deadline, fee and how to enter opens ready in the mail app.
 219. A venue's "Open their site" sits outside the folded details, and works for addresses typed without https.
 220. Applied: "Not this time" adds that the works are free for the next call.
+221. Picking the same picture twice in Add from my files (or sharing it twice) does not make two pieces; it is listed as already in Studio.
+222. Ideas: "Park a picture" parks a picture that sparked an idea, with any words typed above it.
+223. A picture smaller than calls usually want (under 1600 px on the long side) is flagged when it is added, not on deadline day.
+224. Starting a session, pieces are chosen by the piece itself, so two with the same title stay apart; ideas are marked.
+225. "Start a new piece" in a session keeps the new piece chosen instead of jumping back to another one.
+226. Discarding a session of five minutes or more takes a second tap that says how many minutes would go; a stray start still goes at once.
+227. Session saved shows the week so far against your weekly hours, and says when the week is done.
+228. The week's one piece is chosen by the piece itself too, so pieces with the same title cannot be mixed up.
+229. Logging a past session and recording a sale also choose the piece itself, not its title.
+230. Starting a session on a piece still marked Idea moves it to In progress.

@@ -291,6 +291,10 @@ fun DoneScreen(nav: NavController) {
             val mins = ((s.end - s.start) / 60000).coerceAtLeast(0)
             Text((if (mins < 1) "Under a minute" else Texts.count(mins.toInt(), "minute")) + (works.firstOrNull { it.id == s.artworkId }?.let { " on " + it.title.ifBlank { "Untitled" } } ?: "") + ".", style = MaterialTheme.typography.headlineSmall)
             Text(if (mins < 10) "Short sessions count. You showed up." else "That counts toward your week.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // The week so far, against the hours you set: progress, never a scold.
+            val monday = Engine.millis(LocalDate.now().with(java.time.DayOfWeek.MONDAY).atStartOfDay())
+            val weekMin = sessions.filter { it.start >= monday && it.end > it.start }.sumOf { (it.end - it.start) / 60000 }.toInt()
+            if (st.weeklyHours > 0) Small("This week: " + (if (weekMin >= 60) "${weekMin / 60} h ${weekMin % 60} min" else "$weekMin min") + " of your ${st.weeklyHours} hours" + (if (weekMin >= st.weeklyHours * 60) ". The week is done; anything more is extra." else "."))
             if (s.nextStep.isNotBlank()) WallLabel(onClick = null) {
                 Small("Next time starts with")
                 Text(s.nextStep, style = MaterialTheme.typography.titleLarge)
@@ -315,7 +319,9 @@ fun SessionScreen(nav: NavController) {
 
     if (start == 0L) {
         var kind by rememberSaveable { mutableStateOf(if (st.energyDay == LocalDate.now().toString() && st.energy == "wiped") "light" else "make") }
-        var workId by rememberSaveable(works.size) { mutableStateOf((Engine.currentPiece(works) ?: active.firstOrNull())?.id ?: 0L) }
+        // Set once the pieces have loaded; a piece just started here stays chosen when the list grows.
+        var workId by rememberSaveable { mutableStateOf(0L) }
+        if (workId == 0L) (Engine.currentPiece(works) ?: active.firstOrNull())?.id?.let { workId = it }
         val work = works.firstOrNull { it.id == workId }
         Screen("Start a session", nav) {
             Section("What kind?")
@@ -333,8 +339,10 @@ fun SessionScreen(nav: NavController) {
                 }
             }
             if (kind == "make") {
-                if (active.isNotEmpty()) Choice("Which piece?", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, work?.title?.ifBlank { "Untitled #${work.id}" }.orEmpty()) { picked ->
-                    active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == picked }?.let { workId = it.id }
+                // Chosen by the piece itself, not its title, so two pieces with the same name stay apart.
+                if (active.isNotEmpty()) Choice("Which piece?", active.map { it.id.toString() }, workId.toString(),
+                    names = { idText -> active.firstOrNull { it.id.toString() == idText }?.let { w -> w.title.ifBlank { "Untitled #${w.id}" } + (if (w.status == "idea") " (idea)" else "") } ?: idText }) { picked ->
+                    picked.toLongOrNull()?.let { workId = it }
                 }
                 TextButton(onClick = { scope.io { workId = dao.put(newWork()) } }) { Text("Start a new piece") }
             }
@@ -358,6 +366,8 @@ fun SessionScreen(nav: NavController) {
                 st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
                 st.sessionGoalMin = length.substringBefore(" ").toIntOrNull() ?: st.defaultSessionMin
                 st.sessionArtwork = if (kind == "make") workId else 0L; st.sessionKind = kind; st.sessionStart = now()
+                // Working on an idea makes it a piece in progress.
+                if (kind == "make" && work?.status == "idea") scope.io { dao.put(work.copy(status = "in_progress")) }
                 if (st.dndInSession) Notifier.dnd(ctx, true)
             }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start, " + length.replace(" min", " minutes")) }
             if (st.dndInSession && !Notifier.dndGranted(ctx)) Small("Want the phone silenced during sessions? Allow it in You, Settings, Hours and calm.")
@@ -471,7 +481,10 @@ fun SessionScreen(nav: NavController) {
                 Row {
                     TextButton(onClick = { stopping = false }) { Text("Keep going") }
                     Spacer(Modifier.weight(1f))
-                    DangerButton(onClick = { finish(false) }) { Text("Discard this session") }
+                    // Throwing away real time takes a second tap; a stray one-minute start goes at once.
+                    var sure by remember { mutableStateOf(false) }
+                    val mins = (secs / 60).toInt()
+                    DangerButton(onClick = { if (mins < 5 || sure) finish(false) else sure = true }) { Text(if (sure) "Tap again to discard $mins minutes" else "Discard this session") }
                 }
             }
         }
@@ -638,8 +651,9 @@ fun Review(nav: NavController) {
         StageHead(2, "One piece for next week", st.focusWork > 0)
         if (active.isEmpty()) Empty("Nothing in progress. Start a new piece from Studio when you are ready.", "Open Studio") { nav.navigate("works") }
         else {
-            Choice("", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, active.firstOrNull { tick >= 0 && it.id == st.focusWork }?.let { it.title.ifBlank { "Untitled #${it.id}" } }.orEmpty()) { t ->
-                active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == t }?.let { st.focusWork = it.id }
+            Choice("", active.map { it.id.toString() }, if (tick >= 0 && active.any { it.id == st.focusWork }) st.focusWork.toString() else "",
+                names = { i -> active.firstOrNull { it.id.toString() == i }?.let { it.title.ifBlank { "Untitled #${it.id}" } } ?: i }) { i ->
+                i.toLongOrNull()?.let { st.focusWork = it }
             }
             Small("Start now will open straight onto it. Other ideas can wait in Ideas.")
         }
