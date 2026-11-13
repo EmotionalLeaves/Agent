@@ -273,3 +273,5 @@ One real change per round. Pushed and built every ten rounds.
 
 267. New: Places near you. From the free OpenStreetMap (no key), the app finds the real galleries, art centers, art and framing shops, art museums, libraries and community centers around your town, nearest first. Each one can be added to People with what it is, how far, its address, site and email, and the first thing to find out there. In People: "Find places near me".
 268. The map finder is checked live in CI (a real town, real places), and its reading of map data is tested.
+269. Calls, Applied is now a board: shows you got into, applications to finish, ones waiting to hear, and finished ones folded away, each with a five-step track (chosen, sent, heard back, shown, home again) and a one-line summary at the top.
+270. The live check now tries fifteen more listing sites (robots rules, how many calls, how many read as open calls), to pick which to add next.

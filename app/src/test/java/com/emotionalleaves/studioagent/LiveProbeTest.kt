@@ -130,6 +130,40 @@ class LiveProbeTest {
             }
         } catch (e: Exception) { log("places failed: $e") }
 
+        log("\n== Candidate listing sites (not yet in the app): readable, allowed, and how many calls")
+        listOf(
+            "ArtConnect" to "https://www.artconnect.com/opportunities",
+            "CuratorSpace" to "https://www.curatorspace.com/opportunities",
+            "ArtRabbit" to "https://www.artrabbit.com/artist-opportunities",
+            "TransArtists" to "https://www.transartists.org/en/air",
+            "Re-title" to "https://www.re-title.com/opportunities/",
+            "NYFA" to "https://www.nyfa.org/opportunities/",
+            "EntryThingy" to "https://www.entrythingy.com/d/index.php",
+            "Zapplication" to "https://www.zapplication.org/participating-events.php",
+            "CallForEntry" to "https://artist.callforentry.org/festivals.php",
+            "Art Deadline" to "https://artdeadline.com/",
+            "Arts Council Texas" to "https://www.arts.texas.gov/opportunities/",
+            "MutualArt calls" to "https://www.mutualart.com/OpenCalls",
+            "Artwork Archive Calls (category)" to "https://www.artworkarchive.com/call-for-entry/category/exhibition",
+            "OnTheMove" to "https://on-the-move.org/news",
+            "Creative Capital" to "https://creative-capital.org/artist-resources/artist-opportunities/",
+        ).forEach { (name, url) ->
+            try {
+                val allowed = Robots.allowed(url)
+                val doc = Fetch.html(url, automatic = false)
+                val links = Listing.links(doc)
+                var kept = 0; var tried = 0
+                if (allowed) links.take(4).forEach { l ->
+                    tried++
+                    try {
+                        val page = "Link: ${l.url}\n" + Fetch.text(Fetch.html(l.url))
+                        if (com.emotionalleaves.studioagent.work.Engine.plainCall(page, name, l.text, l.url, System.currentTimeMillis(), doc.title()) != null) kept++
+                    } catch (e: Exception) { }
+                }
+                log("candidate $name: robots=$allowed links=${links.size} kept=$kept/$tried textlen=${Fetch.text(doc).length} e.g. ${links.take(2).joinToString(" | ") { it.text.take(50) }}")
+            } catch (e: Exception) { log("candidate $name: failed $e") }
+        }
+
         log("\n== Starter listing sites, exactly as the daily check reads them")
         val now = System.currentTimeMillis()
         com.emotionalleaves.studioagent.work.Engine.starterSources.forEach { (name, url) ->

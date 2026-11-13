@@ -1,5 +1,8 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.semantics.stateDescription
@@ -235,22 +238,45 @@ fun Calls(nav: NavController) {
                 // Ones still being prepared come first, nearest deadline at the top; finished ones follow, newest first.
                 val oppOf = opps.associateBy { it.id }
                 val evts by dao.events().collectAsState(emptyList())
-                appls.sortedWith(compareBy<com.emotionalleaves.studioagent.data.Appl>({ it.status in setOf("submitted", "accepted", "declined") },
-                    { if (it.status in setOf("submitted", "accepted", "declined")) -it.submittedAt else (oppOf[it.oppId]?.deadline?.takeIf { d -> d > 0 } ?: Long.MAX_VALUE) })).forEach { a ->
+                // Every entry on one track, from chosen to the work coming home, grouped by what it needs from you.
+                fun open(a: com.emotionalleaves.studioagent.data.Appl) = evts.filter { it.applId == a.id && it.type == "task" && !it.done }
+                fun stage(a: com.emotionalleaves.studioagent.data.Appl): Int = when (a.status) {
+                    "submitted", "sending" -> 1; "declined" -> 2
+                    "accepted" -> { val t = evts.filter { it.applId == a.id && it.type == "task" }
+                        when { t.any { it.done && it.title.startsWith("Pick up", true) } || (t.isNotEmpty() && t.all { it.done }) -> 4
+                            t.any { it.done && (it.title.startsWith("Deliver", true) || it.title.contains("ship", true)) } -> 3; else -> 2 } }
+                    else -> 0
+                }
+                val toFinish = appls.filter { it.status !in setOf("submitted", "sending", "accepted", "declined") }
+                    .sortedBy { oppOf[it.oppId]?.deadline?.takeIf { d -> d > 0 } ?: Long.MAX_VALUE }
+                val waiting = appls.filter { it.status in setOf("submitted", "sending") }.sortedByDescending { it.submittedAt }
+                val shows = appls.filter { it.status == "accepted" && stage(it) < 4 }.sortedBy { open(it).minOfOrNull { e -> if (e.date > 0) e.date else Long.MAX_VALUE } ?: Long.MAX_VALUE }
+                val done = appls.filter { it.status == "declined" || (it.status == "accepted" && stage(it) >= 4) }.sortedByDescending { it.submittedAt }
+                Text(listOfNotNull(
+                    toFinish.size.takeIf { it > 0 }?.let { "${Texts.count(it, "application")} to finish" },
+                    waiting.size.takeIf { it > 0 }?.let { "$it waiting to hear" },
+                    shows.size.takeIf { it > 0 }?.let { Texts.count(it, "show") + " you got into" }
+                ).joinToString(", ").replaceFirstChar { it.uppercase() }.let { if (it.isBlank()) "Nothing in progress." else "$it." }, style = MaterialTheme.typography.titleMedium)
+                @Composable fun entry(a: com.emotionalleaves.studioagent.data.Appl) {
                     val o = oppOf[a.oppId]
                     Panel(onClick = { nav.navigate("appl/${a.id}") }) {
                         Text(o?.title ?: "Application", style = MaterialTheme.typography.titleSmall)
+                        StageTrack(stage(a), a.status == "declined")
                         Small(when (a.status) {
                             "submitted" -> "Submitted ${fmtDate(a.submittedAt)}. " + (if (st.mailReady) "The result email is picked up for you." else "When you hear back, open it and tap Accepted or Not this time.")
                             // Accepted: the one thing to do next, with its day, so the show does not slip.
-                            "accepted" -> "Accepted. " + (evts.filter { it.applId == a.id && it.type == "task" && !it.done }.sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.firstOrNull()
-                                ?.let { "Next: " + it.title + (if (it.date > 0) ", " + fmtDate(it.date) else "") } ?: "Everything on its list is done.")
+                            "accepted" -> open(a).sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.firstOrNull()
+                                ?.let { "Next: " + it.title + (if (it.date > 0) ", " + fmtDate(it.date) else "") } ?: "Everything on its list is done."
                             "declined" -> "Not this time. The works are free for the next call."
                             "sending" -> "Sending shortly"
                             else -> "Being prepared" + (o?.deadline?.takeIf { it > 0 }?.let { ". Deadline ${fmtDate(it)}, " + Planner.weekendsLeft(LocalDate.now(), Engine.date(it)) } ?: "")
                         })
                     }
                 }
+                if (shows.isNotEmpty()) { Section("Shows you got into"); shows.forEach { entry(it) } }
+                if (toFinish.isNotEmpty()) { Section("To finish"); toFinish.forEach { entry(it) } }
+                if (waiting.isNotEmpty()) { Section("Waiting to hear"); waiting.forEach { entry(it) } }
+                if (done.isNotEmpty()) Expand("Finished (${done.size})") { done.forEach { entry(it) } }
             }
         }
     }
@@ -870,3 +896,23 @@ fun FlyerButtons(nav: NavController, onStatus: (String) -> Unit) {
 
 /** A stand-in title the app gave a call it could not name yet; it gives way to a real one. */
 fun placeholderTitle(t: String) = t.isBlank() || t in setOf("New call", "Call from link", "Shared call", "Call from a flyer photo")
+
+/** Where an entry is, as five short bars: chosen, sent, heard, shown, home. A "not this time" stops at heard, in gray. */
+@Composable
+fun StageTrack(stage: Int, stopped: Boolean = false) {
+    val cs = MaterialTheme.colorScheme
+    val names = listOf("Chosen", "Sent", "Heard back", "Shown", "Home again")
+    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp).semantics(mergeDescendants = true) { contentDescription = "Stage: " + names[stage.coerceIn(0, 4)] }) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            (0..4).forEach { i ->
+                Box(Modifier.weight(1f).height(5.dp).clip(RoundedCornerShape(3.dp)).background(when {
+                    stopped && i <= stage -> cs.outline
+                    stopped -> cs.surfaceContainerHigh
+                    i <= stage -> cs.primary
+                    else -> cs.surfaceContainerHigh
+                }))
+            }
+        }
+        Text(names[stage.coerceIn(0, 4)], style = MaterialTheme.typography.labelMedium, color = if (stopped) cs.onSurfaceVariant else cs.primary, modifier = Modifier.padding(top = 3.dp))
+    }
+}
