@@ -303,7 +303,7 @@ fun Records(nav: NavController) {
         ledger.take(40).forEach { l ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text((mapOf("fee" to "Entry fee", "sale" to "Sale", "commission" to "Commission", "shipping" to "Shipping", "print" to "Printing", "framing" to "Framing", "materials" to "Art supplies", "travel" to "Art trip")[l.kind] ?: l.kind.replaceFirstChar { it.uppercase() }) +
+                    Text((mapOf("fee" to "Entry fee", "sale" to "Sale", "commission" to "Commission", "shipping" to "Shipping", "print" to "Printing", "framing" to "Framing", "materials" to "Art supplies", "travel" to "Art trip", "teaching" to "Teaching")[l.kind] ?: l.kind.replaceFirstChar { it.uppercase() }) +
                         (if (l.note.isNotBlank()) ": ${l.note}" else ""))
                     Small(fmtDate(l.date))
                 }
@@ -326,7 +326,7 @@ fun Records(nav: NavController) {
         // The page a tax preparer asks for: money in and out by kind for the year, and the difference.
         if (thisYear.isNotEmpty()) OutlinedButton(onClick = {
             scope.io({ status = it }) {
-                val names = mapOf("sale" to "Sales", "commission" to "Commissions paid to venues", "fee" to "Entry fees", "print" to "Printing", "framing" to "Framing", "shipping" to "Shipping and delivery", "materials" to "Art supplies and materials", "travel" to "Art trips (miles)", "other" to "Other costs")
+                val names = mapOf("sale" to "Sales", "commission" to "Commissions paid to venues", "fee" to "Entry fees", "print" to "Printing", "framing" to "Framing", "shipping" to "Shipping and delivery", "materials" to "Art supplies and materials", "travel" to "Art trips (miles)", "teaching" to "Teaching", "other" to "Other costs")
                 val byKind = thisYear.groupBy { it.kind }.mapValues { (_, l) -> l.sumOf { it.amount } }
                 val lines = byKind.entries.sortedByDescending { it.value }.joinToString("\n") { (k, v) -> (names[k] ?: k.replaceFirstChar { it.uppercase() }) + ": " + money(kotlin.math.abs(v)) + if (v < 0) " (cost)" else " (income)" }
                 val net = thisYear.sumOf { it.amount }

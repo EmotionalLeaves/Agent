@@ -593,3 +593,4 @@ One real change per round. Pushed and built every ten rounds.
 586. Empty your head shows a few example lines while the box is empty (a job, something to buy, one with a day, an idea), and it belongs to the Today tab now, where it is opened from.
 587. Teach a class lays the class out as a running order: minutes in their own column, what happens beside them.
 588. Two Foundations milestones join the firsts noticed on the day: the twelve weeks of basics done, and eighteen weeks in, a body of work.
+589. After teaching a class, what you were paid can go in with the CV line: it is filed in Records as teaching income, and the tax page lists it as Teaching.

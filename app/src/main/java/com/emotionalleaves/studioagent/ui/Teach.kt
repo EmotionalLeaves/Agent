@@ -74,11 +74,15 @@ fun TeachScreen(nav: NavController) {
         // Once it has happened: a line on the CV, under Teaching and Talks.
         var taught by rememberSaveable { mutableStateOf(false) }
         val scope = androidx.compose.runtime.rememberCoroutineScope()
+        var paid by rememberSaveable { mutableStateOf(0.0) }
+        if (!taught) Num("What you were paid for it, if anything (" + st.currency + ")", paid) { paid = it }
         if (!taught) androidx.compose.material3.TextButton(onClick = {
             taught = true
+            val fee = paid
+            if (fee > 0) scope.io { G.dao.put(com.emotionalleaves.studioagent.data.Ledger(kind = "teaching", amount = fee, date = System.currentTimeMillis(), note = "Class: " + title.value.trim())) }
             val line = "\"" + title.value.trim() + "\", a beginner class" + (to?.let { ", " + it.venue.ifBlank { it.name } } ?: "") + (st.city.takeIf { it.isNotBlank() }?.let { ", $it" } ?: "")
             scope.io { G.dao.put(com.emotionalleaves.studioagent.data.Fact(category = "teaching", year = java.time.LocalDate.now().year, text = line)) }
-        }) { Text("I taught it: add it to my CV") } else Small("On your CV, under Teaching and Talks.")
+        }) { Text("I taught it: add it to my CV") } else Small("On your CV, under Teaching and Talks" + (if (paid > 0) ", and the fee is in Records." else "."))
         if (places.isEmpty()) Small("Libraries and community centers near you are in Places near you; any you add with an email appear here.")
     }
 }
