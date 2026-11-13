@@ -77,7 +77,7 @@ object Engine {
         // Never on a nearly flat battery: the reading can wait for a charge.
         val c = Constraints.Builder().setRequiredNetworkType(if (st.wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED).setRequiresBatteryNotLow(true).apply { if (st.wifiOnly) setRequiresCharging(true) }.build()
         val req = PeriodicWorkRequestBuilder<DailyWorker>(1, TimeUnit.DAYS).setConstraints(c).build()
-        WorkManager.getInstance(ctx).enqueueUniquePeriodicWork("daily", if (changed) ExistingPeriodicWorkPolicy.UPDATE else ExistingPeriodicWorkPolicy.KEEP, req)
+        WorkManager.getInstance(ctx).enqueueUniquePeriodicWork("daily", ExistingPeriodicWorkPolicy.UPDATE, req)
     }
 
     // ------------------------------------------------------------ career level
