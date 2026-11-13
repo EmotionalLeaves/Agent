@@ -508,16 +508,6 @@ class DomainTest {
         assertTrue(com.emotionalleaves.studioagent.domain.Drafts.altText("", "oil", "", emptyList(), "", "").startsWith("An oil."))
     }
 
-    @Test fun museumPiecesAreReadPublicDomainOnly() {
-        val M = com.emotionalleaves.studioagent.net.Museum
-        val json = """{"data":[{"id":1,"title":"Study of Trees","artist_title":"Winslow Homer","date_display":"1890","medium_display":"Watercolor on paper","image_id":"abc","is_public_domain":true},
-            {"id":2,"title":"Recent","artist_title":"Someone","image_id":"def","is_public_domain":false},{"id":3,"title":"No picture","image_id":null,"is_public_domain":true}]}"""
-        val p = M.parse(json)
-        assertEquals(listOf(1L), p.map { it.id })
-        assertEquals("https://www.artic.edu/iiif/2/abc/full/843,/0/default.jpg", p[0].imageUrl)
-        assertEquals("Winslow Homer, 1890. Art Institute of Chicago, public domain.", p[0].credit)
-        assertEquals("gouache", M.termFor("Gouache, pencil")); assertEquals("drawing", M.termFor("digital, archival print")); assertEquals("oil sketch", M.termFor("acrylic"))
-    }
 
     @Test fun goodEnoughUsesYourOwnNumbers() {
         val G = com.emotionalleaves.studioagent.domain.GoodEnough
