@@ -435,7 +435,7 @@ val sectionNames = listOf(
 val settingIndex = listOf(
     "Your name, email, phone, website" to "you", "City and state" to "you", "Mediums, what your work is about" to "you", "Goals for the year" to "you", "Currency" to "you",
     "Days you work, work hours" to "hours", "Rest after work before studio time" to "hours", "Bedtime" to "hours", "Notifications a day" to "hours",
-    "Studio time in my calendar" to "hours", "Silence my phone during sessions (do not disturb)" to "hours", "A studio friend to text" to "hours",
+    "Studio time in my calendar" to "hours", "Silence my phone during sessions (do not disturb)" to "hours", "A studio friend to text" to "hours", "Studio playlist, music" to "hours",
     "Calm Today" to "calm", "Days off from the app" to "calm", "Wi-Fi only, while charging" to "calm", "Social media help" to "calm", "Session length" to "calm",
     "Keep the screen on" to "calm", "Hide the gray explanations" to "calm",
     "Level and gates" to "rules", "Fee caps and monthly budget" to "rules", "Calls to send this year" to "rules", "Farthest distance for calls" to "rules",
@@ -556,6 +556,8 @@ fun SettingsScreen(nav: NavController, section: String) {
                 Toggle("Silence my phone during sessions", dnd) { dnd = it; st.dndInSession = it }
                 // Working "alongside" someone, even by text, makes starting easier for many people with ADHD.
                 SText("A friend to text when you start (optional)", st.buddy) { st.buddy = it }
+                // The same music each time can become the cue that it is studio time.
+                SText("A studio playlist: paste its link (optional)", st.playlist) { st.playlist = it }
                 Small("Your studio times themselves are on Today: tap Your week.")
             }
             "rules" -> {

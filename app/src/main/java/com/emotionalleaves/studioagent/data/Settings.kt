@@ -250,6 +250,8 @@ class Settings(ctx: Context) {
     var calmUntil by L("calmUntil", 0)
     /** A friend's name: one tap tells them a session is starting, and that it is done. */
     var buddy by S("buddy")
+    /** A link to music for the studio, opened from the session screen. */
+    var playlist by S("playlist")
     /** Calls to send in a year; no's count toward it just the same. */
     var yearSends by I("yearSends", 24)
     /** The kinds of artist gathering you have been to, by key. */

@@ -584,6 +584,7 @@ fun SessionScreen(nav: NavController) {
                 if (st.dndInSession) Notifier.dnd(ctx, true)
             }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start, " + length.replace(" min", " minutes")) }
             if (st.dndInSession && !Notifier.dndGranted(ctx)) Small("Want the phone silenced during sessions? Allow it in You, Settings, Hours and calm.")
+            if (st.playlist.isNotBlank()) TextButton(onClick = { Share.open(ctx, st.playlist.trim()) }, modifier = Modifier.offset(x = (-12).dp)) { Text("Put on your studio playlist") }
             if (st.buddy.isNotBlank()) TextButton(onClick = { Share.text(ctx, "Starting ${length.replace(" min", " minutes")} on my art now. Want to work on something of yours at the same time? I'll text you when I'm done.") }, modifier = Modifier.offset(x = (-12).dp)) { Text("Tell ${st.buddy} you're starting") }
         }
     } else {
