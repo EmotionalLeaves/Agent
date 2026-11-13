@@ -91,7 +91,7 @@ fun Flags(o: Opp) {
     Scoring.trustFlags(o).forEach { Text("Worth knowing: " + it.replaceFirstChar { c -> c.lowercase() }, color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall) }
 }
 
-fun whereLine(o: Opp): String = listOf(o.organiser, if (o.online) "online" else o.city).filter { it.isNotBlank() }.joinToString(", ")
+fun whereLine(o: Opp): String = listOf(o.organiser, if (o.online) "Online" else o.city).filter { it.isNotBlank() }.joinToString(", ")
 
 @Composable
 fun Calls(nav: NavController) {
@@ -259,6 +259,7 @@ fun CallDetail(nav: NavController, id: Long) {
         // The facts that decide it, at a glance: when, what it costs, how well it fits.
         Panel {
             if (whereLine(o).isNotBlank()) Small(whereLine(o))
+            if (o.sourceName.isNotBlank() && o.sourceName !in setOf("Pasted", "Shared", "probe")) Small("Found on ${o.sourceName}" + (if (o.createdAt > 1_000_000_000_000L) ", ${fmtDate(o.createdAt)}" else ""))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Small("Deadline")
@@ -288,7 +289,7 @@ fun CallDetail(nav: NavController, id: Long) {
         Status(status)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (o.status in setOf("new", "later", "no")) Button(onClick = { scope.io({ status = it }) { val aid = Engine.createApplication(ctx, o); withContext(Dispatchers.Main) { nav.navigate("appl/$aid") } } }) { Text("Yes, apply") }
-            if (o.url.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, o.url) }) { Text("Open link") }
+            if (o.url.isNotBlank()) OutlinedButton(onClick = { Share.open(ctx, o.url) }) { Text("Open the call's page") }
             if (o.url.isNotBlank()) OutlinedButton(onClick = {
                 status = "Reading the page…"
                 scope.io({ status = it }) {
@@ -648,7 +649,7 @@ fun WebFill(nav: NavController, id: Long) {
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { cb.onReceiveValue(picked.map { Share.uri(ctx, File(it)) }.toTypedArray()); picked.clear(); chooser = null }) { Text("Attach") }
+                        Button(onClick = { cb.onReceiveValue(picked.map { Share.uri(ctx, File(it)) }.toTypedArray()); picked.clear(); chooser = null }) { Text("Attach to the form") }
                         TextButton(onClick = { cb.onReceiveValue(null); picked.clear(); chooser = null }) { Text("Cancel") }
                     }
                 }
@@ -744,6 +745,6 @@ fun StageHead(n: Int, title: String, done: Boolean) {
 fun LevelLine(nav: NavController, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(text, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        TextButton(onClick = { nav.navigate("settings/rules") }) { Text("Change") }
+        TextButton(onClick = { nav.navigate("settings/rules") }) { Text("Change my rules") }
     }
 }

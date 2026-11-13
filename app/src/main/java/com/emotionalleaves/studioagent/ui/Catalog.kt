@@ -318,7 +318,7 @@ fun WorkDetail(nav: NavController, id: Long) {
                 }) { Text(if (thinking) "Thinking of steps…" else "Suggest small steps") }
             }
             Field("Add a small step (for example: block in the big shapes)", newStep)
-            if (newStep.value.isNotBlank()) OutlinedButton(onClick = { save(w.copy(steps = Texts.stepsText(steps + (false to newStep.value.trim())))); newStep.value = "" }) { Text("Add step") }
+            if (newStep.value.isNotBlank()) OutlinedButton(onClick = { save(w.copy(steps = Texts.stepsText(steps + (false to newStep.value.trim())))); newStep.value = "" }) { Text("Add this step") }
 
             H("Finish line")
             Field("This piece is finished when…", w.doneWhen, { save(w.copy(doneWhen = it)) })

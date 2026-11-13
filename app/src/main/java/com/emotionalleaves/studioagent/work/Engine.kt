@@ -843,7 +843,7 @@ object Engine {
      * Reads each listing page once: finds the links that look like single calls, opens up to [perSource] new ones,
      * and reads each for title, deadline, fee and the rest. Works without AI; with AI the reading is fuller.
      */
-    suspend fun scanSources(now: Long, perSource: Int = 6): Int = withContext(Dispatchers.IO) {
+    suspend fun scanSources(now: Long, perSource: Int = 8): Int = withContext(Dispatchers.IO) {
         seedSources()
         // The phone gives a background job about ten minutes. AI reading gets the first four; after that the plain reader carries on alone.
         val started = System.currentTimeMillis()
@@ -860,7 +860,7 @@ object Engine {
                     added += readCall(text, s.name, l.text, l.url, now, doc.title(), useAi = System.currentTimeMillis() - started < 4 * 60_000)
                 }
                 if (links.isEmpty() && Fetch.text(doc).length < 400) "The page shows almost nothing without a browser, so it cannot be read"
-                else if (added == 0) "Looked; nothing new" else "Added $added " + (if (added == 1) "call" else "calls")
+                else if (added == 0) (if (links.isEmpty()) "Looked; no new calls on the page" else "Read ${Texts.count(minOf(perSource, links.size), "new call")}; none still open and new") else "Added ${Texts.count(added, "call")}"
             } catch (e: Exception) { "Could not read: ${com.emotionalleaves.studioagent.ui.plainError(e)}" }
             total += Regex("Added (\\d+)").find(status)?.groupValues?.get(1)?.toIntOrNull() ?: 0
             dao.put(s.copy(lastFetched = now, lastStatus = status))

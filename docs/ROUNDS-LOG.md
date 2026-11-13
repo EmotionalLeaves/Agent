@@ -52,3 +52,13 @@ One real change per round. Pushed and built every ten rounds.
 48. Your email list only adds complete addresses; the button says "Add to my email list".
 49. Ready-made emails: "Choose another letter".
 50. Studio buttons say what they do: "Export pictures", "Certificate of authenticity", "Ask a print lab for a quote", "Save the straightened picture"; the print steps use the same names.
+51. A crash note's button says "Hide this note".
+52. The weekly review says "Look at 3 things waiting" instead of "Approve 3".
+53. A call's link button says "Open the call's page".
+54. The entry-form file picker says "Attach to the form"; the level line says "Change my rules".
+55. Small steps: "Add this step".
+56. Deadlines written without a year ("Deadline: November 30") are read as the next time that date comes round.
+57. The daily check opens up to eight new calls per listing site instead of six.
+58. Each listing site reports what the daily check did there ("Read 8 new calls; none still open and new", "Added 3 calls").
+59. A call says where the app found it and when ("Found on ArtCall, Thu, Nov 12, 2026").
+60. The where line reads "Online" with a capital, and a placeholder date is never shown as 1970.

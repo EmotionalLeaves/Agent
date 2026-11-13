@@ -482,13 +482,16 @@ object CallReader {
         Regex("(\\d{4})-(\\d{1,2})-(\\d{1,2})"),
         Regex("$monthPattern\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})", RegexOption.IGNORE_CASE),
         Regex("(\\d{1,2})(?:st|nd|rd|th)?\\s+$monthPattern\\.?,?\\s+(\\d{4})", RegexOption.IGNORE_CASE),
-        Regex("(\\d{1,2})/(\\d{1,2})/(\\d{2,4})")
+        Regex("(\\d{1,2})/(\\d{1,2})/(\\d{2,4})"),
+        // No year given ("Deadline: November 30"): the next time that date comes round.
+        Regex("$monthPattern\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b(?!,?\\s*\\d{4})(?!:)", RegexOption.IGNORE_CASE),
+        Regex("\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+$monthPattern\\b(?!\\.?,?\\s*\\d{4})", RegexOption.IGNORE_CASE)
     )
 
     private fun month(word: String): Int = months.indexOfFirst { it.startsWith(word.lowercase().take(3)) } + 1
 
     /** Every date found, with where it sits in the text. US month/day order for slashed dates. */
-    fun dates(text: String): List<Pair<Int, LocalDate>> {
+    fun dates(text: String, today: LocalDate = LocalDate.now()): List<Pair<Int, LocalDate>> {
         val out = mutableListOf<Pair<Int, LocalDate>>()
         datePatterns.forEachIndexed { i, p ->
             p.findAll(text).forEach { m ->
@@ -498,6 +501,8 @@ object CallReader {
                         0 -> LocalDate.of(g[1].toInt(), g[2].toInt(), g[3].toInt())
                         1 -> LocalDate.of(g[3].toInt(), month(g[1]), g[2].toInt())
                         2 -> LocalDate.of(g[3].toInt(), month(g[2]), g[1].toInt())
+                        4 -> LocalDate.of(today.year, month(g[1]), g[2].toInt()).let { if (it.isBefore(today)) it.plusYears(1) else it }
+                        5 -> LocalDate.of(today.year, month(g[2]), g[1].toInt()).let { if (it.isBefore(today)) it.plusYears(1) else it }
                         else -> LocalDate.of(g[3].toInt().let { if (it < 100) 2000 + it else it }, g[1].toInt(), g[2].toInt())
                     }
                 } catch (e: Exception) { null }
@@ -509,7 +514,7 @@ object CallReader {
 
     /** The deadline: the first date after a word like "deadline", otherwise the first date still ahead. */
     fun deadline(text: String, today: LocalDate): LocalDate? {
-        val all = dates(text)
+        val all = dates(text, today)
         val key = Regex("deadline|due|closes|submit by|entries by|apply by", RegexOption.IGNORE_CASE).find(text)?.range?.first
         if (key != null) all.firstOrNull { it.first >= key && it.first - key < 160 }?.let { return it.second }
         return all.map { it.second }.firstOrNull { !it.isBefore(today) }

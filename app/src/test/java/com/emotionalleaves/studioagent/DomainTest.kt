@@ -184,6 +184,11 @@ class DomainTest {
         assertEquals(LocalDate.of(2027, 3, 1), CallReader.deadline("Residency applications due 3/1/27", today))
         assertEquals(LocalDate.of(2026, 12, 5), CallReader.deadline("Show runs 5 December 2026 at the library", today))
         assertEquals(null, CallReader.deadline("No dates here", today))
+        // No year written: the next time the date comes round.
+        val nov = LocalDate.of(2026, 11, 12)
+        assertEquals(LocalDate.of(2026, 11, 30), CallReader.deadline("Deadline: November 30", nov))
+        assertEquals(LocalDate.of(2027, 2, 1), CallReader.deadline("Entries due 1st February.", nov))
+        assertEquals(LocalDate.of(2027, 1, 15), CallReader.deadline("Deadline January 15, 2027", nov))
         assertEquals(0.0, CallReader.fee("There is no entry fee. Prize of $500."), 0.0)
         assertEquals("residency", CallReader.read("Artist residency, international", today, zone, "x", 1L).kind)
         // Seen on real listing pages: a prize is not a fee, and a menu word does not decide the kind.
