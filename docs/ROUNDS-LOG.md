@@ -72,3 +72,13 @@ One real change per round. Pushed and built every ten rounds.
 68. Sharing a flyer picture says plainly that the free helper cannot read pictures, and what to type instead.
 69. A contact's status distinguishes "no email address yet" from "no email written yet"; "Said no" and "On your email list" read as words.
 70. Entry forms: a State or Region drop-down is set to yours when it matches.
+71. Spreadsheet exports use the same naming as documents: Lastname_Inventory.csv and Lastname_Income_and_costs_2026.csv.
+72. The income and costs spreadsheet has money in and money out in separate columns, oldest first, with totals, and quotes handled properly.
+73. Saying No (or Not this year) to a call can be undone for 30 seconds, like removing things.
+74. Call cards show "Free" and the kind ("Residency") with capitals.
+75. Applied: applications still being prepared come first with their deadline and time left; finished ones follow, newest first.
+76. "In plain words" works without the writing help too: built from the call's own facts (who runs it, what to send, what to watch).
+77. The Guide names the buttons as they are now ("Add this series", "Publish or update").
+78. Read the page for me fills only empty boxes, so nothing you typed is overwritten, and a past date from the helper gives way to the plain reader's.
+79. Blocking an organiser names them and can be undone for 30 seconds.
+80. Plain answers: where the calls come from, and how to add more.

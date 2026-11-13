@@ -59,7 +59,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
             "interview", "Open the interview", docs.count { it.type == "interview" && it.text.isNotBlank() } >= 3),
         GuideStep("series", a, "Name your first series",
             "A series is a group of works that belong together. Shows and calls ask for one, and it gives you a finish line.",
-            listOf("Open Studio and tap Series at the top.", "Type a working title. It can change later.", "Tap Add series."),
+            listOf("Open Studio and tap Series at the top.", "Type a working title. It can change later.", "Tap Add this series."),
             "works", "Open Studio", series.isNotEmpty()),
         GuideStep("piece", a, "Add one piece with its image",
             "The catalog is what every application, label and portfolio is built from.",
@@ -100,7 +100,7 @@ suspend fun guideSteps(ctx: Context): List<GuideStep> {
             "The portfolio page is the one link you give to venues. The same setup also keeps a second backup off your phone.",
             listOf("On github.com create two repositories: a private one for backup and a public one for your page.", "Open github.com/settings/personal-access-tokens/new.", "Choose Only select repositories and pick those two.",
                 "Under Repository permissions, set Contents to Read and write.", "Generate the token and copy it.", "Come back here, tap the button below, and paste the token and both repository names (yourname/repository).",
-                "Tap Back up to GitHub now to test it.", "For the page: tap Publish in You, Statement bio and CV. Then, once, in the public repository open Settings, Pages, and choose the main branch."),
+                "Tap Back up to GitHub now to test it.", "For the page: tap Publish or update in You, Statement, bio and CV. Then, once, in the public repository open Settings, Pages, and choose the main branch."),
             "settings/github", "Open GitHub settings", (st.ghReady && (st.ghBackupRepo.isNotBlank() || st.ghPagesRepo.isNotBlank())) || m("github"), optional = true,
             link = "https://github.com/settings/personal-access-tokens/new"),
 
@@ -193,6 +193,7 @@ val basics = listOf(
     "What is a commission on sales?" to "The share of the price a venue keeps when your work sells there. Galleries usually take 30 to 50 percent; art centres and fairs often 20 to 30. Set your price so the part left after commission still feels fair to you.",
     "What rights do I give when I enter a call?" to "Normally only the right to show pictures of your work to promote that show, with your name on them. You keep the copyright. Be careful with words like perpetual, irrevocable, exclusive or commercial use: those take much more. The app flags them.",
     "What is an opening?" to "The free first evening of a show, open to anyone. People look at the work and talk. Going to openings, even just to look, is how people in local art slowly come to know your face. Nobody expects you to network.",
+    "Where do the calls come from?" to "Once a day the app reads four public listing sites (ArtCall, Artwork Archive, ArtJobs and Artshow), opens each new call and picks out the title, deadline and fee. It skips calls already closed and sites that ask apps to stay out. You can add more sites, or email alerts, under Calls, All, Where calls come from. Anything you see yourself, share it into the app.",
     "What are the levels in this app?" to "A way to keep the next step small. Level 0 is making your first series. Each level opens slightly bigger opportunities. You can ignore them, or set your level yourself in You, Settings, Your rules."
 )
 

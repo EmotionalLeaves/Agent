@@ -183,8 +183,13 @@ fun Records(nav: NavController) {
         }
         OutlinedButton(onClick = {
             scope.io({ status = it }) {
-                val f = File(ImageTools.exportDir(ctx), "StudioAgent_ledger_$year.csv")
-                f.writeText("date,kind,amount,note\n" + thisYear.joinToString("\n") { "${Engine.date(it.date)},${it.kind},${"%.2f".format(it.amount)},\"${it.note.replace("\"", "'")}\"" })
+                val f = File(ImageTools.exportDir(ctx), com.emotionalleaves.studioagent.work.Papers.docName(st, "Income_and_costs_$year", "csv"))
+                // Money in and money out in their own columns, oldest first, with totals: what a tax preparer asks for.
+                val rows = thisYear.sortedBy { it.date }
+                fun q(t: String) = "\"" + t.replace("\"", "\"\"") + "\""
+                f.writeText("date,kind,description,money_in,money_out\n" + rows.joinToString("\n") {
+                    "${Engine.date(it.date)},${it.kind},${q(it.note)},${if (it.amount > 0) "%.2f".format(it.amount) else ""},${if (it.amount < 0) "%.2f".format(-it.amount) else ""}"
+                } + "\ntotal,,," + "%.2f".format(rows.filter { it.amount > 0 }.sumOf { it.amount }) + "," + "%.2f".format(-rows.filter { it.amount < 0 }.sumOf { it.amount }) + "\n")
                 withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "text/csv") }
             }
         }) { Text("Export $year as a spreadsheet file") }

@@ -156,8 +156,8 @@ fun Calls(nav: NavController) {
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Tag(fitLabel(o.fitScore), strong = true)
                                 if (o.deadline > 0) Tag(Planner.weekendsLeft(today, Engine.date(o.deadline)))
-                                Tag(if (o.fee > 0) money(o.fee) else "free")
-                                if (o.kind != "exhibition" && o.kind.isNotBlank()) Tag(o.kind)
+                                Tag(if (o.fee > 0) money(o.fee) else "Free")
+                                if (o.kind != "exhibition" && o.kind.isNotBlank()) Tag(o.kind.replaceFirstChar { it.uppercase() })
                             }
                             o.fitReasons.lines().filter { it.isNotBlank() && !it.startsWith("Free to enter") && !it.startsWith("Fee ") }.take(2).forEach { Small(it) }
                             Flags(o)
@@ -165,10 +165,11 @@ fun Calls(nav: NavController) {
                                 // "Not this year" is one of the answers to No, so the card needs only two buttons.
                                 Choice("Why not? (optional, it teaches the ranking)", listOf("not this year", "too far", "fee", "wrong vibe", "no reason"), "", names = { mapOf("not this year" to "Not this year", "too far" to "Too far", "fee" to "The fee", "wrong vibe" to "Not my kind of show", "no reason" to "No reason")[it] ?: it }) { r ->
                                     saidNo = 0L
-                                    if (r == "not this year") scope.io { dao.put(o.copy(status = "later")) }
+                                    // A No can be taken back for 30 seconds, like everything else.
+                                    if (r == "not this year") scope.undoable("Not this year: ${o.title}", { dao.put(o.copy(status = "later")) }, { dao.put(o) })
                                     else {
                                         if (r != "no reason") st.addNoReason(r)
-                                        scope.io { dao.put(o.copy(status = "no", noReason = r)); Engine.rescore() }
+                                        scope.undoable("Said no to ${o.title}", { dao.put(o.copy(status = "no", noReason = r)); Engine.rescore() }, { dao.put(o); Engine.rescore() })
                                     }
                                 }
                             } else FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -219,8 +220,11 @@ fun Calls(nav: NavController) {
             }
             else -> {
                 if (appls.isEmpty()) Empty("Nothing applied to yet. Say Yes to a call and the app builds the application.")
-                appls.forEach { a ->
-                    val o = opps.firstOrNull { it.id == a.oppId }
+                // Ones still being prepared come first, nearest deadline at the top; finished ones follow, newest first.
+                val oppOf = opps.associateBy { it.id }
+                appls.sortedWith(compareBy<com.emotionalleaves.studioagent.data.Appl>({ it.status in setOf("submitted", "accepted", "declined") },
+                    { if (it.status in setOf("submitted", "accepted", "declined")) -it.submittedAt else (oppOf[it.oppId]?.deadline?.takeIf { d -> d > 0 } ?: Long.MAX_VALUE) })).forEach { a ->
+                    val o = oppOf[a.oppId]
                     Panel(onClick = { nav.navigate("appl/${a.id}") }) {
                         Text(o?.title ?: "Application", style = MaterialTheme.typography.titleSmall)
                         Small(when (a.status) {
@@ -228,7 +232,7 @@ fun Calls(nav: NavController) {
                             "accepted" -> "Accepted"
                             "declined" -> "Not this time"
                             "sending" -> "Sending shortly"
-                            else -> "Pack in progress"
+                            else -> "Being prepared" + (o?.deadline?.takeIf { it > 0 }?.let { ". Deadline ${fmtDate(it)}, " + Planner.weekendsLeft(LocalDate.now(), Engine.date(it)) } ?: "")
                         })
                     }
                 }
@@ -295,21 +299,22 @@ fun CallDetail(nav: NavController, id: Long) {
                 scope.io({ status = it }) {
                     val page = Fetch.pageText(o.url)
                     val found = if (G.ai.ready) try { G.ai.extractCalls("Link: ${o.url}\n" + page, o.sourceName).firstOrNull() } catch (e: Exception) { null } else null
-                    if (found != null) {
-                        val merged = Engine.scored(found.copy(id = o.id, url = o.url.ifBlank { found.url }, status = o.status, createdAt = o.createdAt), p)
-                        o = merged; dao.put(merged)
-                    } else {
-                        // No AI: the plain reader fills only what is still empty (deadline, fee, title).
-                        val r = com.emotionalleaves.studioagent.domain.CallReader.read(page, LocalDate.now(), java.time.ZoneId.systemDefault(), o.sourceName, now())
-                        val merged = Engine.scored(o.copy(
-                            deadline = if (o.deadline > 0) o.deadline else r.deadline,
-                            fee = if (o.fee > 0) o.fee else r.fee,
-                            title = if (o.title.isBlank() || o.title == "New call") r.title.ifBlank { o.title } else o.title,
-                            rawText = o.rawText.ifBlank { page.take(4000) }
-                        ), p)
-                        o = merged; dao.put(merged)
-                        deadlineText = if (merged.deadline > 0) Engine.date(merged.deadline).toString() else ""
-                    }
+                    // Only empty boxes are filled, so nothing you typed is overwritten. A date the helper reads as past gives way to the plain reader's.
+                    val r = com.emotionalleaves.studioagent.domain.CallReader.read(page, LocalDate.now(), java.time.ZoneId.systemDefault(), o.sourceName, now())
+                    val aiDate = found?.deadline?.takeIf { it > now() } ?: 0L
+                    val merged = Engine.scored(o.copy(
+                        deadline = if (o.deadline > 0) o.deadline else aiDate.takeIf { it > 0 } ?: r.deadline,
+                        fee = if (o.fee > 0) o.fee else (found?.fee?.takeIf { it > 0 } ?: r.fee),
+                        title = if (o.title.isBlank() || o.title == "New call" || o.title == "Call from link") (found?.title ?: r.title).ifBlank { o.title } else o.title,
+                        organiser = o.organiser.ifBlank { found?.organiser.orEmpty() }, venue = o.venue.ifBlank { found?.venue.orEmpty() }, city = o.city.ifBlank { found?.city.orEmpty() },
+                        email = o.email.ifBlank { found?.email?.takeIf { it.isNotBlank() } ?: r.email }, maxWorks = if (o.maxWorks > 0) o.maxWorks else (found?.maxWorks?.takeIf { it > 0 } ?: r.maxWorks),
+                        statementLimit = if (o.statementLimit > 0) o.statementLimit else (found?.statementLimit?.takeIf { it > 0 } ?: r.statementLimit),
+                        imageSpecs = o.imageSpecs.ifBlank { found?.imageSpecs.orEmpty() }, theme = o.theme.ifBlank { found?.theme.orEmpty() },
+                        guaranteed = o.guaranteed || r.guaranteed || found?.guaranteed == true, rightsGrab = o.rightsGrab || r.rightsGrab || found?.rightsGrab == true,
+                        rawText = o.rawText.ifBlank { page.take(6000) }
+                    ), p)
+                    o = merged; dao.put(merged)
+                    deadlineText = if (merged.deadline > 0) Engine.date(merged.deadline).toString() else ""
                     status = "Filled in from the page. Check the deadline and fee against the page yourself."
                 }
             }) { Text("Read the page for me") }
@@ -344,7 +349,10 @@ fun CallDetail(nav: NavController, id: Long) {
         Toggle("Terms take broad rights to my images", o.rightsGrab) { save(o.copy(rightsGrab = it)) }
         }
         Row {
-            if (o.organiser.isNotBlank()) TextButton(onClick = { st.blocked = (st.blocked.split(",").map { it.trim() }.filter { it.isNotBlank() } + o.organiser).distinct().joinToString(", "); status = "Blocked. Their calls will be held back." }) { Text("Block this organiser") }
+            if (o.organiser.isNotBlank()) TextButton(onClick = {
+                val before = st.blocked
+                scope.undoable("Blocked ${o.organiser}. Their calls will be held back.", { st.blocked = (before.split(",").map { it.trim() }.filter { it.isNotBlank() } + o.organiser).distinct().joinToString(", "); Engine.rescore() }, { st.blocked = before; Engine.rescore() })
+            }) { Text("Block ${o.organiser}") }
             DangerButton(onClick = { scope.remove(o.title.ifBlank { "the call" }, { dao.del(o) }, { dao.put(o) }); nav.popBackStack() }) { Text("Delete this call") }
         }
     }

@@ -156,7 +156,7 @@ fun Works(nav: NavController) {
             if (shownWorks.size > limit) OutlinedButton(onClick = { limit += 40 }, modifier = Modifier.fillMaxWidth()) { Text("Show ${minOf(40, shownWorks.size - limit)} more") }
             if (works.size > 1) TextButton(onClick = {
                 scope.io({ importStatus = it }) {
-                    val f = File(ImageTools.exportDir(ctx), "StudioAgent_inventory.csv")
+                    val f = File(ImageTools.exportDir(ctx), com.emotionalleaves.studioagent.work.Papers.docName(st, "Inventory", "csv"))
                     f.writeText(Papers.inventoryCsv(works, series.associate { it.id to it.name }))
                     withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "text/csv") }
                 }

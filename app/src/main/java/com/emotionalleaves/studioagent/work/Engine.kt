@@ -363,15 +363,36 @@ object Engine {
     /** Three short plain lines about a call: what it is, what they want from you, anything to watch. Empty when there is nothing to read. */
     suspend fun plainWords(o: Opp): List<String> = withContext(Dispatchers.IO) {
         val src = o.rawText.ifBlank { listOf(o.theme, o.eligibility, o.prizes, o.delivery).filter { it.isNotBlank() }.joinToString("\n") }
-        if (!ai.ready || src.length < 120) return@withContext emptyList()
-        val out = ai.complete(
+        if (!ai.ready || src.length < 120) return@withContext plainFacts(o)
+        val out = try { ai.complete(
             "You explain open calls for artists to someone new to the art world who has ADHD. ${ai.dataRule} Reply with exactly three short lines, plain words, no jargon, no headings, no bullet symbols: " +
                 "1) what this is and who runs it, 2) what they want you to send, 3) one thing to watch (cost, commission, image rights, delivery, travel). " +
                 "Give a date only if the text gives it, and say what that date is for (entry deadline, delivery, show dates). Do not praise or recommend.",
-            "<data>\nTitle: ${o.title}\n${src.take(5000)}\n</data>", fast = true, maxTokens = 260)
+            "<data>\nTitle: ${o.title}\n${src.take(5000)}\n</data>", fast = true, maxTokens = 260) } catch (e: Exception) { return@withContext plainFacts(o) }
         val lines = out.lines().map { it.trim().trimStart('-', '*', '•').replace(Regex("^\\d+[.)]\\s*"), "").trim() }.filter { it.length in 8..220 }.take(3)
         plainCache[o.id] = lines
         lines
+    }
+
+    /** The same three lines from the call's own fields, for when the writing help is off or busy. */
+    fun plainFacts(o: Opp): List<String> {
+        val kind = mapOf("exhibition" to "An exhibition", "residency" to "A residency", "grant" to "A grant", "publication" to "A publication", "fair" to "An art fair", "commission" to "A commission")[o.kind] ?: "A call"
+        val who = o.organiser.ifBlank { o.venue }
+        val send = buildList {
+            if (o.maxWorks > 0) add("up to ${Texts.count(o.maxWorks, "work")}")
+            if (o.statementLimit > 0) add("a statement of up to ${o.statementLimit} words")
+        }
+        val watch = buildList {
+            if (o.guaranteed && o.fee > 0) add("the fee buys a place; nothing is juried")
+            if (o.rightsGrab) add("the terms take broad rights to your images")
+            if (o.commission > 0) add("${"%.0f".format(o.commission)}% commission on sales")
+            if (o.delivery.isNotBlank()) add("delivery: ${o.delivery.take(80)}")
+        }
+        return listOfNotNull(
+            if (who.isNotBlank()) "$kind run by $who." else null,
+            if (send.isNotEmpty()) "Send " + send.joinToString(" and ") + "." else null,
+            if (watch.isNotEmpty()) "Watch: " + watch.joinToString("; ") + "." else null
+        )
     }
 
     /**

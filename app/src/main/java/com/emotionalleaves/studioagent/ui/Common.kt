@@ -158,8 +158,11 @@ object Undo {
 }
 
 /** Removes something now and offers to put it back, instead of asking "are you sure?" beforehand. */
-fun CoroutineScope.remove(label: String, delete: suspend () -> Unit, restore: suspend () -> Unit) {
-    io { delete(); Undo.restore = restore; Undo.label.value = label }
+fun CoroutineScope.remove(label: String, delete: suspend () -> Unit, restore: suspend () -> Unit) = undoable("Removed $label", delete, restore)
+
+/** Does something now and shows one line with Undo for 30 seconds. [message] is the whole line, for example "Said no to Winter Open". */
+fun CoroutineScope.undoable(message: String, act: suspend () -> Unit, restore: suspend () -> Unit) {
+    io { act(); Undo.restore = restore; Undo.label.value = message }
 }
 
 @Composable
@@ -170,7 +173,7 @@ fun UndoBar() {
     LaunchedEffect(label) { delay(30_000); if (Undo.label.value == label) Undo.clear() }
     Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.inverseSurface)) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Removed $label", Modifier.weight(1f), color = MaterialTheme.colorScheme.inverseOnSurface)
+            Text(label, Modifier.weight(1f), color = MaterialTheme.colorScheme.inverseOnSurface)
             TextButton(onClick = { val r = Undo.restore; Undo.clear(); if (r != null) scope.io { r() } }) { Text("Undo", color = MaterialTheme.colorScheme.inversePrimary) }
         }
     }
