@@ -711,6 +711,16 @@ class PartsTest {
         assertTrue(File(docs, "Leaves_Works_and_value_p1.png").length() > 1000)
     }
 
+    @Test fun anOnlineShowInOneFile() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"; G.settings.email = "jade@example.com"
+        val f = com.emotionalleaves.studioagent.work.Papers.onlineShow(ctx, G.settings, "Night Kitchen", "I draw the kitchen at five.\n\nIt is quiet then.", listOf(Artwork(id = 1, title = "Walk-in <Cooler>", price = 240.0, year = 2026)))
+        val html = f.readText()
+        assertEquals("Leaves_Online_show_NightKitchen.html", f.name)
+        assertTrue(html.contains("<h1>Night Kitchen</h1>") && html.contains("<p>It is quiet then.</p>") && html.contains("mailto:jade@example.com"))
+        assertTrue(!html.contains("<Cooler>"))
+    }
+
     @Test fun qrCodesAreDrawn() {
         ctx
         val b = com.emotionalleaves.studioagent.media.Qr.bitmap("https://jadeleaves.github.io", 300)!!

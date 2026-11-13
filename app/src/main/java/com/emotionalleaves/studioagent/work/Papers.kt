@@ -316,6 +316,33 @@ object Papers {
         return pdf.save(out(ctx, docName(s, "Works_and_value")))
     }
 
+    /**
+     * A show in one file: a web page with the pictures inside it (no hosting, no account), the title, a statement,
+     * each piece large with its label and price, and how to reach you. Opens in any browser; send it, or put it in Drive.
+     */
+    fun onlineShow(ctx: Context, s: Settings, title: String, statement: String, works: List<Artwork>): File {
+        val n = escape(name(s))
+        val html = buildString {
+            append("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
+            append("<title>${escape(title.ifBlank { "New work" })}: $n</title><style>")
+            append("body{margin:0;background:#f4f3ef;color:#222;font:17px/1.6 Georgia,serif}main{max-width:900px;margin:0 auto;padding:48px 20px}")
+            append("h1{font:600 2.2em/1.15 Helvetica,Arial,sans-serif;margin:0 0 .2em}.by{color:#666;margin:0 0 2em}.st{max-width:38em;margin-bottom:3em}")
+            append("figure{margin:0 0 4em}img{display:block;max-width:100%;max-height:85vh;margin:0 auto;box-shadow:0 2px 10px rgba(0,0,0,.12)}")
+            append("figcaption{margin-top:.8em;font:15px/1.5 Helvetica,Arial,sans-serif;color:#444;text-align:center}footer{border-top:1px solid #ccc;padding-top:1.5em;font:15px Helvetica,Arial,sans-serif}")
+            append("</style></head><body><main>")
+            append("<h1>${escape(title.ifBlank { "New work" })}</h1><p class=\"by\">$n</p>")
+            if (statement.isNotBlank()) append("<div class=\"st\">" + statement.split(Regex("\\n\\s*\\n")).joinToString("") { "<p>${escape(it.trim())}</p>" } + "</div>")
+            works.forEach { a ->
+                val bytes = if (a.imagePath.isNotBlank()) com.emotionalleaves.studioagent.media.ImageTools.jpegBytes(a.imagePath, 1400, 82) else null
+                val cap = escape(caption(a)) + (if (!a.nfs && a.price > 0) " &middot; " + escape(money(s, a.price)) else "")
+                if (bytes != null) append("<figure><img alt=\"${escape(a.altText.ifBlank { a.title.ifBlank { "Untitled" } })}\" src=\"data:image/jpeg;base64," + android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP) + "\"><figcaption>$cap</figcaption></figure>")
+            }
+            append("<footer>" + listOfNotNull(s.email.takeIf { it.isNotBlank() }?.let { "<a href=\"mailto:${escape(it)}\">${escape(it)}</a>" }, s.website.takeIf { it.isNotBlank() }?.let { "<a href=\"${escape(if (it.startsWith("http")) it else "https://$it")}\">${escape(it)}</a>" }).joinToString(" &middot; ").ifBlank { n } + "</footer>")
+            append("</main></body></html>")
+        }
+        return out(ctx, docName(s, "Online_show_" + Texts.clean(title).take(24), "html")).apply { writeText(html) }
+    }
+
     // ------------------------------------------------------------ certificate
 
 

@@ -253,6 +253,11 @@ fun Works(nav: NavController) {
                         st.lastPosted = System.currentTimeMillis()
                         withContext(Dispatchers.Main) { Share.files(ctx, files, "image/jpeg", words) }
                     } }) { Text("Post the series (${minOf(10, postable.size)} pictures)") }
+                    // The series as an online show in one file: no hosting, no account; send it or put it in Drive.
+                    if (postable.size >= 2) TextButton(onClick = { scope.io {
+                        val f = Papers.onlineShow(ctx, st, s.name, s.notes.ifBlank { Engine.pickStatement(150) }, postable)
+                        withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "text/html", "${s.name}: new work by ${st.fullName}. Open the attached page in any browser.") }
+                    } }) { Text("An online show of this series (one file)") }
                     Expand("Is this series ready to show?") {
                         val ready = works.filter { it.seriesId == s.id && Engine.documented(it) }
                         val hasStatement = docs.any { it.type == "statement" && it.seriesId == s.id && it.approved && it.text.isNotBlank() }
