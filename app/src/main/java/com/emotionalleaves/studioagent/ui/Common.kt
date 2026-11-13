@@ -482,6 +482,8 @@ fun SearchScreen(nav: NavController) {
     val opps by dao.opps().collectAsState(emptyList())
     val contacts by dao.contacts().collectAsState(emptyList())
     val docs by dao.docs().collectAsState(emptyList())
+    val ideas by dao.ideas().collectAsState(emptyList())
+    val sessionsAll by dao.sessions().collectAsState(emptyList())
     val scope = rememberCoroutineScope()
     var answer by remember { mutableStateOf("") }
     var asking by remember { mutableStateOf(false) }
@@ -508,10 +510,15 @@ fun SearchScreen(nav: NavController) {
         val c = opps.filter { hit(it.title, it.organiser, it.venue, it.city, it.theme) }.take(8)
         val p = contacts.filter { hit(it.venue, it.name, it.email, it.notes) }.take(8)
         val d = docs.filter { it.type != "interview" && hit(it.title, it.text) }.take(5)
-        if (!question && words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty()) Small("Nothing matches that.")
+        // Your own notes too: ideas, and what you wrote at the end of sessions.
+        val i = ideas.filter { hit(it.text) }.take(5)
+        val sn = sessionsAll.filter { (it.note.isNotBlank() || it.nextStep.isNotBlank()) && hit(it.note, it.nextStep) }.take(5)
+        if (!question && words.isNotEmpty() && w.isEmpty() && c.isEmpty() && p.isEmpty() && d.isEmpty() && i.isEmpty() && sn.isEmpty()) Small("Nothing matches that.")
         if (w.isNotEmpty()) { Section("Pieces"); w.forEach { x -> IconRow(Icons.Default.Edit, x.title.ifBlank { "Untitled" }, statusWords(x.status)) { nav.navigate("work/${x.id}") } } }
         if (c.isNotEmpty()) { Section("Calls"); c.forEach { x -> IconRow(Icons.Default.DateRange, x.title, listOf(x.organiser, x.city).filter { it.isNotBlank() }.joinToString(", ")) { nav.navigate("call/${x.id}") } } }
         if (p.isNotEmpty()) { Section("People and venues"); p.forEach { x -> IconRow(Icons.Default.Person, x.venue.ifBlank { x.name.ifBlank { x.email } }, if (x.kind == "subscriber") "On your email list" else kindWords(x.kind)) { nav.navigate("contact/${x.id}") } } }
         if (d.isNotEmpty()) { Section("Writing"); d.forEach { x -> IconRow(Icons.Default.Edit, x.title.ifBlank { x.type.replaceFirstChar { it.uppercase() } }, x.text.take(60)) { nav.navigate("doc/${x.id}") } } }
+        if (i.isNotEmpty()) { Section("Ideas"); i.forEach { x -> IconRow(Icons.Default.Edit, x.text.take(60), fmtDate(x.createdAt)) { nav.navigate("ideas") } } }
+        if (sn.isNotEmpty()) { Section("Session notes"); sn.forEach { x -> IconRow(Icons.Default.DateRange, listOf(x.note, x.nextStep).filter { it.isNotBlank() }.joinToString(" / ").take(70), fmtDate(x.start)) { nav.navigate(if (x.artworkId > 0) "work/${x.artworkId}" else "sessions") } } }
     }
 }

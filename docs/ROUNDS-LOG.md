@@ -448,3 +448,4 @@ One real change per round. Pushed and built every ten rounds.
 442. Amounts read the way prices are written: whole amounts without cents ($55, $1,295), others with them ($23.25). Foundations no longer repeats an exercise's length when the exercise already says it.
 443. A show's deliver and pick-up steps offer "Log the trip, 48 mi" when the map knows the venue's town: the miles there and back go to Records as an art trip in one tap.
 444. Market day prints price tags: twelve to a page, the price large, what it is, your name, and a small code to your page, for everything you are bringing (prints, cards and originals).
+445. Find anything also searches your own notes: ideas, and what you wrote at the end of sessions ("where was that note about the blue?"), each opening where it belongs.
