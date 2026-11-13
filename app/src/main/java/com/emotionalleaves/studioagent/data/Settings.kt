@@ -257,6 +257,8 @@ class Settings(ctx: Context) {
     var lastOpened by L("lastOpened", 0)
     /** The last three tools opened from Everything the app can do, newest first. */
     var recentTools by S("recentTools")
+    /** Today's opens of each sent application: "applId:date:count". */
+    var checkLooks by S("checkLooks")
     /** Days away before this visit, when it was a week or more; cleared once greeted. */
     var awayDays by I("awayDays", 0)
     /** Calls to send in a year; no's count toward it just the same. */

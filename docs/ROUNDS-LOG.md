@@ -601,3 +601,4 @@ One real change per round. Pushed and built every ten rounds.
 594. Studio leads with your pieces: "Someone wants a piece made for them", rarely needed at the start, moved from the top of the list to the bottom with the other occasional things (the catalogue, the insurance list).
 595. After "Put them away", Empty your head says where everything went ("3 to-dos in Records, 1 thing to buy in Supplies, 2 ideas in Ideas") with a button to each, so nothing feels lost.
 596. "New in this version" and the README catch up with rounds 571 to 595.
+597. Still sent, still safe. Opening a sent application a third time in one day, it says once, kindly, at the top: it is the same as last time, sent on that date, locked, nothing about it can change from here, and the answer will come to you. No counting shown, no scolding; just the fact that there is nothing left to check.

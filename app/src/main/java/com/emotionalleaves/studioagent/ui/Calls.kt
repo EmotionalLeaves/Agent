@@ -498,7 +498,14 @@ fun ApplScreen(nav: NavController, id: Long) {
 
     if (loaded.status in setOf("submitted", "accepted", "declined")) {
         val chosen = works.filter { it.id in Engine.workIds(loaded) }
+        // Opened again and again on one day: said once, kindly, that there is nothing left here to check.
+        val looks = remember(loaded.id) { val k = "${loaded.id}:${LocalDate.now()}"; val n = (st.checkLooks.split(",").firstOrNull { it.startsWith("$k:") }?.substringAfterLast(":")?.toIntOrNull() ?: 0) + 1
+            st.checkLooks = (st.checkLooks.split(",").filter { it.isNotBlank() && it.substringBeforeLast(":").substringAfter(":") == LocalDate.now().toString() && !it.startsWith("$k:") } + "$k:$n").joinToString(","); n }
         Screen(o.title, nav) {
+            if (loaded.status == "submitted" && looks >= 3) Panel(strong = true) {
+                Text("Still sent, still safe", fontWeight = FontWeight.SemiBold)
+                Text("It is the same as the last time you looked: sent ${fmtDate(loaded.submittedAt)}, locked, and nothing about it can change from here. You can close it; the answer will come to you.", style = MaterialTheme.typography.bodyMedium)
+            }
             Panel {
                 val own = o.sourceName == "Your own show"
                 Text(when { own -> "Your own show"; loaded.status == "accepted" -> "Accepted"; loaded.status == "declined" -> "Not this time"; else -> "Submitted. Done." }, fontWeight = FontWeight.SemiBold)
