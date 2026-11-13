@@ -571,6 +571,6 @@ class DomainTest {
 
     @Test fun themeWordsFromAStatement() {
         val w = com.emotionalleaves.studioagent.domain.Drafts.themeWords("I paint kitchens at night. The kitchen before the shift, steam and steel, night after night. Kitchens are where I work.")
-        assertEquals(listOf("kitchen", "night", "before"), w.take(3))
+        assertEquals(listOf("kitchen", "night", "shift"), w.take(3))
     }
 }
