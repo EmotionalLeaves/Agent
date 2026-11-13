@@ -242,6 +242,7 @@ class Settings(ctx: Context) {
     var extraThisWeek by S("extraThisWeek")
     /** Drop-off packing ticks: "applId:bits". */
     var packed by S("packed")
+    var marketPacked by S("marketPacked")
     /** Quiet until then: Today shows only a five-minute step. */
     var calmUntil by L("calmUntil", 0)
     /** A friend's name: one tap tells them a session is starting, and that it is done. */

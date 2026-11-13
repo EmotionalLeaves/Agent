@@ -21,6 +21,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Checkbox
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -73,6 +76,16 @@ fun MarketDay(nav: NavController) {
                 }
             } }
         }
+        // The table itself: ticked as it goes in the bag, cleared for the next market when the day is closed.
+        Expand("Packing for the table") {
+            val bits = com.emotionalleaves.studioagent.domain.HangReady.bits(st.marketPacked, 1)
+            Market.packing.forEachIndexed { i, t ->
+                val on = bits and (1 shl i) != 0
+                Row(Modifier.fillMaxWidth().toggleable(on, role = androidx.compose.ui.semantics.Role.Checkbox) { v -> st.marketPacked = com.emotionalleaves.studioagent.domain.HangReady.set(st.marketPacked, 1, i, v) }, verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = on, onCheckedChange = null); Text(t.replace("about 50", "about ${st.currency}50"))
+                }
+            }
+        }
         Expand("What you are bringing", startOpen = items.isEmpty()) {
             items.forEachIndexed { idx, i -> key("edit" + i.name) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -106,6 +119,6 @@ fun MarketDay(nav: NavController) {
             Small("A mix sells best: something under 10, something under 30, and a few originals. Price everything, in plain view.")
         }
         Field("Where (for the records)", where, { where = it })
-        if (tally.isNotEmpty()) Button(onClick = { scope.io { val t = Engine.closeMarket(where.trim()); withContext(Dispatchers.Main) { closed = "Day closed: ${money(t)} recorded in Records. What is left over is kept for next time." } } }, modifier = Modifier.heightIn(min = 56.dp)) { Text("Close the day") }
+        if (tally.isNotEmpty()) Button(onClick = { scope.io { val t = Engine.closeMarket(where.trim()); st.marketPacked = ""; withContext(Dispatchers.Main) { closed = "Day closed: ${money(t)} recorded in Records. What is left over is kept for next time." } } }, modifier = Modifier.heightIn(min = 56.dp)) { Text("Close the day") }
     }
 }

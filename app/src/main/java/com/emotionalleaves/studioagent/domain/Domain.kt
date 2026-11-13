@@ -1012,6 +1012,20 @@ object StudioVisit {
 
 /** A day at a market or fair: prints and cards in multiples, originals one each, a tally, and the day's total. */
 object Market {
+    /** What a fair table needs besides the work: the things people most often wish they had brought. */
+    val packing = listOf(
+        "A cloth for the table, long enough to reach the floor (stock hides under it)",
+        "Price tags on everything, printed",
+        "A sign with your name, big enough to read from the aisle",
+        "Cash for change: about 50 in small bills and coins",
+        "A way to take cards: a phone card reader, or a printed code for a payment app",
+        "Bags or envelopes for prints and cards",
+        "Postcards or cards with your website, to give away",
+        "A sign-up sheet for your email list, and a pen",
+        "Tape, clips and something heavy for wind",
+        "A chair, water and a snack"
+    )
+
     /** [pieceId]: prints of one of your pieces, so each one sold counts against its edition. */
     data class Item(val name: String, val price: Double, val qty: Int, val pieceId: Long = 0)
 
