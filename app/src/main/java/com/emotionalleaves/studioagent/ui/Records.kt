@@ -169,9 +169,9 @@ fun Records(nav: NavController) {
                 val w = works.firstOrNull { it.id == saleWork }
                 val price = salePrice; val pct = saleCommission; val who = buyer.value.trim(); saleWork = 0L; buyer.value = ""
                 val mail = buyerEmail.value.trim(); val join = buyerAgreed && Texts.looksLikeEmail(mail); buyerEmail.value = ""; buyerAgreed = false
-                // A first sale is a CV line too: "Private collection, Austin". One per city, never the buyer's name.
+                // A first sale is a CV line too: "Private collection", never the buyer's name.
                 scope.io {
-                    val line = "Private collection, " + st.city.ifBlank { "United States" }
+                    val line = "Private collection"
                     if (dao.factsNow().none { it.category == "collection" && it.text == line }) dao.put(com.emotionalleaves.studioagent.data.Fact(category = "collection", year = java.time.LocalDate.now().year, text = line))
                 }
                 if (join) scope.io { if (dao.contactsNow().none { it.email.equals(mail, true) }) dao.put(com.emotionalleaves.studioagent.data.Contact(name = who, email = mail, kind = "subscriber", status = "subscriber",
