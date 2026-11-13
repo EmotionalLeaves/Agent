@@ -225,6 +225,19 @@ fun Outreach(nav: NavController) {
         H("Ready-made emails")
         IconRow(Icons.Default.Email, "Print lab, gallery, library", "Short emails you can send as they are") { nav.navigate("letters") }
 
+        // The people who have bought or commissioned work: the likeliest to buy again, so they get their own short list.
+        val collectors = contacts.filter { it.kind == "client" || (it.kind == "subscriber" && it.notes.contains("Bought ")) }
+        if (collectors.isNotEmpty()) {
+            H("People who own your work")
+            collectors.forEach { c ->
+                val bought = Regex("Bought (.+?) on ").findAll(c.notes).map { it.groupValues[1] }.toList()
+                IconRow(Icons.Default.Person, c.name.ifBlank { c.email }, if (c.kind == "client") "Commissioned a piece" else if (bought.isNotEmpty()) "Bought " + bought.joinToString(", ") else "Bought your work") { nav.navigate("contact/${c.id}") }
+            }
+            val mails = collectors.map { it.email }.filter { Texts.looksLikeEmail(it) }
+            if (mails.isNotEmpty()) TextButton(onClick = {
+                Share.email(ctx, "", "New work", fillLetter(letters.first { it.title == "New work, for someone who bought before" }.body, "", "the piece"), bcc = mails)
+            }) { Text("Tell them about new work (${mails.size})") }
+        }
         H("Your email list")
         val subs = contacts.filter { it.kind == "subscriber" }
         Note("${subs.size} people who asked to hear about your shows. Collected in person, never bought, never from social media.")
