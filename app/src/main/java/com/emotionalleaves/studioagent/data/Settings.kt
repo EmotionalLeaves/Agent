@@ -240,6 +240,8 @@ class Settings(ctx: Context) {
     var offThisWeek by S("offThisWeek")
     /** "weekId:1,3": extra work days this week only (an extra shift on a usual day off). */
     var extraThisWeek by S("extraThisWeek")
+    /** "YYYY-MM-DD": on a break from work until then (inclusive); every day is a free day. */
+    var offUntil by S("offUntil")
     /** Drop-off packing ticks: "applId:bits". */
     var packed by S("packed")
     var marketPacked by S("marketPacked")

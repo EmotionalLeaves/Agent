@@ -103,6 +103,13 @@ fun WeekScreen(nav: NavController) {
         DaysField("Working extra this week (only this week)", if (st.extraThisWeek.substringBefore(":") == wk) st.extraThisWeek.substringAfter(":") else "") { d ->
             st.extraThisWeek = "$wk:$d"; scope.io { Engine.replan(ctx) }
         }
+        // A longer break from work (winter break, the summer): every day counts as free until the date set.
+        val breakOn = st.offUntil.isNotBlank() && st.offUntil >= java.time.LocalDate.now().toString()
+        DateField(if (breakOn) "On a break from work until" else "On a break from work? Until when", st.offUntil) { st.offUntil = it; scope.io { Engine.replan(ctx) } }
+        if (breakOn) {
+            Small("Every day until then is planned as a free day. A break is a good time for more studio hours, if you want them: change the hours below.")
+            androidx.compose.material3.TextButton(onClick = { st.offUntil = ""; scope.io { Engine.replan(ctx) } }) { Text("The break is over") }
+        }
         H("Studio times")
         if (!custom) {
             Small("The suggested week: two short evenings after work, the rest at the weekend.")

@@ -175,7 +175,7 @@ fun Home(nav: NavController) {
             if (openNew) whatsNew.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
         }
         // On a break at work: small jobs that fit in five minutes on the phone, so the evening is for making.
-        val atWork = remember { val n0 = java.time.LocalDateTime.now(); n0.dayOfWeek.value in (com.emotionalleaves.studioagent.domain.Planner.days(st.workDays) - Engine.thisWeek(st.offThisWeek) + Engine.thisWeek(st.extraThisWeek)) &&
+        val atWork = remember { val n0 = java.time.LocalDateTime.now(); n0.dayOfWeek.value in Engine.workDaysNow() &&
             !n0.toLocalTime().isBefore(com.emotionalleaves.studioagent.domain.Planner.time(st.workStart, java.time.LocalTime.of(7, 0))) && n0.toLocalTime().isBefore(com.emotionalleaves.studioagent.domain.Planner.time(st.workEnd, java.time.LocalTime.of(15, 30))) }
         if (st.onboarded && atWork && !calm) {
             val opps0 by dao.opps().collectAsState(emptyList())
@@ -566,7 +566,7 @@ fun SessionScreen(nav: NavController) {
             // Straight off a shift: a short reset makes the switch from work to studio easier than pushing straight in.
             val offShift = remember {
                 val n0 = java.time.LocalDateTime.now(); val end = com.emotionalleaves.studioagent.domain.Planner.time(st.workEnd, java.time.LocalTime.of(15, 30))
-                n0.dayOfWeek.value in (com.emotionalleaves.studioagent.domain.Planner.days(st.workDays) - Engine.thisWeek(st.offThisWeek) + Engine.thisWeek(st.extraThisWeek)) &&
+                n0.dayOfWeek.value in Engine.workDaysNow() &&
                     !n0.toLocalTime().isBefore(end) && n0.toLocalTime().isBefore(end.plusMinutes(150))
             }
             var resetSaid by remember { mutableStateOf("") }
