@@ -163,7 +163,7 @@ fun Calls(nav: NavController) {
                             Flags(o)
                             if (saidNo == o.id) {
                                 // "Not this year" is one of the answers to No, so the card needs only two buttons.
-                                Choice("Why not? (optional, it teaches the ranking)", listOf("not this year", "too far", "fee", "wrong vibe", "no reason"), "") { r ->
+                                Choice("Why not? (optional, it teaches the ranking)", listOf("not this year", "too far", "fee", "wrong vibe", "no reason"), "", names = { mapOf("not this year" to "Not this year", "too far" to "Too far", "fee" to "The fee", "wrong vibe" to "Not my kind of show", "no reason" to "No reason")[it] ?: it }) { r ->
                                     saidNo = 0L
                                     if (r == "not this year") scope.io { dao.put(o.copy(status = "later")) }
                                     else {
@@ -318,7 +318,7 @@ fun CallDetail(nav: NavController, id: Long) {
         Choice("Kind of call", Ai.callKinds, o.kind) { save(o.copy(kind = it)) }
         Field("Deadline (YYYY-MM-DD)", deadlineText, { deadlineText = it; val ms = Ai.parseDate(it); if (ms > 0 || it.isBlank()) save(o.copy(deadline = ms)) })
         Num("Entry fee, " + st.currency, o.fee) { save(o.copy(fee = it)) }
-        Choice("Reach", listOf("campus", "local", "online", "regional", "national", "international"), o.scope) { save(o.copy(scope = it)) }
+        Choice("Who can enter", listOf("campus", "local", "online", "regional", "national", "international"), o.scope, names = { mapOf("campus" to "My campus", "local" to "My city", "online" to "Online", "regional" to "My region", "national" to "The whole country", "international" to "Anywhere")[it] ?: it }) { save(o.copy(scope = it)) }
         Field("Link", o.url, { save(o.copy(url = it.trim())) })
         SavedLine()
 
@@ -503,7 +503,7 @@ fun ApplScreen(nav: NavController, id: Long) {
         }
 
         StageHead(5, "Send it", a.submittedAt > 0)
-        Choice("This call takes entries by", listOf("email", "web"), a.method) { save(a.copy(method = it)) }
+        Choice("This call takes entries by", listOf("email", "web"), a.method, names = { if (it == "email") "Email" else "A form on their site" }) { save(a.copy(method = it)) }
         if (o.fee > 0) {
             if (a.feePaid > 0) Note("Fee of ${money(a.feePaid)} logged.")
             else OutlinedButton(onClick = {

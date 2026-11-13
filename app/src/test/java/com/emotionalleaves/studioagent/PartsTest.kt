@@ -65,8 +65,10 @@ class PartsTest {
         assertTrue(ImageTools.export(f.absolutePath, 300, 20_000, out))
         assertTrue(out.length() in 1..20_000)
         assertEquals(300, maxOf(ImageTools.size(out.absolutePath).first, ImageTools.size(out.absolutePath).second))
-        assertEquals(1920 to 5L * 1024 * 1024, ImageTools.parseSpecs(""))
-        assertEquals(1200 to 2L * 1024 * 1024, ImageTools.parseSpecs("JPEG, 1200 px on the long side, max 2 MB"))
+        assertEquals(1920 to 4_750_000L, ImageTools.parseSpecs(""))
+        assertEquals(1200 to 1_900_000L, ImageTools.parseSpecs("JPEG, 1200 px on the long side, max 2 MB"))
+        assertEquals(1920 to 475_000L, ImageTools.parseSpecs("1,920 pixels on the longest side, no larger than 500 KB"))
+        assertEquals(3000 to 2_850_000L, ImageTools.parseSpecs("3000 pixel images under 3 megabytes"))
         assertEquals(16.0 to 20.0, com.emotionalleaves.studioagent.domain.Texts.suggestedPrintSize(4800, 6000))
         assertEquals(null, com.emotionalleaves.studioagent.domain.Texts.suggestedPrintSize(0, 0))
     }
@@ -165,6 +167,7 @@ class PartsTest {
             val exif = android.media.ExifInterface(File(dir, names[0]).absolutePath)
             assertEquals("Jade Leaves", exif.getAttribute(android.media.ExifInterface.TAG_ARTIST))
             assertTrue(exif.getAttribute(android.media.ExifInterface.TAG_COPYRIGHT).orEmpty().contains("All rights reserved"))
+            assertEquals("300/1", exif.getAttribute(android.media.ExifInterface.TAG_X_RESOLUTION))
             val checks = Engine.checklist(G.dao.applsNow().single { it.id == id }, opp, G.dao.artworksNow(), Engine.feeLeft(emptyList()), System.currentTimeMillis())
             assertTrue(checks.filter { !it.second }.joinToString { it.first }, checks.all { it.second })
         } finally { server.shutdown() }

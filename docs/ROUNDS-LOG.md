@@ -32,3 +32,13 @@ One real change per round. Pushed and built every ten rounds.
 28. Email boxes on calls and contacts say when an address is not complete yet.
 29. The application checklist checks the email address properly and that email attachments stay under 20 MB in total.
 30. Checklist counts read "At least 1 work", "No more than 3 works".
+31. Choices show plain names instead of stored keys: "A form on their site", "Long shot", "Who can enter: My city / The whole country / Anywhere".
+32. Session kinds read Making, Practice, Light admin; units read Inches and Centimetres; level reads "Worked out for me" or "Level 2".
+33. The No reasons on a call read "The fee" and "Not my kind of show".
+34. The tour describes what the app really does now: reads the listing sites daily, explains calls in plain words, offers a five-minute start.
+35. Exported pictures say 300 dpi in the file, which many calls ask for.
+36. The pack test checks the 300 dpi mark.
+37. Image rules are read in more forms ("1,920 pixels", "500 KB", "3 megabytes"), and files are made a little under the limit.
+38. A picture that is still over the size limit gets slightly smaller instead of blotchy (never under 800 pixels).
+39. The checklist confirms every picture in the pack is within the call's file size.
+40. README lists the writing-help features and the email set-up as they now work.

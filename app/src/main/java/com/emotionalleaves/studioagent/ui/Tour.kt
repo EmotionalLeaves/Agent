@@ -61,10 +61,10 @@ fun Tour(nav: NavController) {
     val name = remember { mutableStateOf(st.firstName) }
     val pages = listOf(
         TourPage("From the studio to a wall", "You make the art. This app does nearly everything else: time, records, writing, finding shows, applying, follow-up.") { PicWall() },
-        TourPage("One step at a time", "Today shows a single next step, pinned up like a label. Not today? Put it off from the label's menu. Nothing is ever marked missed.") { PicLabel() },
+        TourPage("One step at a time", "Today shows a single next step, pinned up like a label. Tired? There is a five-minute start. Nothing is ever marked missed.") { PicLabel() },
         TourPage("Tap Start, then make", "One tap starts a timer on the right piece. The screen shows only the small step you are on. Stop whenever; it is saved.") { PicTimer() },
         TourPage("Your work, on a wall", "Each piece gets a picture and a short label. When it is finished, the app fills in sizes and file details for you.") { PicTiles() },
-        TourPage("Shows come to you", "Once a few pieces are done, the app sorts open calls by how well they fit, and only shows ones right for where you are.") { PicCall() },
+        TourPage("Shows come to you", "Every day the app reads the big listing sites for open calls, explains each in plain words, and shows only the ones right for where you are.") { PicCall() },
         TourPage("Nothing happens without your yes", "Every application and email waits for you to approve it. Then it is done, with a receipt, so there is nothing to check twice.") { PicCalm() },
         TourPage("Ready", "That is all you need. There is nothing to set up first.") { PicReady() }
     )

@@ -36,5 +36,7 @@ Four tabs, the same every time. Each thing has one place.
 
 - Calls: four public listing sites (ArtCall, Artwork Archive, ArtJobs, Artshow) are read once a day without AI, and only where the site's robots.txt allows it. Each new call's own page is opened and read for title, deadline, fee, kind and scope.
 - Writing help: a free public service that needs no account (Pollinations, with LLM7 as the fallback). If it doesn't answer, every button falls back to a starter built from your own words. A key of your own, from any provider, can be pasted in; the app recognises the provider from the key.
+- Help from the writing help, each with a plain fallback: "In plain words" on every call, "Suggest small steps" on a piece, and "Ask anything" in Help.
+- Email: type your address and the servers fill themselves in for Gmail, Yahoo, iCloud, AOL, Fastmail and Zoho. Without email set up, each application opens in your mail app, filled in.
 - Documents: CV, portfolio, price list, wall labels, certificate, bill of sale and proposal, set in the app's typefaces, with titles of works in italics, sizes as h × w in with cm, catalog numbers, and Lastname_What.pdf names. Exported pictures carry your name and a copyright line inside the file.
 

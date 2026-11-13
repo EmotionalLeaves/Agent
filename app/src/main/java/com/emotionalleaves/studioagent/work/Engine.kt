@@ -525,6 +525,10 @@ object Engine {
         if (qa.isNotEmpty()) out += "Every question answered (${qa.count { it.second.isNotBlank() }} of ${qa.size})" to qa.all { it.second.isNotBlank() }
         if (o.fee > 0 && feeLeft < Double.MAX_VALUE) out += "Fee of ${st.currency}${"%.0f".format(o.fee)} fits this month's budget" to (o.fee <= feeLeft)
         if (a.method == "email") out += "Submission email address known" to Texts.looksLikeEmail(a.emailTo)
+        if (a.packDir.isNotBlank() && o.imageSpecs.isNotBlank()) {
+            val limit = ImageTools.parseSpecs(o.imageSpecs).second / 0.95
+            out += "Every picture is within the call's file size" to packFiles(a).filter { it.extension == "jpg" }.all { it.length() <= limit }
+        }
         // Calls often cap the total attachment size; most mail services refuse anything over about 25 MB.
         if (a.method == "email" && a.packDir.isNotBlank()) out += "Attachments under 20 MB in total" to (packFiles(a).sumOf { it.length() } < 20L * 1024 * 1024)
         return out

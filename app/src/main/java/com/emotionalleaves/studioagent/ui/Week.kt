@@ -158,7 +158,7 @@ fun SessionsScreen(nav: NavController) {
         Expand("Log one you did away from the app") {
             DateField("Day", date.value) { date.value = it }
             Count("Minutes", minutes.value.toIntOrNull() ?: 30, 5, 600, 5, "min") { minutes.value = it.toString() }
-            Choice("Kind", listOf("make", "practise", "light"), if (kind == "skill") "practise" else kind) { kind = if (it == "practise") "skill" else it }
+            Choice("Kind", listOf("make", "practise", "light"), if (kind == "skill") "practise" else kind, names = { mapOf("make" to "Making", "practise" to "Practice", "light" to "Light admin")[it] ?: it }) { kind = if (it == "practise") "skill" else it }
             if (kind == "make" && active.isNotEmpty()) Choice("Piece (optional)", active.map { it.title.ifBlank { "Untitled #${it.id}" } }, name(workId)) { t -> workId = active.firstOrNull { it.title.ifBlank { "Untitled #${it.id}" } == t }?.id ?: 0L }
             Field("Note (optional)", note)
             Button(enabled = (minutes.value.trim().toIntOrNull() ?: 0) > 0, onClick = {

@@ -205,7 +205,7 @@ fun ContactScreen(nav: NavController, id: Long) {
         if (c.email.isNotBlank() && !Texts.looksLikeEmail(c.email)) Small("That does not look like a full email address yet (name@place.org).")
         Field("Website", c.website, { save(c.copy(website = it.trim())) })
         Choice("Kind", contactKinds, c.kind) { save(c.copy(kind = it)) }
-        Choice("How realistic right now", listOf("now", "stretch", "long"), c.tier) { save(c.copy(tier = it)) }
+        Choice("How realistic right now", listOf("now", "stretch", "long"), c.tier, names = { mapOf("now" to "Now", "stretch" to "A stretch", "long" to "Long shot")[it] ?: it }) { save(c.copy(tier = it)) }
         Toggle("They accept submissions from artists", c.acceptsSubmissions) { save(c.copy(acceptsSubmissions = it)) }
         Field("Their submission instructions", c.submissionNotes, { save(c.copy(submissionNotes = it)) }, lines = 2)
         Field("Notes (what they show, who you met, openings you went to)", c.notes, { save(c.copy(notes = it)) }, lines = 3)

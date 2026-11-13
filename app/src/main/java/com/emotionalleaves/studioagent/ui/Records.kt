@@ -374,7 +374,7 @@ fun SettingsScreen(nav: NavController, section: String) {
                 SText("Mediums", st.mediums) { st.mediums = it }
                 Multi("How your work is shown (pick every one that applies)", listOf("print", "physical", "screen"), st.routes) { st.route = it.joinToString(",") }
                 SText("Goals for the next 12 months", st.goals, lines = 2) { st.goals = it }
-                Choice("Sizes in", listOf("in", "cm"), units) { units = it; st.units = it }
+                Choice("Sizes in", listOf("in", "cm"), units, names = { if (it == "in") "Inches" else "Centimetres" }) { units = it; st.units = it }
                 SText("Currency symbol", st.currency) { if (it.isNotBlank()) st.currency = it }
                 Num("Price rule: per square inch", st.pricePerSqIn) { st.pricePerSqIn = it }
             }
@@ -393,7 +393,7 @@ fun SettingsScreen(nav: NavController, section: String) {
             "rules" -> {
                 Intro("rules", "The defaults follow the plan: start free and local, climb when a gate is met. Every one of them is yours to change.")
                 H("Level")
-                Choice("My level", listOf("automatic", "0", "1", "2", "3", "4"), levelPick) { levelPick = it; st.levelOverride = it.toIntOrNull() ?: -1 }
+                Choice("My level", listOf("automatic", "0", "1", "2", "3", "4"), levelPick, names = { if (it == "automatic") "Worked out for me" else "Level $it" }) { levelPick = it; st.levelOverride = it.toIntOrNull() ?: -1 }
                 Note("Automatic works it out from your catalog and CV. Pick a number if you already have a history the app does not know about.")
                 Expand("When each level opens") {
                     Count("Level 1: finished works in one series", st.gateWorks, 1, 30) { st.gateWorks = it }

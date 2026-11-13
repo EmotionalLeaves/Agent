@@ -114,14 +114,18 @@ object ImageTools {
 
     /** Export a JPEG with the long side at [longSide] px and, if [maxBytes] > 0, under that file size. */
     fun export(path: String, longSide: Int, maxBytes: Long, dest: File, artist: String = "", caption: String = ""): Boolean {
-        val b = decode(path, longSide) ?: return false
+        var side = longSide
+        var b = decode(path, side) ?: return false
         var q = 92
         while (true) {
             saveJpeg(b, dest, q)
-            if (maxBytes <= 0 || dest.length() <= maxBytes || q <= 40) break
-            q -= 8
+            if (maxBytes <= 0 || dest.length() <= maxBytes) break
+            if (q > 60) { q -= 8; continue }
+            // Still too big at a decent quality: make it a little smaller rather than blotchy, never under 800 pixels.
+            if (side <= 800) break
+            side = (side * 0.85).toInt().coerceAtLeast(800); b = decode(path, side) ?: break; q = 85
         }
-        if (artist.isNotBlank()) credit(dest, artist, caption)
+        credit(dest, artist, caption)
         return true
     }
 
@@ -130,19 +134,31 @@ object ImageTools {
         try {
             val ascii = { t: String -> java.text.Normalizer.normalize(t.replace('\u00D7', 'x'), java.text.Normalizer.Form.NFD).replace(Regex("[^\\x20-\\x7E]"), "") }
             val e = android.media.ExifInterface(file.absolutePath)
-            e.setAttribute(android.media.ExifInterface.TAG_ARTIST, ascii(artist))
-            e.setAttribute(android.media.ExifInterface.TAG_COPYRIGHT, "Copyright ${java.time.LocalDate.now().year} ${ascii(artist)}. All rights reserved.")
+            // Many calls ask for 300 dpi. Pixels decide the quality, but the file says 300 so no one has to ask.
+            e.setAttribute(android.media.ExifInterface.TAG_X_RESOLUTION, "300/1")
+            e.setAttribute(android.media.ExifInterface.TAG_Y_RESOLUTION, "300/1")
+            e.setAttribute(android.media.ExifInterface.TAG_RESOLUTION_UNIT, "2")
+            if (artist.isNotBlank()) {
+                e.setAttribute(android.media.ExifInterface.TAG_ARTIST, ascii(artist))
+                e.setAttribute(android.media.ExifInterface.TAG_COPYRIGHT, "Copyright ${java.time.LocalDate.now().year} ${ascii(artist)}. All rights reserved.")
+            }
             if (caption.isNotBlank()) e.setAttribute(android.media.ExifInterface.TAG_IMAGE_DESCRIPTION, ascii(caption).take(300))
             e.saveAttributes()
         } catch (x: Exception) { }
     }
 
     /** Pull "1920" and "5 MB" style limits out of a call's image spec text. */
+    /**
+     * Reads a call's image rules: "1,920 pixels on the longest side", "1500px", "under 3 MB", "500 KB", "2 megabytes".
+     * Files are made a little under the limit, because some upload forms count a megabyte as a million bytes.
+     */
     fun parseSpecs(spec: String): Pair<Int, Long> {
-        val s = spec.lowercase()
-        val px = Regex("(\\d{3,5})\\s*(px|pixels)").find(s)?.groupValues?.get(1)?.toIntOrNull() ?: 1920
-        val mb = Regex("(\\d+(?:\\.\\d+)?)\\s*mb").find(s)?.groupValues?.get(1)?.toDoubleOrNull() ?: 5.0
-        return px.coerceIn(600, 6000) to (mb * 1024 * 1024).toLong()
+        val s = spec.lowercase().replace(Regex("(\\d),(\\d{3})"), "$1$2")
+        val px = Regex("(\\d{3,5})\\s*(px|pixels?)\\b").find(s)?.groupValues?.get(1)?.toIntOrNull() ?: 1920
+        val mb = Regex("(\\d+(?:\\.\\d+)?)\\s*(mb|megabytes?)\\b").find(s)?.groupValues?.get(1)?.toDoubleOrNull()
+        val kb = Regex("(\\d+(?:\\.\\d+)?)\\s*(kb|kilobytes?)\\b").find(s)?.groupValues?.get(1)?.toDoubleOrNull()
+        val bytes = when { mb != null -> mb * 1_000_000; kb != null -> kb * 1_000; else -> 5_000_000.0 } * 0.95
+        return px.coerceIn(600, 6000) to bytes.toLong()
     }
 }
 
