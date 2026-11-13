@@ -1406,6 +1406,11 @@ object Engine {
         if (st.mediums.isNotBlank()) b.appendLine("Works in: " + st.mediums)
         if (st.goals.isNotBlank()) b.appendLine("Goal: " + st.goals)
         b.appendLine("Free time: weekday evenings and weekends (day job Monday to Friday)")
+        if (st.themes.isNotBlank()) b.appendLine("Themes of the work: " + st.themes)
+        if (st.monthGoalMonth == java.time.YearMonth.now().toString() && st.monthGoal.isNotBlank()) b.appendLine("This month's goal: " + st.monthGoal)
+        com.emotionalleaves.studioagent.domain.Foundations.current(st.foundationsDone)?.let { b.appendLine("Practice: foundations week ${it.n} (${it.skill})") }
+        dao.ledgerNow().filter { it.kind == "sale" && date(it.date).year == LocalDate.now().year }.takeIf { it.isNotEmpty() }?.let { l -> b.appendLine("Sales this year: ${l.size}, ${money(l.sumOf { it.amount })}") }
+        b.appendLine("Level: ${level()} of 4")
         nextStep().let { b.appendLine("Today's step in the app: " + it.title + ". " + it.detail) }
         b.appendLine("Pieces: " + works.size + " (" + works.groupBy { it.status }.entries.joinToString(", ") { it.value.size.toString() + " " + statusWord(it.key) } + ")")
         works.take(12).forEach { w -> b.appendLine("- piece: " + w.title.ifBlank { "Untitled" } + listOf(w.medium, if (w.widthIn > 0) "${w.widthIn.toInt()}x${w.heightIn.toInt()} in" else "").filter { it.isNotBlank() }.joinToString(", ", " (", ")") + ", " + statusWord(w.status)) }
