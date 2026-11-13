@@ -225,6 +225,15 @@ fun Home(nav: NavController) {
                 }
             }
         }
+        // Three "Not today"s in a row is a signal, not a failing: offer the quiet days, once, and let it go either way.
+        if (st.onboarded && !calm && st.snoozeRun >= 3 && st.snoozeDay != today.toString()) Panel(strong = true) {
+            Text("Three days of \"Not today\"", fontWeight = FontWeight.SemiBold)
+            Text("That is allowed. Would three quiet days help: one five-minute step, no notifications, nothing else asked of you?", style = MaterialTheme.typography.bodyMedium)
+            Row {
+                TextButton(onClick = { st.calmUntil = System.currentTimeMillis() + 3 * 86_400_000L; st.snoozeRun = 0 }) { Text("Yes, quiet days") }
+                TextButton(onClick = { st.snoozeRun = 0 }) { Text("No, I'm all right") }
+            }
+        }
         // The one next step, pinned to the wall.
         val n = next
         WallLabel(onClick = { n?.let { if (it.route != "home") nav.navigate(it.route) } }) {
@@ -236,7 +245,7 @@ fun Home(nav: NavController) {
                         if (st.pinnedStep.isNotBlank()) DropdownMenuItem(text = { Text("Done, clear my pin") }, onClick = { st.pinnedStep = ""; menu = false })
                         else {
                             if (st.snoozeDay == today.toString()) DropdownMenuItem(text = { Text("Bring today's step back") }, onClick = { st.snoozeDay = ""; menu = false })
-                            else DropdownMenuItem(text = { Text("Not today") }, onClick = { st.snoozeDay = today.toString(); menu = false })
+                            else DropdownMenuItem(text = { Text("Not today") }, onClick = { st.snoozeRun = if (st.snoozeDay == today.minusDays(1).toString()) st.snoozeRun + 1 else 1; st.snoozeDay = today.toString(); menu = false })
                             DropdownMenuItem(text = { Text("Empty my head first") }, onClick = { menu = false; nav.navigate("dump") })
                             n?.let { step -> DropdownMenuItem(text = { Text("Remind me this evening") }, onClick = { Engine.remindLater(ctx, step.title, step.route); menu = false }) }
                             // When it is all too much: three quiet days, the step shrinks to five minutes, everything else waits.

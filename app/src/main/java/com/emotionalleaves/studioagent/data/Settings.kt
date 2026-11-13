@@ -92,6 +92,8 @@ class Settings(ctx: Context) {
     var pausedUntil by L("pausedUntil", 0)
     var pinnedStep by S("pinnedStep")
     var snoozeDay by S("snoozeDay")
+    /** Days in a row of "Not today". */
+    var snoozeRun by I("snoozeRun", 0)
     var levelOverride by I("levelOverride", -1)
     var gateWorks by I("gateWorks", 10)
     var gateShows1 by I("gateShows1", 3)
