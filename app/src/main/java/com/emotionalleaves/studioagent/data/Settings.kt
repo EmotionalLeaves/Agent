@@ -263,6 +263,7 @@ class Settings(ctx: Context) {
     var retakes by S("retakes")
     /** A payment link of yours (PayPal.me, Venmo, Cash App), for a code to scan on the table sign. */
     var payLink by S("payLink")
+    var marketsClosed by I("marketsClosed", 0)
     /** Days away before this visit, when it was a week or more; cleared once greeted. */
     var awayDays by I("awayDays", 0)
     /** Calls to send in a year; no's count toward it just the same. */

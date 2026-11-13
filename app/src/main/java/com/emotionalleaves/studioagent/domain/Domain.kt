@@ -1023,7 +1023,7 @@ object Market {
         "Price tags on everything, printed",
         "A sign with your name, big enough to read from the aisle",
         "Cash for change: about 50 in small bills and coins",
-        "A way to take cards: a phone card reader, or a printed code for a payment app",
+        "A way to take cards: a phone card reader, or a code to scan (A sign for the table makes one)",
         "Bags or envelopes for prints and cards",
         "Postcards or cards with your website, to give away",
         "A sign-up sheet for your email list, and a pen",
@@ -1576,7 +1576,7 @@ object Firsts {
     data class First(val key: String, val title: String, val line: String)
 
     data class Counts(val pieces: Int, val pictured: Int, val finished: Int, val sessions: Int, val hourSession: Boolean,
-                      val sent: Int, val yes: Int, val sales: Int, val taught: Int, val openings: Int = 0, val venueEmails: Int = 0, val foundationWeeks: Int = 0)
+                      val sent: Int, val yes: Int, val sales: Int, val taught: Int, val openings: Int = 0, val venueEmails: Int = 0, val foundationWeeks: Int = 0, val markets: Int = 0)
 
     private val all = listOf(
         First("piece", "Your first piece", "It is in the studio now, which is where every body of work starts."),
@@ -1590,13 +1590,14 @@ object Firsts {
         First("body", "Foundations: a body of work", "Eighteen weeks in, you have a series that belongs together. That is what shows are made of."),
         First("sent", "Your first entry sent", "It is out in the world now. Whatever the answer, it counts toward the year."),
         First("yes", "Your first yes", "A juror chose your work for a wall. Take a moment with that one."),
+        First("market", "Your first market table", "A whole day behind your own table, in front of strangers. That takes nerve, whatever sold."),
         First("sale", "Your first sale", "Someone wanted to live with your work enough to pay for it."),
         First("taught", "Your first class taught", "A room of people learned something from you."))
 
     fun reached(c: Counts): List<First> = all.filter {
         when (it.key) {
             "piece" -> c.pieces > 0; "picture" -> c.pictured > 0; "hour" -> c.hourSession; "finished" -> c.finished > 0
-            "ten" -> c.sessions >= 10; "opening" -> c.openings > 0; "venue" -> c.venueEmails > 0; "basics" -> c.foundationWeeks >= 12; "body" -> c.foundationWeeks >= 18; "sent" -> c.sent > 0; "yes" -> c.yes > 0; "sale" -> c.sales > 0; "taught" -> c.taught > 0
+            "ten" -> c.sessions >= 10; "opening" -> c.openings > 0; "venue" -> c.venueEmails > 0; "basics" -> c.foundationWeeks >= 12; "market" -> c.markets > 0; "body" -> c.foundationWeeks >= 18; "sent" -> c.sent > 0; "yes" -> c.yes > 0; "sale" -> c.sales > 0; "taught" -> c.taught > 0
             else -> false
         }
     }

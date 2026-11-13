@@ -854,6 +854,7 @@ object Engine {
         val items = com.emotionalleaves.studioagent.domain.Market.items(st.marketItems)
         val tally = com.emotionalleaves.studioagent.domain.Market.tally(st.marketTally)
         val now = System.currentTimeMillis(); var total = 0.0
+        st.marketsClosed = st.marketsClosed + 1
         val place = where.ifBlank { "a market" }
         tally.forEach { (k, n) ->
             if (k.startsWith("m:")) items.firstOrNull { "m:" + it.name == k }?.let { i -> if (i.price > 0) { dao.put(Ledger(kind = "sale", amount = i.price * n, date = now, note = "$n x ${i.name}, at $place", artworkId = i.pieceId)); total += i.price * n }
@@ -1199,7 +1200,8 @@ object Engine {
             sessions.size, sessions.any { it.end - it.start >= 55 * 60_000L }, appls.count { it.submittedAt > 0 }, appls.count { it.status == "accepted" },
             dao.ledgerNow().count { it.kind == "sale" }, dao.factsNow().count { it.category == "teaching" },
             dao.eventsNow().count { it.type == "opening" && it.done }, dao.contactsNow().count { it.sentAt > 0 && it.kind != "subscriber" },
-            com.emotionalleaves.studioagent.domain.Foundations.done(st.foundationsDone).let { d -> com.emotionalleaves.studioagent.domain.Foundations.weeks.takeWhile { wk -> wk.exercises.all { it.id in d } }.size }))
+            com.emotionalleaves.studioagent.domain.Foundations.done(st.foundationsDone).let { d -> com.emotionalleaves.studioagent.domain.Foundations.weeks.takeWhile { wk -> wk.exercises.all { it.id in d } }.size },
+            st.marketsClosed))
     }
 
     /** To-dos whose day went by are spread over the next week (two days from now on), a few a day, so none shout "overdue". Deadlines stay put. */
