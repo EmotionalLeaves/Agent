@@ -1496,7 +1496,7 @@ object Engine {
             val title = if (e.artworkId > 0) works.firstOrNull { it.id == e.artworkId }?.let { w -> if (w.clientId > 0) "the commission " + w.title.replaceFirstChar { it.lowercase() } else "" }.orEmpty()
                 else dao.oppsNow().firstOrNull { it.id == e.oppId }?.title?.let { "for $it" }.orEmpty()
             val day = date(e.date); val whenWord = when (day) { today -> "Today"; today.plusDays(1) -> "Tomorrow"; else -> if (day.isBefore(today)) "Yesterday" else day.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) }
-            return NextStep(e.title, "$whenWord" + (if (title.isNotBlank()) ", $title" else "") + ". Tick it off when it is done.", if (e.artworkId > 0) "work/${e.artworkId}" else "appl/${e.applId}")
+            return NextStep(e.title, "$whenWord" + (if (title.isNotBlank()) ", $title" else "") + ". Tick it off when it is done.", if (e.artworkId > 0) "work/${e.artworkId}" else if (e.applId > 0) "appl/${e.applId}" else if (e.title.startsWith("Follow up with")) "outreach" else "records")
         }
         if ((today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY) && works.isNotEmpty() && st.lastReviewWeek != weekId())
             return NextStep("Look at next week (3 minutes)", "Pick one piece and glance at your studio times. That is all of it.", "review")
