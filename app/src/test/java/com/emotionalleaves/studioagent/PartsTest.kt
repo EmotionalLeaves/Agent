@@ -409,4 +409,19 @@ class PartsTest {
         assertEquals("interested", G.dao.contactsNow().first { it.id == cid }.status)
     }
 
+
+    @Test fun aPieceIsDrawnOnAWallAtItsSize() {
+        ctx
+        val img = picture("wall.jpg", 1200, 900).absolutePath
+        val small = com.emotionalleaves.studioagent.media.Mockup.render(img, 8.0, 6.0, true, File(ctx.cacheDir, "w8.jpg"))!!
+        val big = com.emotionalleaves.studioagent.media.Mockup.render(img, 40.0, 30.0, true, File(ctx.cacheDir, "w40.jpg"))!!
+        assertTrue(small.length() > 1000 && big.length() > 1000)
+        // The bigger print covers much more of the wall: count non-wall pixels across the middle row.
+        fun covered(f: File): Int { val b = android.graphics.BitmapFactory.decodeFile(f.absolutePath); val y = b.height / 2
+            return (0 until b.width).count { x -> val p = b.getPixel(x, y); android.graphics.Color.red(p) < 200 } }
+        assertTrue("${covered(small)} vs ${covered(big)}", covered(big) > covered(small) * 3)
+        assertEquals(null, com.emotionalleaves.studioagent.media.Mockup.render(img, 0.0, 0.0, true, File(ctx.cacheDir, "w0.jpg")))
+        java.io.File(ctx.cacheDir, "w40.jpg").copyTo(java.io.File("build/screens/docs/on_the_wall.jpg").apply { parentFile?.mkdirs() }, overwrite = true)
+    }
+
 }

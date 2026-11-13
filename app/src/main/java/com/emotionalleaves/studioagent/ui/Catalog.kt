@@ -290,6 +290,20 @@ fun WorkDetail(nav: NavController, id: Long) {
                 }
             }
         }
+        // The piece at its real size on a gallery wall, framed, with a bench for scale.
+        if (w.imagePath.isNotBlank() && w.widthIn > 0 && w.heightIn > 0) {
+            var wall by remember(w.id) { mutableStateOf("") }
+            var stamp by remember { mutableStateOf(0) }
+            TextButton(onClick = { scope.io({ status = it }) {
+                val f = com.emotionalleaves.studioagent.media.Mockup.render(w.imagePath, w.widthIn, w.heightIn, w.framed || w.format == "print", File(ImageTools.exportDir(ctx), Papers.docName(st, "On_the_wall_" + w.title.filter { it.isLetterOrDigit() }.take(24), "jpg")))
+                wall = f?.absolutePath.orEmpty(); stamp++
+            } }) { Text(if (wall.isBlank()) "See it on a wall at its real size" else "Make it again") }
+            if (wall.isNotBlank()) key(stamp) {
+                PathImage(wall, Modifier.fillMaxWidth().height(240.dp), 1400, description = "The piece on a gallery wall at ${Texts.dims(w.widthIn, w.heightIn)}")
+                Small("At ${Texts.dims(w.widthIn, w.heightIn)}" + (if (w.framed || w.format == "print") ", framed with a mat" else "") + ". The bench is 4 feet wide. Change the size under "Size, year, medium" to compare.")
+                TextButton(onClick = { Share.files(ctx, listOf(File(wall)), "image/jpeg") }) { Text("Share this picture") }
+            }
+        }
         Field("Title", w.title, { save(w.copy(title = it)) })
         Explain("How do I photograph work well?", "Daylight from the side, no flash. Put the work flat against a wall and hold the phone parallel to it, level with its center. A sheet of plain gray card in one corner helps the app correct the color. Then tap Straighten and crop.")
         Status(status)

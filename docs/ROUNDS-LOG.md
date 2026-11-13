@@ -307,3 +307,4 @@ One real change per round. Pushed and built every ten rounds.
 300. Places near you keeps its last results while the app is open, so going into a place and back does not mean waiting for the map again.
 301. New home-screen widget: Next step. It shows today's one step with its line of detail (tap to open it) and Start now beneath, kept up to date by the app and the daily check. The one-button Start widget is still there.
 302. Help's quick-start answer mentions the Next step widget.
+303. New: "See it on a wall at its real size". The piece hangs on a plain gallery wall at its true size (framed and matted when it will be), at gallery height, with a 4-foot bench for scale. For choosing a print size, and shareable to show someone before printing.
