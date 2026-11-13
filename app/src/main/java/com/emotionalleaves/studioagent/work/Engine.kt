@@ -663,6 +663,7 @@ object Engine {
         "Tell your email list" to opening.minusDays(18),
         "Print wall labels and the price list" to opening.minusDays(7),
         "Take condition photos of each work" to opening.minusDays(3),
+        "Pack the hanging kit (Help has the list)" to opening.minusDays(3),
         "Deliver and hang the work" to opening.minusDays(2),
         "Go to the opening" to opening,
         "Photograph the work on the wall for your records" to opening.plusDays(1),

@@ -400,7 +400,7 @@ class PartsTest {
         val opening = java.time.LocalDate.now().plusWeeks(8)
         val applId = Engine.planOwnShow(c, "Before the First Shift", opening, 4, emptyList())
         val tasks = G.dao.eventsNow().filter { it.applId == applId && it.type == "task" }
-        assertEquals(12, tasks.size)
+        assertEquals(13, tasks.size)
         assertEquals("accepted", G.dao.applsNow().first { it.id == applId }.status)
         assertEquals(opening.minusDays(42), Engine.date(tasks.minOf { it.date }))
         assertTrue(G.dao.factsNow().none { it.text.contains("Before the First Shift") })
