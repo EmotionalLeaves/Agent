@@ -177,6 +177,7 @@ fun Home(nav: NavController) {
                             if (st.snoozeDay == today.toString()) DropdownMenuItem(text = { Text("Bring today's step back") }, onClick = { st.snoozeDay = ""; menu = false })
                             else DropdownMenuItem(text = { Text("Not today") }, onClick = { st.snoozeDay = today.toString(); menu = false })
                             DropdownMenuItem(text = { Text("Pin my own step") }, onClick = { pinning = true; menu = false })
+                            DropdownMenuItem(text = { Text(if (st.calmToday) "Show everything on Today" else "Calm Today: just this step") }, onClick = { st.calmToday = !st.calmToday; menu = false })
                         }
                     }
                 }

@@ -363,3 +363,4 @@ One real change per round. Pushed and built every ten rounds.
 357. README describes the new features: the month calendar, the board, eight sources, places near you, shows of your own, the widget and the new documents.
 358. Applications whose checks all pass get their files made by the daily check, so the pack is waiting and sending is one look and one tap.
 359. Settings, Focus and calm: Calm Today shows only the next step and Start on Today, for days when anything more is too much; everything else waits in the tabs.
+360. Calm Today can be switched from Today's own menu (the three dots on the step), in one tap either way.
