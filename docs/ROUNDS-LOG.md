@@ -398,3 +398,4 @@ One real change per round. Pushed and built every ten rounds.
 392. A submitted entry shows when results are expected, when the call said so ("notification: March 1"), and the gentle "Heard back?" waits until a few days after that date instead of a fixed six weeks.
 393. A series with nothing written about what ties it together has "Suggest a first try": one or two plain sentences from its works' titles and materials and your statement, to change into your own words.
 394. Venues from the map show how far away they are in the People list.
+395. People lists nearer places first within each group.

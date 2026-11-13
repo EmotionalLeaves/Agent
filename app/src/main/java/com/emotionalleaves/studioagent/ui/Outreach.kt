@@ -189,7 +189,9 @@ fun Outreach(nav: NavController) {
         }
 
         // Places you can write to now come first; within them, the ones waiting on you.
-        val people = contacts.filter { it.kind != "subscriber" }.sortedWith(compareBy<Contact>({ !Levels.outreachAllowed(level, it.kind, Engine.rules()) }, { it.status !in setOf("research", "drafted", "interested", "more") }))
+        val people = contacts.filter { it.kind != "subscriber" }.sortedWith(compareBy<Contact>({ !Levels.outreachAllowed(level, it.kind, Engine.rules()) }, { it.status !in setOf("research", "drafted", "interested", "more") },
+            // Then nearest first, for places from the map.
+            { Regex("""(\d+) (mi|km) away""").find(it.notes)?.groupValues?.get(1)?.toIntOrNull() ?: (if (it.notes.contains("under 1")) 0 else 999) }))
         if (people.isNotEmpty()) H("Venues and people")
         // A long list from the map: find by name, or show one kind at a time; long lists are drawn 25 at a time.
         val findPeople = rememberSaveable { mutableStateOf("") }
