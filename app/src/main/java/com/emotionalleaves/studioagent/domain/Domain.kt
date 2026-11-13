@@ -552,6 +552,9 @@ object Texts {
 
     fun words(s: String): Int = s.trim().split(Regex("\\s+")).count { it.isNotBlank() }
 
+    /** Sentences over [max] words, the start of each: long sentences are where readers (and jurors) drift off. */
+    fun longSentences(s: String, max: Int = 28): List<String> = s.split(Regex("(?<=[.!?])\\s+")).map { it.trim() }.filter { it.split(Regex("\\s+")).size > max }.map { it.split(Regex("\\s+")).take(6).joinToString(" ") + "..." }
+
     fun jargonIn(s: String, extra: List<String> = emptyList()): List<String> {
         val l = s.lowercase()
         return (jargon + extra.map { it.trim().lowercase() }.filter { it.isNotBlank() }).distinct().filter { l.contains(it) }

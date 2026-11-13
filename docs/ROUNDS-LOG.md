@@ -473,3 +473,4 @@ One real change per round. Pushed and built every ten rounds.
 467. Two new ready-made emails: asking an artist you admire for fifteen minutes of advice, and signing up for a portfolio review at an art center or college; and Help answers where to get honest feedback on your work.
 468. The Sunday post suggestion varies week to week: a finished piece, then how a piece was made (from its progress photos), then a whole series as a carousel, each remembered once posted, so a feed has some variety without any planning.
 469. One goal a month: on the first weekend of a month, Today asks for this month's one goal (in your own words, by voice if you like), kept at the top of The year ahead, with "Tell a friend" to send it to one person, since telling someone makes it far likelier to happen.
+470. Statements and bios get one more plain check: a sentence over 28 words is named by its first words, to split in two, since long sentences are where jurors drift off.

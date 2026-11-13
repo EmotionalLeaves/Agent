@@ -335,6 +335,8 @@ fun DocScreen(nav: NavController, id: Long) {
                 if (target > 0) LinearProgressIndicator(progress = { (words.toFloat() / target).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().padding(start = 30.dp).height(4.dp),
                     color = if (lengthOk) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary, trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
             Check(d.text.isNotBlank() && jargon.isEmpty(), if (jargon.isEmpty()) "No stock art jargon" else "Jargon to cut: " + jargon.joinToString(", "))
+            val long = Texts.longSentences(d.text)
+            if (long.isNotEmpty()) Check(false, "A sentence to split in two: " + long.first() + (if (long.size > 1) " (and ${long.size - 1} more)" else ""))
             Check(true, "Written only from your interview and CV facts")
         }
         // A second pair of eyes before approving: what a juror would stumble on, without rewriting a word.

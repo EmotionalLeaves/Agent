@@ -581,4 +581,10 @@ class DomainTest {
         assertTrue(f.contains("DTSTART:20270301T180000Z") && f.contains("DTEND:20270301T190000Z"))
         assertTrue(f.contains("SUMMARY:Deliver work\\; Gallery 4\\, Austin"))
     }
+
+    @Test fun longSentencesAreFound() {
+        val long = "I make paintings of the kitchen where I work at the university before the breakfast shift starts and the steam comes off the dish machine and the cooks arrive one by one and the lights come up. Short one."
+        assertEquals(listOf("I make paintings of the kitchen..."), com.emotionalleaves.studioagent.domain.Texts.longSentences(long))
+        assertTrue(com.emotionalleaves.studioagent.domain.Texts.longSentences("Short. Also short.").isEmpty())
+    }
 }
