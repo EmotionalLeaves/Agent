@@ -576,6 +576,14 @@ fun ApplScreen(nav: NavController, id: Long) {
                                     else -> null
                                 }
                                 act?.let { (label, go) -> TextButton(onClick = go, modifier = Modifier.offset(x = (-12).dp)) { Text(label) } }
+                                // A drive to deliver or collect work is a cost: logged by the mile in one tap when the map knows the town.
+                                if (Regex("deliver|pick up|collect", RegexOption.IGNORE_CASE).containsMatchIn(e.title)) {
+                                    val mi = remember(o.city) { Engine.milesTo()[o.city.substringBefore(",").trim().lowercase()] }
+                                    if (mi != null && mi > 0) TextButton(onClick = {
+                                        val l = com.emotionalleaves.studioagent.data.Ledger(kind = "travel", amount = -Math.round(mi * 2 * st.mileRate * 100) / 100.0, date = now(), note = "${mi * 2} miles: ${e.title.lowercase()}, ${o.title}", oppId = o.id)
+                                        scope.io { dao.put(l) }; status = "Trip added to Records: ${mi * 2} miles there and back."
+                                    }, modifier = Modifier.offset(x = (-12).dp)) { Text("Log the trip, ${mi * 2} mi") }
+                                }
                             }
                         }
                         // A step with no day yet: give it one from the venue's email, so it reaches Today when due.
