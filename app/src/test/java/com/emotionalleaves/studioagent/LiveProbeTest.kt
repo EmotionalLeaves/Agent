@@ -87,6 +87,24 @@ class LiveProbeTest {
             log("themeFit: $fit")
         } catch (e: Exception) { log("failed: $e") }
 
+        log("\n== Reading a flyer photo with no key")
+        val flyer = javaClass.classLoader!!.getResourceAsStream("flyer.jpg").readBytes()
+        val b64 = android.util.Base64.encodeToString(flyer, android.util.Base64.NO_WRAP)
+        fun vision(model: String) = JSONObject().put("model", model).put("max_tokens", 120).put("messages", JSONArray()
+            .put(JSONObject().put("role", "user").put("content", JSONArray()
+                .put(JSONObject().put("type", "text").put("text", "What is the title and deadline on this flyer? One line."))
+                .put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", "data:image/jpeg;base64,$b64"))))))
+        listOf("pollinations openai" to { post("https://text.pollinations.ai/openai", vision("openai")) },
+            "llm7 gpt-4o-mini" to { post("https://api.llm7.io/v1/chat/completions", vision("gpt-4o-mini")) },
+            "llm7 default" to { post("https://api.llm7.io/v1/chat/completions", vision("default")) }).forEach { (name, call) ->
+            val t0 = System.currentTimeMillis(); val (code, body) = call()
+            log("vision $name: $code in ${System.currentTimeMillis() - t0} ms: ${body.replace("\n", " ").take(300)}")
+        }
+        try {
+            val calls = kotlinx.coroutines.runBlocking { G.ai.extractCalls("A photo of a flyer for an open call.", "probe", flyer) }
+            log("app extractCalls from the photo: " + calls.joinToString { "${it.title} / ${it.deadline} / ${it.fee} / ${it.scope}" })
+        } catch (e: Exception) { log("app photo read failed: $e") }
+
         log("\n== Starter listing sites, exactly as the daily check reads them")
         val now = System.currentTimeMillis()
         com.emotionalleaves.studioagent.work.Engine.starterSources.forEach { (name, url) ->

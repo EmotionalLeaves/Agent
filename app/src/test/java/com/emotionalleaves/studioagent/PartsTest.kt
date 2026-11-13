@@ -298,4 +298,17 @@ class PartsTest {
             assertEquals("declined", Engine.classify("We regret to inform you"))
         } finally { server.shutdown() }
     }
+
+    @Test fun anAcceptanceEmailDatesTheStepsWithoutAnyHelp() {
+        val today = java.time.LocalDate.of(2027, 1, 20)
+        val mail = "Congratulations! Please drop off your work on February 10, 2027 between 10 and 4. The opening reception is Friday, February 19, 2027 at 6pm. Unsold work can be picked up March 30, 2027."
+        val steps = com.emotionalleaves.studioagent.work.Engine.fallbackLogistics(mail, today).toMap()
+        fun day(t: String) = java.time.Instant.ofEpochMilli(steps.getValue(t)).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString()
+        assertEquals("2027-02-10", day("Deliver or ship the work"))
+        assertEquals("2027-02-03", day("Frame or prepare hanging hardware"))
+        assertEquals("2027-02-19", day("Go to the opening"))
+        assertEquals("2027-03-30", day("Pick up unsold work"))
+        assertEquals("2027-01-22", day("Confirm you are taking part"))
+    }
+
 }

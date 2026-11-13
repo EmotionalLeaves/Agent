@@ -525,7 +525,7 @@ fun ShareScreen(nav: NavController) {
     Screen("Shared with Studio Agent", nav) {
         if (image != null) {
             Note("A picture was shared.")
-            if (G.ai.free) Small("The free writing help cannot read pictures. For a flyer, type the call's name and deadline below; the app keeps the rest for you to fill in.")
+            Small("A photo of a flyer: tap Add as an open call and the name, deadline and fee are read from it. Anything it misses, you can fill in after.")
         }
         Field("Text or link", text, lines = 4)
         Status(status)
@@ -541,9 +541,15 @@ fun ShareScreen(nav: NavController) {
                     if (ImageTools.copyUri(ctx, image, f)) bytes = ImageTools.jpegBytes(f.absolutePath)
                 }
                 val page = if (isUrl) (try { Fetch.pageText(t) } catch (e: Exception) { "" }) else ""
+                val before = dao.oppsNow().maxOfOrNull { it.id } ?: 0L
                 // Writing help reads it fully; if it is off or does not answer, the plain reader still picks out deadline, fee and link.
                 val n = if (G.ai.ready) try { Engine.ingest((if (isUrl) "Link: $t\n$page" else t).ifBlank { "See the attached picture." }, "Shared", bytes) } catch (e: Exception) { -1 } else -1
-                if (n > 0) { status = "Added $n call" + (if (n > 1) "s" else "") + ". It is in Calls."; busy = false }
+                if (n == 1) {
+                    // One call: open it, so the next step (yes, no, or fill a gap) is right there.
+                    val id = dao.oppsNow().filter { it.id > before }.maxByOrNull { it.id }?.id
+                    withContext(Dispatchers.Main) { if (id != null) nav.navigate("call/$id") { popUpTo("home") } else nav.navigate("calls") { popUpTo("home") } }
+                }
+                else if (n > 1) { status = "Added $n calls. They are in Calls."; busy = false }
                 else {
                     val id = Engine.ingestPlain(if (isUrl) page.ifBlank { "Call from link" } + "\n" + t else t.ifBlank { "Shared call" }, "Shared")
                     withContext(Dispatchers.Main) { nav.navigate("call/$id") { popUpTo("home") } }
@@ -612,6 +618,13 @@ fun Review(nav: NavController) {
     val weekStart = Engine.millis(LocalDate.now().with(java.time.DayOfWeek.MONDAY).atStartOfDay())
     val mine = sessions.filter { it.start >= weekStart && it.end > it.start }
     val active = works.filter { it.status == "in_progress" }
+    val ctx = LocalContext.current
+    // No studio times ahead and not paused: plan them now, instead of saying they come later.
+    var planned by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) { try { if (st.pausedUntil <= now() && dao.eventsNow().none { it.type == "studio" && it.date > now() }) Engine.replan(ctx) } catch (e: Exception) {} }
+        planned = true
+    }
     Screen("Next week", nav) {
         StageHead(1, "What you did", true)
         Text(if (mine.isEmpty()) "No sessions logged this week. That is information, not a verdict. If the plan did not fit your week, the plan is what should change."
@@ -627,7 +640,7 @@ fun Review(nav: NavController) {
         StageHead(3, "Your studio times", false)
         val coming = events.filter { it.type == "studio" && it.date > now() }.take(5)
         if (st.pausedUntil > now()) Small("Planning is paused until ${fmtDate(st.pausedUntil)}.")
-        else if (coming.isEmpty()) Small("None planned yet. They are added with the next daily check.")
+        else if (coming.isEmpty()) Small(if (planned) "None fit the week as it is set. Change studio times below." else "Planning them now…")
         else coming.forEach { Check(false, fmtDate(it.date) + ", " + clock(it.date) + ", ${(it.endDate - it.date) / 60000} min", small = true) }
         OutlinedButton(onClick = { nav.navigate("week") }, modifier = Modifier.fillMaxWidth()) { Text("Change studio times") }
         if (pending > 0) OutlinedButton(onClick = { nav.navigate("admin") }, modifier = Modifier.fillMaxWidth()) { Text("Look at ${Texts.count(pending, "thing")} waiting for your yes") }

@@ -310,7 +310,8 @@ fun DangerButton(onClick: () -> Unit, content: @Composable RowScope.() -> Unit) 
 /** A small count with − and + beside it: nothing to type, nothing to get wrong. */
 @Composable
 fun Count(label: String, value: Int, min: Int = 0, max: Int = 99, step: Int = 1, unit: String = "", onValue: (Int) -> Unit) {
-    var v by remember { mutableStateOf(value.coerceIn(min, max)) }
+    // Keyed on the value, so a change from elsewhere (a page read for you) shows at once.
+    var v by remember(value) { mutableStateOf(value.coerceIn(min, max)) }
     val cs = MaterialTheme.colorScheme
     fun set(n: Int) { v = n.coerceIn(min, max); onValue(v) }
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -338,7 +339,7 @@ private fun StepButton(sign: String, spoken: String, enabled: Boolean, onClick: 
 @Composable
 fun TimeField(label: String, value: String, onValue: (String) -> Unit) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
-    var v by remember { mutableStateOf(value) }
+    var v by remember(value) { mutableStateOf(value) }
     val (h, m) = v.split(":").let { (it.getOrNull(0)?.toIntOrNull() ?: 7) to (it.getOrNull(1)?.toIntOrNull() ?: 0) }
     Column {
         Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(role = Role.Button) {

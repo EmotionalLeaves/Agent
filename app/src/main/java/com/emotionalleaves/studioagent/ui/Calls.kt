@@ -231,6 +231,7 @@ fun Calls(nav: NavController) {
                 if (appls.isEmpty()) Empty("Nothing applied to yet. Say Yes to a call and the app builds the application.")
                 // Ones still being prepared come first, nearest deadline at the top; finished ones follow, newest first.
                 val oppOf = opps.associateBy { it.id }
+                val evts by dao.events().collectAsState(emptyList())
                 appls.sortedWith(compareBy<com.emotionalleaves.studioagent.data.Appl>({ it.status in setOf("submitted", "accepted", "declined") },
                     { if (it.status in setOf("submitted", "accepted", "declined")) -it.submittedAt else (oppOf[it.oppId]?.deadline?.takeIf { d -> d > 0 } ?: Long.MAX_VALUE) })).forEach { a ->
                     val o = oppOf[a.oppId]
@@ -238,7 +239,9 @@ fun Calls(nav: NavController) {
                         Text(o?.title ?: "Application", style = MaterialTheme.typography.titleSmall)
                         Small(when (a.status) {
                             "submitted" -> "Submitted ${fmtDate(a.submittedAt)}. Done. The result will come to you."
-                            "accepted" -> "Accepted"
+                            // Accepted: the one thing to do next, with its day, so the show does not slip.
+                            "accepted" -> "Accepted. " + (evts.filter { it.applId == a.id && it.type == "task" && !it.done }.sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.firstOrNull()
+                                ?.let { "Next: " + it.title + (if (it.date > 0) ", " + fmtDate(it.date) else "") } ?: "Everything on its list is done.")
                             "declined" -> "Not this time"
                             "sending" -> "Sending shortly"
                             else -> "Being prepared" + (o?.deadline?.takeIf { it > 0 }?.let { ". Deadline ${fmtDate(it)}, " + Planner.weekendsLeft(LocalDate.now(), Engine.date(it)) } ?: "")
@@ -346,15 +349,12 @@ fun CallDetail(nav: NavController, id: Long) {
         Field("Theme", o.theme, { save(o.copy(theme = it)) }, lines = 2)
         Field("Jurors", o.jurors, { save(o.copy(jurors = it)) })
         Field("Mediums accepted", o.mediums, { save(o.copy(mediums = it)) })
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Column(Modifier.weight(1f)) { Count("Fewest works", o.minWorks, 0, 20) { save(o.copy(minWorks = it)) }; Count("Most works", o.maxWorks, 0, 20) { save(o.copy(maxWorks = it)) } }
-        }
+        // How many works, asked once (it was asked twice before).
+        Count("Fewest works", o.minWorks, 0, 20) { save(o.copy(minWorks = it)) }
+        Count("Most works", o.maxWorks, 0, 20) { save(o.copy(maxWorks = it)) }
         Field("Image rules (for example: JPEG, 1920 px, under 5 MB)", o.imageSpecs, { save(o.copy(imageSpecs = it)) })
         Whole("Statement word limit", o.statementLimit) { save(o.copy(statementLimit = it)) }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Column(Modifier.weight(1f)) { Whole("Most works you can send", o.maxWorks) { save(o.copy(maxWorks = it)) } }
-            Column(Modifier.weight(1f)) { Num("Commission on sales, %", o.commission) { save(o.copy(commission = it)) } }
-        }
+        Num("Their cut of sales, %", o.commission) { save(o.copy(commission = it)) }
         Field("Send entries to (email, if entries go by email)", o.email, { save(o.copy(email = it.trim())) })
         if (o.email.isNotBlank() && !Texts.looksLikeEmail(o.email)) Small("That does not look like a full email address yet (name@place.org).")
         Toggle("Accepts prints of digital work", o.acceptsPrints) { save(o.copy(acceptsPrints = it)) }
@@ -413,7 +413,7 @@ fun ApplScreen(nav: NavController, id: Long) {
             }
             if (loaded.status == "accepted") {
                 H("Checklist")
-                events.filter { it.applId == id && it.type == "task" }.forEach { e ->
+                events.filter { it.applId == id && it.type == "task" }.sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.forEach { e ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = e.done, onCheckedChange = { c -> scope.io { dao.put(e.copy(done = c)) } })
                         Column { Text(e.title); if (e.date > 0) Note(fmtDate(e.date)) }

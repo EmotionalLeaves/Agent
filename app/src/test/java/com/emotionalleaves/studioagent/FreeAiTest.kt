@@ -69,6 +69,19 @@ class FreeAiTest {
         assertTrue(follow, follow.endsWith("follow-up to my note.\n\n$sig"))
     }
 
+    @Test fun aFlyerPhotoGoesToTheFreeHelperAsAPicture() = runBlocking {
+        ctx
+        G.settings.aiKey = ""; G.settings.freeAi = true
+        up.enqueue(answer("[{\"title\":\"Riverside Print Biennial\",\"deadline\":\"2027-03-03\",\"fee\":25}]"))
+        Ai.freeOverride = listOf(Triple(up.url("/v1").toString(), "b", "Up"))
+        val flyer = javaClass.classLoader!!.getResourceAsStream("flyer.jpg").readBytes()
+        val calls = G.ai.extractCalls("A photo of a flyer.", "Shared", flyer)
+        assertEquals("Riverside Print Biennial", calls.single().title)
+        val parts = JSONObject(up.takeRequest().body.readUtf8()).getJSONArray("messages").getJSONObject(1).getJSONArray("content")
+        assertEquals("image_url", parts.getJSONObject(1).getString("type"))
+        assertTrue(parts.getJSONObject(1).getJSONObject("image_url").getString("url").startsWith("data:image/jpeg;base64,/9j/"))
+    }
+
     @Test fun whenEveryServiceIsDownTheMessageIsPlain() = runBlocking {
         ctx
         G.settings.aiKey = ""; G.settings.freeAi = true

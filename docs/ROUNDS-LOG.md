@@ -182,3 +182,13 @@ One real change per round. Pushed and built every ten rounds.
 178. Ready-made emails fill name, place and address from someone in People with one pick.
 179. Portfolio PDF buttons only offer sizes you can fill; with no documented work it says what is missing.
 180. One name for a finished, photographed piece: the button says "Mark it Ready to send", matching its label everywhere else.
+181. The weekly look ahead plans studio times on the spot when none are planned, instead of saying they come later.
+182. The free helper now tries to read a photo of a flyer (name, deadline, fee), with no key; if it cannot, the plain reader still makes the call.
+183. The live check reads a real flyer photo with each free service, so picture reading is verified, not assumed.
+184. A shared call that is read as one call opens straight onto it, ready for a yes or no.
+185. A call's details ask "how many works" once, not twice; the commission box reads "Their cut of sales, %".
+186. Counters and clock pickers show changes made elsewhere at once (for example after "Read the page for me").
+187. After an acceptance, the steps get real dates from the email (delivery, opening, pick-up) even without writing help; confirm within 2 days, sign within a week.
+188. Applied: an accepted show says its next step and day ("Next: Deliver or ship the work, Feb 10").
+189. An accepted show's checklist is in date order.
+190. Today puts a show step due in the next three days (delivery, opening, pick-up) first, with Today/Tomorrow/weekday.

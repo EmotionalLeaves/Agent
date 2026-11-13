@@ -145,12 +145,15 @@ class Ai(private val settings: Settings) {
     private val freeHttp by lazy { http.newBuilder().readTimeout(50, TimeUnit.SECONDS).callTimeout(60, TimeUnit.SECONDS).build() }
 
     private fun freeComplete(system: String, user: String, maxTokens: Int, image: ByteArray?): String {
-        if (image != null) throw AiException("Reading a photo needs a key of your own. Paste the call's words instead, or add a free key in You, Settings, Writing help.")
         var last = ""
-        for ((url, model, _) in freeOverride ?: FREE) {
+        // A picture goes along in the common chat format; services that cannot see pictures fail, and the next one is tried.
+        val content: Any = if (image == null) user.take(14_000) else JSONArray()
+            .put(JSONObject().put("type", "text").put("text", user.take(6_000)))
+            .put(JSONObject().put("type", "image_url").put("image_url", JSONObject().put("url", "data:image/jpeg;base64," + Base64.encodeToString(image, Base64.NO_WRAP))))
+        for ((url, model, _) in freeOverride ?: (if (image == null) FREE else FREE_VISION)) {
             val body = JSONObject().put("model", model).put("max_tokens", maxTokens.coerceAtMost(1500)).put("messages", JSONArray()
                 .put(JSONObject().put("role", "system").put("content", system))
-                .put(JSONObject().put("role", "user").put("content", user.take(14_000))))
+                .put(JSONObject().put("role", "user").put("content", content)))
             val req = Request.Builder().url(url).header("User-Agent", "StudioAgent/1.0").post(body.toString().toRequestBody(json)).build()
             try {
                 freeHttp.newCall(req).execute().use { r ->
@@ -165,6 +168,7 @@ class Ai(private val settings: Settings) {
                 }
             } catch (e: Exception) { last = e.javaClass.simpleName }
         }
+        if (image != null) throw AiException("The free helper could not read the picture just now ($last). Type the call's name and deadline instead, or try again in a minute.")
         throw AiException("The free writing help did not answer just now ($last). Try again in a minute; everything else works without it.")
     }
 
@@ -311,6 +315,11 @@ class Ai(private val settings: Settings) {
         val FREE = listOf(
             Triple("https://text.pollinations.ai/openai", "openai", "Pollinations"),
             Triple("https://api.llm7.io/v1/chat/completions", "default", "LLM7"),
+        )
+        /** The free services that can look at a picture, such as a photo of a flyer. */
+        val FREE_VISION = listOf(
+            Triple("https://text.pollinations.ai/openai", "openai", "Pollinations"),
+            Triple("https://api.llm7.io/v1/chat/completions", "gpt-4o-mini", "LLM7"),
         )
     
         val callKinds = listOf("exhibition", "residency", "grant", "publication", "fair", "commission", "other")

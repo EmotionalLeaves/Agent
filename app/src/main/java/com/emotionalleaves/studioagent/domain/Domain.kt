@@ -526,6 +526,12 @@ object CallReader {
         return out.sortedBy { it.first }
     }
 
+    /** The first date within a sentence or so after any of [words], for example the delivery day in an acceptance email. */
+    fun dateAfter(text: String, words: String, today: LocalDate = LocalDate.now()): LocalDate? {
+        val all = dates(text, today)
+        return Regex(words, RegexOption.IGNORE_CASE).findAll(text).firstNotNullOfOrNull { k -> all.firstOrNull { it.first >= k.range.first && it.first - k.range.first < 120 }?.second }
+    }
+
     /** The deadline: the first date after a word like "deadline", otherwise the first date still ahead. */
     fun deadline(text: String, today: LocalDate): LocalDate? {
         val all = dates(text, today)

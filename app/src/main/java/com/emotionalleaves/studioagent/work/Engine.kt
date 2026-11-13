@@ -21,6 +21,7 @@ import com.emotionalleaves.studioagent.data.Evt
 import com.emotionalleaves.studioagent.data.Fact
 import com.emotionalleaves.studioagent.data.Ledger
 import com.emotionalleaves.studioagent.data.Opp
+import com.emotionalleaves.studioagent.domain.CallReader
 import com.emotionalleaves.studioagent.domain.CareerStats
 import com.emotionalleaves.studioagent.domain.Levels
 import com.emotionalleaves.studioagent.domain.Planner
@@ -657,13 +658,33 @@ object Engine {
             dao.put(Fact(category = cat, year = LocalDate.now().year, text = line))
         }
         val tasks: List<Pair<String, Long>> = (if (ai.ready && text.isNotBlank()) (try { ai.logistics(text) } catch (e: Exception) { emptyList<Pair<String, Long>>() }) else emptyList()).ifEmpty {
-            listOf("Confirm you are taking part", "Sign and return the agreement", "Frame or prepare hanging hardware", "Print wall labels and price list",
-                "Take condition photos before the work leaves", "Deliver or ship the work", "Go to the opening", "Pick up unsold work").map { it to 0L }
+            fallbackLogistics(text, LocalDate.now())
         }
         tasks.forEach { (title, at) ->
             val calId = if (at > System.currentTimeMillis() && st.useCalendar) Cal.add(ctx, "$title (${opp?.title.orEmpty()})", at - 3_600_000, at) else 0L
             dao.put(Evt(type = "task", title = title, date = at, oppId = a.oppId, applId = a.id, calendarId = calId))
         }
+    }
+
+    /**
+     * The usual steps after an acceptance, dated from the email where it says when (delivery, opening, pick-up),
+     * and otherwise on sensible days: confirm within two days, the agreement within a week, preparing the week before delivery.
+     */
+    fun fallbackLogistics(text: String, today: LocalDate): List<Pair<String, Long>> {
+        fun at(d: LocalDate?, hour: Int = 18) = d?.let { millis(it.atTime(hour, 0)) } ?: 0L
+        val deliver = CallReader.dateAfter(text, "deliver|drop(ped)?[- ]?off|drop your|\\bship|arrive by|install", today)
+        val opening = CallReader.dateAfter(text, "opening|reception", today)
+        val pickup = CallReader.dateAfter(text, "pick(ed)?[- ]?up|collect|retriev", today)
+        return listOf(
+            "Confirm you are taking part" to at(today.plusDays(2)),
+            "Sign and return the agreement" to at(today.plusDays(7)),
+            "Frame or prepare hanging hardware" to at(deliver?.minusDays(7)),
+            "Print wall labels and price list" to at(deliver?.minusDays(3)),
+            "Take condition photos before the work leaves" to at(deliver?.minusDays(1)),
+            "Deliver or ship the work" to at(deliver, 12),
+            "Go to the opening" to at(opening),
+            "Pick up unsold work" to at(pickup, 12)
+        )
     }
 
     // ------------------------------------------------------------ outreach
@@ -831,6 +852,12 @@ object Engine {
             appls.firstOrNull { it.id == e.applId && it.status in setOf("draft", "ready") }?.let {
                 return NextStep(e.title, Planner.weekendsLeft(today, date(e.date + 3 * DAY)) + " to the deadline. The pack is waiting for one look.", "appl/${it.id}")
             }
+        }
+        // A show you got into: a dated step (delivery, the opening, pick-up) in the next three days comes before anything else.
+        dao.eventsNow().filter { it.type == "task" && !it.done && it.date in (now - DAY)..(now + 3 * DAY) }.minByOrNull { it.date }?.let { e ->
+            val title = dao.oppsNow().firstOrNull { it.id == e.oppId }?.title.orEmpty()
+            val day = date(e.date); val whenWord = when (day) { today -> "Today"; today.plusDays(1) -> "Tomorrow"; else -> if (day.isBefore(today)) "Yesterday" else day.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) }
+            return NextStep(e.title, "$whenWord" + (if (title.isNotBlank()) ", for $title" else "") + ". Tick it off when it is done.", "appl/${e.applId}")
         }
         if ((today.dayOfWeek == DayOfWeek.SATURDAY || today.dayOfWeek == DayOfWeek.SUNDAY) && works.isNotEmpty() && st.lastReviewWeek != weekId())
             return NextStep("Look at next week (3 minutes)", "Pick one piece and glance at your studio times. That is all of it.", "review")
