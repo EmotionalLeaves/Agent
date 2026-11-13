@@ -1103,6 +1103,12 @@ object Offers {
 
 /** Builds a first draft from the artist's own interview answers and CV facts. No AI, nothing invented. */
 object Drafts {
+    /** Show titles without help: the series name, a phrase from the statement, and the strongest piece's title. */
+    fun showTitles(series: String, statement: String, firstTitle: String): List<String> {
+        val phrase = statement.split(Regex("(?<=[.!?])\\s+")).firstOrNull()?.let { s -> Regex("\\b(at|in|before|after|during|from) [a-z ]{3,30}", RegexOption.IGNORE_CASE).find(s)?.value }?.trim()?.replaceFirstChar { it.uppercase() }
+        return listOfNotNull(series.ifBlank { null }, phrase, firstTitle.ifBlank { null }?.let { "$it and Other Pieces" }, "New Work").distinct()
+    }
+
     /** A short profile line for Instagram and the like: what you make, where, and a hook from your own statement. Under 150 characters. */
     fun profileLine(mediums: String, city: String, statement: String): String {
         val what = mediums.split(",").map { it.trim() }.filter { it.isNotBlank() }.take(2).joinToString(" and ").ifBlank { "art" }

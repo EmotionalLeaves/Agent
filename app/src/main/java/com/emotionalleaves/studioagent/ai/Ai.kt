@@ -292,6 +292,13 @@ class Ai(private val settings: Settings) {
         return out.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "") }.filter { it.endsWith("?") && it.length in 10..200 }.take(3)
     }
 
+    /** Titles for a show: short, concrete, from the pieces' own titles and the statement. Five, one per line. */
+    suspend fun showTitles(workTitles: String, statement: String): List<String> {
+        val out = clean(complete("You suggest titles for a small art show. $dataRule Give five short titles (two to five words), concrete and plain: a place, a time, a phrase from the work. " +
+            "No colons, no art jargon, no quotation marks. One per line.", "<data>\nThe pieces: ${workTitles.take(1200)}\nThe artist's statement: ${statement.take(800)}\n</data>", fast = true, maxTokens = 120))
+        return out.lines().map { it.trim().trimStart('-', '*', '•', ' ').replace(Regex("^\\d+[.)]\\s*"), "").trim('"') }.filter { it.length in 3..50 }.distinct().take(5)
+    }
+
     /** The same text cut to at most [words] words: the artist's own sentences kept, the least needed cut. Nothing added. */
     suspend fun shorten(text: String, words: Int): String =
         clean(complete("You shorten an artist's own text to at most $words words. Keep their sentences and wording wherever possible; cut whole phrases and sentences " +

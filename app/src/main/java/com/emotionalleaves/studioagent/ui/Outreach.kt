@@ -561,6 +561,16 @@ fun PlanShow(nav: NavController, contactId: Long) {
         var oneDay by rememberSaveable { mutableStateOf(false) }
         Choice("What kind", listOf("show", "day"), if (oneDay) "day" else "show", names = { if (it == "show") "A show that hangs for weeks" else "One day: open studio or pop-up" }) { oneDay = it == "day" }
         Field("Title (for example: Before the First Shift)", title)
+        // Naming a show is hard: a few plain ideas from your pieces and your statement, one tap to use one.
+        var ideas by remember { mutableStateOf<List<String>>(emptyList()) }
+        if (title.value.isBlank() && ideas.isEmpty()) TextButton(onClick = { scope.io {
+            val ws = (if (picked.isNotEmpty()) ready.filter { it.id in picked } else ready).ifEmpty { works }
+            val statement = Engine.pickStatement(150)
+            val series = dao.seriesNow().firstOrNull { s -> ws.count { it.seriesId == s.id } >= 2 }?.name.orEmpty()
+            val got = if (G.ai.ready) try { G.ai.showTitles(ws.joinToString("; ") { it.title }, statement) } catch (e: Exception) { emptyList() } else emptyList()
+            ideas = got.ifEmpty { com.emotionalleaves.studioagent.domain.Drafts.showTitles(series, statement, ws.firstOrNull()?.title.orEmpty()) }
+        } }) { Text("Suggest a title") }
+        if (ideas.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { ideas.forEach { t -> androidx.compose.material3.SuggestionChip(onClick = { title.value = t; ideas = emptyList() }, label = { Text(t) }) } }
         DateField(if (oneDay) "The day" else "Opening day", opening) { opening = it }
         if (!oneDay) Count("How long it hangs", weeks, 1, 16, 1, "weeks") { weeks = it }
         Section("Which pieces")

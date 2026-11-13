@@ -554,4 +554,9 @@ class DomainTest {
         // Unknown towns change nothing.
         assertEquals(S.score(near, com.emotionalleaves.studioagent.domain.Profile(level = 1)).first + 8, a)
     }
+
+    @Test fun showTitlesWithoutHelp() {
+        val t = com.emotionalleaves.studioagent.domain.Drafts.showTitles("Night Kitchen", "I draw the kitchen before the first shift starts. It is quiet then.", "Walk-in Cooler")
+        assertEquals(listOf("Night Kitchen", "Before the first shift starts", "Walk-in Cooler and Other Pieces", "New Work"), t)
+    }
 }
