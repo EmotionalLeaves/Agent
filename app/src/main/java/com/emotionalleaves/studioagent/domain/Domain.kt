@@ -840,6 +840,17 @@ object CallReader {
 }
 
 
+/**
+ * "Is it done?" A piece that has had far more sessions than your others usually take may be finished already;
+ * reworking a finished piece is the commonest way work gets worse. Gentle, and only with your own numbers.
+ */
+object GoodEnough {
+    /** Sessions a finished piece of yours usually took, or 0 until there are two finished pieces to go by. */
+    fun usual(sessionsPerFinished: List<Int>): Int = if (sessionsPerFinished.size < 2) 0 else sessionsPerFinished.sorted()[sessionsPerFinished.size / 2]
+
+    fun overdue(sessionsHere: Int, usual: Int): Boolean = usual > 0 && sessionsHere >= maxOf(usual * 2, usual + 3)
+}
+
 /** Prices that hold together: a table from your rule, the pieces that stray from it, and a raise rounded the way prices are. */
 object Pricing {
     val sizes = listOf(5.0 to 7.0, 8.0 to 10.0, 9.0 to 12.0, 11.0 to 14.0, 16.0 to 20.0, 18.0 to 24.0, 24.0 to 36.0)

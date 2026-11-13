@@ -518,4 +518,13 @@ class DomainTest {
         assertEquals("Winslow Homer, 1890. Art Institute of Chicago, public domain.", p[0].credit)
         assertEquals("gouache", M.termFor("Gouache, pencil")); assertEquals("drawing", M.termFor("digital, archival print")); assertEquals("oil sketch", M.termFor("acrylic"))
     }
+
+    @Test fun goodEnoughUsesYourOwnNumbers() {
+        val G = com.emotionalleaves.studioagent.domain.GoodEnough
+        assertEquals(0, G.usual(listOf(4)))
+        assertEquals(5, G.usual(listOf(3, 5, 8)))
+        assertFalse(G.overdue(9, 5)); assertTrue(G.overdue(10, 5))
+        assertTrue(G.overdue(5, 2)); assertFalse(G.overdue(4, 2))
+        assertFalse(G.overdue(50, 0))
+    }
 }

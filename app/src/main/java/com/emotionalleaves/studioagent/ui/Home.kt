@@ -337,6 +337,7 @@ fun Home(nav: NavController) {
 /** Shown once after a session ends: what was saved, in full, so there is no doubt and nothing to go back and check. */
 @Composable
 fun DoneScreen(nav: NavController) {
+    val scope = rememberCoroutineScope()
     val sessions by dao.sessions().collectAsState(emptyList())
     val works by dao.artworks().collectAsState(emptyList())
     val s = sessions.firstOrNull()
@@ -355,6 +356,22 @@ fun DoneScreen(nav: NavController) {
             val monday = Engine.millis(LocalDate.now().with(java.time.DayOfWeek.MONDAY).atStartOfDay())
             val weekMin = sessions.filter { it.start >= monday && it.end > it.start }.sumOf { (it.end - it.start) / 60000 }.toInt()
             if (st.weeklyHours > 0) Small("This week: " + (if (weekMin >= 60) "${weekMin / 60} h ${weekMin % 60} min" else "$weekMin min") + " of your ${st.weeklyHours} hours" + (if (weekMin >= st.weeklyHours * 60) ". The week is done; anything more is extra." else "."))
+            // Far more sessions than your pieces usually take: it may already be done. Your call, asked once.
+            works.firstOrNull { it.id == s.artworkId && it.status == "in_progress" }?.let { w ->
+                val made = sessions.filter { it.end > it.start && it.artworkId > 0 }
+                val finished = works.filter { it.status !in setOf("idea", "in_progress") }.map { f -> made.count { it.artworkId == f.id } }.filter { it > 0 }
+                val here = made.count { it.artworkId == w.id }
+                val usual = com.emotionalleaves.studioagent.domain.GoodEnough.usual(finished)
+                var asked by remember(w.id) { mutableStateOf(false) }
+                if (!asked && com.emotionalleaves.studioagent.domain.GoodEnough.overdue(here, usual)) Panel {
+                    Text("Is it done?", fontWeight = FontWeight.SemiBold)
+                    Text("${Texts.count(here, "session")} on this one; your pieces usually take about $usual." + (if (w.doneWhen.isNotBlank()) " Your finish line: ${w.doneWhen}" else " More work can make a finished piece worse."))
+                    Row {
+                        TextButton(onClick = { asked = true; scope.io { dao.put(w.copy(status = "finished")) } }) { Text("Yes, it is finished") }
+                        TextButton(onClick = { asked = true }) { Text("Not yet") }
+                    }
+                }
+            }
             if (s.nextStep.isNotBlank()) WallLabel(onClick = null) {
                 Small("Next time starts with")
                 Text(s.nextStep, style = MaterialTheme.typography.titleLarge)
