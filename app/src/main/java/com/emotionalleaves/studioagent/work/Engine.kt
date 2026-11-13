@@ -594,6 +594,12 @@ object Engine {
 
     fun workIds(a: Appl): List<Long> = a.workIds.split(",").mapNotNull { it.trim().toLongOrNull() }
 
+    /** The show is over and the unsold work is home: it can go out to the next call. Its CV line stays. */
+    suspend fun releaseShown(applId: Long) {
+        val a = dao.applsNow().firstOrNull { it.id == applId } ?: return
+        dao.artworksNow().filter { it.id in workIds(a) && it.status == "shown" }.forEach { dao.put(it.copy(status = "available", location = "Studio")) }
+    }
+
     /** Objective checks. When every line is true the pack is ready; there is nothing else to perfect. */
     fun checklist(a: Appl, o: Opp, works: List<Artwork>, feeLeft: Double, now: Long): List<Pair<String, Boolean>> {
         val chosen = works.filter { it.id in workIds(a) }

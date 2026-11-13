@@ -349,6 +349,8 @@ fun WorkDetail(nav: NavController, id: Long) {
             val appl = remember(w.id, w.status) { mutableStateOf<com.emotionalleaves.studioagent.data.Appl?>(null) }
             LaunchedEffect(w.id, w.status) { appl.value = withContext(Dispatchers.IO) { dao.applsNow().lastOrNull { w.id in Engine.workIds(it) } } }
             appl.value?.let { a -> TextButton(onClick = { nav.navigate("appl/${a.id}") }) { Text("Open the application it is part of") } }
+            // After a show the piece comes home; this lets it go out again.
+            if (w.status == "shown") OutlinedButton(onClick = { save(w.copy(status = "available", location = "Studio")) }) { Text("It is back with me: send it out again") }
         }
         Explain("What do these mean?", "Idea: not started. In progress: still making it. Finished: done, not photographed yet. Ready to send: has its picture and details and can go to calls. Out on a call, Shown and Sold are set by the app when they happen.")
         // The rest only matters once a piece is heading out, so it stays folded until then.

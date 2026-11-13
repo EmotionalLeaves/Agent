@@ -172,6 +172,11 @@ class AppTest {
         Engine.recordResult(ctx, dao.applsNow().single(), true, "")
         assertEquals("accepted", dao.applsNow().single().status)
         assertEquals(2, dao.artworksNow().count { it.status == "shown" })
+        // Back from the show, the pieces can go out again.
+        Engine.releaseShown(dao.applsNow().single().id)
+        val sent = Engine.workIds(dao.applsNow().single())
+        assertTrue(dao.artworksNow().filter { it.id in sent }.all { it.status == "available" })
+        assertEquals(0, dao.artworksNow().count { it.status == "shown" })
         assertTrue(dao.factsNow().single().text.contains("Winter Open"))
         assertTrue(dao.eventsNow().count { it.type == "task" } >= 5)
         assertEquals(works.size, dao.artworksNow().size)

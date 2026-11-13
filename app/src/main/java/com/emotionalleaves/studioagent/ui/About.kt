@@ -23,6 +23,7 @@ fun AboutBody() {
         Text("• Writing help: the text being written is sent to the free helper (Pollinations or LLM7, no account), or to the AI service whose key you added.", style = MaterialTheme.typography.bodyMedium)
         Text("• GitHub: your backup and portfolio page go to your own account.", style = MaterialTheme.typography.bodyMedium)
         Text("• Finding calls: the app reads public listing pages once a day, and skips sites that ask apps to stay out.", style = MaterialTheme.typography.bodyMedium)
+        Text("• Flyer photos: the words are read on the phone itself by the text reader in Google Play services. Only the words go on to the free helper; with an AI key of your own, the picture goes to that service too.", style = MaterialTheme.typography.bodyMedium)
         Text("There are no ads, no tracking and no account with us.", style = MaterialTheme.typography.bodyMedium)
         Text("Your rights", style = MaterialTheme.typography.titleSmall)
         Text("Picture files the app exports carry your name and a copyright line inside them. Certificates and bills of sale say that you keep the copyright when a work is sold.", style = MaterialTheme.typography.bodyMedium)

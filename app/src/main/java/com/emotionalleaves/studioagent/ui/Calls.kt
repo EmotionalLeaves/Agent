@@ -429,8 +429,17 @@ fun ApplScreen(nav: NavController, id: Long) {
                 H("Checklist")
                 events.filter { it.applId == id && it.type == "task" }.sortedBy { if (it.date > 0) it.date else Long.MAX_VALUE }.forEach { e ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = e.done, onCheckedChange = { c -> scope.io { dao.put(e.copy(done = c)) } })
-                        Column { Text(e.title); if (e.date > 0) Note(fmtDate(e.date)) }
+                        Checkbox(checked = e.done, onCheckedChange = { c -> scope.io {
+                            dao.put(e.copy(done = c))
+                            // Unsold work picked up: it is free for the next call.
+                            if (c && e.title.startsWith("Pick up", ignoreCase = true)) { Engine.releaseShown(id); status = "Picked up. The unsold pieces can go out to the next call." }
+                        } })
+                        Column(Modifier.weight(1f)) { Text(e.title); if (e.date > 0) Note(fmtDate(e.date)) }
+                        // A step with no day yet: give it one from the venue's email, so it reaches Today when due.
+                        if (!e.done) TextButton(onClick = {
+                            val d = if (e.date > 0) Engine.date(e.date) else LocalDate.now().plusDays(7)
+                            android.app.DatePickerDialog(ctx, { _, y, m, day -> scope.io { dao.put(e.copy(date = Engine.millis(LocalDate.of(y, m + 1, day).atTime(18, 0)))) } }, d.year, d.monthValue - 1, d.dayOfMonth).show()
+                        }) { Text(if (e.date > 0) "Change day" else "Set a day") }
                     }
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

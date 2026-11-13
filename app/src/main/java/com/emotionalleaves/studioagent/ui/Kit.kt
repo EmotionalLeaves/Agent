@@ -1,5 +1,10 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import kotlinx.coroutines.launch
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.selection.toggleable
@@ -316,21 +321,35 @@ fun Count(label: String, value: Int, min: Int = 0, max: Int = 99, step: Int = 1,
     fun set(n: Int) { v = n.coerceIn(min, max); onValue(v) }
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-        StepButton("−", "Less", v > min) { set(v - step) }
+        StepButton("−", "Less $label", v > min) { set(v - step) }
         Column(Modifier.size(width = 64.dp, height = 48.dp).semantics(mergeDescendants = true) { }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text("$v", style = MaterialTheme.typography.titleLarge)
             if (unit.isNotBlank()) Text(unit, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
         }
-        StepButton("+", "More", v < max) { set(v + step) }
+        StepButton("+", "More $label", v < max) { set(v + step) }
     }
 }
 
 @Composable
 private fun StepButton(sign: String, spoken: String, enabled: Boolean, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val tap by androidx.compose.runtime.rememberUpdatedState(onClick)
+    val on by androidx.compose.runtime.rememberUpdatedState(enabled)
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    // Hold to keep counting, so 120 minutes is one press, not twenty-three taps.
     Box(Modifier.size(44.dp).clip(RoundedCornerShape(22.dp)).background(if (enabled) cs.surfaceContainerLowest else cs.surfaceContainer)
-        .clickable(enabled = enabled, role = Role.Button, onClickLabel = spoken) { onClick() }
-        .semantics { contentDescription = spoken }, contentAlignment = Alignment.Center) {
+        .pointerInput(Unit) {
+            androidx.compose.foundation.gestures.awaitEachGesture {
+                androidx.compose.foundation.gestures.awaitFirstDown()
+                if (on) {
+                    tap()
+                    val repeat = scope.launch { kotlinx.coroutines.delay(450); while (on) { tap(); kotlinx.coroutines.delay(90) } }
+                    androidx.compose.foundation.gestures.waitForUpOrCancellation()
+                    repeat.cancel()
+                }
+            }
+        }
+        .semantics { role = Role.Button; contentDescription = spoken; onClick(label = spoken) { if (on) tap(); on }; if (!enabled) disabled() }, contentAlignment = Alignment.Center) {
         Text(sign, style = MaterialTheme.typography.titleLarge, color = if (enabled) cs.primary else cs.outline)
     }
 }

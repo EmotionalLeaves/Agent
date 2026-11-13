@@ -262,3 +262,9 @@ One real change per round. Pushed and built every ten rounds.
 258. Your week: Add a time lands on the first free day, at 10:00 on a weekend or after work plus rest on a work day, with a length that fits.
 259. Help explains what "Fee?" means on a call and what to do about it.
 260. Help answers "What do I do at my own opening?" in a few plain, low-pressure steps.
+261. About: says how flyer photos are read (on the phone; only the words go to the free helper, the picture too only with your own AI key).
+262. Counter buttons are read aloud with what they change ("More Minutes", "Less Fewest works").
+263. Holding + or − keeps counting, so long lengths and big numbers are one press instead of many taps.
+264. An accepted show's steps can each be given (or moved to) a day, so they reach Today when due.
+265. After a show, ticking "Pick up unsold work" (or "It is back with me" on the piece) makes the unsold pieces available for the next call; until now a shown piece could never go out again.
+266. A test walks a piece through being shown and coming home available again.
