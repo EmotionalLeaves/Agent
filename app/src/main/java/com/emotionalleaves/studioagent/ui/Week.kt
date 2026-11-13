@@ -76,6 +76,14 @@ fun WeekScreen(nav: NavController) {
         val opps by dao.opps().collectAsState(emptyList())
         MonthView(events, nav, opps.filter { it.status in setOf("new", "later") && it.deadline > now() && it.fitScore >= 50 })
         androidx.compose.material3.TextButton(onClick = { nav.navigate("year") }) { Text("The year ahead") }
+        // For a calendar the app cannot reach (a work calendar, a shared one): every coming date in one file to import.
+        androidx.compose.material3.TextButton(onClick = {
+            val now0 = now()
+            val coming = events.filter { !it.done && it.date > now0 && it.type in setOf("submit", "task", "studio", "invite", "watch") }
+            val f = java.io.File(com.emotionalleaves.studioagent.media.ImageTools.exportDir(ctx), "Studio_Agent_dates.ics")
+            f.writeText(com.emotionalleaves.studioagent.domain.Ics.file(coming.map { Triple("evt${it.id}", it.title.ifBlank { if (it.type == "studio") "Studio time" else it.type }, it.date to it.endDate) }))
+            com.emotionalleaves.studioagent.sys.Share.files(ctx, listOf(f), "text/calendar")
+        }) { Text("Add these dates to another calendar") }
         Status(status)
         H("Studio times")
         if (!custom) {

@@ -856,6 +856,22 @@ object CallReader {
 }
 
 
+/** Dates as a calendar file (.ics) any calendar app can import: deadlines, show steps and studio times. */
+object Ics {
+    private fun stamp(ms: Long): String = java.time.Instant.ofEpochMilli(ms).atZone(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'"))
+    private fun esc(s: String) = s.replace("\\", "\\\\").replace(",", "\\,").replace(";", "\\;").replace("\n", "\\n")
+
+    /** Each entry: a stable id, the title, start and end (end 0 = one hour). */
+    fun file(entries: List<Triple<String, String, Pair<Long, Long>>>, now: Long = System.currentTimeMillis()): String = buildString {
+        append("BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Studio Agent//EN\r\nCALSCALE:GREGORIAN\r\n")
+        entries.forEach { (id, title, t) ->
+            val end = if (t.second > t.first) t.second else t.first + 3_600_000L
+            append("BEGIN:VEVENT\r\nUID:$id@studioagent\r\nDTSTAMP:${stamp(now)}\r\nDTSTART:${stamp(t.first)}\r\nDTEND:${stamp(end)}\r\nSUMMARY:${esc(title)}\r\nEND:VEVENT\r\n")
+        }
+        append("END:VCALENDAR\r\n")
+    }
+}
+
 /** Money in and out by month, for a picture of the year: income and costs per month, January first. */
 object MoneyByMonth {
     fun of(year: Int, entries: List<Pair<LocalDate, Double>>): List<Pair<Double, Double>> = (1..12).map { m ->

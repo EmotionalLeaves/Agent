@@ -573,4 +573,12 @@ class DomainTest {
         val w = com.emotionalleaves.studioagent.domain.Drafts.themeWords("I paint kitchens at night. The kitchen before the shift, steam and steel, night after night. Kitchens are where I work.")
         assertEquals(listOf("kitchen", "night", "shift"), w.take(3))
     }
+
+    @Test fun datesAsACalendarFile() {
+        val ms = java.time.LocalDateTime.of(2027, 3, 1, 18, 0).toInstant(java.time.ZoneOffset.UTC).toEpochMilli()
+        val f = com.emotionalleaves.studioagent.domain.Ics.file(listOf(Triple("evt1", "Deliver work; Gallery 4, Austin", ms to 0L)), now = ms)
+        assertTrue(f.startsWith("BEGIN:VCALENDAR\r\n") && f.endsWith("END:VCALENDAR\r\n"))
+        assertTrue(f.contains("DTSTART:20270301T180000Z") && f.contains("DTEND:20270301T190000Z"))
+        assertTrue(f.contains("SUMMARY:Deliver work\\; Gallery 4\\, Austin"))
+    }
 }
