@@ -665,3 +665,4 @@ One real change per round. Pushed and built every ten rounds.
 658. "Your week, as seven marks" joins the Today cards you can switch off (Your week stays one tap away in the tools).
 659. Asking "when is my next studio time?" answers on the phone: the day, date and length, and that nothing stops you starting sooner.
 660. "New in this version" and the README catch up with rounds 641 to 659.
+661. A test for "when is my next studio time?": none planned, then the next one with its length.

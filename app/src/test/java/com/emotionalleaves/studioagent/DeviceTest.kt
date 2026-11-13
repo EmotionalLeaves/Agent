@@ -286,4 +286,13 @@ class AppTest {
         val a = Engine.answerLocally("What's on this week?")!!
         assertTrue(a, a.startsWith("The next seven days:") && a.contains("Buy titanium white") && a.contains("Studio time") && !a.contains("Far away") && !a.contains("Already done"))
     }
+
+    @Test fun theNextStudioTimeIsAnsweredOnThePhone() = runBlocking {
+        ctx
+        val dao = G.dao; val now = System.currentTimeMillis()
+        assertTrue(Engine.answerLocally("When is my next studio time?")!!.startsWith("No studio time is planned yet."))
+        dao.put(Evt(type = "studio", title = "Studio time", date = now + 3_600_000L, endDate = now + 3_600_000L + 40 * 60_000L))
+        val a = Engine.answerLocally("When is my next studio time?")!!
+        assertTrue(a, a.startsWith("Your next studio time:") && a.contains("for 40 minutes"))
+    }
 }
