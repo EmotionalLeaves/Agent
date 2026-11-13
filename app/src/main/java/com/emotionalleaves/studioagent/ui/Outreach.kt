@@ -116,6 +116,8 @@ fun Outreach(nav: NavController) {
                 Button(onClick = { scope.io { Engine.starterContacts(now()).forEach { dao.put(it) } } }) { Text("Give me a starter list") }
             }
         }
+        // The quickest way to a real list: what the map knows is near you.
+        Button(onClick = { nav.navigate("nearby") }, modifier = Modifier.fillMaxWidth()) { Text("Find places near me") }
         H("Add a venue or person")
         Field("Their website", url)
         Status(status)

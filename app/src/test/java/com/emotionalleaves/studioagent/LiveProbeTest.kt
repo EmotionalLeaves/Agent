@@ -118,6 +118,18 @@ class LiveProbeTest {
             log("app extractCalls from the photo: " + calls.joinToString { "${it.title} / ${it.deadline} / ${it.fee} / ${it.scope}" })
         } catch (e: Exception) { log("app photo read failed: $e") }
 
+        log("\n== Places near a town, from OpenStreetMap")
+        try {
+            val t0 = System.currentTimeMillis()
+            val at = com.emotionalleaves.studioagent.net.Places.locate("Austin, Texas")
+            log("located: $at in ${System.currentTimeMillis() - t0} ms")
+            if (at != null) {
+                val near = com.emotionalleaves.studioagent.net.Places.near(at.first, at.second, 10)
+                log("found ${near.size} places in ${System.currentTimeMillis() - t0} ms; with a website ${near.count { it.website.isNotBlank() }}, with email ${near.count { it.email.isNotBlank() }}")
+                near.groupBy { it.what }.forEach { (k, v) -> log("  $k: ${v.size}, e.g. ${v.take(3).joinToString { it.name }}") }
+            }
+        } catch (e: Exception) { log("places failed: $e") }
+
         log("\n== Starter listing sites, exactly as the daily check reads them")
         val now = System.currentTimeMillis()
         com.emotionalleaves.studioagent.work.Engine.starterSources.forEach { (name, url) ->

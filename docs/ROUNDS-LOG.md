@@ -268,3 +268,8 @@ One real change per round. Pushed and built every ten rounds.
 264. An accepted show's steps can each be given (or moved to) a day, so they reach Today when due.
 265. After a show, ticking "Pick up unsold work" (or "It is back with me" on the piece) makes the unsold pieces available for the next call; until now a shown piece could never go out again.
 266. A test walks a piece through being shown and coming home available again.
+
+## From round 267: bigger changes, toward round 1,000
+
+267. New: Places near you. From the free OpenStreetMap (no key), the app finds the real galleries, art centers, art and framing shops, art museums, libraries and community centers around your town, nearest first. Each one can be added to People with what it is, how far, its address, site and email, and the first thing to find out there. In People: "Find places near me".
+268. The map finder is checked live in CI (a real town, real places), and its reading of map data is tested.

@@ -212,6 +212,7 @@ fun Root(incoming: MutableState<Incoming?>) {
             composable("web/{id}") { WebFill(nav, it.id()) }
             composable("sources") { Sources(nav) }
             composable("outreach") { Outreach(nav) }
+            composable("nearby") { Nearby(nav) }
             composable("contact/{id}") { ContactScreen(nav, it.id()) }
             composable("records") { Records(nav) }
             composable("settings") { SettingsScreen(nav, "") }

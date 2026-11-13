@@ -324,4 +324,23 @@ class PartsTest {
         assertEquals("", other?.scope)
     }
 
+
+    @Test fun placesFromTheMapBecomeVenuesNearestFirst() {
+        ctx
+        val json = """{"elements":[
+          {"type":"node","id":1,"lat":30.27,"lon":-97.74,"tags":{"amenity":"library","name":"Central Library","addr:street":"Cesar Chavez St","addr:housenumber":"710","addr:city":"Austin","website":"library.austintexas.gov"}},
+          {"type":"way","id":2,"center":{"lat":30.30,"lon":-97.74},"tags":{"tourism":"gallery","name":"Big Medium","email":"info@bigmedium.org"}},
+          {"type":"node","id":3,"lat":30.27,"lon":-97.74,"tags":{"shop":"art"}},
+          {"type":"node","id":4,"lat":30.2701,"lon":-97.7401,"tags":{"amenity":"arts_centre","name":"Dougherty Arts Center"}}
+        ]}"""
+        val list = com.emotionalleaves.studioagent.net.Places.parse(json, 30.27, -97.74)
+        // Within a few miles, places that show art come before the library.
+        assertEquals(listOf("Dougherty Arts Center", "Big Medium", "Central Library"), list.map { it.name })
+        val c = com.emotionalleaves.studioagent.ui.placeToContact(list[2], 1L)
+        assertEquals("community", c.kind)
+        assertEquals("https://library.austintexas.gov", c.website)
+        assertTrue(c.notes.contains("710 Cesar Chavez St, Austin"))
+        assertEquals("info@bigmedium.org", com.emotionalleaves.studioagent.ui.placeToContact(list[1], 1L).email)
+    }
+
 }
