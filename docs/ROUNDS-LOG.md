@@ -504,3 +504,4 @@ One real change per round. Pushed and built every ten rounds.
 498. A piece left untouched for a month is brought up on a weekend, without guilt, until it is decided: its page offers three ways to decide it in one tap (one small step and straight into a session, call it finished, or park it as an idea for later). Deciding it is what stops it weighing on you.
 499. Is everything working? also says which parts of the last daily check did not finish, in the check's own words, and that each tries again the next day.
 500. The README describes the app as it now stands, grouped the same way as Everything the app can do.
+501. A commission's "Show them a draft" step sends the newest progress photo of the piece with a short note asking for any change while it is still easy to make, and ticks the step.

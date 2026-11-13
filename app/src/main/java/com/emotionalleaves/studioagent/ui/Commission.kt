@@ -75,6 +75,7 @@ fun CommissionPanel(nav: NavController, w: Artwork) {
     val contacts by dao.contacts().collectAsState(emptyList())
     val evts by dao.events().collectAsState(emptyList())
     val ledger by dao.ledger().collectAsState(emptyList())
+    val sessions by dao.sessions().collectAsState(emptyList())
     val client = contacts.firstOrNull { it.id == w.clientId }
     val steps = evts.filter { it.artworkId == w.id && it.type == "task" }.sortedBy { it.date }
     val paid = ledger.filter { it.artworkId == w.id && it.kind == "sale" }.sumOf { it.amount }
@@ -93,7 +94,15 @@ fun CommissionPanel(nav: NavController, w: Artwork) {
                         scope.io { dao.put(e.copy(done = true)) }
                     }) { Text("Send") }
                     "Deposit received" -> TextButton(onClick = { scope.io { Engine.commissionPaid(w, deposit = true) } }) { Text("Paid") }
-                    "Show them a draft" -> TextButton(onClick = { nav.navigate("session") }) { Text("Work on it") }
+                    "Show them a draft" -> {
+                        // The newest progress photo, sent with a short note asking for anything to change now rather than later.
+                        val draft = sessions.filter { it.artworkId == w.id && it.photoPath.isNotBlank() && java.io.File(it.photoPath).exists() }.maxByOrNull { it.start }
+                        if (draft != null) TextButton(onClick = {
+                            val note = "Hi ${client?.name?.ifBlank { null } ?: "there"},\n\nHere is where your piece is now. Is there anything you would like changed while it is still easy to change? If it looks right to you, I will carry on and finish it.\n\n${st.firstName}"
+                            Share.files(ctx, listOf(java.io.File(draft.photoPath)), "image/jpeg", note)
+                            scope.io { G.dao.put(e.copy(done = true)) }
+                        }) { Text("Send the draft") } else TextButton(onClick = { nav.navigate("session") }) { Text("Work on it") }
+                    }
                     "Final payment received" -> TextButton(onClick = { scope.io { Engine.commissionPaid(w, deposit = false) } }) { Text("Paid") }
                     "Hand it over" -> TextButton(onClick = { scope.io { Engine.commissionDelivered(w) } }) { Text("Done") }
                     else -> {}
