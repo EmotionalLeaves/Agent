@@ -506,3 +506,4 @@ One real change per round. Pushed and built every ten rounds.
 500. The README describes the app as it now stands, grouped the same way as Everything the app can do.
 501. A commission's "Show them a draft" step sends the newest progress photo of the piece with a short note asking for any change while it is still easy to make, and ticks the step.
 502. All calls can be narrowed to "Near me or online": calls in towns within sixty miles of yours, plus online ones, once the map knows the towns.
+503. Ideas parked more than four months ago can be looked through now and then: keep the ones that still pull at you (they move to the top) and let the rest go, with one plain line that letting an idea go is not losing it.

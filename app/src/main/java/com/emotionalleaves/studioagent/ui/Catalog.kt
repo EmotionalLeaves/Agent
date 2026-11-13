@@ -765,8 +765,24 @@ fun IdeasBody(nav: NavController) {
                 scope.io { val f = File(ImageTools.mediaDir(ctx), "idea_${now()}.jpg"); if (ImageTools.copyUri(ctx, uri, f)) dao.put(Idea(text = t, photoPath = f.absolutePath, createdAt = now())) } }
         }
         TextButton(onClick = { pic.launch("image/*") }) { Text("Park a picture") }
-        val open = ideas.filter { !it.done }
-        if (open.isEmpty()) Empty("Nothing parked. When an idea keeps circling while you work, put it here and let it go.")
+        val allOpen = ideas.filter { !it.done }
+        // Ideas parked long ago: look through them now and then, keep the ones that still pull, let the rest go.
+        val old = allOpen.filter { it.createdAt in 1 until now() - 120 * 86_400_000L }
+        var reviewing by rememberSaveable { mutableStateOf(false) }
+        if (old.size >= 3 && !reviewing) TextButton(onClick = { reviewing = true }) { Text("Look through ${Texts.count(old.size, "idea")} parked over four months ago") }
+        if (reviewing) {
+            Small("Keep the ones that still pull at you; let the rest go. Letting an idea go is not losing it: it was never a promise.")
+            old.forEach { i -> Panel {
+                Text(i.text.ifBlank { "(picture)" }, maxLines = 4); Small(fmtDate(i.createdAt))
+                Row {
+                    TextButton(onClick = { scope.io { dao.put(i.copy(createdAt = now())) } }) { Text("Keep") }
+                    TextButton(onClick = { scope.io { dao.put(i.copy(done = true)) } }) { Text("Let it go") }
+                }
+            } }
+            TextButton(onClick = { reviewing = false }) { Text("Done looking") }
+        }
+        val open = if (reviewing) allOpen.filter { it !in old } else allOpen
+        if (open.isEmpty() && !reviewing) Empty("Nothing parked. When an idea keeps circling while you work, put it here and let it go.")
         // A pinboard: each idea a small sheet with a pin, two across.
         open.chunked(2).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
