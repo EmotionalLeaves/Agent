@@ -370,6 +370,11 @@ fun Home(nav: NavController) {
         if (weekSessions.isNotEmpty()) wins += "${weekSessions.size} session" + (if (weekSessions.size > 1) "s" else "") + ", ${weekSessions.sumOf { (it.end - it.start) / 60000 }} minutes of making"
         works.count { it.createdAt >= weekStart && it.imagePath.isNotBlank() }.let { if (it > 0) wins += "$it piece" + (if (it > 1) "s" else "") + " with an image added" }
         appls.count { it.submittedAt >= weekStart }.let { if (it > 0) wins += "$it application" + (if (it > 1) "s" else "") + " sent" }
+        // The quieter work counts too: emails to venues, and ideas parked so they stop circling.
+        val contactsWk by dao.contacts().collectAsState(emptyList())
+        val ideasWk by dao.ideas().collectAsState(emptyList())
+        contactsWk.count { it.sentAt >= weekStart }.let { if (it > 0) wins += Texts.count(it, "email") + " to venues sent" }
+        ideasWk.count { it.createdAt >= weekStart }.let { if (it > 0) wins += Texts.count(it, "idea") + " parked" }
         if (wins.isNotEmpty() && !calm) {
             Section("Done this week")
             wins.forEach { Check(true, it) }
