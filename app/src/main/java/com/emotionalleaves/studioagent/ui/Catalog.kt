@@ -183,6 +183,19 @@ fun Works(nav: NavController) {
                     LinearProgressIndicator(progress = { (done.toFloat() / s.targetCount.coerceAtLeast(1)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                     Note("$done of ${s.targetCount} documented, ${works.count { it.seriesId == s.id }} started")
                     Small(Engine.forecast(s.id, s.targetCount, works, sessions))
+                    // The series hung together at real sizes: does it hold as a group, and how much wall it needs.
+                    val hung = works.filter { it.seriesId == s.id && it.imagePath.isNotBlank() && it.widthIn > 0 && it.heightIn > 0 }
+                    if (hung.size > 1) {
+                        var wallPic by remember(s.id) { mutableStateOf("") }
+                        TextButton(onClick = { scope.io { wallPic = com.emotionalleaves.studioagent.media.Mockup.series(hung.map { Triple(it.imagePath, it.widthIn, it.heightIn) }, hung.any { it.framed || it.format == "print" },
+                            File(ImageTools.exportDir(ctx), Papers.docName(st, "Series_wall_" + s.name.filter { it.isLetterOrDigit() }.take(20), "jpg")))?.absolutePath.orEmpty() } }) { Text("See the series hung together") }
+                        if (wallPic.isNotBlank()) {
+                            PathImage(wallPic, Modifier.fillMaxWidth().height(170.dp), 1400, description = "The series on one wall")
+                            val inches = hung.sumOf { it.widthIn + 7 } + 6 * (hung.size - 1)
+                            Small("About ${"%.0f".format(inches / 12)} feet of wall, framed, hung 6 inches apart.")
+                            TextButton(onClick = { Share.files(ctx, listOf(File(wallPic)), "image/jpeg") }) { Text("Share this picture") }
+                        }
+                    }
                     Expand("Is this series ready to show?") {
                         val ready = works.filter { it.seriesId == s.id && Engine.documented(it) }
                         val hasStatement = docs.any { it.type == "statement" && it.seriesId == s.id && it.approved && it.text.isNotBlank() }

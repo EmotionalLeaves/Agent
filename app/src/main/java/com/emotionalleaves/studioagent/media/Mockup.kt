@@ -62,4 +62,43 @@ object Mockup {
         c.drawRect(RectF(cx + bw / 2 - 4.5f * k, floorY - bh, cx + bw / 2 - 3 * k, floorY), bench)
         return b
     }
+
+    /**
+     * A whole series hung together on one wall at real sizes, centers at 57 inches, 6 inches apart:
+     * how a show of them would look, and whether they hold together.
+     */
+    fun series(items: List<Triple<String, Double, Double>>, framed: Boolean, dest: File, outW: Int = 2000, outH: Int = 1000): File? {
+        val list = items.filter { it.second > 0 && it.third > 0 }
+        if (list.isEmpty()) return null
+        val border = if (framed) 3.5 else 0.0
+        val gap = 6.0
+        val totalIn = list.sumOf { it.second + 2 * border } + gap * (list.size - 1) + 24
+        val floorY = outH * 0.86f
+        val ppi = min(floorY / 100.0, outW / totalIn)
+        val b = Bitmap.createBitmap(outW, outH, Bitmap.Config.ARGB_8888)
+        val c = Canvas(b)
+        c.drawRect(0f, 0f, outW.toFloat(), floorY, Paint().apply { shader = LinearGradient(0f, 0f, 0f, floorY, 0xFFF7F6F2.toInt(), 0xFFE6E4DE.toInt(), Shader.TileMode.CLAMP) })
+        c.drawRect(0f, floorY, outW.toFloat(), outH.toFloat(), Paint().apply { color = 0xFFC9B79C.toInt() })
+        val rowW = (list.sumOf { it.second + 2 * border } + gap * (list.size - 1)) * ppi
+        var x = ((outW - rowW) / 2).toFloat()
+        val cy = (floorY - 57 * ppi).toFloat()
+        val shadow = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x33000000; maskFilter = android.graphics.BlurMaskFilter(12f, android.graphics.BlurMaskFilter.Blur.NORMAL) }
+        list.forEach { (path, w, h) ->
+            val fw = ((w + 2 * border) * ppi).toFloat(); val fh = ((h + 2 * border) * ppi).toFloat()
+            val outer = RectF(x, cy - fh / 2, x + fw, cy + fh / 2)
+            c.drawRect(RectF(outer.left + 5f, outer.top + 9f, outer.right + 5f, outer.bottom + 12f), shadow)
+            var inner = outer
+            if (framed) {
+                val k = ppi.toFloat()
+                c.drawRect(outer, Paint().apply { color = 0xFF2B2B2B.toInt() })
+                inner = RectF(outer.left + k, outer.top + k, outer.right - k, outer.bottom - k)
+                c.drawRect(inner, Paint().apply { color = 0xFFFBFAF7.toInt() })
+                inner = RectF(inner.left + 2.5f * k, inner.top + 2.5f * k, inner.right - 2.5f * k, inner.bottom - 2.5f * k)
+            }
+            ImageTools.decode(path, 1200)?.let { c.drawBitmap(it, null, inner, Paint(Paint.FILTER_BITMAP_FLAG)) } ?: c.drawRect(inner, Paint().apply { color = 0xFFDDDDDD.toInt() })
+            x += fw + (gap * ppi).toFloat()
+        }
+        ImageTools.saveJpeg(b, dest, 90)
+        return dest
+    }
 }
