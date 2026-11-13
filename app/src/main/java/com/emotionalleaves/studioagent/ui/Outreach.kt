@@ -655,6 +655,21 @@ fun AtTheOpening(nav: NavController) {
         }) { Text("Add to my list") }
         if (added > 0) Small("${Texts.count(added, "person", "people")} added tonight.")
         SellingTonight()
+        // People you talked to: a name and a line, kept before it is forgotten, with a follow-up in three days.
+        Expand("People I talked to tonight") {
+            val who = rememberSaveable { mutableStateOf("") }; val what = rememberSaveable { mutableStateOf("") }; val mail = rememberSaveable { mutableStateOf("") }
+            Field("Their name", who); Field("Where they work or what you talked about", what, mic = true); Field("Their email, if they gave it", mail)
+            if (who.value.isNotBlank()) Button(onClick = {
+                val n = who.value.trim(); val note = what.value.trim(); val m = mail.value.trim()
+                who.value = ""; what.value = ""; mail.value = ""
+                scope.io {
+                    val id = dao.put(Contact(name = n, email = m, kind = "curator".takeIf { note.contains("curat", true) } ?: "community", status = "research",
+                        notes = "Met at an opening, ${java.time.LocalDate.now()}." + (if (note.isNotBlank()) " $note." else ""), createdAt = now()))
+                    dao.put(com.emotionalleaves.studioagent.data.Evt(type = "task", title = "Follow up with $n", date = now() + 3 * 86_400_000L))
+                }
+            }) { Text("Keep, and remind me to follow up") }
+            Small("A short note within a few days, while they remember you, is most of networking. Ready-made emails has one.")
+        }
         Expand("Bring with you") {
             listOf("The sign-up sheet and two pens", "The price list (and a few copies)", "Cards or small flyers with your name and page", "Red dot stickers for sold work",
                 "Your phone, charged, for the code and for photos", "Water, and something to eat before").forEach { Text("• $it") }
