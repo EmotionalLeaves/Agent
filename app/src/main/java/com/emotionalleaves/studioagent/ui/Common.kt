@@ -131,7 +131,8 @@ private val dateFmt: DateTimeFormatter = try {
 fun clock(ms: Long): String = Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT))
 
 fun fmtDate(ms: Long): String = if (ms <= 0) "no date" else Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(dateFmt)
-fun money(d: Double): String = (if (d < 0) "-" else "") + st.currency + "%,.2f".format(kotlin.math.abs(d))
+/** Whole amounts without cents ($55), others with them ($23.25). */
+fun money(d: Double): String = (if (d < 0) "-" else "") + st.currency + kotlin.math.abs(d).let { a -> if (Math.abs(a - Math.rint(a)) < 0.005) "%,.0f".format(a) else "%,.2f".format(a) }
 fun jargon(text: String): List<String> = Texts.jargonIn(text, st.jargonExtra)
 
 /** Run database or network work off the main thread; errors land in [onError] instead of crashing. */
