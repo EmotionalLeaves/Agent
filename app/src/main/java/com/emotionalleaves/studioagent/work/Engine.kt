@@ -1202,7 +1202,7 @@ object Engine {
                 var added = 0
                 for (l in links.take(perSource)) {
                     // Slow sites cannot push the check past the phone's limit: after eight minutes the rest wait for tomorrow.
-                    if (System.currentTimeMillis() - started > 8 * 60_000) break
+                    if (System.currentTimeMillis() - started > 7 * 60_000) break
                     known += l.url
                     val text = try { "Link: ${l.url}\n" + Fetch.text(Fetch.html(l.url)) } catch (e: Exception) { continue }
                     val n = readCall(text, s.name, l.text, l.url, now, doc.title(), useAi = System.currentTimeMillis() - started < 4 * 60_000)
@@ -1317,11 +1317,13 @@ object Engine {
             dao.oppsNow().filter { it.id !in applied && it.status in setOf("expired", "no") && it.deadline in 1..(now - 90 * DAY) }.forEach { dao.del(it) }
         }
         step("plan week") { planWeek(ctx) }
-        step("sources") { scanSources(now) }
+        // The quick steps run before the long read of the listing sites, so a slow site can never crowd them out.
         step("email") { withContext(Dispatchers.IO) { checkMail(ctx) } }
         step("outreach") { withContext(Dispatchers.IO) { sendOutreach(now) } }
-        step("rescore") { rescore() }
         step("venues") { researchVenues() }
+        step("openings") { findOpenings() }
+        step("sources") { scanSources(now) }
+        step("rescore") { rescore() }
         // Applications whose checks all pass get their files made overnight, so sending is one look and one tap.
         step("packs") {
             val works = dao.artworksNow(); val left = feeLeft(dao.ledgerNow())
@@ -1332,7 +1334,6 @@ object Engine {
                 }
             }
         }
-        step("openings") { findOpenings() }
         step("backup") { backupToGitHub(ctx) }
         step("folder backup") {
             if (st.backupFolder.isNotBlank()) withContext(Dispatchers.IO) { val name = com.emotionalleaves.studioagent.sys.Backup.toFolder(ctx, st); st.log("Backup saved to your folder: $name") }
