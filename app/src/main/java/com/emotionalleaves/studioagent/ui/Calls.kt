@@ -625,7 +625,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                     listOf("Ask the venue what is allowed: drinks, food, music, how late" to "A week before",
                         "Water and something simple to drink; cups and napkins" to "Most openings spend 30 to 60 on this",
                         "Something small to eat that does not need plates" to "Optional",
-                        "The sign-up sheet and pens, by the door" to "In Documents above",
+                        "The sign-up sheet and pens, by the door" to "Printed from People, Your email list",
                         "Price list, red dot stickers, a way to take payment" to "Ask the venue if they take it for you",
                         "A friend to greet people while you talk" to "It frees you to talk about the work",
                         "Photos of the room full of people" to "For your records and your next proposal")
