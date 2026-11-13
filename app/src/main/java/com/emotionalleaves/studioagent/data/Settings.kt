@@ -218,6 +218,8 @@ class Settings(ctx: Context) {
     var monthGoalMonth by S("monthGoalMonth")
     /** A faint "© name" on the picture itself in posts. */
     var watermark by B("watermark", false)
+    /** The month a seasonal note was last shown ("2027-9"). */
+    var seasonTold by S("seasonTold")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */
