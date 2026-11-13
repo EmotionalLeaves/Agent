@@ -271,7 +271,12 @@ fun Home(nav: NavController) {
             Row(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 stones.forEachIndexed { i, (_, done) -> Box(Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp)).background(if (done) MaterialTheme.colorScheme.primary else if (i == at) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHigh)) }
             }
-            Small("Next: ${stones[at].first} (${at + 1} of ${stones.size}). Order does not matter much; every one counts.")
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Next: ${stones[at].first} (${at + 1} of ${stones.size}).", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                // Each milestone opens where it is done.
+                val route = listOf("works", "materials", "nearby", "outreach", "outreach", "calls", "calls")[at]
+                TextButton(onClick = { nav.navigate(route) }) { Text("Go") }
+            }
         }
 
         // Proof of what got done, in plain counts. No streaks, nothing to break.

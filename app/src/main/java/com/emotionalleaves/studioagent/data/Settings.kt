@@ -185,6 +185,8 @@ class Settings(ctx: Context) {
     var practiceText by S("practiceText")
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
+    /** The week the Sunday look ahead was last sent. */
+    var lastWeekAhead by S("lastWeekAhead")
     var widgetDetail by S("widgetDetail")
     var widgetRoute by S("widgetRoute")
     var noReasons by S("noReasons")

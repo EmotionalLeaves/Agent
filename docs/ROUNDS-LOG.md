@@ -340,3 +340,5 @@ One real change per round. Pushed and built every ten rounds.
 334. People lists the openings found at your venues, each with "I went", which counts toward your openings this month.
 335. New: Portfolio order. Set the order of your works by looking at them (Up, Down, First); the portfolio PDF, the web page and the materials kit all follow it, strongest first.
 336. Today shows the road to your first show until you are in one: seven milestones as a bar (three pieces with pictures, statement approved, five real places, visit two, write to one, first application, first show), with the next one named.
+337. Each milestone on the road to your first show opens where it is done (Studio, your statement, places near you, People, Calls).
+338. On Sunday, one calm notice with the week ahead: how many studio times, the first dated thing and its day, and how many more, so Monday holds no surprises.

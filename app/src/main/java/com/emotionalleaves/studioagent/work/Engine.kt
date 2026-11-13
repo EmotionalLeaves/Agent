@@ -1300,6 +1300,16 @@ object Engine {
             dao.eventsNow().firstOrNull { it.type == "submit" && !it.done && it.date in (now - DAY)..(now + 2 * DAY) }?.let {
                 Notifier.post(ctx, st, 101, it.title, "This one has a deadline this week.", "appl/${it.applId}")
             }
+            // Sunday: the week ahead in one calm line, so Monday holds no surprises.
+            if (LocalDate.now().dayOfWeek == DayOfWeek.SUNDAY && st.lastWeekAhead != weekId()) {
+                val ev = dao.eventsNow().filter { !it.done && it.date in now..(now + 7 * DAY) }
+                val studio = ev.count { it.type == "studio" }
+                val due = ev.filter { it.type in setOf("deadline", "task", "invite") }.sortedBy { it.date }
+                val parts = listOfNotNull(studio.takeIf { it > 0 }?.let { Texts.count(it, "studio time") },
+                    due.firstOrNull()?.let { e -> e.title.removePrefix("Deadline: ") + " " + date(e.date).dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault()) },
+                    (due.size - 1).takeIf { it > 0 }?.let { "$it more dated " + if (it == 1) "thing" else "things" })
+                if (parts.isNotEmpty() && Notifier.post(ctx, st, 105, "Your week ahead", parts.joinToString(", ") + ".", "week")) st.lastWeekAhead = weekId()
+            }
             // A strong call that closes before the weekend notice would reach you: said once, the day it is found.
             val told = st.urgentTold.split(",").filter { it.isNotBlank() }.toMutableSet()
             shortlist(dao.oppsNow(), profile(), now, stretchOk(now), 20).filter { it.fitScore >= 75 && it.deadline in (now + DAY)..(now + 10 * DAY) && it.id.toString() !in told }
