@@ -523,4 +523,16 @@ class DomainTest {
         assertEquals("Artist in Austin. Gouache and pencil. I draw the kitchen at five in the morning. Shows and news below.", l)
         assertTrue(l.length <= 150)
     }
+
+    @Test fun anEntryInFifteenMinuteEvenings() {
+        val E = com.emotionalleaves.studioagent.domain.EntrySteps
+        val today = java.time.LocalDate.of(2027, 1, 4) // a Monday
+        val d = E.days(today, java.time.LocalDate.of(2027, 1, 22), setOf(1, 2, 3, 4, 5))
+        assertEquals(5, d.size)
+        assertTrue(d.all { it.dayOfWeek.value in 1..5 && it.isAfter(today) && !it.isAfter(java.time.LocalDate.of(2027, 1, 22)) })
+        assertEquals(d, d.sorted())
+        // Two days left: the steps share them.
+        val tight = E.days(today, today.plusDays(2), setOf(1, 2, 3, 4, 5))
+        assertTrue(tight.all { it == today.plusDays(1) || it == today.plusDays(2) })
+    }
 }

@@ -653,6 +653,11 @@ fun ApplScreen(nav: NavController, id: Long) {
 
     Screen(o.title, nav) {
         Note((if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.")
+        // The entry in small pieces: five 15-minute evenings, so it is never one big job the night before.
+        if (o.deadline > now() + 4 * 86_400_000L && events.none { it.applId == id && it.title.startsWith("Entry, 15 minutes: ") }) {
+            var split by remember(id) { mutableStateOf("") }
+            if (split.isBlank()) TextButton(onClick = { scope.io({ split = it }) { val n = Engine.planEntrySteps(a, o); split = "${Texts.count(n, "15-minute step")} on your week, one an evening." } }) { Text("Split it into 15-minute evenings") } else Small(split)
+        }
         StageHead(1, "Choose the works", chosenIds.isNotEmpty())
         val ready = works.filter { Engine.available(it) || it.id in chosenIds }
         // Short of pieces: the making, planned back from the deadline, a Saturday for each.

@@ -840,6 +840,20 @@ object CallReader {
 }
 
 
+/** An entry in small pieces: five 15-minute steps, one per evening, spread over the days before the send date. */
+object EntrySteps {
+    val steps = listOf("choose the works", "check each picture and its details", "the paragraph on how it fits", "fill in the form or the email", "send it")
+
+    /** The days for each step: work-day evenings first ([workDays] as 1 = Monday .. 7 = Sunday), never after [sendBy], never before tomorrow. */
+    fun days(today: LocalDate, sendBy: LocalDate, workDays: Set<Int>): List<LocalDate> {
+        val all = generateSequence(today.plusDays(1)) { it.plusDays(1) }.takeWhile { !it.isAfter(sendBy) }.toList()
+        if (all.isEmpty()) return steps.map { today }
+        val evenings = all.filter { it.dayOfWeek.value in workDays }
+        val pool = if (evenings.size >= steps.size) evenings else all
+        return steps.indices.map { i -> pool[(i * pool.size / steps.size).coerceAtMost(pool.size - 1)] }
+    }
+}
+
 /**
  * "Is it done?" A piece that has had far more sessions than your others usually take may be finished already;
  * reworking a finished piece is the commonest way work gets worse. Gentle, and only with your own numbers.

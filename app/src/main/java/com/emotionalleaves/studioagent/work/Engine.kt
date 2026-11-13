@@ -826,6 +826,19 @@ object Engine {
         return com.emotionalleaves.studioagent.domain.Drafts.altText(w.title, Papers.medium(w), if (w.widthIn > 0) Texts.dims(w.widthIn, w.heightIn) else "", colors, light, w.notes)
     }
 
+    /** The entry as five 15-minute evening steps on your week, back from the send date (three days before the deadline). */
+    suspend fun planEntrySteps(a: Appl, o: Opp): Int {
+        if (o.deadline <= 0) return 0
+        val have = dao.eventsNow().filter { it.applId == a.id && it.title.startsWith("Entry, 15 minutes: ") }.map { it.title }.toSet()
+        val days = com.emotionalleaves.studioagent.domain.EntrySteps.days(LocalDate.now(), date(o.deadline - 3 * DAY), Planner.days(st.workDays))
+        var n = 0
+        com.emotionalleaves.studioagent.domain.EntrySteps.steps.forEachIndexed { i, step ->
+            val t = "Entry, 15 minutes: $step"
+            if (t !in have) { dao.put(Evt(type = "task", title = t, date = millis(days[i].atTime(19, 0)), oppId = o.id, applId = a.id)); n++ }
+        }
+        return n
+    }
+
     // ------------------------------------------------------------ commissions
 
     /** The steps of a piece made for someone, in order, with the day each falls on, counted from today to the promised day. */
