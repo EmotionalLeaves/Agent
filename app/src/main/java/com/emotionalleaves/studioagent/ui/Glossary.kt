@@ -56,7 +56,8 @@ val glossary: List<Pair<String, String>> = listOf(
     "Underpainting" to "A first thin layer that sets up light and dark before the color goes on.",
     "Varnish" to "A clear coat over a finished painting that protects it and evens out the shine. Oil paintings wait months before varnishing; acrylics a few days.",
     "Wall label" to "The small card beside each piece: your name, the title, year, medium, size and price.",
-    "Wire / D-rings" to "The hanging hardware on the back of a framed piece. Many venues say which they want."
+    "Wire / D-rings" to "The hanging hardware on the back of a framed piece. Many venues say which they want.",
+    "Zine" to "A small, cheap booklet of pictures or words, often made from one folded sheet. Artists sell them for a few dollars at markets; Market day makes one of your pieces."
 )
 
 @Composable
