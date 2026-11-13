@@ -156,8 +156,9 @@ fun Home(nav: NavController) {
 
         // After an update: what is new, once, in a few lines, so new features are found instead of hunted for.
         val version = remember { try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).let { if (android.os.Build.VERSION.SDK_INT >= 28) it.longVersionCode else @Suppress("DEPRECATION") it.versionCode.toLong() } } catch (e: Exception) { 0L } }
-        var showNew by remember { mutableStateOf(st.onboarded && st.seenVersion in 1 until version) }
-        LaunchedEffect(version) { if ((!st.onboarded || st.seenVersion == 0L) && st.seenVersion != version) st.seenVersion = version }
+        var showNew by remember { mutableStateOf(st.onboarded && version > 0 && st.seenVersion < version) }
+        // A brand-new install has nothing to compare against: it starts as seen.
+        LaunchedEffect(version) { if (!st.onboarded && st.seenVersion != version) st.seenVersion = version }
         if (showNew) Panel(strong = true) {
             Text("New in this version", style = MaterialTheme.typography.titleSmall)
             whatsNew.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
