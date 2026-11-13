@@ -471,3 +471,4 @@ One real change per round. Pushed and built every ten rounds.
 465. The daily check can wait for Wi-Fi and charging (Settings, Hours and calm), to save mobile data and battery; the change takes effect straight away.
 466. Your week can hand every coming date (deadlines, show steps, studio times, openings) to another calendar as one file to import, for a work or shared calendar the app cannot reach.
 467. Two new ready-made emails: asking an artist you admire for fifteen minutes of advice, and signing up for a portfolio review at an art center or college; and Help answers where to get honest feedback on your work.
+468. The Sunday post suggestion varies week to week: a finished piece, then how a piece was made (from its progress photos), then a whole series as a carousel, each remembered once posted, so a feed has some variety without any planning.

@@ -1554,6 +1554,15 @@ object Engine {
         // Once a week, on a Sunday: put one finished piece where people who look you up will find it.
         if (today.dayOfWeek == DayOfWeek.SUNDAY && now - st.lastPosted > 6 * DAY) {
             val posted = st.postedIds.split(",").toSet()
+            // Every third week, something other than a finished piece: how one was made, then a whole series. Variety keeps a feed alive.
+            val week = (now / (7 * DAY)).toInt() % 3
+            val sessionsAll = dao.sessionsNow()
+            if (week == 1) works.filter { w -> sessionsAll.count { it.artworkId == w.id && it.photoPath.isNotBlank() } >= 2 && "p${w.id}" !in posted }.maxByOrNull { it.createdAt }?.let { w ->
+                return NextStep("Post how ${w.title.ifBlank { "a piece" }} was made", "Process posts are the ones people stop for. Open the piece, How it was made, then Post how it was made.", "work/${w.id}")
+            }
+            if (week == 2) dao.seriesNow().firstOrNull { s0 -> works.count { it.seriesId == s0.id && it.imagePath.isNotBlank() && it.status !in setOf("idea", "in_progress") } >= 3 && "s${s0.id}" !in posted }?.let { s0 ->
+                return NextStep("Post the series ${s0.name}", "A carousel of the series, in order, with what ties it together. In Studio, Series, Post the series.", "works")
+            }
             works.filter { it.imagePath.isNotBlank() && it.status in setOf("documented", "available", "shown", "sold") && it.id.toString() !in posted }.maxByOrNull { it.createdAt }?.let { w ->
                 return NextStep("Post ${w.title.ifBlank { "a piece" }} online", "Jurors and venues look you up. Open Pictures and papers on the piece and tap Post it online: the picture and the words are made for you.", "work/${w.id}")
             }

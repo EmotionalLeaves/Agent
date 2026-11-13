@@ -250,7 +250,7 @@ fun Works(nav: NavController) {
                         val files = postable.take(10).mapIndexedNotNull { i, w -> com.emotionalleaves.studioagent.media.Post.render(w.imagePath, st.fullName, File(dir, "${i + 1}_" + w.title.filter { it.isLetterOrDigit() }.take(20) + ".jpg")) }
                         val words = listOf(s.name, s.notes.trim(), postable.take(10).mapIndexed { i, w -> "${i + 1}. " + w.title.ifBlank { "Untitled" } + (if (w.year > 0) " (${w.year})" else "") }.joinToString("\n"),
                             com.emotionalleaves.studioagent.media.Post.tags(postable.first().medium, st.city)).filter { it.isNotBlank() }.joinToString("\n\n")
-                        st.lastPosted = System.currentTimeMillis()
+                        st.lastPosted = System.currentTimeMillis(); st.postedIds = (st.postedIds.split(",").filter { it.isNotBlank() } + "s${s.id}").takeLast(300).joinToString(",")
                         withContext(Dispatchers.Main) { Share.files(ctx, files, "image/jpeg", words) }
                     } }) { Text("Post the series (${minOf(10, postable.size)} pictures)") }
                     // The series as an online show in one file: no hosting, no account; send it or put it in Drive.
@@ -582,6 +582,7 @@ fun WorkDetail(nav: NavController, id: Long) {
                 val bms = (shots.map { it.photoPath } + listOfNotNull(w.imagePath.takeIf { p -> p.isNotBlank() })).mapNotNull { ImageTools.decode(it, 700) }
                 val f = File(ImageTools.exportDir(ctx), Papers.docName(st, "Process_" + w.title.filter { it.isLetterOrDigit() }.take(24), "jpg"))
                 ImageTools.saveJpeg(com.emotionalleaves.studioagent.media.Post.process(bms, st.fullName), f, 90)
+                st.lastPosted = System.currentTimeMillis(); st.postedIds = (st.postedIds.split(",").filter { it.isNotBlank() } + "p${w.id}").takeLast(300).joinToString(",")
                 val words = "How " + w.title.ifBlank { "this piece" } + " came together, " + Texts.count(mine.size, "session") + " from first marks to finished.\n\n" + com.emotionalleaves.studioagent.media.Post.tags(w.medium, st.city)
                 withContext(Dispatchers.Main) { Share.post(ctx, f, words) }
             } }) { Text("Post how it was made") }
