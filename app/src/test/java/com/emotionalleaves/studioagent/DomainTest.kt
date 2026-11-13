@@ -413,4 +413,14 @@ class DomainTest {
         assertTrue(fine.isEmpty())
         assertTrue(O.verdict(fine).startsWith("Nothing here"))
     }
+
+    @Test fun receiptsAreRead() {
+        val R = com.emotionalleaves.studioagent.domain.Receipts
+        val blick = R.read("BLICK ART MATERIALS\nStore #123 Austin TX\nGolden Heavy Body 2oz 12.99\nCanvas pad 9x12 8.49\nSUBTOTAL 21.48\nTAX 1.77\nTOTAL 23.25\nVISA 23.25")
+        assertEquals(23.25, blick.total, 0.001); assertEquals("BLICK ART MATERIALS", blick.shop); assertEquals("materials", blick.kind)
+        val ups = R.read("The UPS Store\nShipping 1 package\nTotal\n$ 41.30")
+        assertEquals(41.30, ups.total, 0.001); assertEquals("shipping", ups.kind)
+        assertEquals("framing", R.read("Main St Custom Framing\nMat board, glass\nAmount due 85.00").kind)
+        assertEquals(1234.56, R.read("Print shop\nGiclee prints 1,234.56").total, 0.001)
+    }
 }

@@ -821,6 +821,39 @@ object CallReader {
 }
 
 
+/** A photographed receipt, read: the total, the shop, and what kind of cost it most likely is. */
+object Receipts {
+    data class Read(val total: Double, val shop: String, val kind: String)
+
+    private val money = Regex("(?<![\\d.])\\$?\\s?(\\d{1,5}(?:,\\d{3})*[.,]\\d{2})(?!\\d)")
+
+    fun read(text: String): Read {
+        val lines = text.lines().map { it.trim() }.filter { it.isNotBlank() }
+        fun amounts(l: String) = money.findAll(l).mapNotNull { it.groupValues[1].replace(",", "").let { v -> if (v.length > 3 && v[v.length - 3] == '.') v.toDoubleOrNull() else v.replace(Regex("(\\d)(\\d{2})$"), "$1.$2").toDoubleOrNull() } }.toList()
+        // The line that says total (not subtotal), or the line after it when the amount sits below; else the largest amount.
+        var total = 0.0
+        for ((i, l) in lines.withIndex()) {
+            val low = l.lowercase()
+            if (Regex("\\b(total|amount due|balance due|grand total)\\b").containsMatchIn(low) && !low.contains("subtotal") && !low.contains("sub total")) {
+                val a = amounts(l).lastOrNull() ?: lines.getOrNull(i + 1)?.let { amounts(it).lastOrNull() }
+                if (a != null && a > 0) { total = a; if (low.contains("grand") || low.contains("due")) break }
+            }
+        }
+        if (total == 0.0) total = lines.flatMap { amounts(it) }.maxOrNull() ?: 0.0
+        val shop = lines.firstOrNull { l -> l.count { it.isLetter() } >= 3 && !Regex("(?i)receipt|welcome|thank|store #|^\\d").containsMatchIn(l) }?.take(40).orEmpty()
+        val all = text.lowercase()
+        val kind = when {
+            Regex("blick|michaels|jerry'?s|utrecht|hobby lobby|joann|artist ?& ?craftsman|cheap joe|plaza art|paint|canvas|brush|gesso|watercolor|acrylic|sketchbook").containsMatchIn(all) -> "materials"
+            Regex("\\bups\\b|fedex(?! office)|usps|postal|shipping|uline|postage").containsMatchIn(all) -> "shipping"
+            Regex("frame|framing|mat board|matboard").containsMatchIn(all) -> "framing"
+            Regex("print|fedex office|staples|copies|giclee|photo lab|mpix|bay photo").containsMatchIn(all) -> "print"
+            Regex("entry fee|call for|submission|jury fee").containsMatchIn(all) -> "fee"
+            else -> "other"
+        }
+        return Read(total, shop, kind)
+    }
+}
+
 /**
  * "Too good to be true?" for a message, invitation or offer. Artists starting out are targeted by a few
  * well-known schemes: the overpaying buyer, paid "features", pay-to-show dressed as an honor, and urgency.

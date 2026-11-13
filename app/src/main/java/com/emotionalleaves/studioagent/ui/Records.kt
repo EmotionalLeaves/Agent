@@ -163,8 +163,25 @@ fun Records(nav: NavController) {
             }
         }
         Expand("Add a cost") {
-            Choice("What kind", listOf("fee", "shipping", "print", "framing", "other"), kind, names = { mapOf("fee" to "Entry fee", "print" to "Printing")[it] ?: it.replaceFirstChar { c -> c.uppercase() } }) { kind = it }
-            Num("Amount, " + st.currency, amount) { amount = it }
+            // A receipt photographed and read on the phone: the total, the shop and the kind, filled in to check. The photo is kept with your backup.
+            var receiptNote by remember { mutableStateOf("") }
+            var filled by remember { mutableStateOf(0) }
+            val receiptFile = remember { File(File(ctx.filesDir, "receipts").apply { mkdirs() }, "receipt_${now()}.jpg") }
+            val snap = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+                if (ok) { receiptNote = "Reading the receipt…"; scope.io({ receiptNote = it }) {
+                    val r = com.emotionalleaves.studioagent.domain.Receipts.read(com.emotionalleaves.studioagent.media.Ocr.read(ctx, receiptFile.absolutePath))
+                    withContext(Dispatchers.Main) {
+                        if (r.total > 0) amount = r.total
+                        filled++
+                        kind = r.kind; note.value = listOf(r.shop, "receipt " + receiptFile.name).filter { it.isNotBlank() }.joinToString(", ")
+                        receiptNote = if (r.total > 0) "Read ${money(r.total)}" + (if (r.shop.isNotBlank()) " at ${r.shop}" else "") + ". Check it, then Add cost." else "The total could not be read. Type it in; the photo is kept."
+                    }
+                } }
+            }
+            OutlinedButton(onClick = { try { snap.launch(com.emotionalleaves.studioagent.sys.Share.uri(ctx, receiptFile)) } catch (e: Exception) { receiptNote = "No camera app found." } }) { Text("Photograph a receipt") }
+            if (receiptNote.isNotBlank()) Small(receiptNote)
+            Choice("What kind", listOf("materials", "fee", "shipping", "print", "framing", "other"), kind, names = { mapOf("fee" to "Entry fee", "print" to "Printing", "materials" to "Art supplies")[it] ?: it.replaceFirstChar { c -> c.uppercase() } }) { kind = it }
+            key(filled) { Num("Amount, " + st.currency, amount) { amount = it } }
             Field("What for", note)
             if (amount > 0) Button(onClick = { val l = Ledger(kind = kind, amount = -amount, date = now(), note = note.value.trim()); note.value = ""; amount = 0.0; scope.io { dao.put(l) } }) { Text("Add cost") }
         }
@@ -237,7 +254,7 @@ fun Records(nav: NavController) {
         ledger.take(40).forEach { l ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text((mapOf("fee" to "Entry fee", "sale" to "Sale", "commission" to "Commission", "shipping" to "Shipping", "print" to "Printing", "framing" to "Framing")[l.kind] ?: l.kind.replaceFirstChar { it.uppercase() }) +
+                    Text((mapOf("fee" to "Entry fee", "sale" to "Sale", "commission" to "Commission", "shipping" to "Shipping", "print" to "Printing", "framing" to "Framing", "materials" to "Art supplies")[l.kind] ?: l.kind.replaceFirstChar { it.uppercase() }) +
                         (if (l.note.isNotBlank()) ": ${l.note}" else ""))
                     Small(fmtDate(l.date))
                 }
@@ -260,7 +277,7 @@ fun Records(nav: NavController) {
         // The page a tax preparer asks for: money in and out by kind for the year, and the difference.
         if (thisYear.isNotEmpty()) OutlinedButton(onClick = {
             scope.io({ status = it }) {
-                val names = mapOf("sale" to "Sales", "commission" to "Commissions paid to venues", "fee" to "Entry fees", "print" to "Printing", "framing" to "Framing", "shipping" to "Shipping and delivery", "other" to "Other costs")
+                val names = mapOf("sale" to "Sales", "commission" to "Commissions paid to venues", "fee" to "Entry fees", "print" to "Printing", "framing" to "Framing", "shipping" to "Shipping and delivery", "materials" to "Art supplies and materials", "other" to "Other costs")
                 val byKind = thisYear.groupBy { it.kind }.mapValues { (_, l) -> l.sumOf { it.amount } }
                 val lines = byKind.entries.sortedByDescending { it.value }.joinToString("\n") { (k, v) -> (names[k] ?: k.replaceFirstChar { it.uppercase() }) + ": " + money(kotlin.math.abs(v)) + if (v < 0) " (cost)" else " (income)" }
                 val net = thisYear.sumOf { it.amount }
