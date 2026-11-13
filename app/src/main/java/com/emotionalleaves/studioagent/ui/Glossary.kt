@@ -13,6 +13,7 @@ val glossary: List<Pair<String, String>> = listOf(
     "Artist statement" to "A short piece of writing about what your work is and why you make it, in your own plain words. Calls ask for 100 to 300 words.",
     "Body of work" to "A group of pieces that clearly belong together. Shows and many calls want one, not single pieces.",
     "Call for art (open call)" to "An invitation to send work to be considered for a show, a prize, a residency or a publication.",
+    "Color temperature (light)" to "How warm or cool a light is, in kelvin. Ordinary home bulbs are warm (about 2700K), so colors mixed under them look cooler and duller in daylight. A daylight bulb, 5000K with CRI 90 or more, keeps evening colors true.",
     "Commission (gallery)" to "The share of a sale the venue keeps, often 30 to 50 percent at galleries and less at libraries and cafes. Ask before you agree.",
     "Commission (a piece)" to "A piece made to order for someone, usually with half paid up front.",
     "Condition report" to "Photos and notes of a piece's condition before it leaves and when it returns, so damage can be shown.",

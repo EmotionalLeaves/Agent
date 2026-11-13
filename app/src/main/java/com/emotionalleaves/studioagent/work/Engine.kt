@@ -1630,6 +1630,13 @@ object Engine {
                 return NextStep("Three no's in a row", "Every working artist has runs like this; most work is turned down many times first. One change helps most: ask three people which piece is strongest, check the photos, or try a few local calls before the bigger ones.", "feedback")
             }
         }
+        // Painting after work means painting by lamplight: said once, on the day it first matters, with the fix.
+        if ((st.lightTold.isBlank() || st.lightTold == today.toString()) && Regex("paint|acrylic|oil|watercolo|gouache|pastel|colou?r", RegexOption.IGNORE_CASE).containsMatchIn(st.mediums) &&
+            dao.sessionsNow().count { it.end > it.start && java.time.Instant.ofEpochMilli(it.start).atZone(zone).hour >= 17 } >= 3) {
+            if (st.lightTold.isBlank() && !st.supplies.contains("daylight bulb", true)) st.supplies = com.emotionalleaves.studioagent.ui.suppliesText(com.emotionalleaves.studioagent.ui.supplies(st.supplies) + ("A daylight bulb (5000K, CRI 90+) for evenings" to true))
+            st.lightTold = today.toString()
+            return NextStep("Your evening light", "Home bulbs are warm, so colors mixed at night look cooler and duller by day. A daylight bulb (5000K, CRI 90 or more) over your table fixes it; it is on your supplies list.", "supplies")
+        }
         // Once a year, the day you started: what has happened since, shown all that day.
         dao.sessionsNow().filter { it.end > it.start }.minByOrNull { it.start }?.let { first ->
             val years = com.emotionalleaves.studioagent.domain.Anniversary.years(date(first.start), today)

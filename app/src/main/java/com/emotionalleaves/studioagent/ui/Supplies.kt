@@ -61,7 +61,7 @@ fun SuppliesScreen(nav: NavController) {
                 Toggle(name + (if (isLow) " (low)" else ""), isLow) { on -> st.supplies = suppliesText(list.mapIndexed { j, p -> if (j == i) p.first to on else p }) }
             }
         }
-        if (list.isEmpty()) TextButton(onClick = { st.supplies = suppliesText(listOf("Paper or canvas", "White paint", "Your main colors", "Brushes", "Pencils and erasers", "Fixative or varnish", "Tape").map { it to false }) }) { Text("Start from a common list") }
+        if (list.isEmpty()) TextButton(onClick = { st.supplies = suppliesText(listOf("Paper or canvas", "White paint", "Your main colors", "Brushes", "Pencils and erasers", "Fixative or varnish", "Tape", "A daylight bulb (5000K, CRI 90+) for evenings").map { it to false }) }) { Text("Start from a common list") }
         val add = rememberSaveable { mutableStateOf("") }
         Field("Add a supply", add)
         if (add.value.isNotBlank()) OutlinedButton(onClick = { st.supplies = suppliesText(list + (add.value.trim() to false)); add.value = "" }) { Text("Add") }
