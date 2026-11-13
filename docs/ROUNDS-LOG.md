@@ -476,3 +476,4 @@ One real change per round. Pushed and built every ten rounds.
 470. Statements and bios get one more plain check: a sentence over 28 words is named by its first words, to split in two, since long sentences are where jurors drift off.
 471. Session history opens with the last eight weeks of making as bars, with a line at the hours you set, so steady progress is visible at a glance; a week under the line is said to still count.
 472. A show of your own has "The opening night": a short list (what the venue allows, drinks and cups, something small to eat, the sign-up sheet by the door, price list and red dots, a friend to greet people, photos of the room), each with a plain note, so nothing is remembered at the last minute.
+473. For those who want it (a switch under Pictures and papers): a faint "© your name" in the corner of the picture itself on everything you post, so it travels with every copy.

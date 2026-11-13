@@ -15,6 +15,8 @@ import kotlin.math.min
 object Post {
     const val W = 1080
     const val H = 1350
+    /** Set from your settings: a faint name on the picture itself in posts. */
+    @Volatile var watermark = false
 
     fun draw(imagePath: String, credit: String = "", outW: Int = W, outH: Int = H): Bitmap? {
         val art = ImageTools.decode(imagePath, 2000) ?: return null
@@ -36,6 +38,11 @@ object Post {
         val shadow = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x22000000 }
         c.drawRect(RectF(left + 6, top + 10, left + w + 6, top + h + 10), shadow)
         c.drawBitmap(art, null, RectF(left, top, left + w, top + h), Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
+        // A faint name in the corner of the picture itself, for those who want it: it travels with every copy.
+        if (watermark && credit.isNotBlank()) {
+            val wp = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x66FFFFFF; textSize = maxOf(18f, w * 0.03f); textAlign = Paint.Align.RIGHT; setShadowLayer(3f, 0f, 0f, 0x55000000) }
+            c.drawText("© " + credit.take(40), left + w - w * 0.02f, top + h - h * 0.025f, wp)
+        }
         if (credit.isNotBlank()) {
             val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF6B6A66.toInt(); textSize = outW * 0.024f; textAlign = Paint.Align.CENTER }
             c.drawText(credit.take(70), outW / 2f, outH - margin * 0.6f, p)

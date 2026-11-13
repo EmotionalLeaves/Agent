@@ -487,6 +487,10 @@ class PartsTest {
         // A wide piece is shown whole: red reaches near both sides, the corners stay the quiet field.
         assertTrue(android.graphics.Color.red(b.getPixel(100, 675)) > 150 && android.graphics.Color.green(b.getPixel(100, 675)) < 80)
         assertTrue(android.graphics.Color.green(b.getPixel(10, 10)) > 200)
+        // With the watermark on, the corner of the picture carries the name; the corners of the field stay clean.
+        com.emotionalleaves.studioagent.media.Post.watermark = true
+        val wm = try { com.emotionalleaves.studioagent.media.Post.draw(art, "Jade Leaves") } finally { com.emotionalleaves.studioagent.media.Post.watermark = false }
+        assertTrue(android.graphics.Color.green(wm.getPixel(10, 10)) > 200)
         val words = com.emotionalleaves.studioagent.media.Post.caption("Walk-in Cooler", 2026, "Gouache on paper", "9 × 12 in", "Painted at six in the morning before the breakfast rush. More later.", "Austin, TX", available = true)
         assertTrue(words.startsWith("Walk-in Cooler (2026)"))
         assertTrue(words.contains("Painted at six in the morning before the breakfast rush."))

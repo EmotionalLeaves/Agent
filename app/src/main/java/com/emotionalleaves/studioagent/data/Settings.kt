@@ -216,6 +216,8 @@ class Settings(ctx: Context) {
     /** This month's one goal, in your words, and the month it is for ("2027-03"). */
     var monthGoal by S("monthGoal")
     var monthGoalMonth by S("monthGoalMonth")
+    /** A faint "© name" on the picture itself in posts. */
+    var watermark by B("watermark", false)
     /** The order works appear in your portfolio, PDF and web page alike: ids, strongest first. */
     var portfolioOrder by S("portfolioOrder")
     /** The week the Sunday look ahead was last sent. */

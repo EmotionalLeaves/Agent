@@ -247,6 +247,7 @@ fun Works(nav: NavController) {
                     val postable = works.filter { it.seriesId == s.id && it.imagePath.isNotBlank() && it.status !in setOf("idea", "in_progress") }
                     if (postable.size >= 2) TextButton(onClick = { scope.io {
                         val dir = File(ImageTools.exportDir(ctx), "series_post").apply { deleteRecursively(); mkdirs() }
+                        com.emotionalleaves.studioagent.media.Post.watermark = st.watermark
                         val files = postable.take(10).mapIndexedNotNull { i, w -> com.emotionalleaves.studioagent.media.Post.render(w.imagePath, st.fullName, File(dir, "${i + 1}_" + w.title.filter { it.isLetterOrDigit() }.take(20) + ".jpg")) }
                         val words = listOf(s.name, s.notes.trim(), postable.take(10).mapIndexed { i, w -> "${i + 1}. " + w.title.ifBlank { "Untitled" } + (if (w.year > 0) " (${w.year})" else "") }.joinToString("\n"),
                             com.emotionalleaves.studioagent.media.Post.tags(postable.first().medium, st.city)).filter { it.isNotBlank() }.joinToString("\n\n")
@@ -588,6 +589,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             } }) { Text("Post how it was made") }
         }
         Expand("Pictures and papers") {
+        Toggle("Put a faint © and my name on pictures I post", st.watermark) { st.watermark = it }
         Note("More pictures of this piece: a detail, the back, the piece on a wall. Kept with it and backed up.")
         w.extraImages.split("|").filter { it.isNotBlank() }.let { extras ->
             extras.forEach { path ->
@@ -622,6 +624,7 @@ fun WorkDetail(nav: NavController, id: Long) {
             OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, listOf(w))) }) { Text("Ask a print lab for a quote") }
             OutlinedButton(enabled = w.imagePath.isNotBlank(), onClick = {
                 scope.io({ status = it }) {
+                    com.emotionalleaves.studioagent.media.Post.watermark = st.watermark
                     val f = com.emotionalleaves.studioagent.media.Post.render(w.imagePath, st.fullName, File(ImageTools.exportDir(ctx), Papers.docName(st, "Post_" + w.title.filter { it.isLetterOrDigit() }.take(24), "jpg")))
                         ?: throw Exception("The picture of this piece could not be opened.")
                     val words = com.emotionalleaves.studioagent.media.Post.caption(w.title, w.year, Papers.medium(w), if (w.widthIn > 0) Texts.dims(w.widthIn, w.heightIn, w.depthIn) else "", w.notes, st.city,
