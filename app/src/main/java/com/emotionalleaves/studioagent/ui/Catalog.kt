@@ -695,6 +695,18 @@ fun WorkDetail(nav: NavController, id: Long) {
             }) { Text("Export pictures") }
             OutlinedButton(onClick = { scope.io({ status = it }) { val f = Papers.certificate(ctx, st, w, (w.editionUsed + 1).coerceAtLeast(1)); withContext(Dispatchers.Main) { Share.view(ctx, f, "application/pdf") } } }) { Text("Certificate of authenticity") }
             OutlinedButton(onClick = { Share.text(ctx, Papers.printOrder(st, listOf(w))) }) { Text("Ask a print lab for a quote") }
+            // Many labs ask for a TIFF: every pixel as it is, with the print size written in.
+            if (w.format == "print" && w.imagePath.isNotBlank()) OutlinedButton(onClick = {
+                status = "Making the TIFF…"
+                scope.io({ status = it }) {
+                    val src = w.originalPath.takeIf { it.isNotBlank() && File(it).exists() } ?: w.imagePath
+                    val b = try { ImageTools.decode(src, 9000) } catch (e: OutOfMemoryError) { ImageTools.decode(src, 4500) } ?: throw Exception("The picture could not be opened.")
+                    val dpi = if (w.widthIn > 0) (maxOf(b.width, b.height) / maxOf(w.widthIn, w.heightIn)).toInt().coerceIn(72, 1200) else 300
+                    val f = com.emotionalleaves.studioagent.media.Tiff.write(b, File(ImageTools.exportDir(ctx), Papers.docName(st, w.title.filter { it.isLetterOrDigit() }.take(24).ifBlank { "Piece" }, "tif")), dpi)
+                    status = "TIFF ready: ${b.width} × ${b.height} px at $dpi ppi" + (if (dpi < 240) ". Under 240 ppi may look soft at this size; ask the lab." else ".")
+                    withContext(Dispatchers.Main) { Share.files(ctx, listOf(f), "image/tiff") }
+                }
+            }) { Text("A TIFF for the print lab") }
             if (st.socialOn) OutlinedButton(enabled = w.imagePath.isNotBlank(), onClick = {
                 scope.io({ status = it }) {
                     com.emotionalleaves.studioagent.media.Post.watermark = st.watermark

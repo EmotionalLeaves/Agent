@@ -821,4 +821,16 @@ class PartsTest {
         assertTrue(E.toolAnswer("where can i teach a class")!!.endsWith("GO: teach"))
         assertEquals(null, E.toolAnswer("how do i"))
     }
+
+    @Test fun aTiffForThePrintLab() {
+        ctx
+        val h = com.emotionalleaves.studioagent.media.Tiff.header(4, 3, 300)
+        assertEquals('I'.code.toByte(), h[0]); assertEquals(42.toByte(), h[2])
+        val bmp = android.graphics.Bitmap.createBitmap(4, 3, android.graphics.Bitmap.Config.ARGB_8888)
+        bmp.eraseColor(0xFF336699.toInt())
+        val f = com.emotionalleaves.studioagent.media.Tiff.write(bmp, File.createTempFile("t", ".tif"))
+        assertEquals(h.size + 4L * 3 * 3, f.length())
+        val all = f.readBytes()
+        assertEquals(0x33.toByte(), all[h.size]); assertEquals(0x66.toByte(), all[h.size + 1]); assertEquals(0x99.toByte(), all[h.size + 2])
+    }
 }
