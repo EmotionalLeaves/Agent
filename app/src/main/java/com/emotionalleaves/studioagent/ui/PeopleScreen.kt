@@ -1,6 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -29,8 +30,9 @@ fun PeopleScreen(nav: NavController) {
         Intro("people", "Other artists pass on calls, say honestly which piece is strongest, and make starting easier just by working in the same room. One drop-in a month is plenty.")
         People.places.forEach { p ->
             Panel {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = p.key in been, onCheckedChange = { on -> st.peopleTried = (if (on) been + p.key else been - p.key).joinToString(",") })
+                // The whole line is the switch, so a screen reader says what is being ticked.
+                Row(androidx.compose.ui.Modifier.toggleable(p.key in been, role = androidx.compose.ui.semantics.Role.Checkbox) { on -> st.peopleTried = (if (on) been + p.key else been - p.key).joinToString(",") }, verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = p.key in been, onCheckedChange = null)
                     Text(p.name + if (p.key in been) " (been)" else "", fontWeight = FontWeight.SemiBold)
                 }
                 Text(p.what, style = MaterialTheme.typography.bodyMedium)
