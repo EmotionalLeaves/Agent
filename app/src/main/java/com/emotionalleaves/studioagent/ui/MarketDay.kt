@@ -116,6 +116,13 @@ fun MarketDay(nav: NavController) {
                 val f = com.emotionalleaves.studioagent.work.Papers.postcards(ctx, st, cards.take(8))
                 withContext(Dispatchers.Main) { com.emotionalleaves.studioagent.sys.Share.view(ctx, f, "application/pdf") }
             } }) { Text("Postcards of your pieces to print") }
+            // A sign for the table, with a code to pay by (a PayPal.me, Venmo or Cash App link of yours) if you add one.
+            var pay by remember { mutableStateOf(st.payLink) }
+            Field("Your payment link, for a code to scan (optional)", pay, { pay = it; st.payLink = it.trim() })
+            OutlinedButton(onClick = { scope.io {
+                val f = com.emotionalleaves.studioagent.work.Papers.tableSign(ctx, st, st.payLink)
+                withContext(Dispatchers.Main) { com.emotionalleaves.studioagent.sys.Share.view(ctx, f, "application/pdf") }
+            } }) { Text("A sign for the table") }
             Small("A mix sells best: something under 10, something under 30, and a few originals. Price everything, in plain view.")
         }
         Field("Where (for the records)", where, { where = it })

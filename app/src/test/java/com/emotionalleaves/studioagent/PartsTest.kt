@@ -844,4 +844,14 @@ class PartsTest {
         assertEquals(34, android.graphics.Color.red(m.getPixel(0, 0)))
         assertEquals(244, android.graphics.Color.red(m.getPixel(1, 0)))
     }
+
+    @Test fun aSignForTheMarketTable() {
+        ctx
+        G.settings.firstName = "Jade"; G.settings.lastName = "Leaves"; G.settings.website = "jadeleaves.art"
+        val docs = File("build/screens/docs").apply { mkdirs() }
+        com.emotionalleaves.studioagent.media.Pdf.previewDir = docs
+        val f = try { com.emotionalleaves.studioagent.work.Papers.tableSign(ctx, G.settings, "paypal.me/jadeleaves") } finally { com.emotionalleaves.studioagent.media.Pdf.previewDir = null }
+        assertEquals("Leaves_Table_sign.pdf", f.name)
+        assertTrue(File(docs, "Leaves_Table_sign_p1.png").length() > 1000)
+    }
 }

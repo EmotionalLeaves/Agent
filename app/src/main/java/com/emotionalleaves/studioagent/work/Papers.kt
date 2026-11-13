@@ -272,6 +272,23 @@ object Papers {
     }
 
     /**
+     * A sign for the market table: your name big enough to read from the aisle, what is for sale, how people can pay,
+     * and codes to scan for paying (your payment link) and for your website.
+     */
+    fun tableSign(ctx: Context, s: Settings, payLink: String): File {
+        val pdf = pdf(ctx, s, "", margin = 54, footer = false)
+        pdf.coverPage = true; pdf.newPage()
+        pdf.space(70f)
+        pdf.text(name(s), 46f, gap = 14f, face = Pdf.Face.DISPLAY, center = true)
+        pdf.text("Original art, prints and cards", 20f, gap = 40f, grey = true, center = true)
+        pdf.text("Cash or card" + (if (payLink.isNotBlank()) ", or scan to pay" else ""), 22f, gap = 24f, center = true)
+        fun qr(url: String) = com.emotionalleaves.studioagent.media.Qr.bitmap(if (url.startsWith("http")) url else "https://$url", 400)
+        if (payLink.isNotBlank()) { pdf.bitmap(qr(payLink.trim()), 170f); pdf.text("Scan to pay", 14f, gap = 30f, center = true) }
+        if (s.website.isNotBlank()) { pdf.bitmap(qr(s.website.trim()), 110f); pdf.text("More work: " + s.website, 13f, center = true, grey = true) }
+        return pdf.save(out(ctx, docName(s, "Table_sign")))
+    }
+
+    /**
      * Postcards of your pieces, four to a sheet: the pictures on one page and, on the next, each card's back in the
      * mirrored spot (title, size, your name, website and a code to scan), so a double-sided print flipped on the long
      * edge lines up. Cut on the marks. For a market table, an opening, or slipping in with a sale.

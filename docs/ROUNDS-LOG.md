@@ -607,3 +607,4 @@ One real change per round. Pushed and built every ten rounds.
 600. A test that the year's entries are counted and answered on the phone (sent, yes, no, still to hear), drafts left out. Six hundred rounds.
 601. Can't choose? With three or more ideas parked, Ideas offers "Pick one for me": one idea picked at random, with "Another" and "Never mind". Choosing is often the hardest part.
 602. The Guide has an optional step, "Make starting easier": a friend to text, a studio playlist, and your blocker or focus app (Honest Lockout, for one), each shown on the session screen once set. It ticks itself when any one is set.
+603. A sign for the market table, from Market day: your name big enough to read from the aisle, "Original art, prints and cards", how people can pay, a code to scan to pay (from a PayPal.me, Venmo or Cash App link of yours, if you add one) and a code for your website.
