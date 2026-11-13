@@ -345,7 +345,7 @@ fun CallDetail(nav: NavController, id: Long) {
             }
             Hair()
             Row { Tag(fitLabel(o.fitScore), strong = o.fitScore >= 60) }
-            o.fitReasons.lines().filter { it.isNotBlank() }.forEach { Text(it) }
+            o.fitReasons.lines().filter { it.isNotBlank() && !it.startsWith("Free to enter") && (!it.startsWith("Fee ") || it.startsWith("Fee not stated")) }.forEach { Text(it) }
             if (why.isNotEmpty()) Text("Held back by your rules: " + why.joinToString("; "), color = MaterialTheme.colorScheme.secondary)
             Flags(o)
             // The signs of the usual schemes, read from the call's own words (paid features, awards that cost, urgency).
