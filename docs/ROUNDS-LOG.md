@@ -613,3 +613,4 @@ One real change per round. Pushed and built every ten rounds.
 606. Closing a market day names what sold best ("Sold best: small prints (7). Bring more of those next time.") alongside the day's total.
 607. On a break from work. Your week takes a date ("On a break from work? Until when"): until then every day is planned as a free day (winter break, the summer), Today does not treat you as at work, and a line suggests a break is a good time for more studio hours, if you want them. "The break is over" ends it early.
 608. One answer to "is today a work day?" everywhere: the quiet hours for notifications and the entry steps planned in 15-minute evenings now follow days off, extra shifts and a break from work too, not only the usual work days.
+609. A test for which days count as work days: the usual ones, less this week's days off, plus an extra shift, all of them off during a break, and last week's settings ignored.

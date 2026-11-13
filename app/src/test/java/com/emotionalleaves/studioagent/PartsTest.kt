@@ -854,4 +854,19 @@ class PartsTest {
         assertEquals("Leaves_Table_sign.pdf", f.name)
         assertTrue(File(docs, "Leaves_Table_sign_p1.png").length() > 1000)
     }
+
+    @Test fun workDaysFollowBreaksShiftsAndDaysOff() {
+        ctx
+        val s = G.settings; val E = com.emotionalleaves.studioagent.work.Engine
+        s.workDays = "1,2,3,4,5"; s.offUntil = ""; s.offThisWeek = ""; s.extraThisWeek = ""
+        assertEquals(setOf(1, 2, 3, 4, 5), E.workDaysNow())
+        s.offThisWeek = E.weekId() + ":2"; s.extraThisWeek = E.weekId() + ":6"
+        assertEquals(setOf(1, 3, 4, 5, 6), E.workDaysNow())
+        s.offUntil = java.time.LocalDate.now().plusDays(10).toString()
+        assertEquals(setOf(6), E.workDaysNow())
+        s.offUntil = java.time.LocalDate.now().minusDays(1).toString()
+        assertEquals(setOf(1, 3, 4, 5, 6), E.workDaysNow())
+        s.offThisWeek = "2000-01-03:1"
+        assertEquals(setOf(1, 2, 3, 4, 5, 6), E.workDaysNow())
+    }
 }
