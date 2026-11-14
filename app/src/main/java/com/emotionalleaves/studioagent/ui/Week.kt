@@ -73,6 +73,15 @@ fun WeekScreen(nav: NavController) {
 
     Screen("Your week", nav) {
         Intro("week", "These are the times the app books for making work. They are a plan, not a test: skip one and nothing is marked missed. Change anything here to fit your real life.")
+        // The week in one number, over a field in your color, with the next studio time beneath it.
+        val weekSessions by G.dao.sessions().collectAsState(emptyList())
+        val hrs = Engine.hoursThisWeek(weekSessions)
+        val nextStudio = events.firstOrNull { it.type == "studio" && it.date > now() }
+        Banner("%.1f of %d hours".format(hrs, st.weeklyHours).replace(".0 of", " of"), nextStudio?.let { "Next studio time: " + fmtDate(it.date) + ", " + clock(it.date) } ?: "No studio time planned yet.",
+            key = 71L, height = 160, extra = {
+                androidx.compose.material3.LinearProgressIndicator(progress = { if (st.weeklyHours > 0) (hrs / st.weeklyHours).toFloat().coerceIn(0f, 1f) else 0f },
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(6.dp).clip(RoundedCornerShape(3.dp)), color = androidx.compose.ui.graphics.Color.White, trackColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.25f))
+            })
         val opps by dao.opps().collectAsState(emptyList())
         MonthView(events, nav, opps.filter { it.status in setOf("new", "later") && it.deadline > now() && it.fitScore >= 50 })
         androidx.compose.material3.TextButton(onClick = { nav.navigate("year") }) { Text("The year ahead") }

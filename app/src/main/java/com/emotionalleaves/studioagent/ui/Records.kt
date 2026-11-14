@@ -97,6 +97,12 @@ fun Records(nav: NavController) {
 
     Screen("Records", nav) {
         Intro("records", "The paperwork drawer: what is left to do for shows you got into, your own to-dos, money in and out, a report once a quarter, and proof of everything sent. Nothing here needs checking daily.")
+        // The year so far, in one line, on the drawer's front.
+        val yNow = java.time.LocalDate.now().year
+        val inYear = ledger.filter { Engine.date(it.date).year == yNow }
+        val earned = inYear.filter { it.amount > 0 }.sumOf { it.amount }; val spent = -inYear.filter { it.amount < 0 }.sumOf { it.amount }
+        val openTodo = events.count { it.type == "task" && !it.done }
+        Banner(if (earned > 0) money(earned) + " earned in $yNow" else "Nothing earned yet in $yNow", "Spent " + money(spent) + ". " + (if (openTodo > 0) Texts.count(openTodo, "to-do") + " open." else "No to-dos open."), key = 41L, height = 170)
         // The year so far, counted: what a whole year of small sessions adds up to.
         val sessionsAll by dao.sessions().collectAsState(emptyList())
         val people by dao.contacts().collectAsState(emptyList())

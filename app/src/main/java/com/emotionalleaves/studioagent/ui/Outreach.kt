@@ -98,6 +98,10 @@ fun Outreach(nav: NavController) {
     var busy by remember { mutableStateOf(false) }
     Screen("People and venues", nav) {
         Intro("people", "Venues and people worth knowing, and what has passed between you. The app drafts short, personal emails and remembers to follow up once. Nothing is sent without your yes.")
+        // Who you know, at a glance: venues, people on your list, openings this month.
+        val venuesN = contacts.count { it.kind != "subscriber" }; val listN = contacts.count { it.kind == "subscriber" }
+        Banner(if (venuesN == 0) "Your people and places" else Texts.count(venuesN, "venue") + (if (listN > 0) ", " + Texts.count(listN, "person", "people") + " on your list" else ""),
+            "Openings to go to, emails written for you, and one follow-up, never more.", key = 51L, height = 170)
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Small("At level $level")
             Text(when (level) {

@@ -68,6 +68,7 @@ fun ToolsScreen(nav: NavController) {
     var open by rememberSaveable { mutableStateOf("") }
     Screen("Everything the app can do", nav) {
         Intro("tools", "Every tool, folded into five groups by what you are trying to get done. Open one group at a time. Today still shows the one thing that matters now.")
+        Banner("Everything, in five groups", Texts.count(toolGroups.sumOf { it.second.size }, "tool") + ". Open one group at a time.", key = 61L, height = 150)
         val all = toolGroups.flatMap { it.second }
         val recent = if (tick >= 0) st.recentTools.split(",").mapNotNull { r -> all.firstOrNull { it.third == r } } else emptyList()
         fun go(route: String) { st.recentTools = (listOf(route) + st.recentTools.split(",").filter { it.isNotBlank() && it != route }).take(3).joinToString(","); nav.navigate(route) }

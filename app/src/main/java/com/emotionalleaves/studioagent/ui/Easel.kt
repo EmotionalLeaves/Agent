@@ -130,3 +130,30 @@ fun ColorField(base: Color, modifier: Modifier = Modifier, key: Long = -1L, shif
         repeat(900) { drawCircle(Color.White.copy(alpha = 0.035f), 1.2f, Offset(r.nextFloat() * size.width, r.nextFloat() * size.height)) }
     }
 }
+
+/**
+ * The opening of a screen in the new face: a painted field (or a picture) with the screen's big words in white over it,
+ * and room underneath for one line, a number or a bar. Every main screen starts this way, so they belong together.
+ */
+@Composable
+fun Banner(
+    title: String, sub: String = "", key: Long = 0L, image: String? = null, height: Int = 190,
+    big: String? = null, bigLabel: String = "", onClick: (() -> Unit)? = null, extra: @Composable () -> Unit = {}
+) {
+    val cs = MaterialTheme.colorScheme
+    Box(Modifier.fillMaxWidth().height(height.dp).clip(RoundedCornerShape(26.dp)).let { if (onClick != null) it.clickable(role = Role.Button) { onClick() } else it }) {
+        if (image != null && image.isNotBlank() && java.io.File(image).exists()) PathImage(image, Modifier.matchParentSize(), 1000, ContentScale.Crop)
+        else ColorField(cs.primary, Modifier.matchParentSize(), key = key, shift = ((key * 37) % 70 - 35).toFloat())
+        Box(Modifier.matchParentSize().background(Brush.verticalGradient(0f to Color.Transparent, 0.35f to Color.Black.copy(alpha = 0.08f), 1f to Color.Black.copy(alpha = 0.78f))))
+        if (big != null) Column(Modifier.align(Alignment.TopEnd).padding(14.dp).clip(RoundedCornerShape(14.dp)).background(Color.Black.copy(alpha = 0.32f)).padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(big, style = MaterialTheme.typography.headlineMedium, color = Color.White)
+            if (bigLabel.isNotBlank()) Text(bigLabel, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.85f))
+        }
+        Column(Modifier.align(Alignment.BottomStart).padding(20.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, style = MaterialTheme.typography.headlineLarge, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            if (sub.isNotBlank()) Text(sub, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.86f), maxLines = 3, overflow = TextOverflow.Ellipsis)
+            extra()
+        }
+    }
+}

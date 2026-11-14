@@ -679,3 +679,4 @@ One real change per round. Pushed and built every ten rounds.
 672. A call's own page opens with its poster, the same one it wears in the list, days left in the corner.
 673. Foundations opens on the week you are on, big, over a field in your color ("Week 3 of 24: Edges"), with the whole course as a white bar along its foot, and Practice the next one full width beneath.
 674. The tour, the first thing anyone sees, gets the new face: each page's picture is held on a card in front of its own painted field in the app's color.
+675. A new face, part seven: every main screen opens on a painted banner with its one number in big white type. Your week: "1.5 of 4 hours" with a white bar and the next studio time. Records: what you earned this year, what you spent, how many to-dos are open. People and venues: how many venues and people on your list. Market day: the day's total, big, the number that matters at a table. Everything the app can do: thirty tools in five groups.
