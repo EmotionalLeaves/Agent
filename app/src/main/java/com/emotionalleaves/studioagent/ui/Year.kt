@@ -19,6 +19,9 @@ fun YearScreen(nav: NavController) {
     val pace by produceState(0.0) { value = withContext(Dispatchers.IO) { Engine.piecesPerWeek() } }
     Screen("The year ahead", nav) {
         Intro("year", "A long view, to see where steady work leads. Nothing here is a deadline: it moves with your real pace, and a slow month costs nothing.")
+        // The long view, big: how many pieces a year of steady work adds up to at your pace.
+        val yearPieces = Math.round(pace * 52).toInt()
+        Banner(if (pace > 0) "About $yearPieces pieces by this time next year" else "Twelve months, at your pace", "A plan that moves with you. A slow month costs nothing.", key = 91L, height = 160)
         Small(when {
             pace <= 0 -> "Once a piece is finished with its sessions logged, the app counts how many you will have by each month."
             pace >= 1.5 -> "At your recent pace, about ${"%.0f".format(pace)} pieces a week."

@@ -1,5 +1,18 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.selectable
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -167,26 +180,29 @@ fun Root(incoming: MutableState<Incoming?>) {
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             // Sessions, setup and the saved screen get the whole phone: nothing else to tap.
-            if (route.substringBefore('/') !in setOf("session", "done", "crop", "share", "tour")) Column {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                NavigationBar(containerColor = MaterialTheme.colorScheme.background, tonalElevation = 0.dp) {
-                    tabs.forEach { (r, label, icon) ->
-                        val on = tabFor(route, tabs.map { it.first }) == r
-                        NavigationBarItem(
-                            selected = on,
-                            onClick = { nav.navigate(r) { popUpTo("home"); launchSingleTop = true } },
-                            icon = { Icon(icon, null) }, label = {
+            if (route.substringBefore('/') !in setOf("session", "done", "crop", "share", "tour")) {
+                // A floating bar of ink with the tab you are on lit in your own color: always four, always labelled.
+                val cs = MaterialTheme.colorScheme
+                val dark = isDark()
+                val bar = if (dark) cs.surfaceContainerHigh else cs.inverseSurface
+                val pill = if (dark) cs.primary else cs.inversePrimary
+                val onPill = if (dark) cs.onPrimary else cs.inverseSurface
+                val idle = if (dark) cs.onSurfaceVariant else cs.inverseOnSurface.copy(alpha = 0.72f)
+                Box(Modifier.fillMaxWidth().background(cs.background).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 10.dp)) {
+                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(30.dp)).background(bar).padding(6.dp).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        tabs.forEach { (r, label, icon) ->
+                            val on = tabFor(route, tabs.map { it.first }) == r
+                            val w by androidx.compose.animation.core.animateFloatAsState(if (on) 1.35f else 1f, tween(220), label = "tab")
+                            Column(Modifier.weight(w).clip(RoundedCornerShape(24.dp)).background(if (on) pill else Color.Transparent)
+                                .selectable(selected = on, role = Role.Tab) { nav.navigate(r) { popUpTo("home"); launchSingleTop = true } }
+                                .padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Icon(icon, null, Modifier.size(22.dp), tint = if (on) onPill else idle)
                                 // Tab names grow with the phone's text size, but only so far, so they never break mid-word.
                                 val fs = androidx.compose.ui.platform.LocalDensity.current.fontScale
-                                Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
+                                Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, color = if (on) onPill else idle,
                                     fontSize = androidx.compose.ui.unit.TextUnit(13f * minOf(fs, 1.3f) / fs, androidx.compose.ui.unit.TextUnitType.Sp), maxLines = 1, softWrap = false)
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary, selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant, unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
+                            }
+                        }
                     }
                 }
             }

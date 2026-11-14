@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.selection.toggleable
@@ -845,6 +846,10 @@ fun IdeasBody(nav: NavController) {
     val ideas by dao.ideas().collectAsState(emptyList())
     val text = rememberSaveable { mutableStateOf("") }
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        val parkedN = ideas.count { !it.done }
+        // The board's front: how many are waiting, on a field in your color, with the newest picture if there is one.
+        Banner(if (parkedN == 0) "A place to park ideas" else "Parked, not promised", if (parkedN == 0) "Write it down, let it go, get back to work." else "Look through them when a piece is done and you want the next one.",
+            key = 81L, image = ideas.firstOrNull { !it.done && it.photoPath.isNotBlank() }?.photoPath, height = 160, big = if (parkedN > 0) "$parkedN" else null, bigLabel = if (parkedN == 1) "idea" else "ideas")
         Field("New idea", text, lines = 2, mic = true)
         if (text.value.isNotBlank()) Button(onClick = { val t = text.value.trim(); text.value = ""; scope.io { dao.put(Idea(text = t, createdAt = now())) } }) { Text("Park it") }
         // A picture that sparked it (a screenshot, a photo of a wall, a color) parks the same way, with any words typed above.
@@ -889,8 +894,11 @@ fun IdeasBody(nav: NavController) {
         open.chunked(2).forEach { pair ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 pair.forEach { i ->
-                    Box(Modifier.weight(1f)) {
-                        Column(Modifier.fillMaxWidth().padding(top = 6.dp).clip(RoundedCornerShape(3.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(start = 14.dp, end = 14.dp, top = 18.dp, bottom = 6.dp),
+                    // Each sheet hangs a little crooked, as paper on a board does, tinted a near neighbor of your color.
+                    val tilt = ((i.id * 7919) % 5 - 2) * 0.6f
+                    val tint = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f + ((i.id * 31) % 4) * 0.08f)
+                    Box(Modifier.weight(1f).graphicsLayer { rotationZ = tilt }) {
+                        Column(Modifier.fillMaxWidth().padding(top = 6.dp).clip(RoundedCornerShape(3.dp)).background(MaterialTheme.colorScheme.surfaceContainerLowest).background(tint).padding(start = 14.dp, end = 14.dp, top = 18.dp, bottom = 6.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             if (i.photoPath.isNotBlank()) PathImage(i.photoPath, Modifier.fillMaxWidth().height(110.dp), 400, ContentScale.Crop)
                             Text(i.text.ifBlank { "(picture)" }, maxLines = 6)

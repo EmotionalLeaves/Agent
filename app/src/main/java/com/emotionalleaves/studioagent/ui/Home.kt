@@ -301,30 +301,36 @@ fun Home(nav: NavController) {
             // The week as seven marks: filled for a day you made something, a ring for a block still ahead.
             val hours = Engine.hoursThisWeek(sessions)
             val cs = MaterialTheme.colorScheme
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(cs.surfaceContainerLowest).clickable { nav.navigate("week") }.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text("Your week", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-                    Text("%.1f of %d hours".format(hours, st.weeklyHours), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Open your week", Modifier.padding(start = 4.dp).size(20.dp), tint = cs.outline)
-                }
-                val monday = today.with(java.time.DayOfWeek.MONDAY)
-                Row(Modifier.fillMaxWidth()) {
-                    (0..6).forEach { i ->
-                        val day = monday.plusDays(i.toLong())
-                        val worked = sessions.any { it.end > it.start && Engine.date(it.start) == day }
-                        val planned = events.any { it.type == "studio" && it.date > now() && Engine.date(it.date) == day }
-                        Column(Modifier.weight(1f).semantics(mergeDescendants = true) { contentDescription = day.dayOfWeek.toString().lowercase() + (if (worked) ", worked" else if (planned) ", planned" else "") },
-                            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("MTWTFSS"[i].toString(), style = MaterialTheme.typography.labelMedium, fontWeight = if (day == today) FontWeight.Bold else FontWeight.Normal,
-                                color = if (day == today) cs.onSurface else cs.onSurfaceVariant)
-                            Box(Modifier.size(width = 26.dp, height = 34.dp).clip(RoundedCornerShape(3.dp)).let {
-                                if (worked) it.background(cs.primary) else if (planned) it.border(2.dp, cs.primary, RoundedCornerShape(3.dp)) else it.background(cs.surfaceContainerHigh)
-                            })
+            // Painted like the easel above it, so the week reads as part of the same wall: the hours big, seven days as white marks.
+            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).clickable(onClickLabel = "Open your week") { nav.navigate("week") }) {
+                ColorField(cs.primary, Modifier.matchParentSize(), key = today.toEpochDay() / 7, shift = 28f)
+                Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.18f), 1f to Color.Black.copy(alpha = 0.62f))))
+                Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Your week", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = Color.White.copy(alpha = 0.9f))
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, Modifier.size(22.dp), tint = Color.White)
+                    }
+                    Text(("%.1f of %d hours".format(hours, st.weeklyHours)).replace(".0 of", " of"), style = MaterialTheme.typography.headlineMedium, color = Color.White)
+                    val monday = today.with(java.time.DayOfWeek.MONDAY)
+                    Row(Modifier.fillMaxWidth()) {
+                        (0..6).forEach { i ->
+                            val day = monday.plusDays(i.toLong())
+                            val worked = sessions.any { it.end > it.start && Engine.date(it.start) == day }
+                            val planned = events.any { it.type == "studio" && it.date > now() && Engine.date(it.date) == day }
+                            Column(Modifier.weight(1f).semantics(mergeDescendants = true) { contentDescription = day.dayOfWeek.toString().lowercase() + (if (worked) ", worked" else if (planned) ", planned" else "") },
+                                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Box(Modifier.size(width = 26.dp, height = 40.dp).clip(RoundedCornerShape(4.dp)).let {
+                                    if (worked) it.background(Color.White) else if (planned) it.border(2.dp, Color.White, RoundedCornerShape(4.dp)) else it.background(Color.White.copy(alpha = 0.16f))
+                                })
+                                Text("MTWTFSS"[i].toString(), style = MaterialTheme.typography.labelMedium, fontWeight = if (day == today) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (day == today) Color.White else Color.White.copy(alpha = 0.7f))
+                            }
                         }
                     }
+                    val nextLine = if (st.pausedUntil > now()) "Planning is paused until ${fmtDate(st.pausedUntil)}."
+                        else events.firstOrNull { it.type == "studio" && it.date > now() }?.let { "Next studio time: ${fmtDate(it.date)}, ${clock(it.date)}" }
+                    if (nextLine != null) Text(nextLine, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.85f))
                 }
-                if (st.pausedUntil > now()) Small("Planning is paused until ${fmtDate(st.pausedUntil)}.")
-                else events.firstOrNull { it.type == "studio" && it.date > now() }?.let { Small("Next studio time: ${fmtDate(it.date)}, ${clock(it.date)}") }
             }
 
             // From your own wall: one finished piece a day, a quiet reminder of what the work is for.
@@ -374,8 +380,20 @@ fun Home(nav: NavController) {
             )
             val at = stones.indexOfFirst { !it.second }.coerceAtLeast(0)
             Section("The road to your first show")
-            Row(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                stones.forEachIndexed { i, (_, done) -> Box(Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp)).background(if (done) MaterialTheme.colorScheme.primary else if (i == at) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHigh)) }
+            // A real sequence, so it is drawn as one: seven stops on a line, done ones filled, the next one ringed and bigger.
+            val rcs = MaterialTheme.colorScheme
+            Box(Modifier.fillMaxWidth().padding(top = 4.dp).semantics(mergeDescendants = true) { contentDescription = "${stones.count { it.second }} of ${stones.size} done" }) {
+                Box(Modifier.align(Alignment.Center).fillMaxWidth().padding(horizontal = 14.dp).height(3.dp).background(rcs.outlineVariant))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    stones.forEachIndexed { i, (_, done) ->
+                        val here = i == at && !done
+                        Box(Modifier.size(if (here) 34.dp else 26.dp).clip(CircleShape).background(if (done) rcs.primary else if (here) rcs.surface else rcs.surfaceContainerHigh)
+                            .let { if (here) it.border(3.dp, rcs.secondary, CircleShape) else it }, contentAlignment = Alignment.Center) {
+                            Text(if (done) "✓" else "${i + 1}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold,
+                                color = if (done) rcs.onPrimary else if (here) rcs.secondary else rcs.onSurfaceVariant)
+                        }
+                    }
+                }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Next: ${stones[at].first} (${at + 1} of ${stones.size}).", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
