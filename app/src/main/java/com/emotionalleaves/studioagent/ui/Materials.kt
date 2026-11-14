@@ -515,9 +515,12 @@ fun PortfolioOrder(nav: NavController) {
         TextButton(onClick = { nav.navigate("feedback") }) { Text("Not sure which is strongest? Ask a few people") }
         ordered.forEachIndexed { i, w ->
             Panel {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    PathImage(w.imagePath, Modifier.size(84.dp), 300, androidx.compose.ui.layout.ContentScale.Fit, w.title)
-                    Column(Modifier.weight(1f)) { Text("${i + 1}. " + w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleSmall); Small(listOf(w.year.takeIf { it > 0 }?.toString(), w.medium.ifBlank { null }).filterNotNull().joinToString(", ")) }
+                // It is a real sequence, so the place number is big; first and last, the two that matter most, are in your color.
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Text("${i + 1}", Modifier.width(36.dp), style = MaterialTheme.typography.headlineLarge,
+                        color = if (i == 0 || i == ordered.lastIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
+                    PathImage(w.imagePath, Modifier.size(84.dp).clip(RoundedCornerShape(10.dp)), 300, androidx.compose.ui.layout.ContentScale.Crop, w.title)
+                    Column(Modifier.weight(1f)) { Text(w.title.ifBlank { "Untitled" } + (if (i == 0) " (opens)" else if (i == ordered.lastIndex && i > 0) " (closes)" else ""), style = MaterialTheme.typography.titleSmall); Small(listOf(w.year.takeIf { it > 0 }?.toString(), w.medium.ifBlank { null }).filterNotNull().joinToString(", ")) }
                 }
                 Row {
                     TextButton(enabled = i > 0, onClick = { move(i, i - 1) }) { Text("Up") }

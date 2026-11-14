@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -220,7 +221,12 @@ fun Home(nav: NavController) {
         if (showNew) Panel(strong = true) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // The line itself opens the list, so two short buttons never squeeze it at large text sizes.
-                Text("New in this version: " + Texts.count(whatsNew.size, "thing") + if (openNew) "" else " (show)", Modifier.weight(1f).clickable(onClickLabel = if (openNew) "Hide what is new" else "Show what is new") { openNew = !openNew }.padding(vertical = 8.dp), style = MaterialTheme.typography.titleSmall)
+                // The line opens the list; a chevron says so instead of "(show)", and turns when it is open.
+                Row(Modifier.weight(1f).clickable(onClickLabel = if (openNew) "Hide what is new" else "Show what is new") { openNew = !openNew }.padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(Texts.count(whatsNew.size, "new thing") + " in this version", style = MaterialTheme.typography.titleSmall)
+                    Icon(Icons.Default.KeyboardArrowDown, null, Modifier.size(20.dp).graphicsLayer { rotationZ = if (openNew) 180f else 0f })
+                }
                 TextButton(onClick = { st.seenVersion = version; showNew = false }) { Text("Got it") }
             }
             if (openNew) whatsNew.forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
