@@ -309,7 +309,8 @@ fun Home(nav: NavController) {
             val cs = MaterialTheme.colorScheme
             // Painted like the easel above it, so the week reads as part of the same wall: the hours big, seven days as white marks.
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).clickable(onClickLabel = "Open your week") { nav.navigate("week") }) {
-                ColorField(cs.primary, Modifier.matchParentSize(), key = today.toEpochDay() / 7, shift = 28f)
+                // A smooth wash in two neighbors of your color: on a chart, the bars should be the only blocks.
+                Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(neighbor(MaterialTheme.colorScheme.primary, -18f, 0.34f), neighbor(MaterialTheme.colorScheme.primary, 22f, 0.22f)))))
                 Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.18f), 1f to Color.Black.copy(alpha = 0.62f))))
                 Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

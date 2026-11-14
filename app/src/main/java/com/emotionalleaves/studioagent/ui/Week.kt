@@ -228,7 +228,8 @@ fun SessionsScreen(nav: NavController) {
         val hours = com.emotionalleaves.studioagent.domain.HoursByWeek.of(LocalDate.now(), sessions.filter { it.end > it.start }.map { Engine.date(it.start) to (it.end - it.start) / 3_600_000.0 })
         // Painted like the banners: the eight weeks' hours big, the weeks as white bars, the hours you set as a faint line.
         if (hours.any { it > 0 }) Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(26.dp))) {
-            ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = 131L, shift = -14f)
+            // A smooth wash in two neighbors of your color: on a chart, the bars should be the only blocks.
+            Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(neighbor(MaterialTheme.colorScheme.primary, -18f, 0.34f), neighbor(MaterialTheme.colorScheme.primary, 22f, 0.22f)))))
             Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.25f), 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f))))
             Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 val white = androidx.compose.ui.graphics.Color.White

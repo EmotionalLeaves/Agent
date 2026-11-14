@@ -785,7 +785,7 @@ fun ApplScreen(nav: NavController, id: Long) {
     Screen(o.title, nav) {
         // The entry's front: when to send it, big, with the days left in a badge. Once sent, the day it went.
         val daysLeft = if (o.deadline > now()) ((o.deadline - now()) / 86_400_000L).toInt() else -1
-        Banner(when { a.submittedAt > 0 -> "Sent " + fmtDate(a.submittedAt); o.deadline > 0 -> "Send by " + fmtDate(o.deadline - 3 * 86_400_000L); else -> "No deadline given" },
+        Banner(when { a.submittedAt > 0 -> "Sent " + fmtDate(a.submittedAt); o.deadline > 0 -> "Send by " + Engine.date(o.deadline - 3 * 86_400_000L).let { d -> d.month.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.US) + " " + d.dayOfMonth }; else -> "No deadline given" },
             (if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.",
             key = 600L + o.id, height = 160, big = if (a.submittedAt == 0L && daysLeft >= 0) "$daysLeft" else null, bigLabel = if (daysLeft == 1) "day left" else "days left")
         // The entry in small pieces: five 15-minute evenings, so it is never one big job the night before.

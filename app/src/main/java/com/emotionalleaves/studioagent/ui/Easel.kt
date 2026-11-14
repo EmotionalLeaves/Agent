@@ -151,7 +151,8 @@ fun Banner(
             if (bigLabel.isNotBlank()) Text(bigLabel, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.85f))
         }
         Column(Modifier.align(Alignment.BottomStart).padding(20.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(title, style = MaterialTheme.typography.headlineLarge, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            // With a number badge in the corner, the title keeps clear of it.
+            Text(title, Modifier.padding(end = if (big != null) 72.dp else 0.dp), style = MaterialTheme.typography.headlineLarge, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (sub.isNotBlank()) Text(sub, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.86f), maxLines = 3, overflow = TextOverflow.Ellipsis)
             extra()
         }
