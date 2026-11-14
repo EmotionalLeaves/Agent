@@ -188,14 +188,16 @@ fun Root(incoming: MutableState<Incoming?>) {
                 val pill = if (dark) cs.primary else cs.inversePrimary
                 val onPill = if (dark) cs.onPrimary else cs.inverseSurface
                 val idle = if (dark) cs.onSurfaceVariant else cs.inverseOnSurface.copy(alpha = 0.72f)
-                Box(Modifier.fillMaxWidth().background(cs.background).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 10.dp)) {
+                // Sideways the screen is short, so the bar slims down to leave room for the screen itself.
+                val short = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp < 480
+                Box(Modifier.fillMaxWidth().background(cs.background).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, top = if (short) 2.dp else 6.dp, bottom = if (short) 4.dp else 10.dp)) {
                     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(30.dp)).background(bar).padding(6.dp).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         tabs.forEach { (r, label, icon) ->
                             val on = tabFor(route, tabs.map { it.first }) == r
                             val w by androidx.compose.animation.core.animateFloatAsState(if (on) 1.35f else 1f, tween(220), label = "tab")
                             Column(Modifier.weight(w).clip(RoundedCornerShape(24.dp)).background(if (on) pill else Color.Transparent)
                                 .selectable(selected = on, role = Role.Tab) { nav.navigate(r) { popUpTo("home"); launchSingleTop = true } }
-                                .padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                .padding(vertical = if (short) 4.dp else 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                 Icon(icon, null, Modifier.size(22.dp), tint = if (on) onPill else idle)
                                 // Tab names grow with the phone's text size, but only so far, so they never break mid-word.
                                 val fs = androidx.compose.ui.platform.LocalDensity.current.fontScale
