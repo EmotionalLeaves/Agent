@@ -493,9 +493,15 @@ fun SearchScreen(nav: NavController) {
     Screen("Find anything", nav) {
         Field("A title, a venue, a person, a word, or a question", q, mic = true)
         // A few questions it can answer on the phone, so asking is found by trying.
-        if (q.value.isBlank()) androidx.compose.foundation.layout.FlowRow(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-            listOf("What's on this week?", "What should I do today?", "How many entries have I sent this year?", "What does consignment mean?", "How do I meet other artists?").forEach { ex ->
-                androidx.compose.material3.AssistChip(onClick = { q.value = ex }, label = { Text(ex) })
+        // As a stack of painted cards, each its own neighbor of your color: tap one to ask it.
+        if (q.value.isBlank()) {
+            Section("Try asking")
+            val cs = MaterialTheme.colorScheme
+            listOf("What's on this week?", "What should I do today?", "How many entries have I sent this year?", "What does consignment mean?", "How do I meet other artists?").forEachIndexed { k, ex ->
+                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(neighbor(cs.primary, k * 14f - 28f, 0.38f + (k % 2) * 0.06f))
+                    .clickable(role = Role.Button, onClickLabel = "Ask this") { q.value = ex }.padding(horizontal = 18.dp, vertical = 16.dp)) {
+                    Text(ex, style = MaterialTheme.typography.titleMedium, color = Color.White)
+                }
             }
         }
         // A question gets an answer about your own situation, not a list of matches.

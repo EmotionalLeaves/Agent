@@ -77,7 +77,7 @@ fun MarketDay(nav: NavController) {
         }
         val total = Market.total(tally, items, originals.associate { it.id to it.price })
         // The day's total, big, on a painted field: the number that matters at a table.
-        Banner(money(total), "Today. " + Texts.count(tally.values.sum(), "sale") + (if (st.marketFee > 0) ", booth ${money(st.marketFee)}" else "") + ". A tap adds one; a long list is fine.", key = 31L, height = 170)
+        Banner(money(total), "Today. " + Texts.count(tally.values.sum(), "sale") + (if (st.marketFee > 0) ", booth ${money(st.marketFee)}" else "") + ". Tap a tile when something sells.", key = 31L, height = 170)
         if (items.isEmpty() && originals.isEmpty()) Note("Add what you are bringing below: prints, cards, small pieces.")
         // What is on the table as big tiles, two across: the whole tile is the "sold one" button, the price big on it, how many are left under.
         val cs = MaterialTheme.colorScheme

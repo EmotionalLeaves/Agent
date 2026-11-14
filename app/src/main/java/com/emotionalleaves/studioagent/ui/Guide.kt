@@ -152,8 +152,14 @@ fun Guide(nav: NavController) {
         val done = steps.count { it.done }
         Intro("guide", "One step at a time. Only the open step needs you; ignore the rest until you get there. Steps marked optional can be skipped for good: the app works without them.")
         if (steps.isNotEmpty()) {
-            LinearProgressIndicator(progress = { done.toFloat() / steps.size }, modifier = Modifier.fillMaxWidth().height(6.dp), trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
-            Small("${steps.count { it.done && !it.optional }} of ${steps.count { !it.optional }} needed steps done" + (if (steps.any { it.optional }) ". ${steps.count { it.optional }} more are optional." else ""))
+            // Set-up as a painted banner: the next step named big, the count and a white bar under it.
+            val needed = steps.count { !it.optional }; val neededDone = steps.count { it.done && !it.optional }
+            val next = steps.firstOrNull { it.id == openId }
+            Banner(if (neededDone >= needed) "Set up. The rest is optional" else "Next: " + (next?.title ?: "one step"),
+                "$neededDone of $needed needed steps done" + (if (steps.any { it.optional }) ". ${steps.count { it.optional }} more are optional." else "."), key = 121L, height = 170, extra = {
+                    LinearProgressIndicator(progress = { done.toFloat() / steps.size }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(6.dp).clip(RoundedCornerShape(3.dp)),
+                        color = androidx.compose.ui.graphics.Color.White, trackColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.25f), drawStopIndicator = {})
+                })
         }
         steps.groupBy { it.group }.forEach { (group, list) ->
             // A finished group folds to one line, so the page shows what is left.
