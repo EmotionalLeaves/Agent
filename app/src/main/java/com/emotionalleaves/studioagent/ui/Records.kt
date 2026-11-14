@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
@@ -334,13 +335,16 @@ fun Records(nav: NavController) {
 
         H("Entries")
         ledger.take(40).forEach { l ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // Money in wears your color with a plus; money out is plain with a minus, so the list reads at a glance.
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(Modifier.size(10.dp).clip(CircleShape).background(if (l.amount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline))
                 Column(Modifier.weight(1f)) {
                     Text((mapOf("fee" to "Entry fee", "sale" to "Sale", "commission" to "Commission", "shipping" to "Shipping", "print" to "Printing", "framing" to "Framing", "materials" to "Art supplies", "travel" to "Art trip", "teaching" to "Teaching")[l.kind] ?: l.kind.replaceFirstChar { it.uppercase() }) +
                         (if (l.note.isNotBlank()) ": ${l.note}" else ""))
                     Small(fmtDate(l.date))
                 }
-                Text(money(l.amount))
+                Text((if (l.amount > 0) "+" else "") + money(l.amount), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                    color = if (l.amount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 RemoveButton("entry") { scope.remove("the ${l.kind} entry", { dao.del(l) }, { dao.put(l) }) }
             }
         }

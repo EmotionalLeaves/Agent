@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.PlayArrow
@@ -472,14 +474,14 @@ fun WorkDetail(nav: NavController, id: Long) {
             }
         }
         // Flip it, take the color away, squint: see it as a stranger would.
-        if (w.imagePath.isNotBlank() || w.status == "in_progress") TextButton(onClick = { nav.navigate("look/${w.id}") }) { Text("Look at it with fresh eyes") }
+        if (w.imagePath.isNotBlank() || w.status == "in_progress") IconRow(Icons.Default.Search, "Look at it with fresh eyes", "Flipped, without color, squinted: the painter's checks") { nav.navigate("look/${w.id}") }
         // A series grows piece by piece: the next one starts with this one's size, medium and series already set.
-        if (w.status !in setOf("idea")) TextButton(onClick = { scope.io {
+        if (w.status !in setOf("idea")) IconRow(Icons.Default.Add, "Start a new piece like this one", "Same size, medium and series, ready to begin") { scope.io {
             val next = Artwork(title = Texts.nextTitle(w.title), medium = w.medium, support = w.support, widthIn = w.widthIn, heightIn = w.heightIn, depthIn = w.depthIn, framed = w.framed,
                 seriesId = w.seriesId, format = w.format, status = "idea", year = java.time.LocalDate.now().year, createdAt = now())
             val nid = dao.put(next)
             withContext(Dispatchers.Main) { nav.navigate("work/$nid") }
-        } }) { Text("Start a new piece like this one") }
+        } }
         // The piece at its real size on a gallery wall, framed, with a bench for scale.
         if (w.imagePath.isNotBlank() && w.widthIn > 0 && w.heightIn > 0) {
             var wall by remember(w.id) { mutableStateOf("") }

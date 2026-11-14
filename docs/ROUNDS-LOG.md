@@ -742,3 +742,5 @@ One real change per round. Pushed and built every ten rounds.
 735. Sideways, the tab bar slims down (less padding above, below and inside each tab) so more of the screen is the screen.
 736. The year ahead shows the year so far as pictures: every piece dated this year, five across, under "Made in 2026: 3 pieces". Proof of the work, not a score, and no streak to break.
 737. The year ahead, month by month: each month sits on its own block, its short name big in a pale neighbor of your color (this month solid in your color), with what it holds beside it, instead of a stack of panels.
+738. Records, Entries: money in wears your color with a plus and a colored dot, money out is plain with a minus and a grey dot, the amount larger, so the list reads at a glance.
+739. A piece's page: "Look at it with fresh eyes" and "Start a new piece like this one" are proper rows with their painted chips and a line saying what each does ("Same size, medium and series, ready to begin"), instead of two bare text links.
