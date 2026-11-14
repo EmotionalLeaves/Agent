@@ -1,5 +1,11 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.semantics.stateDescription
@@ -321,7 +327,17 @@ fun DocScreen(nav: NavController, id: Long) {
             Whole("About how many words", d.target) { n -> if (n > 0) save(d.copy(target = n)) }
         }
         if (locked) {
-            Panel { Text(d.text) }
+            // Approved, it is shown as what it now is: a finished page, with room around the words and a stamp in the corner.
+            Box(Modifier.fillMaxWidth().shadow(6.dp, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp)).background(androidx.compose.ui.graphics.Color(0xFFFDFCF9))) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 26.dp, vertical = 30.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Text(kind.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.titleMedium, color = androidx.compose.ui.graphics.Color(0xFF55524C))
+                    Text(d.text, style = MaterialTheme.typography.bodyLarge.copy(lineHeight = MaterialTheme.typography.bodyLarge.fontSize * 1.6f), color = androidx.compose.ui.graphics.Color(0xFF1E1D1A))
+                    if (st.fullName.isNotBlank()) Text(st.fullName, style = MaterialTheme.typography.labelLarge, color = androidx.compose.ui.graphics.Color(0xFF55524C))
+                }
+                Box(Modifier.align(Alignment.TopEnd).padding(14.dp).border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(6.dp)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                    Text("Approved", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                }
+            }
             Small("Approved and locked: ${Texts.words(d.text)} words. This is finished. The app uses exactly this.")
             TextButton(onClick = { unlocked = true }) { Text("I have a real reason to change it") }
         } else {
