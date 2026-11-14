@@ -226,20 +226,38 @@ fun SessionsScreen(nav: NavController) {
         if (sessions.isEmpty()) Empty("No sessions yet. Each one you finish is listed here.")
         // The last eight weeks at a glance, against the hours you set: steady beats heroic.
         val hours = com.emotionalleaves.studioagent.domain.HoursByWeek.of(LocalDate.now(), sessions.filter { it.end > it.start }.map { Engine.date(it.start) to (it.end - it.start) / 3_600_000.0 })
-        if (hours.any { it > 0 }) Panel {
-            Text("The last eight weeks", fontWeight = FontWeight.SemiBold)
-            val top = maxOf(hours.max(), st.weeklyHours.toDouble(), 1.0)
-            val bar = MaterialTheme.colorScheme.primary; val goal = MaterialTheme.colorScheme.outline
-            androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(110.dp).semantics { contentDescription = hours.joinToString(", ") { "%.1f hours".format(it) } }) {
-                val w = size.width / hours.size
-                hours.forEachIndexed { i, h -> val bh = (h / top * size.height * 0.95).toFloat(); drawRect(bar, androidx.compose.ui.geometry.Offset(i * w + w * 0.2f, size.height - bh), androidx.compose.ui.geometry.Size(w * 0.6f, bh)) }
-                if (st.weeklyHours > 0) { val y = (size.height - st.weeklyHours / top * size.height * 0.95).toFloat(); drawLine(goal, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), 2f) }
+        // Painted like the banners: the eight weeks' hours big, the weeks as white bars, the hours you set as a faint line.
+        if (hours.any { it > 0 }) Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(26.dp))) {
+            ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = 131L, shift = -14f)
+            Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.25f), 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f))))
+            Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                val white = androidx.compose.ui.graphics.Color.White
+                Text("%.1f hours in eight weeks".format(hours.sum()).replace(".0 hours", " hours"), style = MaterialTheme.typography.headlineMedium, color = white)
+                val top = maxOf(hours.max(), st.weeklyHours.toDouble(), 1.0)
+                androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(120.dp).semantics { contentDescription = hours.joinToString(", ") { "%.1f hours".format(it) } }) {
+                    val w = size.width / hours.size
+                    hours.forEachIndexed { k, h ->
+                        val bh = (h / top * size.height * 0.95).toFloat().coerceAtLeast(3f)
+                        drawRoundRect(white.copy(alpha = if (k == hours.lastIndex) 1f else if (h > 0) 0.8f else 0.2f), androidx.compose.ui.geometry.Offset(k * w + w * 0.18f, size.height - bh),
+                            androidx.compose.ui.geometry.Size(w * 0.64f, bh), androidx.compose.ui.geometry.CornerRadius(6f))
+                    }
+                    if (st.weeklyHours > 0) { val y = (size.height - st.weeklyHours / top * size.height * 0.95).toFloat()
+                        drawLine(white.copy(alpha = 0.55f), androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), 2f,
+                            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 8f))) }
+                }
+                Text("This week on the right." + (if (st.weeklyHours > 0) " The dashed line is the ${st.weeklyHours} hours you set; a week under it still counts." else ""),
+                    style = MaterialTheme.typography.bodySmall, color = white.copy(alpha = 0.85f))
             }
-            Small("This week on the right." + (if (st.weeklyHours > 0) " The line is the ${st.weeklyHours} hours you set; a week under it still counts." else ""))
         }
         sessions.take(60).forEach { s ->
             Panel {
-                Text(fmtDate(s.start) + ", ${((s.end - s.start) / 60000).coerceAtLeast(0)} min, ${mapOf("make" to "Make", "skill" to "Practice", "light" to "Light")[s.kind] ?: s.kind}" + name(s.artworkId).let { if (it.isNotBlank()) ", $it" else "" }, fontWeight = FontWeight.SemiBold)
+                // Each session on its day's leaf, like the calls: the day big, the month small.
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    DateLeaf(s.start, closed = false, shift = mapOf("make" to 0f, "skill" to 24f, "light" to -24f)[s.kind] ?: 0f)
+                    Column(Modifier.weight(1f)) {
+                        Text(fmtDate(s.start) + ", ${((s.end - s.start) / 60000).coerceAtLeast(0)} min, ${mapOf("make" to "Make", "skill" to "Practice", "light" to "Light")[s.kind] ?: s.kind}" + name(s.artworkId).let { if (it.isNotBlank()) ", $it" else "" }, fontWeight = FontWeight.SemiBold)
+                    }
+                }
                 if (s.nextStep.isNotBlank()) Note("Next time: ${s.nextStep}")
                 if (s.note.isNotBlank()) Note(s.note)
                 if (s.photoPath.isNotBlank()) PathImage(s.photoPath, Modifier.fillMaxWidth(), 500)
