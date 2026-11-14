@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.heightIn
@@ -215,9 +217,29 @@ fun Works(nav: NavController) {
                 var notes by remember(s.id) { mutableStateOf(s.notes) }
                 var name by remember(s.id) { mutableStateOf(s.name) }
                 Panel {
-                    Text(name.ifBlank { "Untitled series" }, style = MaterialTheme.typography.titleMedium)
-                    LinearProgressIndicator(progress = { (done.toFloat() / s.targetCount.coerceAtLeast(1)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
-                    Note("$done of ${s.targetCount} documented, ${works.count { it.seriesId == s.id }} started")
+                    // The series' cover: its pieces side by side (or a painted field before there are pictures), its name over them in white.
+                    val members = works.filter { it.seriesId == s.id }
+                    val started = members.size
+                    Box(Modifier.fillMaxWidth().height(176.dp).clip(RoundedCornerShape(18.dp))) {
+                        val pics = members.filter { it.imagePath.isNotBlank() && File(it.imagePath).exists() }.take(4)
+                        if (pics.isEmpty()) ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = 500L + s.id, shift = ((s.id * 41) % 60 - 30).toFloat())
+                        else Row(Modifier.matchParentSize(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            pics.forEach { w -> PathImage(w.imagePath, Modifier.weight(1f).fillMaxHeight(), 400, ContentScale.Crop) }
+                        }
+                        Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Transparent, 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.75f))))
+                        Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+                            Text(name.ifBlank { "Untitled series" }, style = MaterialTheme.typography.headlineSmall, color = androidx.compose.ui.graphics.Color.White, maxLines = 2)
+                            Text("$done of ${s.targetCount} documented, $started started", style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
+                        }
+                    }
+                    // One slot per piece the series is aiming for: solid when documented, faint when started, empty when still to make.
+                    val slots = s.targetCount.coerceIn(1, 24)
+                    Row(Modifier.fillMaxWidth().clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        (0 until slots).forEach { k ->
+                            Box(Modifier.weight(1f).height(12.dp).clip(RoundedCornerShape(3.dp)).background(
+                                if (k < done) MaterialTheme.colorScheme.primary else if (k < started) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f) else MaterialTheme.colorScheme.surfaceContainerHigh))
+                        }
+                    }
                     Small(Engine.forecast(s.id, s.targetCount, works, sessions))
                     // The series hung together at real sizes: does it hold as a group, and how much wall it needs.
                     val hung = works.filter { it.seriesId == s.id && it.imagePath.isNotBlank() && it.widthIn > 0 && it.heightIn > 0 }
