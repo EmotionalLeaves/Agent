@@ -722,104 +722,109 @@ fun SessionScreen(nav: NavController) {
             if (paused || goal <= 0) Engine.cancelGoal(ctx)
             else Engine.scheduleGoal(ctx, goal * 60_000L - Engine.sessionElapsed(now()), goal)
         }
-        Screen("In session", nav, bare = true) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(if (paused) "Paused" else "In session", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                IconButton(onClick = { nav.navigate("home") { popUpTo("home") { inclusive = true } } }) { Icon(Icons.Default.Close, "Leave this screen; the timer keeps going", tint = MaterialTheme.colorScheme.onSurfaceVariant) }
-            }
-            val track = MaterialTheme.colorScheme.surfaceContainerHigh
-            val fill = MaterialTheme.colorScheme.primary
-            val part = if (goal > 0) (secs / (goal * 60f)).coerceIn(0f, 1f) else 0f
-            // A ring that fills as time passes: the whole session visible at a glance.
-            // A screen reader hears the time in words, not a ticking clock.
-            val spoken = "${Texts.count((secs / 60).toInt(), "minute")} in" + (if (goal > 0 && secs < goal * 60L) ", ${Texts.count(Math.ceil((goal * 60L - secs) / 60.0).toInt(), "minute")} to go" else "")
-            Box(Modifier.fillMaxWidth().padding(top = 8.dp).clearAndSetSemantics { contentDescription = spoken }, contentAlignment = Alignment.Center) {
-                val shown by animateFloatAsState(part, tween(900), label = "ring")
-                // Smaller when the phone is sideways, so the step under it stays in view.
-                val ringSize = minOf(250, (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.55f).toInt()).dp
-                // The piece itself, seen through a round window inside the ring: the clock sits on your own work.
-                val inner = ringSize - 34.dp
-                Box(Modifier.size(inner).clip(androidx.compose.foundation.shape.CircleShape)) {
-                    if (work != null && work.imagePath.isNotBlank()) PathImage(work.imagePath, Modifier.matchParentSize(), 700, androidx.compose.ui.layout.ContentScale.Crop)
-                    else ColorField(fill, Modifier.matchParentSize(), key = work?.id ?: 7L)
-                    Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.42f)))
+        // Studio mode: the session always runs in the dark version of your colors, whatever the rest of the app wears,
+        // so the screen is calm at night, sits back while you work, and the piece in the ring is the brightest thing on it.
+        val sessionSeed = if (st.artSeed != 0 && st.wearArt) st.artSeed else DefaultSeed
+        MaterialTheme(colorScheme = remember(sessionSeed) { seedScheme(sessionSeed, true) }, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+            Screen("In session", nav, bare = true) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (paused) "Paused" else "In session", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    IconButton(onClick = { nav.navigate("home") { popUpTo("home") { inclusive = true } } }) { Icon(Icons.Default.Close, "Leave this screen; the timer keeps going", tint = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
-                val second = MaterialTheme.colorScheme.secondary
-                Canvas(Modifier.size(ringSize)) {
-                    val w = 12.dp.toPx()
-                    drawArc(track, -90f, 360f, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
-                    if (shown > 0f) drawArc(androidx.compose.ui.graphics.Brush.sweepGradient(listOf(fill, second, fill)), -90f, 360f * shown, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
+                val track = MaterialTheme.colorScheme.surfaceContainerHigh
+                val fill = MaterialTheme.colorScheme.primary
+                val part = if (goal > 0) (secs / (goal * 60f)).coerceIn(0f, 1f) else 0f
+                // A ring that fills as time passes: the whole session visible at a glance.
+                // A screen reader hears the time in words, not a ticking clock.
+                val spoken = "${Texts.count((secs / 60).toInt(), "minute")} in" + (if (goal > 0 && secs < goal * 60L) ", ${Texts.count(Math.ceil((goal * 60L - secs) / 60.0).toInt(), "minute")} to go" else "")
+                Box(Modifier.fillMaxWidth().padding(top = 8.dp).clearAndSetSemantics { contentDescription = spoken }, contentAlignment = Alignment.Center) {
+                    val shown by animateFloatAsState(part, tween(900), label = "ring")
+                    // Smaller when the phone is sideways, so the step under it stays in view.
+                    val ringSize = minOf(250, (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.55f).toInt()).dp
+                    // The piece itself, seen through a round window inside the ring: the clock sits on your own work.
+                    val inner = ringSize - 34.dp
+                    Box(Modifier.size(inner).clip(androidx.compose.foundation.shape.CircleShape)) {
+                        if (work != null && work.imagePath.isNotBlank()) PathImage(work.imagePath, Modifier.matchParentSize(), 700, androidx.compose.ui.layout.ContentScale.Crop)
+                        else ColorField(fill, Modifier.matchParentSize(), key = work?.id ?: 7L)
+                        Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.42f)))
+                    }
+                    val second = MaterialTheme.colorScheme.secondary
+                    Canvas(Modifier.size(ringSize)) {
+                        val w = 12.dp.toPx()
+                        drawArc(track, -90f, 360f, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
+                        if (shown > 0f) drawArc(androidx.compose.ui.graphics.Brush.sweepGradient(listOf(fill, second, fill)), -90f, 360f * shown, false, topLeft = Offset(w / 2, w / 2), size = Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text((if (secs >= 3600) "%d:%02d:%02d".format(secs / 3600, (secs / 60) % 60, secs % 60) else "%d:%02d".format(secs / 60, secs % 60)), style = MaterialTheme.typography.displayMedium, color = androidx.compose.ui.graphics.Color.White)
+                        if (goal > 0) Text(if (secs >= goal * 60L) "$goal minutes done" else "${Math.ceil((goal * 60L - secs) / 60.0).toInt()} min to go", style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
+                    }
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text((if (secs >= 3600) "%d:%02d:%02d".format(secs / 3600, (secs / 60) % 60, secs % 60) else "%d:%02d".format(secs / 60, secs % 60)), style = MaterialTheme.typography.displayMedium, color = androidx.compose.ui.graphics.Color.White)
-                    if (goal > 0) Text(if (secs >= goal * 60L) "$goal minutes done" else "${Math.ceil((goal * 60L - secs) / 60.0).toInt()} min to go", style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
-                }
-            }
-            if (goal > 0 && secs >= goal * 60L) Panel(strong = true) { Text("That is your $goal minutes. Stopping now is a complete session. Keep going only if you want to.") }
-            Text(work?.title?.ifBlank { "Untitled" } ?: (if (st.sessionKind == "skill") "Practice" else "Light session"), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-            if (work == null && st.sessionKind in setOf("skill", "light") && st.practiceText.isNotBlank()) Text(st.practiceText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
+                if (goal > 0 && secs >= goal * 60L) Panel(strong = true) { Text("That is your $goal minutes. Stopping now is a complete session. Keep going only if you want to.") }
+                Text(work?.title?.ifBlank { "Untitled" } ?: (if (st.sessionKind == "skill") "Practice" else "Light session"), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                if (work == null && st.sessionKind in setOf("skill", "light") && st.practiceText.isNotBlank()) Text(st.practiceText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
 
-            if (work != null) {
-                val steps = Texts.steps(work.steps)
-                val open = steps.indexOfFirst { !it.first }
-                if (open >= 0) WallLabel(onClick = null) {
-                    Text("Now: ${steps[open].second}", style = MaterialTheme.typography.titleLarge)
-                    Small("${steps.count { it.first }} of ${steps.size} small steps done")
-                    TextButton(onClick = { scope.io { dao.put(work.copy(steps = Texts.stepsText(steps.mapIndexed { i, p -> if (i == open) true to p.second else p }))) } }, modifier = Modifier.offset(x = (-12).dp)) { Text("Done, show the next one") }
-                } else if (steps.isNotEmpty() && work.status == "in_progress") WallLabel(onClick = null) {
-                    // Every step ticked: the finish line decides, not another pass.
-                    Text("Every small step is done.", style = MaterialTheme.typography.titleLarge)
-                    Small(if (work.doneWhen.isNotBlank()) "Finished when: ${work.doneWhen}" else "If it looks done to you, it is done.")
-                    TextButton(onClick = { scope.io { dao.put(work.copy(status = "finished")) } }, modifier = Modifier.offset(x = (-12).dp)) { Text("Call it finished") }
-                } else if (work.nextStep.isNotBlank()) Small("Where you left off: ${work.nextStep}")
-                if (work.doneWhen.isNotBlank() && (open >= 0 || steps.isEmpty())) Small("Finished when: ${work.doneWhen}")
-                // Anything else on this piece's list, so it is not forgotten while the piece is in front of you.
-                events.filter { it.artworkId == work.id && it.type == "task" && !it.done }.take(2).forEach { Small("Also for this piece: " + it.title) }
-            }
-            if (Planner.isWindDown(LocalDateTime.now(), Planner.time(st.bedtime, LocalTime.of(22, 30)))) Panel(strong = true) {
-                Text("Wind-down time. A good place to stop: write your next step so nothing is lost.")
-            }
-            if (!stopping) {
-                Space(8)
-                // One big way out, one quiet way to pause. Stacked, so long words never get squeezed.
-                Button(modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp), onClick = { stopping = true }) { Text("I am stopping") }
-                OutlinedButton(modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), onClick = {
-                    if (paused) { st.sessionPausedTotal = st.sessionPausedTotal + (now() - st.sessionPausedAt); st.sessionPausedAt = 0L; if (st.sessionNoise) com.emotionalleaves.studioagent.media.Noise.start() }
-                    else { st.sessionPausedAt = now(); com.emotionalleaves.studioagent.media.Noise.stop() }
-                }) { Text(if (paused) "Resume" else "Pause") }
-                Text("Put the phone down. The timer keeps going.", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                // Every 45 minutes, for a couple of minutes: step back. Good for a back that stood all shift, and for the work.
-                val mins = (secs / 60).toInt()
-                if (!paused && mins >= 45 && mins % 45 < 3) Panel(strong = true) {
-                    Text("Step back", fontWeight = FontWeight.SemiBold)
-                    Text("Stand up and look at the piece from across the room for a minute. Your back gets a rest, and you will see it fresh.", style = MaterialTheme.typography.bodyMedium)
+                if (work != null) {
+                    val steps = Texts.steps(work.steps)
+                    val open = steps.indexOfFirst { !it.first }
+                    if (open >= 0) WallLabel(onClick = null) {
+                        Text("Now: ${steps[open].second}", style = MaterialTheme.typography.titleLarge)
+                        Small("${steps.count { it.first }} of ${steps.size} small steps done")
+                        TextButton(onClick = { scope.io { dao.put(work.copy(steps = Texts.stepsText(steps.mapIndexed { i, p -> if (i == open) true to p.second else p }))) } }, modifier = Modifier.offset(x = (-12).dp)) { Text("Done, show the next one") }
+                    } else if (steps.isNotEmpty() && work.status == "in_progress") WallLabel(onClick = null) {
+                        // Every step ticked: the finish line decides, not another pass.
+                        Text("Every small step is done.", style = MaterialTheme.typography.titleLarge)
+                        Small(if (work.doneWhen.isNotBlank()) "Finished when: ${work.doneWhen}" else "If it looks done to you, it is done.")
+                        TextButton(onClick = { scope.io { dao.put(work.copy(status = "finished")) } }, modifier = Modifier.offset(x = (-12).dp)) { Text("Call it finished") }
+                    } else if (work.nextStep.isNotBlank()) Small("Where you left off: ${work.nextStep}")
+                    if (work.doneWhen.isNotBlank() && (open >= 0 || steps.isEmpty())) Small("Finished when: ${work.doneWhen}")
+                    // Anything else on this piece's list, so it is not forgotten while the piece is in front of you.
+                    events.filter { it.artworkId == work.id && it.type == "task" && !it.done }.take(2).forEach { Small("Also for this piece: " + it.title) }
                 }
-                // A steady hum to settle into: on or off with one tap, remembered for next time.
-                var hum by remember { mutableStateOf(com.emotionalleaves.studioagent.media.Noise.playing) }
-                LaunchedEffect(Unit) { if (st.sessionNoise && !hum && !paused) { com.emotionalleaves.studioagent.media.Noise.start(); hum = true } }
-                TextButton(onClick = {
-                    if (hum) com.emotionalleaves.studioagent.media.Noise.stop() else com.emotionalleaves.studioagent.media.Noise.start()
-                    hum = !hum; st.sessionNoise = hum
-                }, modifier = Modifier.fillMaxWidth()) { Text(if (hum) "Turn the background hum off" else "Play a background hum (brown noise)") }
-            } else {
-                // Back here means "not yet", not "leave".
-                BackHandler { stopping = false }
-                H("Before you go")
-                Field("Next time, start with…", nextStep, mic = true)
-                // One line is all that is asked. A note or photo is there if wanted, folded away.
-                Expand("Add a note or a progress photo", startOpen = note.value.isNotBlank() || photo.isNotBlank()) {
-                    Field("Anything to note", note, lines = 2)
-                    if (photo.isNotBlank()) PathImage(photo, Modifier.fillMaxWidth().height(160.dp))
-                    OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, photoFile)) } catch (e: Exception) { } }) { Text(if (photo.isBlank()) "Take a progress photo" else "Retake photo") }
+                if (Planner.isWindDown(LocalDateTime.now(), Planner.time(st.bedtime, LocalTime.of(22, 30)))) Panel(strong = true) {
+                    Text("Wind-down time. A good place to stop: write your next step so nothing is lost.")
                 }
-                Button(onClick = { buzz(); finish(true) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("End and save") }
-                Row {
-                    TextButton(onClick = { stopping = false }) { Text("Keep going") }
-                    Spacer(Modifier.weight(1f))
-                    // Throwing away real time takes a second tap; a stray one-minute start goes at once.
-                    var sure by remember { mutableStateOf(false) }
+                if (!stopping) {
+                    Space(8)
+                    // One big way out, one quiet way to pause. Stacked, so long words never get squeezed.
+                    Button(modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp), onClick = { stopping = true }) { Text("I am stopping") }
+                    OutlinedButton(modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), onClick = {
+                        if (paused) { st.sessionPausedTotal = st.sessionPausedTotal + (now() - st.sessionPausedAt); st.sessionPausedAt = 0L; if (st.sessionNoise) com.emotionalleaves.studioagent.media.Noise.start() }
+                        else { st.sessionPausedAt = now(); com.emotionalleaves.studioagent.media.Noise.stop() }
+                    }) { Text(if (paused) "Resume" else "Pause") }
+                    Text("Put the phone down. The timer keeps going.", Modifier.fillMaxWidth(), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    // Every 45 minutes, for a couple of minutes: step back. Good for a back that stood all shift, and for the work.
                     val mins = (secs / 60).toInt()
-                    DangerButton(onClick = { if (mins < 5 || sure) finish(false) else sure = true }) { Text(if (sure) "Tap again to discard $mins minutes" else "Discard this session") }
+                    if (!paused && mins >= 45 && mins % 45 < 3) Panel(strong = true) {
+                        Text("Step back", fontWeight = FontWeight.SemiBold)
+                        Text("Stand up and look at the piece from across the room for a minute. Your back gets a rest, and you will see it fresh.", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    // A steady hum to settle into: on or off with one tap, remembered for next time.
+                    var hum by remember { mutableStateOf(com.emotionalleaves.studioagent.media.Noise.playing) }
+                    LaunchedEffect(Unit) { if (st.sessionNoise && !hum && !paused) { com.emotionalleaves.studioagent.media.Noise.start(); hum = true } }
+                    TextButton(onClick = {
+                        if (hum) com.emotionalleaves.studioagent.media.Noise.stop() else com.emotionalleaves.studioagent.media.Noise.start()
+                        hum = !hum; st.sessionNoise = hum
+                    }, modifier = Modifier.fillMaxWidth()) { Text(if (hum) "Turn the background hum off" else "Play a background hum (brown noise)") }
+                } else {
+                    // Back here means "not yet", not "leave".
+                    BackHandler { stopping = false }
+                    H("Before you go")
+                    Field("Next time, start with…", nextStep, mic = true)
+                    // One line is all that is asked. A note or photo is there if wanted, folded away.
+                    Expand("Add a note or a progress photo", startOpen = note.value.isNotBlank() || photo.isNotBlank()) {
+                        Field("Anything to note", note, lines = 2)
+                        if (photo.isNotBlank()) PathImage(photo, Modifier.fillMaxWidth().height(160.dp))
+                        OutlinedButton(onClick = { try { take.launch(Share.uri(ctx, photoFile)) } catch (e: Exception) { } }) { Text(if (photo.isBlank()) "Take a progress photo" else "Retake photo") }
+                    }
+                    Button(onClick = { buzz(); finish(true) }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("End and save") }
+                    Row {
+                        TextButton(onClick = { stopping = false }) { Text("Keep going") }
+                        Spacer(Modifier.weight(1f))
+                        // Throwing away real time takes a second tap; a stray one-minute start goes at once.
+                        var sure by remember { mutableStateOf(false) }
+                        val mins = (secs / 60).toInt()
+                        DangerButton(onClick = { if (mins < 5 || sure) finish(false) else sure = true }) { Text(if (sure) "Tap again to discard $mins minutes" else "Discard this session") }
+                    }
                 }
             }
         }
