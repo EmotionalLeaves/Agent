@@ -74,7 +74,7 @@ fun WeekScreen(nav: NavController) {
     Screen("Your week", nav) {
         Intro("week", "These are the times the app books for making work. They are a plan, not a test: skip one and nothing is marked missed. Change anything here to fit your real life.")
         // The week in one number, over a field in your color, with the next studio time beneath it.
-        val weekSessions by G.dao.sessions().collectAsState(emptyList())
+        val weekSessions by dao.sessions().collectAsState(emptyList())
         val hrs = Engine.hoursThisWeek(weekSessions)
         val nextStudio = events.firstOrNull { it.type == "studio" && it.date > now() }
         Banner("%.1f of %d hours".format(hrs, st.weeklyHours).replace(".0 of", " of"), nextStudio?.let { "Next studio time: " + fmtDate(it.date) + ", " + clock(it.date) } ?: "No studio time planned yet.",
