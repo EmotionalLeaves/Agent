@@ -1,5 +1,13 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
 import androidx.compose.material3.Button
 
 import com.emotionalleaves.studioagent.work.Engine
@@ -174,7 +182,8 @@ fun Guide(nav: NavController) {
                 }
             }
         }
-        Expand("Where this is going: the five levels") { LevelsBody() }
+        Section("Where this is going: the five levels")
+        LevelsBody()
     }
 }
 
@@ -274,18 +283,37 @@ fun LevelsBody() {
     )
     run {
         Small("Five levels, one small step at a time. You only ever need to think about the one you are on.")
-        Column {
-            steps.forEachIndexed { i, (name, what, opens) ->
-                Timeline(i < level, current = i == level, last = i == steps.lastIndex) {
-                    Text("Level $i: $name", style = if (i == level) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium,
-                        color = if (i > level) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
-                    if (i == level) Row { Tag("you are here", strong = true) }
-                    Text(what, color = if (i == level) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (i == level && level < 4) Panel {
-                        LinearProgressIndicator(progress = { gate.progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().height(6.dp), trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {})
-                        Text("So far: ${gate.text}")
-                        if (opens.isNotBlank()) Small(opens)
-                    } else if (opens.isNotBlank() && i > level) Small(opens)
+        // A staircase: five steps climbing to the right, the top one first. Steps behind you are solid, the one you are on is painted
+        // and open with what lifts you to the next, and the ones ahead are only their names, so there is one thing to think about.
+        val cs = MaterialTheme.colorScheme
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            steps.withIndex().reversed().forEach { (i, step) ->
+                val (name, what, opens) = step
+                val here = i == level
+                Box(Modifier.padding(start = (i * 18).dp).fillMaxWidth().clip(RoundedCornerShape(16.dp))
+                    .background(if (i < level) cs.primary else if (here) cs.primary else cs.surfaceContainerHigh)
+                    .semantics(mergeDescendants = true) { contentDescription = "Level $i, $name" + if (here) ", you are here" else if (i < level) ", done" else "" }) {
+                    if (here) {
+                        ColorField(cs.primary, Modifier.matchParentSize(), key = 400L + i)
+                        Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.2f), 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.72f))))
+                    }
+                    val fg = if (i <= level) androidx.compose.ui.graphics.Color.White else cs.onSurfaceVariant
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = if (here) 18.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Level $i: $name", Modifier.weight(1f), style = if (here) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleSmall, color = fg)
+                            if (i < level) Text("✓", style = MaterialTheme.typography.titleMedium, color = fg)
+                            if (here) Text("You are here", style = MaterialTheme.typography.labelMedium, color = fg.copy(alpha = 0.9f))
+                        }
+                        if (here) {
+                            Text(what, style = MaterialTheme.typography.bodyMedium, color = fg.copy(alpha = 0.92f))
+                            if (level < 4) {
+                                LinearProgressIndicator(progress = { gate.progress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                                    color = androidx.compose.ui.graphics.Color.White, trackColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.25f))
+                                Text("So far: ${gate.text}", style = MaterialTheme.typography.bodySmall, color = fg)
+                                if (opens.isNotBlank()) Text(opens, style = MaterialTheme.typography.bodySmall, color = fg.copy(alpha = 0.8f))
+                            }
+                        }
+                    }
                 }
             }
         }
