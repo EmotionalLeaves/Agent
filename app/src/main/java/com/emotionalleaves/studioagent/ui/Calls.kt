@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.border
@@ -245,10 +246,16 @@ fun Calls(nav: NavController) {
                     if (month != lastMonth) { Section(month + " (" + everything.take(allLimit).count { x -> (when { x.status == "expired" || x.deadline in 1 until now() -> "Closed"; x.deadline <= 0 -> "No deadline given"; else -> Engine.date(x.deadline).let { d -> d.month.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.US) + (if (d.year != LocalDate.now().year) " ${d.year}" else "") } }) == month } + ")"); lastMonth = month }
                     val why = Scoring.ineligible(o, p, now())
                     Panel(onClick = { nav.navigate("call/${o.id}") }) {
-                        Text(o.title, style = MaterialTheme.typography.titleSmall)
+                        // A calendar leaf for each call: the closing day big, painted while it is open, grey once it has passed.
+                        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                            DateLeaf(o.deadline, closed = o.status == "expired" || o.deadline in 1 until now(), shift = ((o.id * 23) % 40 - 20).toFloat())
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(o.title, style = MaterialTheme.typography.titleSmall)
                         Small(listOf(o.kind.replaceFirstChar { it.uppercase() }, whereLine(o), if (o.deadline > 0) fmtDate(o.deadline) else "", if (o.fee > 0) money(o.fee) else "free").filter { it.isNotBlank() }.joinToString(", "))
                         Small(when { o.status == "later" -> "You said not this year"; o.status == "no" -> "You said no"; o.status == "expired" -> "Deadline passed"; why.isEmpty() -> "Eligible, " + fitLabel(o.fitScore).lowercase(); else -> "Held back: " + why.joinToString("; ") })
-                        Flags(o)
+                                Flags(o)
+                            }
+                        }
                     }
                 }
                 if (everything.size > allLimit) OutlinedButton(onClick = { allLimit += 50 }, modifier = Modifier.fillMaxWidth()) { Text("Show ${minOf(50, everything.size - allLimit)} more") }
@@ -280,11 +287,12 @@ fun Calls(nav: NavController) {
                 val waiting = appls.filter { it.status in setOf("submitted", "sending") }.sortedByDescending { it.submittedAt }
                 val shows = appls.filter { it.status == "accepted" && stage(it) < 4 }.sortedBy { open(it).minOfOrNull { e -> if (e.date > 0) e.date else Long.MAX_VALUE } ?: Long.MAX_VALUE }
                 val done = appls.filter { it.status == "declined" || (it.status == "accepted" && stage(it) >= 4) }.sortedByDescending { it.submittedAt }
-                Text(listOfNotNull(
+                // Where your entries stand, on a painted banner: the one sentence that matters on this tab.
+                Banner(listOfNotNull(
                     toFinish.size.takeIf { it > 0 }?.let { "${Texts.count(it, "application")} to finish" },
                     waiting.size.takeIf { it > 0 }?.let { "$it waiting to hear" },
                     shows.size.takeIf { it > 0 }?.let { Texts.count(it, "show") + " you got into" }
-                ).joinToString(", ").replaceFirstChar { it.uppercase() }.let { if (it.isBlank()) "Nothing in progress." else "$it." }, style = MaterialTheme.typography.titleMedium)
+                ).joinToString(", ").replaceFirstChar { it.uppercase() }.let { if (it.isBlank()) "Nothing in progress" else it }, "Every entry, from chosen to the work coming home.", key = 111L, height = 150)
                 @Composable fun entry(a: com.emotionalleaves.studioagent.data.Appl) {
                     val o = oppOf[a.oppId]
                     Panel(onClick = { nav.navigate("appl/${a.id}") }) {
@@ -1397,5 +1405,18 @@ fun CallPoster(o: Opp, onOpen: () -> Unit) {
             Text(if (days == 1) "day left" else "days left", style = MaterialTheme.typography.labelSmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
         }
         Text(o.title, Modifier.align(Alignment.BottomStart).padding(14.dp).fillMaxWidth(0.78f), style = MaterialTheme.typography.titleLarge, color = androidx.compose.ui.graphics.Color.White, maxLines = 3)
+    }
+}
+
+/** A calendar leaf: the day of the month big, the month small above it; painted in your color while open, grey once closed. */
+@Composable
+fun DateLeaf(at: Long, closed: Boolean, shift: Float = 0f) {
+    val cs = MaterialTheme.colorScheme
+    val d = if (at > 0) Engine.date(at) else null
+    val bg = if (closed || d == null) cs.surfaceContainerHigh else neighbor(cs.primary, shift, 0.40f)
+    val fg = if (closed || d == null) cs.onSurfaceVariant else Color.White
+    Column(Modifier.width(54.dp).clip(RoundedCornerShape(14.dp)).background(bg).padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(d?.month?.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.US) ?: "Any", style = MaterialTheme.typography.labelMedium, color = fg.copy(alpha = 0.85f))
+        Text(d?.dayOfMonth?.toString() ?: "day", style = if (d != null) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.labelLarge, color = fg)
     }
 }
