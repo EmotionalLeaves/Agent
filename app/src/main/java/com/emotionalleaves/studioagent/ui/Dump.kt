@@ -45,6 +45,7 @@ fun DumpScreen(nav: NavController) {
     val lines = Dump.sort(text.value).mapIndexed { i, l -> moved.lastOrNull { it.first == i }?.let { l.copy(kind = it.second) } ?: l }
     Screen("Empty your head", nav) {
         Intro("dump", "Everything that is buzzing around, one line each, in any order. Nothing needs deciding: the app sorts it into jobs (with their day when you name one), things to buy, and ideas, and puts each away.")
+        Banner("Get it out of your head", "One line each, any order. The app sorts it into jobs, ideas and notes.", key = 804L, height = 150)
         Field("One thing per line", text, lines = 8, mic = true)
         if (putAway.isNotBlank() && lines.isEmpty()) Panel {
             Text("Put away: $putAway.", fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)

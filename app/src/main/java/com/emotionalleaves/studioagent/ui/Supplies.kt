@@ -37,6 +37,7 @@ fun SuppliesScreen(nav: NavController) {
     var cost by rememberSaveable { mutableStateOf(0.0) }
     Screen("Supplies", nav) {
         Intro("supplies", "Tap a supply when it is running low. The shopping list is ready whenever you pass an art store, and nothing runs out in the middle of a session.")
+        Banner("Nothing runs out mid-session", "Tap a supply when it runs low. The list is ready when you pass an art store.", key = 825L, height = 150)
         val low = list.filter { it.second }
         if (low.isNotEmpty()) Panel(strong = true) {
             Text("Running low: " + low.joinToString(", ") { it.first }, fontWeight = FontWeight.SemiBold)

@@ -593,6 +593,7 @@ fun UpdateScreen(nav: NavController) {
     val body = rememberSaveable(draft.second) { mutableStateOf(draft.second) }
     Screen("Studio update", nav) {
         Intro("update", "A short email to the people on your list: new work and where to see it. A few times a year is plenty.")
+        Banner("New work, and where to see it", "A short email to your list. A few times a year is plenty.", key = 811L, height = 150)
         if (st.lastNewsletter > 0) Small("Last one went out ${fmtDate(st.lastNewsletter)}.")
         if (fresh.isEmpty() && shows.isEmpty()) Panel(strong = true) { Text("There is nothing new to tell yet. It is fine to wait until there is a show or a finished piece; that is what people signed up for.") }
         Field("Subject", subject)

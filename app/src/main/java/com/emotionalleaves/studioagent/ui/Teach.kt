@@ -38,6 +38,7 @@ fun TeachScreen(nav: NavController) {
     val places = contacts.filter { it.kind in setOf("community", "nonprofit", "university", "campus") && it.email.isNotBlank() }
     Screen("Teach a class", nav) {
         Intro("teach", "A beginner class is paid, local, and puts your work in front of a room of people who now care about it. You do not need to be an expert: you only need to be a few steps ahead, and kind.")
+        Banner("Paid to share the basics", "Local, beginner level, and a room of people who now care about your work.", key = 815L, height = 150)
         Choice("What to teach", listOf("drawing", "watercolor", "painting", "printmaking", "collage", "phone drawing"), kind, names = { it.replaceFirstChar { c -> c.uppercase() } }) { kind = it }
         Field("Name of the class", title)
         Count("How long", minutes, 45, 180, 15, " min") { minutes = it }

@@ -28,7 +28,7 @@ fun FindableScreen(nav: NavController) {
     val statement by produceState("") { value = withContext(Dispatchers.IO) { G.dao.docsNow().filter { it.type == "statement" && it.text.isNotBlank() }.sortedByDescending { if (it.approved) 1 else 0 }.firstOrNull()?.text.orEmpty() } }
     Screen("When someone looks you up", nav) {
         Intro("findable", "Before choosing work, most jurors and gallery staff search the artist's name. A few simple things make what they find look like a working artist.")
-        Text("${done.size} of ${items.size} done", fontWeight = FontWeight.SemiBold)
+        Banner("When they search your name", "Most jurors look you up before choosing work. A few simple things make it look right.", key = 818L, height = 160, big = "${done.size}/${items.size}", bigLabel = "done")
         items.forEachIndexed { i, label -> Toggle(label, i in done) { on ->
             val all = st.findableDone.split(",").mapNotNull { it.toIntOrNull() }.toMutableSet(); if (on) all += base + i else all -= base + i
             st.findableDone = all.sorted().joinToString(",") } }

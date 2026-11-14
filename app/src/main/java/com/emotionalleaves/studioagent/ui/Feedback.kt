@@ -53,6 +53,7 @@ fun FeedbackScreen(nav: NavController) {
     androidx.compose.runtime.LaunchedEffect(Unit) { com.emotionalleaves.studioagent.work.Engine.noStreakSeen() }
     Screen("Ask for feedback", nav) {
         Intro("feedback", "Three people's honest pick tells you more than a week of wondering. Choose a few pieces, send them numbered with three short questions, and note what each person says.")
+        Banner("Three honest picks", "Tell you more than a week of wondering which piece is strongest.", key = 805L, height = 150)
         if (pickable.size < 2) { Note("Add pictures of at least two pieces in Studio, and you can ask people which is strongest."); return@Screen }
         Section("1. The pieces (three to six is best)")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

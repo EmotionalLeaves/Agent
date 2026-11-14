@@ -79,6 +79,7 @@ fun Letters(nav: NavController) {
     val to = rememberSaveable { mutableStateOf("") }
     Screen("Ready-made emails", nav) {
         Intro("letters", "Short, polite emails for moments when you do not know what to say. Pick one, fill in a name, and it opens in your mail app ready to send. Nothing here goes out by itself.")
+        Banner("Words for awkward moments", "Pick one, add a name, and it opens in your mail app ready to send.", key = 806L, height = 150)
         if (picked < 0) letters.forEachIndexed { i, l -> Panel(onClick = { picked = i }) { Text(l.title, fontWeight = FontWeight.SemiBold); Small(l.whenToUse) } }
         else {
             val l = letters[picked]

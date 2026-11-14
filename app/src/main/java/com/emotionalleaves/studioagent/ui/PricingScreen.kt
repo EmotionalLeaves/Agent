@@ -33,6 +33,7 @@ fun PricingScreen(nav: NavController) {
     var raise by remember { mutableStateOf(10.0) }
     Screen("Your prices", nav) {
         Intro("pricing", "Buyers and galleries trust prices that hold together: the same size costs the same. Start from a simple rule, keep to it, and raise it when work sells.")
+        Banner("Prices that hold together", "The same size costs the same. Keep to one rule, raise it when work sells.", key = 824L, height = 150)
         Num("Your rule: price per square inch, " + st.currency, rule) { st.pricePerSqIn = it }
         Small("Paper and prints often start around 1 to 2 a square inch, paintings around 2 to 4. Add the frame's cost on top when it is framed.")
         Panel {

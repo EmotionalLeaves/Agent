@@ -32,6 +32,7 @@ fun PeopleScreen(nav: NavController) {
     val been = if (tick >= 0) st.peopleTried.split(",").filter { it.isNotBlank() }.toSet() else emptySet()
     Screen("Your people", nav) {
         Intro("people", "Other artists pass on calls, say honestly which piece is strongest, and make starting easier just by working in the same room. One drop-in a month is plenty.")
+        Banner("Your people", "Other artists pass on calls and make starting easier. One drop-in a month is plenty.", key = 823L, height = 150)
         People.places.forEach { p ->
             Panel {
                 Text(p.name, fontWeight = FontWeight.SemiBold)

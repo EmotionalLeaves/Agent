@@ -105,6 +105,7 @@ fun Materials(nav: NavController) {
 
     Screen("Statement, bio and CV", nav) {
         Intro("materials", "The written things every call asks for. You answer the interview once; the app drafts each document; you approve it once and it is reused everywhere.")
+        Banner("Written once, used everywhere", "Answer the interview once. Approve each draft once. Every call reuses it.", key = 807L, height = 150)
         Panel(onClick = { nav.navigate("interview") }, strong = answered == 0) {
             Text("Interview", fontWeight = FontWeight.SemiBold)
             Small("$answered of ${interviewQuestions.size} answered. Everything below is written from these.")
@@ -215,6 +216,7 @@ fun Interview(nav: NavController) {
     val ownQuestion = rememberSaveable { mutableStateOf("") }
     Screen("Interview", nav) {
         Intro("interview", "About 10 minutes, once. Talk or type. Rough is good: your own words are what make the writing sound like you. You can stop and come back.")
+        Banner("Seven questions, your own words", "About ten minutes. Talk or type; rough is good. Stop and come back any time.", key = 808L, height = 150)
         // One question at a time, so the screen never looks like a form to get through.
         val all = interviewQuestions + answers.keys.filter { it.startsWith("own:") }.sorted().map { it to it.removePrefix("own:") }
         var at by rememberSaveable { mutableStateOf(all.indexOfFirst { answers[it.first].isNullOrBlank() }.coerceAtLeast(0)) }
@@ -414,6 +416,7 @@ fun Facts(nav: NavController) {
     var editing by remember { mutableStateOf<Fact?>(null) }
     Screen("CV facts", nav) {
         Intro("facts", "Only true, finished things. A show you applied to is not a line; a show you were in is. Accepted applications are added here automatically.")
+        Banner("Only true, finished things", "A show you were in is a line. Accepted entries land here by themselves.", key = 809L, height = 150)
         // Already have a CV somewhere? Paste it once; each line lands under its heading, to check and fix.
         Expand("Paste a CV you already have") {
             val pasted = rememberSaveable { mutableStateOf("") }
@@ -493,6 +496,7 @@ fun PortfolioOrder(nav: NavController) {
     }
     Screen("Portfolio order", nav) {
         Intro("order", "Open with your strongest piece and close with one that stays with people. Works in a series sit together. This order is used for the PDF, the web page and the materials kit.")
+        Banner("First and last matter most", "Strongest first, one that stays with people last, a series kept together.", key = 810L, height = 150)
         TextButton(onClick = { nav.navigate("feedback") }) { Text("Not sure which is strongest? Ask a few people") }
         ordered.forEachIndexed { i, w ->
             Panel {

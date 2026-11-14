@@ -1213,6 +1213,7 @@ fun Sources(nav: NavController) {
     var busy by remember { mutableStateOf(false) }
     Screen("Where calls come from", nav) {
         Intro("sources", "Eight big listing sites are already here and are read once a day. You can add more: a listing page, or the sender of email alerts you get.")
+        Banner("Where calls come from", "Big listing sites, read once a day. Add any page or email alert you get.", key = 801L, height = 150)
         LaunchedEffect(Unit) { Engine.seedSources() }
         if (sources.isEmpty()) Empty("No sources yet. Calls you share or paste still arrive without one.")
         Explain("What can I add here?", "Email source: the sender's address or domain (for example callforentry.org). Needs email set up in You, Settings, Email. Page source: only add a listing page whose terms allow automated reading; the app reads it once a day. Pages that build their list with scripts will not work.")
@@ -1354,7 +1355,7 @@ fun JuryView(nav: NavController, id: Long) {
         scope.launch { pager.scrollToPage(to) }
     }
     Screen("As a juror sees it", nav) {
-        Small("Jurors often look at each image for only a few seconds. Put the strongest first, and end on one that stays with them.")
+        Banner("A few seconds per image", "That is all most jurors give. Strongest first; end on one that stays with them.", key = 802L, height = 150)
         androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.fillMaxWidth().height(420.dp)) { i ->
             val w = chosen[i]
             Column(Modifier.fillMaxSize().clip(RoundedCornerShape(3.dp)).background(Color(0xFF1C1C1C)).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

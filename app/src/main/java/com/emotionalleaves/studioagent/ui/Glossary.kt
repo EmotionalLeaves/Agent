@@ -66,6 +66,7 @@ fun GlossaryScreen(nav: NavController) {
     val q = rememberSaveable { mutableStateOf("") }
     Screen("Words calls and galleries use", nav) {
         Intro("glossary", "The words you will meet in calls and at galleries, each in plain language.")
+        Banner("Plain words for art-world words", "Every term you will meet in calls and at galleries, explained simply.", key = 819L, height = 150)
         Field("Find a word", q)
         val w = q.value.trim().lowercase()
         glossary.filter { w.isBlank() || it.first.lowercase().contains(w) || it.second.lowercase().contains(w) }.forEach { (term, meaning) ->

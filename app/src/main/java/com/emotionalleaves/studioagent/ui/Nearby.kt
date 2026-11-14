@@ -74,6 +74,7 @@ fun Nearby(nav: NavController, startWithLabs: Boolean = false) {
     val known = contacts.map { it.venue.lowercase().trim() }.toSet()
     Screen("Places near you", nav) {
         Intro("nearby", "Real galleries, art centers, libraries and community centers around you, from the free OpenStreetMap. Add the ones worth a visit to People; nothing is sent to anyone.")
+        Banner("Places near you worth a visit", "Galleries, art centers, libraries and labs, from the free OpenStreetMap.", key = 822L, height = 150)
         Choice("Looking for", listOf("show", "labs"), if (labs) "labs" else "show", names = { if (it == "show") "Places that show art" else "Printing and framing" }) { labs = it == "labs"; found = emptyList() }
         Field("Town or city", town)
         Choice("How far", listOf("10", "25", "50"), reach, names = { distanceWords(it.toDouble()) }) { reach = it }

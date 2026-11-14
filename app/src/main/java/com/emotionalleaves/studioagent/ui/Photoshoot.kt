@@ -63,6 +63,7 @@ fun PhotoshootScreen(nav: NavController) {
     }
     Screen("Photograph your pieces", nav) {
         Intro("photoshoot", "Every piece without a picture, one after another: tap, photograph, and the next one comes up. Do it by a big window on a bright, overcast day, the piece flat on the wall and the phone square to it.")
+        Banner("Every piece, photographed", "One after another by a big window on a bright, overcast day.", key = 813L, height = 150)
         if (next == null) {
             Panel(strong = true) { Text(if (done > 0) "Done: ${Texts.count(done, "piece")} photographed." else "Every piece has a picture.", fontWeight = FontWeight.SemiBold); Small("Straighten any that are not square from the piece's page.") }
             return@Screen

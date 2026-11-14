@@ -46,6 +46,7 @@ fun DecideScreen(nav: NavController) {
     androidx.compose.runtime.LaunchedEffect(Unit) { st.lastCallsLook = now() }
     Screen("Decide, one at a time", nav) {
         Intro("decide", "The calls that fit you, one at a time. Yes starts the entry, No teaches the ranking, Not this year keeps it for next year. Skip if you are not sure.")
+        Banner("One call at a time", "Yes starts the entry. No teaches the ranking. Not this year keeps it.", key = 817L, height = 150)
         if (o == null) {
             Panel(strong = true) { Text(if (decided > 0) "Done: ${Texts.count(decided, "call")} decided." else "Nothing waiting to be decided.", style = MaterialTheme.typography.titleMedium) }
             Button(onClick = { nav.navigate("calls") }) { Text("Back to Calls") }

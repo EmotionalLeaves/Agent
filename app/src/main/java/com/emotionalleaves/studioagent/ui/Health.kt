@@ -26,6 +26,7 @@ fun HealthScreen(nav: NavController) {
     val now = now(); val day = 86_400_000L
     Screen("Is everything working?", nav) {
         Intro("health", "The parts of the app that work on their own, each checked in plain words. A cross says what to do; nothing here is urgent.")
+        Banner("Everything that runs on its own", "Checked in plain words. A cross says what to do; nothing here is urgent.", key = 820L, height = 150)
         val ran = st.lastDaily
         Check(ran > now - 2 * day, if (ran == 0L) "The daily check has not run yet. It runs once a day when the phone is online." else "Daily check: last ran ${fmtDate(ran)}, ${clock(ran)}." + (if (ran < now - 2 * day) " Phones sometimes pause apps to save battery: allow Studio Agent to run in the background in your phone's battery settings." else ""))
         if (st.wifiOnly) Small("It waits for Wi-Fi and charging, as you chose.")

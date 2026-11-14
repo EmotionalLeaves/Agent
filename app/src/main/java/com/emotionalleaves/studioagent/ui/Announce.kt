@@ -27,6 +27,7 @@ fun AnnounceScreen(nav: NavController, applId: Long) {
     val tick by st.changed.collectAsState()
     Screen("Tell people about the show", nav) {
         Intro("announce", "Newspaper calendars, radio, the venue and boards around town list small shows for free. The announcement is written from your show's details and your bio; change anything, then send it to each place.")
+        Banner("Free listings for your show", "Papers, radio, the venue and boards around town list small shows at no cost.", key = 814L, height = 150)
         Field("The announcement", text, { text = it }, lines = 10)
         Button(onClick = { Share.text(ctx, text) }) { Text("Send or copy it") }
         Section("Where it goes")

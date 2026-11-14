@@ -45,6 +45,7 @@ fun CommissionStart(nav: NavController) {
     var busy by remember { mutableStateOf(false) }
     Screen("A piece made for someone", nav) {
         Intro("commission", "A commission, start to finish: the quote, the deposit, one draft to show them, the final payment and the hand-over, each on your week. The price starts from your own rule for the size.")
+        Banner("Made for someone, step by step", "Quote, deposit, one draft, final payment, hand-over. Each lands on your week.", key = 816L, height = 150)
         Field("Their name", name, { name = it })
         Field("Their email (for the quote)", email, { email = it })
         Field("Or their phone", phone, { phone = it })
