@@ -55,7 +55,6 @@ fun LookScreen(nav: NavController, id: Long) {
     val w = works?.firstOrNull { it.id == id }
     if (w == null) { Screen("Fresh eyes", nav) { Loading() }; return }
     val sessions by dao.sessions().collectAsState(emptyList())
-        Banner("See it like a stranger", "Flip it, take the color away, squint. The checks painters use on their own work.", key = 821L, image = path.ifBlank { null }, height = 170)
     val progress = sessions.filter { it.artworkId == id && it.photoPath.isNotBlank() && File(it.photoPath).exists() }.maxByOrNull { it.start }
     var useProgress by rememberSaveable(id) { mutableStateOf(w.status == "in_progress" || w.imagePath.isBlank()) }
     val path = if (useProgress && progress != null) progress.photoPath else w.imagePath.ifBlank { progress?.photoPath.orEmpty() }
