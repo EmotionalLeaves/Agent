@@ -58,7 +58,7 @@ fun YearScreen(nav: NavController) {
         // The year so far, as pictures: every piece started this year, five across. Proof, not a score.
         val works by G.dao.artworks().collectAsState(emptyList())
         val yr = java.time.LocalDate.now().year
-        val made = works.filter { Engine.date(it.createdAt).year == yr && it.status != "idea" }.sortedBy { it.createdAt }
+        val made = works.filter { (it.year == yr || (it.year == 0 && it.createdAt > 0 && Engine.date(it.createdAt).year == yr)) && it.status != "idea" }.sortedBy { it.createdAt }
         if (made.isNotEmpty()) {
             Section("Made in $yr: " + Texts.count(made.size, "piece"))
             made.chunked(5).forEach { row ->
