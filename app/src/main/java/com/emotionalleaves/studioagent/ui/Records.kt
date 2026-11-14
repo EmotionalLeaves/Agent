@@ -1,5 +1,11 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -183,9 +189,29 @@ fun Records(nav: NavController) {
         val year = LocalDate.now().year
         val thisYear = ledger.filter { Engine.date(it.date).year == year }
         Panel {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column(Modifier.weight(1f)) { Small("Spent in $year"); Text(money(-thisYear.filter { it.amount < 0 }.sumOf { it.amount }), style = MaterialTheme.typography.headlineSmall) }
-                Column(Modifier.weight(1f)) { Small("Earned in $year"); Text(money(thisYear.filter { it.amount > 0 }.sumOf { it.amount }), style = MaterialTheme.typography.headlineSmall) }
+            // The year month by month: two bars a month, earned in your color and spent in grey, so the shape of the year shows at a glance.
+            // The totals are on the banner at the top; this is where they came from.
+            val mcs = MaterialTheme.colorScheme
+            val byMonth = (1..12).map { m -> val inM = thisYear.filter { Engine.date(it.date).monthValue == m }
+                inM.filter { it.amount > 0 }.sumOf { it.amount } to -inM.filter { it.amount < 0 }.sumOf { it.amount } }
+            val top = byMonth.maxOf { maxOf(it.first, it.second) }.coerceAtLeast(1.0)
+            val nowM = LocalDate.now().monthValue
+            Row(Modifier.fillMaxWidth().height(110.dp).semantics(mergeDescendants = true) {
+                contentDescription = "Earned and spent each month of $year" }, verticalAlignment = Alignment.Bottom) {
+                byMonth.forEachIndexed { k, (inn, out) ->
+                    Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+                        Row(Modifier.weight(1f), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Box(Modifier.width(7.dp).fillMaxHeight((inn / top).toFloat().coerceIn(0.02f, 1f)).clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)).background(if (inn > 0) mcs.primary else mcs.surfaceContainerHigh))
+                            Box(Modifier.width(7.dp).fillMaxHeight((out / top).toFloat().coerceIn(0.02f, 1f)).clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp)).background(if (out > 0) mcs.outline else mcs.surfaceContainerHigh))
+                        }
+                        Text("JFMAMJJASOND"[k].toString(), style = MaterialTheme.typography.labelSmall, fontWeight = if (k + 1 == nowM) FontWeight.Bold else FontWeight.Normal,
+                            color = if (k + 1 == nowM) mcs.onSurface else mcs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                    }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(mcs.primary)); Small("Earned")
+                Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(mcs.outline)); Small("Spent")
             }
             val net = thisYear.sumOf { it.amount }
             if (thisYear.isNotEmpty()) Small((if (net >= 0) "Ahead by " else "Behind by ") + money(kotlin.math.abs(net)) + " this year.")
