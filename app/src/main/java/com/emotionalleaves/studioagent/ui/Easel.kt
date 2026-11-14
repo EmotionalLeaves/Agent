@@ -1,5 +1,13 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -66,7 +74,12 @@ fun Easel(
             Text(dateLine, Modifier.weight(1f), color = Color.White.copy(alpha = 0.88f), style = MaterialTheme.typography.labelLarge)
             menu()
         }
-        Column(Modifier.align(Alignment.BottomStart).padding(22.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // The one orchestrated moment in the app: the first time Today opens after the app starts, the step rises into place.
+        // After that it is simply there, so it never gets in the way of a quick look.
+        var risen by remember { mutableStateOf(EaselIntro.done) }
+        LaunchedEffect(Unit) { EaselIntro.done = true; risen = true }
+        val rise by animateFloatAsState(if (risen) 1f else 0f, tween(620, easing = FastOutSlowInEasing), label = "easel")
+        Column(Modifier.align(Alignment.BottomStart).padding(22.dp).graphicsLayer { alpha = rise; translationY = (1f - rise) * 36.dp.toPx() }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (piece != null && piece.title.isNotBlank()) Text(piece.title, color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.labelLarge)
             Text(title, color = Color.White, style = MaterialTheme.typography.displaySmall, maxLines = 4, overflow = TextOverflow.Ellipsis)
             if (detail.isNotBlank()) Text(detail, color = Color.White.copy(alpha = 0.86f), style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis)
@@ -82,6 +95,9 @@ fun Easel(
         }
     }
 }
+
+/** Whether Today's step has risen into place once since the app started. */
+object EaselIntro { var done = false }
 
 /** A white pill with the play mark: the one big action. */
 @Composable

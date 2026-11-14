@@ -735,3 +735,4 @@ One real change per round. Pushed and built every ten rounds.
 728. Is everything working opens on the count: "4 of 5 parts working" (or "Everything is working"), with the count in a badge, before the list says which part needs what.
 729. The new-in-this-version line on Today reads "7 new things in this version" with a chevron that turns when the list is open, instead of "(show)" tacked on the end.
 730. Portfolio order: since it is a real sequence, each place number is big, the first and last (the two that matter most) in your color and marked "opens" and "closes", with the picture cropped square and rounded beside it.
+731. One orchestrated moment: the first time Today opens after the app starts, the step on the easel rises gently into place. After that it is simply there, so it never slows a quick look. It follows the phone's animation setting, so it is off for anyone who has turned animations off.
