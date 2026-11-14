@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -344,8 +345,10 @@ fun IconRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String
     Column {
         Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { onClick() }.heightIn(min = 60.dp).padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(cs.secondaryContainer), contentAlignment = Alignment.Center) {
-                Icon(icon, null, Modifier.size(20.dp), tint = cs.onSecondaryContainer)
+            // Each row's mark is a small painted chip: a near neighbor of your color picked by the row's name, so a list reads as a set of colors, the same each visit.
+            val shift = ((title.hashCode() % 5 + 5) % 5) * 13f - 26f
+            Box(Modifier.size(42.dp).clip(RoundedCornerShape(13.dp)).background(Brush.linearGradient(listOf(neighbor(cs.primary, shift, 0.50f), neighbor(cs.primary, shift + 10f, 0.34f)))), contentAlignment = Alignment.Center) {
+                Icon(icon, null, Modifier.size(22.dp), tint = Color.White)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
@@ -472,4 +475,11 @@ fun DateField(label: String, value: String, onValue: (String) -> Unit) {
         }
         Hair()
     }
+}
+
+/** A near neighbor of a color: the same family, turned a little round the wheel, at a chosen lightness. */
+fun neighbor(base: Color, shift: Float, light: Float, sat: Float = -1f): Color {
+    val f = FloatArray(3)
+    androidx.core.graphics.ColorUtils.colorToHSL(android.graphics.Color.argb(255, (base.red * 255).toInt(), (base.green * 255).toInt(), (base.blue * 255).toInt()), f)
+    return hsl(f[0] + shift, if (sat >= 0f) sat else f[1].coerceIn(0.35f, 0.7f), light)
 }
