@@ -71,7 +71,7 @@ fun DecideScreen(nav: NavController) {
             FitRing(o.fitScore)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text((if (o.deadline > 0) "Closes ${fmtDate(o.deadline)} (" + Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline)) + "). " else "") + (if (o.fee > 0) "Fee ${money(o.fee)}." else "Free to enter."), fontWeight = FontWeight.SemiBold)
-                o.fitReasons.lines().filter { it.isNotBlank() }.take(3).forEach { Small(it) }
+                o.fitReasons.lines().filter { it.isNotBlank() && !it.startsWith("Free to enter") && !it.startsWith("Fee ") }.take(3).forEach { Small(it) }
             }
         }
         Engine.plainWordsCached(o).take(3).forEach { Text("• $it") }

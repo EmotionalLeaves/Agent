@@ -808,8 +808,20 @@ fun SessionScreen(nav: NavController) {
                 } else {
                     // Back here means "not yet", not "leave".
                     BackHandler { stopping = false }
+                    // What just happened, big, before the one question: the minutes are the point.
+                    val doneMin = (secs / 60).toInt()
+                    Text(if (doneMin < 1) "Under a minute" else Texts.count(doneMin, "minute"), style = MaterialTheme.typography.displaySmall)
                     H("Before you go")
                     Field("Next time, start with…", nextStep, mic = true)
+                    // One tap to fill it: the next small step on the piece, or a plain way back in.
+                    if (nextStep.value.isBlank()) {
+                        val nextSmall = work?.let { w -> Texts.steps(w.steps).firstOrNull { !it.first }?.second }
+                        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOfNotNull(nextSmall, "Pick up where I stopped", "Look at it fresh for a minute first").distinct().forEach { sug ->
+                                androidx.compose.material3.SuggestionChip(onClick = { nextStep.value = sug }, label = { Text(sug) })
+                            }
+                        }
+                    }
                     // One line is all that is asked. A note or photo is there if wanted, folded away.
                     Expand("Add a note or a progress photo", startOpen = note.value.isNotBlank() || photo.isNotBlank()) {
                         Field("Anything to note", note, lines = 2)
