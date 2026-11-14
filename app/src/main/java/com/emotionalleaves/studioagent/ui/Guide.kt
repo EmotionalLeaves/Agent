@@ -300,8 +300,8 @@ fun LevelsBody() {
                     .background(if (i < level) cs.primary else if (here) cs.primary else cs.surfaceContainerHigh)
                     .semantics(mergeDescendants = true) { contentDescription = "Level $i, $name" + if (here) ", you are here" else if (i < level) ", done" else "" }) {
                     if (here) {
-                        ColorField(cs.primary, Modifier.matchParentSize(), key = 400L + i)
-                        Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.2f), 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.72f))))
+                        // A smooth wash, not painted blocks: this card is mostly words, and words need a calm ground.
+                        Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(neighbor(cs.primary, -16f, 0.36f), neighbor(cs.primary, 20f, 0.24f)))))
                     }
                     val fg = if (i <= level) androidx.compose.ui.graphics.Color.White else cs.onSurfaceVariant
                     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = if (here) 18.dp else 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

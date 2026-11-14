@@ -196,7 +196,8 @@ fun Records(nav: NavController) {
                 inM.filter { it.amount > 0 }.sumOf { it.amount } to -inM.filter { it.amount < 0 }.sumOf { it.amount } }
             val top = byMonth.maxOf { maxOf(it.first, it.second) }.coerceAtLeast(1.0)
             val nowM = LocalDate.now().monthValue
-            Row(Modifier.fillMaxWidth().height(110.dp).semantics(mergeDescendants = true) {
+            if (byMonth.all { it.first == 0.0 && it.second == 0.0 }) Small("Nothing in or out yet this year. Two bars a month appear here as money comes and goes: earned in your color, spent in grey.")
+            else Row(Modifier.fillMaxWidth().height(110.dp).semantics(mergeDescendants = true) {
                 contentDescription = "Earned and spent each month of $year" }, verticalAlignment = Alignment.Bottom) {
                 byMonth.forEachIndexed { k, (inn, out) ->
                     Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
@@ -209,7 +210,7 @@ fun Records(nav: NavController) {
                     }
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (byMonth.any { it.first > 0 || it.second > 0 }) Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(mcs.primary)); Small("Earned")
                 Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(mcs.outline)); Small("Spent")
             }
