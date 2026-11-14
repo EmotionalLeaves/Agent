@@ -738,3 +738,4 @@ One real change per round. Pushed and built every ten rounds.
 731. One orchestrated moment: the first time Today opens after the app starts, the step on the easel rises gently into place. After that it is simply there, so it never slows a quick look. It follows the phone's animation setting, so it is off for anyone who has turned animations off.
 732. Two more screenshots in the test run: a piece's page scrolled to its six stops, and scrolled to the bottom, so the whole page gets looked at by eye, not just its top.
 733. A piece without a picture: Take a photo, Scan it and Choose a file now sit on its painted canvas as white buttons, like every banner, instead of three separate buttons stacked under it. The canvas grows to fit them.
+734. Sideways or in split screen, the easel on Today was taller than the screen, so the step and Start fell below the edge. It now keeps to most of the screen's height (and stays its full size on a phone held upright).

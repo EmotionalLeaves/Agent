@@ -61,7 +61,8 @@ fun Easel(
 ) {
     val cs = MaterialTheme.colorScheme
     Box(
-        Modifier.fillMaxWidth().height(460.dp).clip(RoundedCornerShape(28.dp)).background(cs.primary)
+        // Tall on a phone held upright; sideways (or in split screen) it keeps to most of the height, so the step and Start stay in view.
+        Modifier.fillMaxWidth().height((androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp * 0.62f).toInt().coerceIn(280, 460).dp).clip(RoundedCornerShape(28.dp)).background(cs.primary)
             .clickable(role = Role.Button, onClickLabel = "Open today's step") { onOpen() }
     ) {
         if (piece != null && piece.imagePath.isNotBlank())
