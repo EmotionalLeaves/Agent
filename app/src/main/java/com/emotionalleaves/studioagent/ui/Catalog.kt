@@ -430,13 +430,19 @@ fun WorkDetail(nav: NavController, id: Long) {
                 val facts = listOfNotNull(w.year.takeIf { it > 0 }?.toString(), w.medium.ifBlank { null }, if (w.widthIn > 0 && w.heightIn > 0) Texts.dims(w.widthIn, w.heightIn) else null)
                 if (facts.isNotEmpty()) Text(facts.joinToString(", "), style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.75f))
             }
-        } else Box(Modifier.fillMaxWidth().height(220.dp).clip(RoundedCornerShape(24.dp))) {
+        } else Box(Modifier.fillMaxWidth().heightIn(min = 260.dp).clip(RoundedCornerShape(24.dp))) {
             // No picture yet: the canvas, blocked in with color, waiting.
             ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = w.id, shift = ((w.id * 47) % 90 - 45).toFloat())
             Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Transparent, 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f))))
-            Column(Modifier.align(Alignment.BottomStart).padding(18.dp)) {
+            Column(Modifier.align(Alignment.BottomStart).padding(18.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.headlineMedium, color = androidx.compose.ui.graphics.Color.White)
-                Text("No picture yet. Photograph it, scan it, or bring in the file; everything else can come later.", style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
+                Text("No picture yet. Everything else can come later.", style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
+                // The three ways to give it a picture sit on the canvas itself, as white buttons, like every banner.
+                FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    WhitePill("Take a photo") { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }
+                    WhitePill("Scan it", filled = false) { scan() }
+                    WhitePill("Choose a file", filled = false) { pick.launch("image/*") }
+                }
             }
         }
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -448,14 +454,7 @@ fun WorkDetail(nav: NavController, id: Long) {
                     Small("Your reference. The piece's own picture goes here once it is made.")
                 }
             }
-            if (w.imagePath.isBlank()) Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { try { take.launch(Share.uri(ctx, orig)) } catch (e: Exception) { status = "No camera app found." } }, modifier = Modifier.fillMaxWidth()) { Text("Take a photo") }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { scan() }, modifier = Modifier.weight(1f)) { Text("Scan it", maxLines = 1) }
-                    OutlinedButton(onClick = { pick.launch("image/*") }, modifier = Modifier.weight(1f)) { Text("Choose a file", maxLines = 1) }
-                }
-                Small("Scan finds the edges of a flat piece (paper, prints) and squares it for you.")
-            }
+            if (w.imagePath.isBlank()) Small("Scan finds the edges of a flat piece (paper, prints) and squares it for you.")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (w.imagePath.isBlank()) { } else {
                     // Fixing the picture is the common need; replacing it is rarer, so it sits behind one button.
