@@ -963,12 +963,12 @@ fun More(nav: NavController) {
         // A cover: your name, set like a show title, over your own work (or a field in your color).
         val coverWorks by dao.artworks().collectAsState(emptyList())
         val cover = Engine.heroPiece(coverWorks)
-        Box(Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(24.dp)).clickable { nav.navigate("settings/you") }) {
+        Box(Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(24.dp)).clickable(onClickLabel = "Edit your details") { nav.navigate("settings/you") }) {
             if (cover != null && cover.imagePath.isNotBlank()) PathImage(cover.imagePath, Modifier.matchParentSize(), 1000, ContentScale.Crop)
             else ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = 3L)
             Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Transparent, 1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.75f))))
             Column(Modifier.align(Alignment.BottomStart).padding(18.dp)) {
-                Text(st.fullName.ifBlank { "Your name here" }, style = MaterialTheme.typography.displaySmall, color = androidx.compose.ui.graphics.Color.White)
+                Text(st.fullName.ifBlank { "Add your name" }, style = MaterialTheme.typography.displaySmall, color = androidx.compose.ui.graphics.Color.White)
                 Text(listOfNotNull(st.mediums.split(",").firstOrNull { it.isNotBlank() }?.trim()?.replaceFirstChar { it.uppercase() }, st.city.ifBlank { null }).joinToString(", ").ifBlank { "Tap to add your details" },
                     style = MaterialTheme.typography.bodyMedium, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f))
             }

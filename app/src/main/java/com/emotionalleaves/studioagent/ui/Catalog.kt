@@ -1,5 +1,9 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.IconButton
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
@@ -134,7 +138,10 @@ fun Works(nav: NavController) {
             }
         }
     }
-    Screen("Studio", nav, back = false) {
+    // Show your work: the finished pieces on a gallery wall, one at a time, for showing someone on your phone.
+    Screen("Studio", nav, back = false, actions = {
+        IconButton(onClick = { nav.navigate("wall") }) { Icon(Icons.Default.PlayArrow, "Show your work on a wall", tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+    }) {
         Intro("studio", "Every piece you make lives here, with its image and details. Works are single pieces; Series are groups that belong together. Already have finished files? Add from my files picks several at once and each becomes a piece.")
         Choice("", listOf("works", "series", "ideas"), tab) { tab = it }
         if (tab == "ideas") IdeasBody(nav)

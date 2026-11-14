@@ -180,7 +180,7 @@ fun Root(incoming: MutableState<Incoming?>) {
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             // Sessions, setup and the saved screen get the whole phone: nothing else to tap.
-            if (route.substringBefore('/') !in setOf("session", "done", "crop", "share", "tour")) {
+            if (route.substringBefore('/') !in setOf("session", "done", "crop", "share", "tour", "wall")) {
                 // A floating bar of ink with the tab you are on lit in your own color: always four, always labelled.
                 val cs = MaterialTheme.colorScheme
                 val dark = isDark()
@@ -218,6 +218,7 @@ fun Root(incoming: MutableState<Incoming?>) {
         ) {
             composable("home") { Home(nav) }
             composable("tour") { Tour(nav) }
+            composable("wall") { ShowWall(nav) }
             composable("about") { About(nav) }
             composable("session") { SessionScreen(nav) }
             composable("admin") { Admin(nav) }

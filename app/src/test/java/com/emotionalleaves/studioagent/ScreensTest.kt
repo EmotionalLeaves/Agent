@@ -196,6 +196,7 @@ class ScreensTest {
         shot("67i_pricing", "pricing", "What your rule gives")
         shot("67j_findable", "findable", "done")
         shot("71_records_money", "records", "Records", scrollTo = "Earned")
+        shot("74_wall", "wall", "wall")
         shot("72_home_lower", "home", "Your week", scrollTo = "Your week")
         shot("73_path_levels", "path", "the five levels", scrollTo = "Level 0")
         shot("67k_tools", "tools", "Making the work")
