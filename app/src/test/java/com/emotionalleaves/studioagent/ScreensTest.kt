@@ -108,6 +108,8 @@ class ScreensTest {
         shot("10_home", "home", "Block in the big shapes")
         shot("11_studio", "works", "Blue Hour")
         shot("12_piece", "work/${ids["wip"]}", "Small steps")
+        shot("75_piece_stops", "work/${ids["wip"]}", "Small steps", scrollTo = "Where it stands")
+        shot("76_piece_lower", "work/${ids["wip"]}", "Small steps", scrollTo = "Delete")
         shot("13_session_setup", "session", "Two-minute start")
         shot("14_calls", "calls", "Winter Open")
         shot("15_call", "call/${ids["opp"]}", "Details")
