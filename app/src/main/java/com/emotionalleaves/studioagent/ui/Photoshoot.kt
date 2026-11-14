@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -63,23 +65,25 @@ fun PhotoshootScreen(nav: NavController) {
     }
     Screen("Photograph your pieces", nav) {
         Intro("photoshoot", "Every piece without a picture, one after another: tap, photograph, and the next one comes up. Do it by a big window on a bright, overcast day, the piece flat on the wall and the phone square to it.")
-        Banner("Every piece, photographed", "One after another by a big window on a bright, overcast day.", key = 813L, height = 150)
         if (next == null) {
-            Panel(strong = true) { Text(if (done > 0) "Done: ${Texts.count(done, "piece")} photographed." else "Every piece has a picture.", fontWeight = FontWeight.SemiBold); Small("Straighten any that are not square from the piece's page.") }
+            Banner(if (done > 0) "Done: ${Texts.count(done, "piece")} photographed" else "Every piece has a picture", "", key = 813L, height = 150)
+            Small("Straighten any that are not square from the piece's page.")
             return@Screen
         }
-        Text("${Texts.count(todo.count { it.id !in skipped }, "piece")} to go" + (if (done > 0) ", $done done" else ""), style = MaterialTheme.typography.titleMedium)
-        Panel(strong = true) {
-            Text(next.title.ifBlank { "Untitled #${next.id}" }, style = MaterialTheme.typography.headlineSmall)
-            Small(listOfNotNull(next.medium.ifBlank { null }, if (next.widthIn > 0) Texts.dims(next.widthIn, next.heightIn) else null, statusWords(next.status)).joinToString(", "))
-            Button(onClick = {
-                pending = next.id
-                val f = File(dir, "work_${next.id}_orig.jpg")
-                try { take.launch(Share.uri(ctx, f)) } catch (e: Exception) { said = "No camera app found." }
-            }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Photograph it") }
-            OutlinedButton(onClick = { pending = next.id; Scan.start(ctx, { scanned.launch(it) }, { said = it }) }, modifier = Modifier.fillMaxWidth()) { Text("Scan it instead (flat pieces)") }
-            TextButton(onClick = { skipped = skipped + next.id }) { Text("Skip this one for now") }
-        }
+        // The piece in front of you fills the top as a painted canvas waiting for its picture, with what to do as white buttons on it.
+        val left = todo.count { it.id !in skipped }
+        Banner(next.title.ifBlank { "Untitled #${next.id}" }, listOfNotNull(next.medium.ifBlank { null }, if (next.widthIn > 0) Texts.dims(next.widthIn, next.heightIn) else null, statusWords(next.status)).joinToString(", ") +
+            (if (done > 0) ". $done done so far." else "."), key = next.id, height = 260, big = "$left", bigLabel = "to go", extra = {
+            androidx.compose.foundation.layout.FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                WhitePill("Photograph it") {
+                    pending = next.id
+                    val f = File(dir, "work_${next.id}_orig.jpg")
+                    try { take.launch(Share.uri(ctx, f)) } catch (e: Exception) { said = "No camera app found." }
+                }
+                WhitePill("Scan it (flat pieces)", filled = false) { pending = next.id; Scan.start(ctx, { scanned.launch(it) }, { said = it }) }
+                WhitePill("Skip for now", filled = false) { skipped = skipped + next.id }
+            }
+        })
         if (said.isNotBlank()) Note(said)
         Small("Fill the frame with the piece, edges just inside. No flash. Turn off any lamp that shines on the surface.")
     }
