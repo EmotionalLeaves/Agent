@@ -632,6 +632,11 @@ fun PlanShow(nav: NavController, contactId: Long) {
     Screen("Plan the show", nav) {
         Intro("planshow", "A show of your own at ${c.venue.ifBlank { "this venue" }}. Give it a name and an opening date; every step is dated back from there and lands on Today when it is due.")
         var oneDay by rememberSaveable { mutableStateOf(false) }
+        // The show's front: its name (or the venue) big, and the weeks to the opening in the corner.
+        val openDay = try { java.time.LocalDate.parse(opening) } catch (e: Exception) { null }
+        val weeksTo = openDay?.let { java.time.temporal.ChronoUnit.WEEKS.between(java.time.LocalDate.now(), it) }
+        Banner(title.value.ifBlank { "Your show at " + c.venue.ifBlank { "this venue" } }, "Give it a name and a date. Every step is dated back from there and lands on Today when it is due.",
+            key = 904L + c.id, height = 160, big = weeksTo?.takeIf { it >= 0 }?.toString(), bigLabel = if (weeksTo == 1L) "week to go" else "weeks to go")
         Choice("What kind", listOf("show", "day"), if (oneDay) "day" else "show", names = { if (it == "show") "A show that hangs for weeks" else "One day: open studio or pop-up" }) { oneDay = it == "day" }
         Field("Title (for example: Before the First Shift)", title)
         // Naming a show is hard: a few plain ideas from your pieces and your statement, one tap to use one.
@@ -654,7 +659,13 @@ fun PlanShow(nav: NavController, contactId: Long) {
         val day = try { java.time.LocalDate.parse(opening) } catch (e: Exception) { null }
         if (day != null) {
             Section("The plan")
-            (if (oneDay) Engine.openStudioSteps(day) else Engine.ownShowSteps(day, weeks)).forEach { (t, d) -> Row { Text(fmtDate(Engine.millis(d.atTime(12, 0))), Modifier.width(96.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(t, Modifier.weight(1f)) } }
+            // Every step on its own calendar leaf, past ones grey, so the plan reads as dates you can see coming.
+            (if (oneDay) Engine.openStudioSteps(day) else Engine.ownShowSteps(day, weeks)).forEachIndexed { k, (t, d) ->
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    DateLeaf(Engine.millis(d.atTime(12, 0)), closed = d.isBefore(java.time.LocalDate.now()), shift = if (d == day) 30f else 0f)
+                    Text(t, Modifier.weight(1f), style = if (d == day) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium, fontWeight = if (d == day) FontWeight.SemiBold else FontWeight.Normal)
+                }
+            }
             if (day.isBefore(java.time.LocalDate.now().plusDays(21))) Small("That is soon. The early steps are already due; do them in order and skip what does not apply.")
         }
         Status(status)

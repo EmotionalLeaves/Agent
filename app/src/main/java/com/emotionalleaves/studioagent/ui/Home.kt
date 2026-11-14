@@ -836,6 +836,8 @@ fun Admin(nav: NavController) {
     LaunchedEffect(docs, appls, contacts) { withContext(Dispatchers.IO) { items = try { Engine.pending() } catch (e: Exception) { emptyList() }; loaded = true } }
     Screen("Waiting for your yes", nav) {
         Intro("admin", "Everything that needs a yes from you, in one place. One tap each. When this list is empty you are done.")
+        if (loaded && items.isNotEmpty()) Banner(if (items.size == 1) "One thing waits for your yes" else "${items.size} things wait for your yes",
+            "One tap each. When this list is empty, you are done.", key = 903L, height = 150, big = "${items.size}", bigLabel = "to approve")
         if (loaded && items.isEmpty()) Empty("Nothing to approve. You are done here.", "Back to Today") { nav.popBackStack() }
         items.forEach { p -> IconRow(if (p.route.startsWith("doc")) Icons.Default.Edit else if (p.route.startsWith("appl")) Icons.AutoMirrored.Filled.Send else Icons.Default.Done, p.title, p.detail) { nav.navigate(p.route) } }
     }

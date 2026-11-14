@@ -710,3 +710,7 @@ One real change per round. Pushed and built every ten rounds.
 703. While you were away is a short timeline now: a dot for each thing done for you, joined by a thin line, instead of a bulleted list.
 704. Welcome back (after a week or more away) and Three days of "Not today" are painted banners with white buttons on them. A new white button shape is shared by every banner that needs one.
 705. Banners grow with their words instead of cutting a sentence off with "...": the height is now a floor, not a limit. The Interview drops its banner again; it is a focused one-question-at-a-time flow and the question deserves the top of the screen.
+706. A call's page shows its fit as a ring that fills with the score, in your color for a strong fit and grey for a long shot, with the plain-words label and the reasons beside it. Readable from across the room.
+707. Waiting for your yes opens on a banner that counts what is waiting ("2 things wait for your yes"), the number in a badge.
+708. Empty places look like places for your work: the bare frame on its nail is bigger, its mat holds a faint wash of your color, and the button under the words is filled, not just outlined.
+709. Plan the show: the banner carries the show's name (or "Your show at" the venue) with the weeks to the opening in a badge, and every step of the plan sits on its own calendar leaf, past dates grey, the opening itself in a brighter color.

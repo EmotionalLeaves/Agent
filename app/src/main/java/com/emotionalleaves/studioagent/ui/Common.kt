@@ -416,7 +416,7 @@ fun Empty(text: String, action: String = "", onAction: () -> Unit = {}) {
         EmptyFrame()
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (action.isNotBlank()) OutlinedButton(onClick = onAction) { Text(action) }
+            if (action.isNotBlank()) androidx.compose.material3.FilledTonalButton(onClick = onAction) { Text(action) }
         }
     }
 }
@@ -426,12 +426,15 @@ fun Empty(text: String, action: String = "", onAction: () -> Unit = {}) {
 fun EmptyFrame() {
     val line = MaterialTheme.colorScheme.outline
     val wall = MaterialTheme.colorScheme.outlineVariant
-    Canvas(Modifier.size(width = 44.dp, height = 56.dp)) {
+    // The mat inside the frame holds a faint wash of your color: a place your work will go.
+    val wash = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+    Canvas(Modifier.size(width = 56.dp, height = 72.dp)) {
         val w = size.width; val h = size.height; val s = 2.dp.toPx()
         drawCircle(line, radius = 2.5f.dp.toPx(), center = Offset(w / 2, 3.dp.toPx()))
         drawLine(line, Offset(w / 2, 3.dp.toPx()), Offset(w * 0.18f, h * 0.30f), s * 0.6f)
         drawLine(line, Offset(w / 2, 3.dp.toPx()), Offset(w * 0.82f, h * 0.30f), s * 0.6f)
         drawRect(line, topLeft = Offset(w * 0.06f, h * 0.30f), size = Size(w * 0.88f, h * 0.68f), style = Stroke(s))
+        drawRect(wash, topLeft = Offset(w * 0.22f, h * 0.42f), size = Size(w * 0.56f, h * 0.44f))
         drawRect(wall, topLeft = Offset(w * 0.22f, h * 0.42f), size = Size(w * 0.56f, h * 0.44f), style = Stroke(s * 0.6f))
     }
 }

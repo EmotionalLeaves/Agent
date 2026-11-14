@@ -360,8 +360,14 @@ fun CallDetail(nav: NavController, id: Long) {
                 }
             }
             Hair()
-            Row { Tag(fitLabel(o.fitScore), strong = o.fitScore >= 60) }
-            o.fitReasons.lines().filter { it.isNotBlank() && !it.startsWith("Free to enter") && (!it.startsWith("Fee ") || it.startsWith("Fee not stated")) }.forEach { Text(it) }
+            // How well it fits, as a ring you can read from across the room, with the reasons beside it.
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Top) {
+                FitRing(o.fitScore)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(fitLabel(o.fitScore), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    o.fitReasons.lines().filter { it.isNotBlank() && !it.startsWith("Free to enter") && (!it.startsWith("Fee ") || it.startsWith("Fee not stated")) }.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                }
+            }
             if (why.isNotEmpty()) Text("Held back by your rules: " + why.joinToString("; "), color = MaterialTheme.colorScheme.secondary)
             Flags(o)
             // The signs of the usual schemes, read from the call's own words (paid features, awards that cost, urgency).
@@ -1424,5 +1430,23 @@ fun DateLeaf(at: Long, closed: Boolean, shift: Float = 0f) {
     Column(Modifier.width(54.dp).clip(RoundedCornerShape(14.dp)).background(bg).padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(d?.month?.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.US) ?: "Any", style = MaterialTheme.typography.labelMedium, color = fg.copy(alpha = 0.85f))
         Text(d?.dayOfMonth?.toString() ?: "day", style = if (d != null) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.labelLarge, color = fg)
+    }
+}
+
+/** A ring that fills with the fit score: your color when it is a strong fit, grey when it is a long shot. */
+@Composable
+fun FitRing(score: Int, size: Int = 64) {
+    val cs = MaterialTheme.colorScheme
+    val strong = score >= 60
+    Box(Modifier.size(size.dp).semantics { contentDescription = "Fit $score of 100" }, contentAlignment = Alignment.Center) {
+        androidx.compose.foundation.Canvas(Modifier.matchParentSize()) {
+            val stroke = 7.dp.toPx()
+            val inset = stroke / 2
+            val arcSize = androidx.compose.ui.geometry.Size(this.size.width - stroke, this.size.height - stroke)
+            drawArc(cs.surfaceContainerHigh, -90f, 360f, false, androidx.compose.ui.geometry.Offset(inset, inset), arcSize, style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
+            drawArc(if (strong) cs.primary else cs.outline, -90f, 360f * score.coerceIn(0, 100) / 100f, false, androidx.compose.ui.geometry.Offset(inset, inset), arcSize,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+        }
+        Text("$score", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = if (strong) cs.primary else cs.onSurfaceVariant)
     }
 }
