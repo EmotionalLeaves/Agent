@@ -714,3 +714,4 @@ One real change per round. Pushed and built every ten rounds.
 707. Waiting for your yes opens on a banner that counts what is waiting ("2 things wait for your yes"), the number in a badge.
 708. Empty places look like places for your work: the bare frame on its nail is bigger, its mat holds a faint wash of your color, and the button under the words is filled, not just outlined.
 709. Plan the show: the banner carries the show's name (or "Your show at" the venue) with the weeks to the opening in a badge, and every step of the plan sits on its own calendar leaf, past dates grey, the opening itself in a brighter color.
+710. The screenshot test can now scroll before it takes a picture, so the lower halves of screens get checked by eye too: Records' money by month, the lower half of Today, and the five-level staircase in Guide.

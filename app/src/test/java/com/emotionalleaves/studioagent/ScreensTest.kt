@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent
 
+import androidx.compose.ui.test.performScrollTo
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -37,10 +38,14 @@ class ScreensTest {
     private val ctx: Context get() = ApplicationProvider.getApplicationContext()
     private val dir = File("build/screens").apply { mkdirs() }
 
-    private fun shot(name: String, route: String, expect: String) {
+    private fun shot(name: String, route: String, expect: String, scrollTo: String? = null) {
         ActivityScenario.launch<MainActivity>(Intent(ctx, MainActivity::class.java).putExtra("route", route)).use { scenario ->
             try { compose.waitUntil(15_000) { compose.onAllNodesWithText(expect, substring = true, ignoreCase = true).fetchSemanticsNodes().isNotEmpty() } } catch (e: Throwable) { }
             try { compose.waitForIdle() } catch (e: Throwable) { }
+            // Lower parts of a screen get their own picture: scroll the named words into view first.
+            if (scrollTo != null) try {
+                compose.onAllNodesWithText(scrollTo, substring = true)[0].performScrollTo(); compose.waitForIdle()
+            } catch (e: Throwable) { }
             try {
                 var bmp: Bitmap? = null
                 var note = ""
@@ -190,6 +195,9 @@ class ScreensTest {
         shot("67h_market", "market", "Today:")
         shot("67i_pricing", "pricing", "What your rule gives")
         shot("67j_findable", "findable", "done")
+        shot("71_records_money", "records", "Records", scrollTo = "Earned")
+        shot("72_home_lower", "home", "Your week", scrollTo = "Your week")
+        shot("73_path_levels", "path", "the five levels", scrollTo = "Level 0")
         shot("67k_tools", "tools", "Making the work")
         shot("67l_health", "health", "Daily check")
         shot("67m_photoshoot", "photoshoot", "Photograph")
