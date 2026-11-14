@@ -1,5 +1,11 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.semantics.clearAndSetSemantics
 
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -531,24 +537,43 @@ fun SessionScreen(nav: NavController) {
         val work = works.firstOrNull { it.id == workId }
         Screen("Start a session", nav) {
             Section("What kind?")
-            // Three kinds as rows with a line each, so the choice explains itself.
-            Column {
-                listOf("make" to ("Make" to "Work on a piece."), "skill" to ("Practice" to "The next foundations exercise, or any exercise. Counts toward your week."),
-                    "light" to ("Light" to "Low effort: sort references, a 15-minute sketch, tidy up.")).forEach { (k, tl) ->
+            // Three kinds as three painted tiles side by side; the chosen one is framed and the others step back. Its line sits under them.
+            val kinds = listOf(Triple("make", "Make", "Work on a piece."), Triple("skill", "Practice", "The next foundations exercise, or any exercise. Counts toward your week."),
+                Triple("light", "Light", "Low effort: sort references, a 15-minute sketch, tidy up."))
+            Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                kinds.forEachIndexed { idx, (k, name, _) ->
                     val on = kind == k
-                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (on) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
-                        .clickable(role = androidx.compose.ui.semantics.Role.RadioButton) { kind = k }.semantics { selected = on }.padding(horizontal = 12.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(selected = on, onClick = null)
-                        Column(Modifier.weight(1f)) { Text(tl.first, style = MaterialTheme.typography.titleSmall); Small(tl.second) }
+                    Box(Modifier.weight(1f).height(132.dp).clip(RoundedCornerShape(20.dp))
+                        .let { if (on) it.border(3.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(20.dp)) else it }
+                        .selectable(selected = on, role = androidx.compose.ui.semantics.Role.RadioButton) { kind = k }) {
+                        ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = 300L + idx, shift = -26f + idx * 26f)
+                        Box(Modifier.matchParentSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(0f to Color.Black.copy(alpha = if (on) 0f else 0.3f), 1f to Color.Black.copy(alpha = if (on) 0.6f else 0.75f))))
+                        if (on) Box(Modifier.align(Alignment.TopEnd).padding(8.dp).size(24.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Check, null, Modifier.size(16.dp), tint = Color.Black)
+                        }
+                        Text(name, Modifier.align(Alignment.BottomStart).padding(12.dp), style = MaterialTheme.typography.titleLarge, color = Color.White.copy(alpha = if (on) 1f else 0.8f))
                     }
                 }
             }
+            Small(kinds.first { it.first == kind }.third)
             if (kind == "make") {
-                // Chosen by the piece itself, not its title, so two pieces with the same name stay apart.
-                if (active.isNotEmpty()) Choice("Which piece?", active.map { it.id.toString() }, workId.toString(),
-                    names = { idText -> active.firstOrNull { it.id.toString() == idText }?.let { w -> w.title.ifBlank { "Untitled #${w.id}" } + (if (w.status == "idea") " (idea)" else "") } ?: idText }) { picked ->
-                    picked.toLongOrNull()?.let { workId = it }
+                // Your pieces as a strip of small pictures (or painted canvases): the one you will work on is framed.
+                if (active.isNotEmpty()) {
+                    Section("Which piece?")
+                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        active.forEach { w ->
+                            val on = w.id == workId
+                            Column(Modifier.width(104.dp).selectable(selected = on, role = androidx.compose.ui.semantics.Role.RadioButton) { workId = w.id }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Box(Modifier.size(width = 104.dp, height = 128.dp).clip(RoundedCornerShape(16.dp))
+                                    .let { if (on) it.border(3.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(16.dp)) else it }) {
+                                    if (w.imagePath.isNotBlank() && File(w.imagePath).exists()) PathImage(w.imagePath, Modifier.matchParentSize(), 300, ContentScale.Crop)
+                                    else ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = w.id, shift = ((w.id * 37) % 60 - 30).toFloat())
+                                }
+                                Text(w.title.ifBlank { "Untitled #${w.id}" } + (if (w.status == "idea") " (idea)" else ""), style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = if (on) FontWeight.Bold else FontWeight.Normal, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
                 }
                 TextButton(onClick = { scope.io { workId = dao.put(newWork()) } }) { Text("Start a new piece") }
             }
@@ -606,7 +631,19 @@ fun SessionScreen(nav: NavController) {
                 else Small(resetSaid)
             }
             Section("How long?")
-            Choice("", listOf("5 min", "15 min", usual).distinct(), length) { length = it }
+            // Three round marks with the minutes big: a choice you can make without reading.
+            Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                listOf("5 min", "15 min", usual).distinct().forEach { opt ->
+                    val on = length == opt
+                    val cs = MaterialTheme.colorScheme
+                    Column(Modifier.weight(1f).aspectRatio(1f).clip(CircleShape).background(if (on) cs.primary else cs.surfaceContainerHigh)
+                        .selectable(selected = on, role = androidx.compose.ui.semantics.Role.RadioButton) { length = opt },
+                        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        Text(opt.substringBefore(" "), style = MaterialTheme.typography.headlineMedium, color = if (on) cs.onPrimary else cs.onSurface)
+                        Text("minutes", style = MaterialTheme.typography.labelSmall, color = if (on) cs.onPrimary.copy(alpha = 0.85f) else cs.onSurfaceVariant)
+                    }
+                }
+            }
             Button(onClick = {
                 buzz()
                 st.sessionPausedAt = 0L; st.sessionPausedTotal = 0L
