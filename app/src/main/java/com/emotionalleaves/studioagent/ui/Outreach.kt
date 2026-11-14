@@ -1,5 +1,9 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.graphics.asImageBitmap
@@ -252,10 +256,21 @@ fun Outreach(nav: NavController) {
         if (shownPeople.size > peopleLimit) Small("The ${peopleLimit} you can write to first are shown.")
         shownPeople.take(peopleLimit).forEach { c ->
             Panel(onClick = { nav.navigate("contact/${c.id}") }) {
-                Text(c.venue.ifBlank { c.name.ifBlank { "New contact" } }, fontWeight = FontWeight.SemiBold)
-                // Places from the map say how far they are.
-                val far = Regex("""(\d+ (mi|km)|under 1 (mi|km)) away""").find(c.notes)?.value
-                Small(kindWords(c.kind) + (if (far != null) ", $far" else "") + ", " + statusWords(c).replaceFirstChar { it.lowercase() })
+                // Each place wears a monogram: its initials on a chip in a neighbor of your color picked by its kind, so a gallery and a library look different at a glance.
+                val label = c.venue.ifBlank { c.name.ifBlank { "New contact" } }
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    val kindShift = (listOf("commercial", "nonprofit", "artist_run", "community", "campus", "library", "cafe").indexOf(c.kind).coerceAtLeast(0) * 17f) - 40f
+                    Box(Modifier.size(48.dp).clip(CircleShape).background(neighbor(MaterialTheme.colorScheme.primary, kindShift, 0.42f)), contentAlignment = Alignment.Center) {
+                        Text(label.split(Regex("\\s+")).filter { w -> w.firstOrNull()?.isLetter() == true && w.lowercase() !in setOf("the", "of", "and", "a") }.take(2).joinToString("") { it.first().uppercase() }.ifBlank { "?" },
+                            style = MaterialTheme.typography.titleMedium, color = androidx.compose.ui.graphics.Color.White)
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(label, fontWeight = FontWeight.SemiBold)
+                        // Places from the map say how far they are.
+                        val far = Regex("""(\d+ (mi|km)|under 1 (mi|km)) away""").find(c.notes)?.value
+                        Small(kindWords(c.kind) + (if (far != null) ", $far" else "") + ", " + statusWords(c).replaceFirstChar { it.lowercase() })
+                    }
+                }
                 if (c.submissionNotes.contains("Work like yours.")) Tag("Shows work like yours", strong = true)
                 if (!Levels.outreachAllowed(level, c.kind, Engine.rules())) Note("Emails to this kind of venue open at Level ${Levels.outreachNeeds(c.kind)}.")
             }
