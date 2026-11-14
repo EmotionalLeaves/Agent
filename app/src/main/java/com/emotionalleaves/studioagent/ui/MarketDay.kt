@@ -1,5 +1,17 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -67,24 +79,55 @@ fun MarketDay(nav: NavController) {
         // The day's total, big, on a painted field: the number that matters at a table.
         Banner(money(total), "Today. " + Texts.count(tally.values.sum(), "sale") + (if (st.marketFee > 0) ", booth ${money(st.marketFee)}" else "") + ". A tap adds one; a long list is fine.", key = 31L, height = 170)
         if (items.isEmpty() && originals.isEmpty()) Note("Add what you are bringing below: prints, cards, small pieces.")
-        items.forEach { i -> key(i.name) {
-            val k = "m:" + i.name; val n = tally[k] ?: 0
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Column(Modifier.weight(1f)) { Text(i.name, fontWeight = FontWeight.SemiBold); Small(money(i.price) + ", " + (i.qty - n).coerceAtLeast(0) + " left" + (if (n > 0) ", $n sold" else "")) }
-                if (n > 0) TextButton(onClick = { st.marketTally = Market.bump(st.marketTally, k, -1) }) { Text("Undo") }
-                FilledTonalButton(onClick = { st.marketTally = Market.bump(st.marketTally, k, 1) }, enabled = n < i.qty || i.qty == 0, modifier = Modifier.heightIn(min = 56.dp)) { Text("Sold one") }
+        // What is on the table as big tiles, two across: the whole tile is the "sold one" button, the price big on it, how many are left under.
+        val cs = MaterialTheme.colorScheme
+        items.withIndex().toList().chunked(2).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                row.forEach { (idx, i) -> key(i.name) {
+                    val k = "m:" + i.name; val n = tally[k] ?: 0
+                    val gone = i.qty > 0 && n >= i.qty
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Box(Modifier.fillMaxWidth().height(116.dp).clip(RoundedCornerShape(20.dp))
+                            .background(if (gone) cs.surfaceContainerHigh else neighbor(cs.primary, idx * 17f - 17f, 0.40f))
+                            .clickable(enabled = !gone, role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Sold one") { st.marketTally = Market.bump(st.marketTally, k, 1) }
+                            .padding(14.dp)) {
+                            val fg = if (gone) cs.onSurfaceVariant else androidx.compose.ui.graphics.Color.White
+                            Text(i.name, Modifier.align(Alignment.TopStart), style = MaterialTheme.typography.titleSmall, color = fg, maxLines = 2)
+                            Text(money(i.price), Modifier.align(Alignment.BottomStart), style = MaterialTheme.typography.headlineSmall, color = fg)
+                            if (n > 0) Box(Modifier.align(Alignment.BottomEnd).size(34.dp).clip(CircleShape).background(androidx.compose.ui.graphics.Color.White), contentAlignment = Alignment.Center) {
+                                Text("$n", style = MaterialTheme.typography.titleSmall, color = androidx.compose.ui.graphics.Color.Black)
+                            }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(if (gone) "All gone" else if (i.qty > 0) "${i.qty - n} left" else "Tap per sale", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                            if (n > 0) TextButton(onClick = { st.marketTally = Market.bump(st.marketTally, k, -1) }) { Text("Undo") }
+                        }
+                    }
+                } }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
             }
-        } }
+        }
         if (originals.isNotEmpty()) {
             Section("Originals")
-            originals.forEach { w -> key(w.id) {
-                val k = "w:${w.id}"; val sold = (tally[k] ?: 0) > 0
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) { Text(w.title.ifBlank { "Untitled" }, fontWeight = FontWeight.SemiBold); Small(money(w.price) + if (sold) ", sold" else "") }
-                    if (sold) TextButton(onClick = { st.marketTally = Market.bump(st.marketTally, k, -1) }) { Text("Undo") }
-                    else FilledTonalButton(onClick = { st.marketTally = Market.bump(st.marketTally, k, 1) }) { Text("Sold") }
+            // Each original as its picture; a sold one gets a red dot, the way galleries mark a sale on the wall label.
+            originals.chunked(2).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    row.forEach { w -> key(w.id) {
+                        val k = "w:${w.id}"; val sold = (tally[k] ?: 0) > 0
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(Modifier.fillMaxWidth().aspectRatio(0.9f).clip(RoundedCornerShape(18.dp))
+                                .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = if (sold) "Undo the sale" else "Sold") { st.marketTally = Market.bump(st.marketTally, k, if (sold) -1 else 1) }) {
+                                if (w.imagePath.isNotBlank() && java.io.File(w.imagePath).exists()) PathImage(w.imagePath, Modifier.matchParentSize(), 400, ContentScale.Crop)
+                                else ColorField(cs.primary, Modifier.matchParentSize(), key = w.id)
+                                if (sold) Box(Modifier.align(Alignment.TopEnd).padding(10.dp).size(22.dp).clip(CircleShape).background(androidx.compose.ui.graphics.Color(0xFFD32F2F)))
+                            }
+                            Text(w.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleSmall, maxLines = 1)
+                            Small(money(w.price) + if (sold) ", sold. Tap again to undo" else ". Tap the picture when it sells")
+                        }
+                    } }
+                    if (row.size == 1) Spacer(Modifier.weight(1f))
                 }
-            } }
+            }
         }
         // The table itself: ticked as it goes in the bag, cleared for the next market when the day is closed.
         Expand("Packing for the table") {
