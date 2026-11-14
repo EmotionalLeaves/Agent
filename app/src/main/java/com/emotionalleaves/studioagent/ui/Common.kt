@@ -364,7 +364,11 @@ fun PathImage(path: String, modifier: Modifier = Modifier, maxSide: Int = 700, s
         if (value == null) value = withContext(Dispatchers.IO) { ImageTools.decode(path, maxSide)?.asImageBitmap()?.also { thumbs.put(key, it) } }
     }
     val b = bmp
+    // A picture that is gone (moved, deleted, never copied over in a restore) shows as a painted canvas, the same one each time,
+    // instead of a grey hole; one still loading shows a quiet tint for the moment it takes.
+    val missing = remember(key) { path.isBlank() || !File(path).exists() }
     if (b != null) Image(b, description, modifier, contentScale = scale)
+    else if (missing) ColorField(MaterialTheme.colorScheme.primary, modifier, key = path.hashCode().toLong())
     else Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant))
 }
 
