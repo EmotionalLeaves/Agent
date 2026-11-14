@@ -141,7 +141,8 @@ fun Banner(
     big: String? = null, bigLabel: String = "", onClick: (() -> Unit)? = null, extra: @Composable () -> Unit = {}
 ) {
     val cs = MaterialTheme.colorScheme
-    Box(Modifier.fillMaxWidth().height(height.dp).clip(RoundedCornerShape(26.dp)).let { if (onClick != null) it.clickable(role = Role.Button) { onClick() } else it }) {
+    // At least [height] tall, and taller when the words need it: a banner never cuts its own sentence off.
+    Box(Modifier.fillMaxWidth().heightIn(min = height.dp).clip(RoundedCornerShape(26.dp)).let { if (onClick != null) it.clickable(role = Role.Button) { onClick() } else it }) {
         if (image != null && image.isNotBlank() && java.io.File(image).exists()) PathImage(image, Modifier.matchParentSize(), 1000, ContentScale.Crop)
         else ColorField(cs.primary, Modifier.matchParentSize(), key = key, shift = ((key * 37) % 70 - 35).toFloat())
         Box(Modifier.matchParentSize().background(Brush.verticalGradient(0f to Color.Transparent, 0.35f to Color.Black.copy(alpha = 0.08f), 1f to Color.Black.copy(alpha = 0.78f))))
@@ -150,10 +151,10 @@ fun Banner(
             Text(big, style = MaterialTheme.typography.headlineMedium, color = Color.White)
             if (bigLabel.isNotBlank()) Text(bigLabel, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.85f))
         }
-        Column(Modifier.align(Alignment.BottomStart).padding(20.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.align(Alignment.BottomStart).padding(start = 20.dp, end = 20.dp, bottom = 20.dp, top = 44.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             // With a number badge in the corner, the title keeps clear of it.
-            Text(title, Modifier.padding(end = if (big != null) 72.dp else 0.dp), style = if (title.length > 26) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineLarge, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            if (sub.isNotBlank()) Text(sub, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.86f), maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Text(title, Modifier.padding(end = if (big != null) 72.dp else 0.dp), style = if (title.length > 26) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineLarge, color = Color.White)
+            if (sub.isNotBlank()) Text(sub, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.86f))
             extra()
         }
     }

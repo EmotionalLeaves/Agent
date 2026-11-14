@@ -216,7 +216,6 @@ fun Interview(nav: NavController) {
     val ownQuestion = rememberSaveable { mutableStateOf("") }
     Screen("Interview", nav) {
         Intro("interview", "About 10 minutes, once. Talk or type. Rough is good: your own words are what make the writing sound like you. You can stop and come back.")
-        Banner("Seven questions, your own words", "About ten minutes. Talk or type; rough is good. Stop and come back any time.", key = 808L, height = 150)
         // One question at a time, so the screen never looks like a form to get through.
         val all = interviewQuestions + answers.keys.filter { it.startsWith("own:") }.sorted().map { it to it.removePrefix("own:") }
         var at by rememberSaveable { mutableStateOf(all.indexOfFirst { answers[it.first].isNullOrBlank() }.coerceAtLeast(0)) }
