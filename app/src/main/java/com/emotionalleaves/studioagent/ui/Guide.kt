@@ -244,7 +244,8 @@ val basics = listOf(
 @Composable
 fun Basics(nav: NavController) {
     Screen("Help", nav) {
-        OutlinedButton(onClick = { nav.navigate("tour") }, modifier = Modifier.fillMaxWidth()) { Text("Take the two-minute tour again") }
+        Banner("Plain answers, no test", "Ask anything about shows, calls or this app, or tap a question below. You can use the whole app without reading any of it.",
+            key = 905L, height = 180, extra = { Row(Modifier.padding(top = 6.dp)) { WhitePill("Take the two-minute tour again") { nav.navigate("tour") } } })
         Section("Ask anything")
         val scope = rememberCoroutineScope()
         val question = rememberSaveable { mutableStateOf("") }

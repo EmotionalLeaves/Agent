@@ -1028,6 +1028,10 @@ fun Review(nav: NavController) {
         planned = true
     }
     Screen("Next week", nav) {
+        // The week just gone, in one line, big: what happened counts.
+        val weekMin = mine.sumOf { (it.end - it.start) / 60_000L }
+        Banner(if (weekMin == 0L) "A fresh week ahead" else (if (weekMin < 60) "$weekMin minutes" else "%.1f hours".format(weekMin / 60.0).replace(".0 hours", " hours")) + " of making this week",
+            "Look back for a minute, choose one piece, and the week ahead plans itself.", key = 906L, height = 160)
         StageHead(1, "What you did", true)
         // The month so far, counted plainly: proof that it is moving, without streaks to break.
         val monthStart = Engine.millis(LocalDate.now().withDayOfMonth(1).atStartOfDay())

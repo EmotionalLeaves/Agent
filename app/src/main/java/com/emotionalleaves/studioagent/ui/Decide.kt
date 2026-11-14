@@ -1,5 +1,14 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -46,20 +55,26 @@ fun DecideScreen(nav: NavController) {
     androidx.compose.runtime.LaunchedEffect(Unit) { st.lastCallsLook = now() }
     Screen("Decide, one at a time", nav) {
         Intro("decide", "The calls that fit you, one at a time. Yes starts the entry, No teaches the ranking, Not this year keeps it for next year. Skip if you are not sure.")
-        Banner("One call at a time", "Yes starts the entry. No teaches the ranking. Not this year keeps it.", key = 817L, height = 150)
         if (o == null) {
-            Panel(strong = true) { Text(if (decided > 0) "Done: ${Texts.count(decided, "call")} decided." else "Nothing waiting to be decided.", style = MaterialTheme.typography.titleMedium) }
+            Banner(if (decided > 0) "Done: ${Texts.count(decided, "call")} decided" else "Nothing waiting to be decided", "New calls that fit you are read once a day and wait here.", key = 817L, height = 170)
             Button(onClick = { nav.navigate("calls") }) { Text("Back to Calls") }
             return@Screen
         }
-        Small("${list.size} to go")
-        Panel(strong = true) {
-            Text(o.title, style = MaterialTheme.typography.headlineSmall)
-            Small(listOf(o.venue.ifBlank { o.organiser }, o.city, if (o.online) "online" else "").filter { it.isNotBlank() }.joinToString(", "))
-            Text((if (o.deadline > 0) "Closes ${fmtDate(o.deadline)} (" + Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline)) + "). " else "") + (if (o.fee > 0) "Fee ${money(o.fee)}." else if (Texts.feeStated(o)) "Free to enter." else "Fee not stated."))
-            o.fitReasons.lines().filter { it.isNotBlank() }.take(3).forEach { Small(it) }
-            Engine.plainWordsCached(o).take(3).forEach { Text("• $it") }
+        // How many are left, as dots: the one in front of you filled.
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            (0 until minOf(list.size, 12)).forEach { k -> Box(Modifier.size(if (k == 0) 12.dp else 8.dp).clip(CircleShape).background(if (k == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) }
+            Small("  ${list.size} to go")
         }
+        // The call as its poster, then how well it fits as a ring with the reasons beside it.
+        CallPoster(o) { nav.navigate("call/${o.id}") }
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            FitRing(o.fitScore)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text((if (o.deadline > 0) "Closes ${fmtDate(o.deadline)} (" + Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline)) + "). " else "") + (if (o.fee > 0) "Fee ${money(o.fee)}." else "Free to enter."), fontWeight = FontWeight.SemiBold)
+                o.fitReasons.lines().filter { it.isNotBlank() }.take(3).forEach { Small(it) }
+            }
+        }
+        Engine.plainWordsCached(o).take(3).forEach { Text("• $it") }
         Button(onClick = { val x = o; decided++; scope.io { val id = Engine.createApplication(ctx, x); kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { skipped = skipped + x.id } } }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Yes: start the entry") }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { askWhy = o.id }) { Text("No") }
@@ -72,6 +87,5 @@ fun DecideScreen(nav: NavController) {
             if (r != "no reason") st.addNoReason(r)
             scope.undoable("Said no to ${x.title}", { dao.put(x.copy(status = "no", noReason = r)); Engine.rescore() }, { dao.put(x); Engine.rescore() })
         }
-        TextButton(onClick = { nav.navigate("call/${o.id}") }) { Text("See the whole call") }
     }
 }
