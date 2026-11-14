@@ -1,5 +1,26 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.DateRange
@@ -68,7 +89,6 @@ fun ToolsScreen(nav: NavController) {
     var open by rememberSaveable { mutableStateOf("") }
     Screen("Everything the app can do", nav) {
         Intro("tools", "Every tool, folded into five groups by what you are trying to get done. Open one group at a time. Today still shows the one thing that matters now.")
-        Banner("Everything, in five groups", Texts.count(toolGroups.sumOf { it.second.size }, "tool") + ". Open one group at a time.", key = 61L, height = 150)
         val all = toolGroups.flatMap { it.second }
         val recent = if (tick >= 0) st.recentTools.split(",").mapNotNull { r -> all.firstOrNull { it.third == r } } else emptyList()
         fun go(route: String) { st.recentTools = (listOf(route) + st.recentTools.split(",").filter { it.isNotBlank() && it != route }).take(3).joinToString(","); nav.navigate(route) }
@@ -76,12 +96,32 @@ fun ToolsScreen(nav: NavController) {
             Section("Used lately")
             recent.forEach { (name, what, route) -> IconRow(Icons.Default.Refresh, name, what) { go(route) } }
         }
-        toolGroups.forEach { (group, tools) ->
+        // The five groups as painted tiles, two across, each in its own neighbor of your color. One tap opens a group below them.
+        Section("Pick a group")
+        val shifts = listOf(-30f, -10f, 12f, 30f, 48f)
+        toolGroups.withIndex().toList().chunked(2).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { (k, g) ->
+                    val (group, tools) = g
+                    val isOpen = open == group
+                    Box(Modifier.weight(1f).height(124.dp).clip(RoundedCornerShape(22.dp))
+                        .let { if (isOpen) it.border(3.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(22.dp)) else it }
+                        .clickable(role = Role.Button, onClickLabel = if (isOpen) "Fold" else "Open") { open = if (isOpen) "" else group }) {
+                        ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), key = 200L + k, shift = shifts[k % shifts.size])
+                        Box(Modifier.matchParentSize().background(Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.7f))))
+                        Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
+                            Text(group, style = MaterialTheme.typography.titleLarge, color = Color.White, maxLines = 2)
+                            Text(Texts.count(tools.size, "tool"), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.85f))
+                        }
+                    }
+                }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+        toolGroups.firstOrNull { it.first == open }?.let { (group, tools) ->
             val icon = when (group) { "Making the work" -> Icons.Default.Edit; "Showing it" -> Icons.Default.Person; "Selling it" -> Icons.Default.Star; "Being seen" -> Icons.Default.Search; else -> Icons.Default.AccountBox }
-            val isOpen = open == group
             Section(group)
-            if (!isOpen) IconRow(icon, Texts.count(tools.size, "tool"), tools.joinToString(", ") { it.first }) { open = group }
-            else tools.forEach { (name, what, route) -> IconRow(icon, name, what) { go(route) } }
+            tools.forEach { (name, what, route) -> IconRow(icon, name, what) { go(route) } }
         }
     }
 }
