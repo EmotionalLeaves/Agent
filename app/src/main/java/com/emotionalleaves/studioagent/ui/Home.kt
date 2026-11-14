@@ -1,5 +1,7 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -234,10 +236,16 @@ fun Home(nav: NavController) {
                 Triple("Park an idea you had today", "A line, or a photo", "ideas"),
                 Triple("Read a call's page in plain words", "Then decide tonight", "calls")
             ).take(3)
-            Panel {
-                Text("On a break? Five-minute jobs", style = MaterialTheme.typography.titleSmall)
-                // Each job wears what it is about; a tick would read as already done.
-                jobs.forEach { (t, d, r) -> IconRow(when { r.startsWith("call") || r == "decide" -> Icons.Default.Search; r == "admin" || r.startsWith("outreach") || r.startsWith("letters") || r.startsWith("contact") -> Icons.Default.Email; r.startsWith("idea") || r == "dump" -> Icons.Default.Edit; r.startsWith("work") || r == "photoshoot" -> Icons.Default.Star; else -> Icons.AutoMirrored.Filled.KeyboardArrowRight }, t, d) { nav.navigate(r) } }
+            Section("On a break? Five-minute jobs")
+            // Three cards side by side, each a neighbor of your color: big enough to hit with a thumb between orders.
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                jobs.forEachIndexed { k, (t, d, r) ->
+                    Column(Modifier.width(210.dp).height(124.dp).clip(RoundedCornerShape(20.dp)).background(neighbor(MaterialTheme.colorScheme.primary, k * 18f - 18f, 0.38f))
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button) { nav.navigate(r) }.padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                        Text(t, style = MaterialTheme.typography.titleMedium, color = Color.White, maxLines = 3)
+                        Text(d, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.85f), maxLines = 1)
+                    }
+                }
             }
         }
         // What the app did while you were away, in a few lines: the work done for you, seen without hunting.
@@ -248,7 +256,16 @@ fun Home(nav: NavController) {
                 Text("While you were away", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
                 TextButton(onClick = { st.activitySeen = fresh.maxOf { it.first } }) { Text("Got it") }
             }
-            fresh.take(3).forEach { Small("• " + it.second) }
+            // A short timeline: a dot per thing done for you, joined by a thin line.
+            fresh.take(3).forEachIndexed { k, line ->
+                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(Modifier.padding(top = 5.dp).size(10.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
+                        if (k < minOf(2, fresh.size - 1)) Box(Modifier.weight(1f).width(2.dp).background(MaterialTheme.colorScheme.outlineVariant))
+                    }
+                    Text(line.second, Modifier.padding(bottom = 10.dp), style = MaterialTheme.typography.bodyMedium)
+                }
+            }
             if (fresh.size > 3) Small("and ${fresh.size - 3} more, in Records.")
         }
         // A first, on the day it happens: a sentence to let it land, then "Lovely" puts it away.
@@ -266,34 +283,31 @@ fun Home(nav: NavController) {
             val todayS = LocalDate.now().toString()
             com.emotionalleaves.studioagent.domain.Firsts.toShow(reached, st.firstsSeen, todayS)?.let { f ->
                 LaunchedEffect(f.key) { st.firstsSeen = com.emotionalleaves.studioagent.domain.Firsts.mark(st.firstsSeen, f.key, todayS) }
-                Panel(strong = true) {
-                    Text(f.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    Text(f.line)
-                    Row {
-                        TextButton(onClick = { st.firstsSeen = com.emotionalleaves.studioagent.domain.Firsts.mark(st.firstsSeen, f.key, "done") }) { Text("Lovely") }
-                        if (st.buddy.isNotBlank()) TextButton(onClick = { Share.text(ctx, f.title + "!") }) { Text("Tell ${st.buddy}") }
+                // A first gets the full width and the big type: it only happens once.
+                Banner(f.title, f.line, key = f.key.hashCode().toLong(), height = 200, extra = {
+                    Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        WhitePill("Lovely") { st.firstsSeen = com.emotionalleaves.studioagent.domain.Firsts.mark(st.firstsSeen, f.key, "done") }
+                        if (st.buddy.isNotBlank()) WhitePill("Tell ${st.buddy}", filled = false) { Share.text(ctx, f.title + "!") }
                     }
-                }
+                })
             }
         }
         // Back after a week or more away: nothing is late from here, and the week is planned again from today.
-        if (st.onboarded && st.awayDays >= 7) Panel(strong = true) {
-            Text("Welcome back", fontWeight = FontWeight.SemiBold)
-            Text("It has been ${st.awayDays} days. Nothing is lost, and nothing is overdue from here: what went by has gone by, and any to-dos that slipped are spread over the coming week. One step today is plenty.", style = MaterialTheme.typography.bodyMedium)
-            TextButton(onClick = { st.awayDays = 0; scope.io { Engine.spreadOverdue(); Engine.replan(ctx) } }) { Text("Thanks, plan my week from today") }
-        }
+        if (st.onboarded && st.awayDays >= 7) Banner("Welcome back", "It has been ${st.awayDays} days. Nothing is lost and nothing is overdue from here; slipped to-dos are spread over the coming week. One step today is plenty.",
+            key = 901L, height = 230, extra = {
+                Row(Modifier.padding(top = 6.dp)) { WhitePill("Plan my week from today") { st.awayDays = 0; scope.io { Engine.spreadOverdue(); Engine.replan(ctx) } } }
+            })
         // The day after quiet days end: a soft way back in, not a pile of everything that waited.
         if (st.onboarded && !calm && st.calmUntil in (System.currentTimeMillis() - 86_400_000L)..System.currentTimeMillis())
             Small("Welcome back. Just the one step below today; everything else will find its place over the next few days.")
         // Three "Not today"s in a row is a signal, not a failing: offer the quiet days, once, and let it go either way.
-        if (st.onboarded && !calm && st.snoozeRun >= 3 && st.snoozeDay != today.toString()) Panel(strong = true) {
-            Text("Three days of \"Not today\"", fontWeight = FontWeight.SemiBold)
-            Text("That is allowed. Would three quiet days help: one five-minute step, no notifications, nothing else asked of you?", style = MaterialTheme.typography.bodyMedium)
-            Row {
-                TextButton(onClick = { st.calmUntil = System.currentTimeMillis() + 3 * 86_400_000L; st.snoozeRun = 0 }) { Text("Yes, quiet days") }
-                TextButton(onClick = { st.snoozeRun = 0 }) { Text("No, I'm all right") }
-            }
-        }
+        if (st.onboarded && !calm && st.snoozeRun >= 3 && st.snoozeDay != today.toString()) Banner("Three days of \"Not today\"",
+            "That is allowed. Would three quiet days help: one five-minute step, no notifications, nothing else asked of you?", key = 902L, height = 220, extra = {
+                Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    WhitePill("Yes, quiet days") { st.calmUntil = System.currentTimeMillis() + 3 * 86_400_000L; st.snoozeRun = 0 }
+                    WhitePill("I'm all right", filled = false) { st.snoozeRun = 0 }
+                }
+            })
         if (!st.onboarded) TextButton(onClick = { st.setupDone = true; st.tourSeen = true; nav.navigate("home") { popUpTo("home") { inclusive = true } } }) { Text("Skip the tour and start") }
         if (pinning) {
             Field("What do you want to see here instead?", pinText)

@@ -158,3 +158,13 @@ fun Banner(
         }
     }
 }
+
+/** The button that sits on a painted banner: solid white for the main choice, a white outline for the other. */
+@Composable
+fun WhitePill(label: String, filled: Boolean = true, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(50)
+    Box(Modifier.clip(shape).let { if (filled) it.background(Color.White) else it.border(1.5.dp, Color.White, shape) }
+        .clickable(role = Role.Button) { onClick() }.padding(horizontal = 18.dp, vertical = 9.dp)) {
+        Text(label, style = MaterialTheme.typography.labelLarge, color = if (filled) Color.Black else Color.White)
+    }
+}

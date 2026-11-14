@@ -705,3 +705,7 @@ One real change per round. Pushed and built every ten rounds.
 698. Banners for the people tools: Your people, Places near you, Studio update, Ready-made emails ("Words for awkward moments"), Ask for feedback ("Three honest picks") and Tell people about the show ("Free listings for your show").
 699. Banners for the money and making tools: Your prices ("Prices that hold together"), A piece made for someone, Teach a class ("Paid to share the basics"), Supplies ("Nothing runs out mid-session") and Photograph your pieces.
 700. Banners for the rest: Empty your head, Words calls and galleries use, Is everything working, When someone looks you up (with how many of the checks are done in a badge). Fresh eyes keeps the piece itself as its opening, so it has none.
+701. A first (first piece finished, first entry sent, first sale) now gets a full-width painted banner with its title in big white type, and two white buttons on it: Lovely, and Tell your buddy. It only happens once, so it gets the room.
+702. On a break at work, the five-minute jobs are three painted cards side by side, each a neighbor of your color, big enough to hit with a thumb between orders. Swipe for the third.
+703. While you were away is a short timeline now: a dot for each thing done for you, joined by a thin line, instead of a bulleted list.
+704. Welcome back (after a week or more away) and Three days of "Not today" are painted banners with white buttons on them. A new white button shape is shared by every banner that needs one.
