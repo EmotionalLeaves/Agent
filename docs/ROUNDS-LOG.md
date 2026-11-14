@@ -721,3 +721,4 @@ One real change per round. Pushed and built every ten rounds.
 714. Next week opens on a banner with the week's making in big type ("40 minutes of making this week", or "A fresh week ahead").
 715. Help opens on a banner, "Plain answers, no test", with the tour as a white button on it instead of an outlined button on its own.
 716. A new app icon to match the new face: a white frame held up by a strip of tape on a phthalo green wall with two soft painted blocks, the same fields as inside the app. It is a proper adaptive icon now, so it fits whatever shape your phone uses for icons, and it has a one-color version for phones that tint icons to the wallpaper. The opening screen shows the same icon.
+717. The home-screen widgets wear the new wall too: phthalo green deepening toward the bottom like the banners, rounder corners, the next step's title larger, and Start as a white pill, the same shape as the white buttons inside the app. The old cobalt is gone from them.

@@ -1,4 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widgets wear the app's own wall: phthalo green, deepening toward the bottom like the banners inside the app. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#2B4ACB" />
-    <corners android:radius="18dp" />
+    <gradient android:angle="270" android:startColor="#2A8270" android:endColor="#143F45" />
+    <corners android:radius="24dp" />
 </shape>
