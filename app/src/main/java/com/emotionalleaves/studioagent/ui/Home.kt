@@ -1,5 +1,6 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.material.icons.filled.Check
@@ -1119,10 +1120,13 @@ fun Review(nav: NavController) {
 @Composable
 fun Tile(modifier: Modifier, number: String, label: String, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
-    Column(modifier.clip(RoundedCornerShape(14.dp)).background(cs.surfaceContainerLowest).clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }
-        .semantics(mergeDescendants = true) { }.padding(14.dp).heightIn(min = 72.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(number, style = MaterialTheme.typography.headlineMedium, maxLines = 1)
-        Text(label, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 2)
+    // Painted like the rest of the new face: each count on its own neighbor of your color, picked by its label, the number big in white.
+    val shift = ((label.hashCode() % 4 + 4) % 4) * 16f - 24f
+    Column(modifier.clip(RoundedCornerShape(20.dp)).background(Brush.linearGradient(listOf(neighbor(cs.primary, shift, 0.40f), neighbor(cs.primary, shift + 12f, 0.28f))))
+        .clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }
+        .semantics(mergeDescendants = true) { }.padding(16.dp).heightIn(min = 96.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(number, style = MaterialTheme.typography.headlineLarge, color = Color.White, maxLines = 1)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.88f), maxLines = 2)
     }
 }
 
