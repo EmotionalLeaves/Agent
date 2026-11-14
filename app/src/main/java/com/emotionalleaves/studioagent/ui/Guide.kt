@@ -260,7 +260,6 @@ fun Basics(nav: NavController) {
         // The answer can be selected and copied, to keep or to send to someone.
         if (reply.isNotBlank()) Panel { androidx.compose.foundation.text.selection.SelectionContainer { Text(reply) } }
         Section("Plain answers")
-        Small("Tap any question. None of this is a test, and you can use the whole app without reading it.")
         basics.forEach { (q, a) -> Expand(q) { Text(a) } }
         Section("About this app")
         AboutBody()

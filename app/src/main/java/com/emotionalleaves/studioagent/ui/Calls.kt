@@ -162,8 +162,10 @@ fun Calls(nav: NavController) {
                         }
                     }) { Text(if (looking) "Looking…" else "Look for calls now") }
                 }
-                if (list.size >= 2) TextButton(onClick = { nav.navigate("decide") }) { Text("Decide them one at a time") }
-                if (list.isNotEmpty()) Text(if (list.size == 1) "One call fits you this week. Yes or No takes a minute." else "${list.size} calls fit you this week, best fit first. Yes or No on each takes a minute.", style = MaterialTheme.typography.bodyMedium)
+                // The week's calls in one line, big, with the way to go through them as a white button on it.
+                if (list.isNotEmpty()) Banner(if (list.size == 1) "One call fits you this week" else "${list.size} calls fit you this week",
+                    "Best fit first. Yes or No on each takes about a minute.", key = 907L, height = 170, big = "${list.size}", bigLabel = if (list.size == 1) "call" else "calls",
+                    extra = { if (list.size >= 2) Row(Modifier.padding(top = 6.dp)) { WhitePill("Decide them one at a time") { nav.navigate("decide") } } })
                 list.forEach { o ->
                     key(o.id) {
                         Panel {

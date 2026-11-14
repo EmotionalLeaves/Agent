@@ -978,9 +978,11 @@ fun IdeasBody(nav: NavController) {
 fun WorkTile(w: Artwork, seriesName: String, focus: Boolean, compact: Boolean = false, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // A picture that was moved or deleted counts as no picture, so the title shows once, on the canvas.
+        val hasPic = w.imagePath.isNotBlank() && File(w.imagePath).exists()
         Box(Modifier.fillMaxWidth().aspectRatio(0.8f).clip(RoundedCornerShape(18.dp)).background(cs.surfaceContainerLowest), contentAlignment = Alignment.Center) {
             // The whole picture, never cropped, on a white mat: artists need to see their edges.
-            if (w.imagePath.isNotBlank() && File(w.imagePath).exists()) PathImage(w.imagePath, Modifier.fillMaxSize().padding(10.dp), 500, ContentScale.Fit)
+            if (hasPic) PathImage(w.imagePath, Modifier.fillMaxSize().padding(10.dp), 500, ContentScale.Fit)
             else {
                 // No picture yet: a canvas blocked in with color, its title on it, waiting to be photographed.
                 ColorField(cs.primary, Modifier.fillMaxSize(), key = w.id, shift = ((w.id * 47) % 90 - 45).toFloat())
@@ -993,7 +995,7 @@ fun WorkTile(w: Artwork, seriesName: String, focus: Boolean, compact: Boolean = 
             if (focus) TapeStrip(Modifier.align(Alignment.TopCenter).offset(y = (-6).dp), 2f)
         }
         Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            if (w.imagePath.isNotBlank()) Text(w.title.ifBlank { "Untitled" }, style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            if (hasPic) Text(w.title.ifBlank { "Untitled" }, style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             val facts = listOfNotNull(w.year.takeIf { it > 0 }?.toString(), if (w.widthIn > 0 && w.heightIn > 0) Texts.dims(w.widthIn, w.heightIn) else null)
             if (facts.isNotEmpty() && !compact) Small(facts.joinToString(", "))
             if (seriesName.isNotBlank() && !compact) Text(seriesName, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 2)
