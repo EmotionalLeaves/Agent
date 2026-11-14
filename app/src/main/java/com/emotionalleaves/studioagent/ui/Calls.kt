@@ -783,7 +783,11 @@ fun ApplScreen(nav: NavController, id: Long) {
     val newQuestion = rememberSaveable { mutableStateOf("") }
 
     Screen(o.title, nav) {
-        Note((if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.")
+        // The entry's front: when to send it, big, with the days left in a badge. Once sent, the day it went.
+        val daysLeft = if (o.deadline > now()) ((o.deadline - now()) / 86_400_000L).toInt() else -1
+        Banner(when { a.submittedAt > 0 -> "Sent " + fmtDate(a.submittedAt); o.deadline > 0 -> "Send by " + fmtDate(o.deadline - 3 * 86_400_000L); else -> "No deadline given" },
+            (if (o.deadline > 0) "Deadline ${fmtDate(o.deadline)} (${Planner.weekendsLeft(LocalDate.now(), Engine.date(o.deadline))}). " else "") + "The app aims to send 3 days early.",
+            key = 600L + o.id, height = 160, big = if (a.submittedAt == 0L && daysLeft >= 0) "$daysLeft" else null, bigLabel = if (daysLeft == 1) "day left" else "days left")
         // The entry in small pieces: five 15-minute evenings, so it is never one big job the night before.
         if (o.deadline > now() + 4 * 86_400_000L && events.none { it.applId == id && it.title.startsWith("Entry, 15 minutes: ") }) {
             var split by remember(id) { mutableStateOf("") }
@@ -822,6 +826,7 @@ fun ApplScreen(nav: NavController, id: Long) {
                             .border(if (pos >= 0) 3.dp else 1.dp, if (pos >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(4.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainerLowest)) {
                             if (w.imagePath.isNotBlank()) PathImage(w.imagePath, Modifier.fillMaxSize().padding(6.dp), 300, androidx.compose.ui.layout.ContentScale.Fit, w.title)
+                            else ColorField(MaterialTheme.colorScheme.primary, Modifier.matchParentSize().padding(6.dp), key = w.id, shift = ((w.id * 37) % 60 - 30).toFloat())
                             if (pos >= 0) Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(26.dp).clip(androidx.compose.foundation.shape.CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
                                 Text("${pos + 1}", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.labelMedium)
                             }

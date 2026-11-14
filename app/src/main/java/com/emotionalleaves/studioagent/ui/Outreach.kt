@@ -261,7 +261,7 @@ fun Outreach(nav: NavController) {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     val kindShift = (listOf("commercial", "nonprofit", "artist_run", "community", "campus", "library", "cafe").indexOf(c.kind).coerceAtLeast(0) * 17f) - 40f
                     Box(Modifier.size(48.dp).clip(CircleShape).background(neighbor(MaterialTheme.colorScheme.primary, kindShift, 0.42f)), contentAlignment = Alignment.Center) {
-                        Text(label.split(Regex("\\s+")).filter { w -> w.firstOrNull()?.isLetter() == true && w.lowercase() !in setOf("the", "of", "and", "a") }.take(2).joinToString("") { it.first().uppercase() }.ifBlank { "?" },
+                        Text(initials(label),
                             style = MaterialTheme.typography.titleMedium, color = androidx.compose.ui.graphics.Color.White)
                     }
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -377,8 +377,9 @@ fun ContactScreen(nav: NavController, id: Long) {
     val limit = st.revisionLimit
 
     Screen(c.venue.ifBlank { c.name.ifBlank { "Contact" } }, nav) {
-        Row { Tag(statusWords(c), strong = c.status in setOf("research", "drafted")) }
-        if (c.email.isNotBlank() || c.website.isNotBlank()) Small(listOf(c.name, c.email, c.website).filter { it.isNotBlank() }.joinToString("\n"))
+        // The place's front: where things stand with them, big, its monogram in the corner, and who to write to under it.
+        Banner(statusWords(c), (listOf(kindWords(c.kind)) + listOf(c.name, c.email, c.website).filter { it.isNotBlank() }).joinToString(", "),
+            key = 700L + c.id, height = 160, big = initials(c.venue.ifBlank { c.name }))
         // The email is the point of this page; the details fold away once the basics are in.
         Expand("Details: who, where, how they take work", startOpen = c.venue.isBlank() || c.email.isBlank()) {
         Field("Venue", c.venue, { save(c.copy(venue = it)) })
@@ -763,3 +764,7 @@ fun SellingTonight() {
     } }
     Small("Ask how they would like to pay before the night: many venues take the payment and pay you after; otherwise a card reader app or a payment link on your phone works.")
 }
+
+/** A place's monogram: the first letters of its first two real words ("Campus Gallery" is CG, "The Blue Door" is BD). */
+fun initials(name: String): String = name.split(Regex("\\s+")).filter { w -> w.firstOrNull()?.isLetter() == true && w.lowercase() !in setOf("the", "of", "and", "a") }
+    .take(2).joinToString("") { it.first().uppercase() }.ifBlank { "?" }

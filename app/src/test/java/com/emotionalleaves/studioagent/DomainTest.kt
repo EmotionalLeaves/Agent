@@ -759,4 +759,11 @@ class DomainTest {
         assertEquals("1:0:1;2:1:1", s)
         assertEquals(mapOf(1 to (0 to 1), 2 to (1 to 1)), O.parse(s))
     }
+
+    @Test fun monogramsSkipSmallWords() {
+        assertEquals("CG", com.emotionalleaves.studioagent.ui.initials("Campus Gallery"))
+        assertEquals("BD", com.emotionalleaves.studioagent.ui.initials("The Blue Door"))
+        assertEquals("R", com.emotionalleaves.studioagent.ui.initials("Riverside"))
+        assertEquals("?", com.emotionalleaves.studioagent.ui.initials(""))
+    }
 }
