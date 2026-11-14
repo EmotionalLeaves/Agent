@@ -1,5 +1,10 @@
 package com.emotionalleaves.studioagent.ui
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.graphicsLayer
@@ -544,17 +549,37 @@ fun WorkDetail(nav: NavController, id: Long) {
         }
 
         H("Where it stands")
-        // Four you set; the rest (out on a call, shown, sold) the app sets when they happen.
+        // The life of a piece as one line of six stops, the one it is at painted and bigger. The first four you set by tapping;
+        // the last two (out on a call, shown or sold) the app sets when they happen.
         val manual = listOf("idea", "in_progress", "finished", "documented")
-        if (w.status in manual || w.status == "available") {
-            // Choosing Ready to send here does the same as the button above: empty details are filled in for you.
-            Choice("Status", manual, if (w.status == "available") "documented" else w.status, names = ::statusWords) {
-                if (it == "documented" && w.status != "documented") { val (filled, _) = Engine.fillBlanks(w.copy(status = "documented")); save(filled) } else save(w.copy(status = it))
+        val stops = listOf("idea", "in_progress", "finished", "documented", "pending", if (w.status == "sold") "sold" else "shown")
+        val at = when (w.status) { "available" -> 3; "sold" -> 5; else -> stops.indexOf(w.status).coerceAtLeast(0) }
+        val canSet = w.status in manual || w.status == "available"
+        val tcs = MaterialTheme.colorScheme
+        Box(Modifier.fillMaxWidth()) {
+            Box(Modifier.padding(top = 14.dp).fillMaxWidth(0.84f).align(Alignment.TopCenter).height(3.dp).background(tcs.outlineVariant))
+            Row(Modifier.fillMaxWidth().selectableGroup()) {
+                stops.forEachIndexed { k, code ->
+                    val here = k == at
+                    val settable = canSet && k < 4
+                    Column(Modifier.weight(1f).let { m -> if (settable) m.selectable(selected = here, role = androidx.compose.ui.semantics.Role.RadioButton) {
+                        // Choosing Ready to send does the same as the button above: empty details are filled in for you.
+                        if (code == "documented" && w.status != "documented") { val (filled, _) = Engine.fillBlanks(w.copy(status = "documented")); save(filled) } else save(w.copy(status = code))
+                    } else m.semantics(mergeDescendants = true) { } }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Box(Modifier.height(30.dp), contentAlignment = Alignment.Center) {
+                            Box(Modifier.size(if (here) 30.dp else 16.dp).clip(CircleShape).background(if (k <= at) tcs.primary else tcs.surfaceContainerHigh)
+                                .let { if (here) it.border(4.dp, tcs.primaryContainer, CircleShape) else it })
+                        }
+                        Text(statusWords(code), style = MaterialTheme.typography.labelSmall, fontWeight = if (here) FontWeight.Bold else FontWeight.Normal,
+                            color = if (here) tcs.onSurface else if (settable) tcs.onSurfaceVariant else tcs.outline, textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 2)
+                    }
+                }
             }
+        }
+        if (canSet) {
             if (w.status in setOf("documented", "available") && w.imagePath.isBlank()) Small("It needs its picture before it can go to calls. Add one at the top of this page.")
         }
         else {
-            Row { Tag(statusWords(w.status), strong = true) }
             // Which call it is out on, one tap away.
             val appl = remember(w.id, w.status) { mutableStateOf<com.emotionalleaves.studioagent.data.Appl?>(null) }
             LaunchedEffect(w.id, w.status) { appl.value = withContext(Dispatchers.IO) { dao.applsNow().lastOrNull { w.id in Engine.workIds(it) } } }
